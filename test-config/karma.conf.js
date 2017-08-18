@@ -4,7 +4,10 @@ module.exports = function (config) {
     var _config = {
         basePath: '',
 
-        frameworks: ['jasmine'],
+        frameworks: [
+            'jasmine',
+            'jasmine-matchers'
+        ],
 
         files: [{
             pattern: './karma-test-shim.js',
