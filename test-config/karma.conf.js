@@ -6,7 +6,6 @@ module.exports = function (config) {
 
         frameworks: [
             'jasmine'
-            // 'jasmine-matchers'
         ],
 
         files: [{
@@ -34,7 +33,8 @@ module.exports = function (config) {
             terminal: true
         },
 
-        reporters: ['kjhtml', 'dots'],
+        // reporters: ['kjhtml', 'dots'],
+        reporters: ['kjhtml'],
         port: 9876,
         colors: true,
         logLevel: config.LOG_INFO,

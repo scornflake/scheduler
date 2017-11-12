@@ -6,7 +6,7 @@ export type IAllPersons = Immutable.Map<string, IPerson>;
 
 export interface IPerson {
     uuid: string,
-    name: string;
+    name: string,
     unavailable: Immutable.List<Date>;
 }
 
@@ -23,6 +23,7 @@ export let personReducer = (state: IPerson = defaultPersonState, action: AnyActi
         case PersonActions.ADD_UNAVAILABLE:
             newPerson = Object.assign({}, state);
             newPerson.unavailable = newPerson.unavailable.push(action.payload);
+            // console.log("New avail: " + newPerson.unavailable + " have " + JSON.stringify(newPerson));
             return newPerson;
 
         case PersonActions.REMOVE_UNAVAILABLE:
@@ -30,8 +31,6 @@ export let personReducer = (state: IPerson = defaultPersonState, action: AnyActi
             let index = newPerson.unavailable.indexOf(action.payload);
             if (index != -1) {
                 newPerson.unavailable = newPerson.unavailable.remove(index);
-            } else {
-                console.log("didn't remove, didn't find");
             }
             return newPerson;
     }

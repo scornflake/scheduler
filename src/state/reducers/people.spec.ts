@@ -2,8 +2,8 @@ import Immutable from 'immutable';
 import {IAllPersons, IPerson, peopleReducer} from "./people";
 import {PersonActions} from "../actions/person";
 import {MockNgRedux} from "@angular-redux/store/lib/testing";
-// import {addJasmineMatchers} from "../../utils/jasmine-matchers";
 import * as matchers from "jasmine-immutable-matchers";
+
 
 describe('people, ', () => {
     let firstPerson: IPerson = {
@@ -19,7 +19,6 @@ describe('people, ', () => {
     let someDate: Date = new Date(2010, 10, 3);
 
     beforeEach(() => {
-        // addJasmineMatchers();
         jasmine.addMatchers(matchers);
         state = Immutable.Map({'1234': firstPerson});
     });
@@ -29,10 +28,13 @@ describe('people, ', () => {
             ...firstPerson,
             unavailable: Immutable.List<Date>([someDate])
         };
+
         let expected: IAllPersons = Immutable.Map<string, IPerson>().set(expectedPerson.uuid, expectedPerson);
-        expect(
-            reducer(state, actions.addUnavailability(firstPerson, someDate))
-        ).toEqualImmutable(expected)
+
+        let actual = reducer(state, actions.addUnavailability(firstPerson, someDate));
+        console.log("Actual: " + JSON.stringify(actual));
+
+        expect(actual).toEqualImmutable(expected)
     });
 
     xit('can remove unavailable date', () => {
