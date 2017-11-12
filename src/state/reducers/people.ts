@@ -23,7 +23,6 @@ export let personReducer = (state: IPerson = defaultPersonState, action: AnyActi
         case PersonActions.ADD_UNAVAILABLE:
             newPerson = Object.assign({}, state);
             newPerson.unavailable = newPerson.unavailable.push(action.payload);
-            // console.log("New avail: " + newPerson.unavailable + " have " + JSON.stringify(newPerson));
             return newPerson;
 
         case PersonActions.REMOVE_UNAVAILABLE:
@@ -38,6 +37,7 @@ export let personReducer = (state: IPerson = defaultPersonState, action: AnyActi
 };
 
 export let peopleReducer = (state: IAllPersons = defaultPersons, action: AnyAction): IAllPersons => {
+        console.log("GOT STATE: " + JSON.stringify(state));
         if (action.type.startsWith("person/")) {
             let uuid = action.uuid;
             if (uuid == null) {
@@ -46,7 +46,9 @@ export let peopleReducer = (state: IAllPersons = defaultPersons, action: AnyActi
 
             let person: IPerson = state.get(uuid);
             let modifiedPerson: IPerson = personReducer(person, action);
-            return state.set(modifiedPerson.uuid, modifiedPerson);
+            let newState = state.set(modifiedPerson.uuid, modifiedPerson);
+            console.log("NEW STATE: " + JSON.stringify(newState));
+            return newState;
         }
 
         switch (action.type) {

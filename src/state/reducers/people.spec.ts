@@ -31,10 +31,11 @@ describe('people, ', () => {
 
         let expected: IAllPersons = Immutable.Map<string, IPerson>().set(expectedPerson.uuid, expectedPerson);
 
-        let actual = reducer(state, actions.addUnavailability(firstPerson, someDate));
-        console.log("Actual: " + JSON.stringify(actual));
-
-        expect(actual).toEqualImmutable(expected)
+        let reduced = reducer(state, actions.addUnavailability(firstPerson, someDate));
+        let actual = reduced.get('1234');
+        console.log("ACTUAL  :" + JSON.stringify(actual));
+        console.log("EXPECTED:" + JSON.stringify(expectedPerson));
+        expect(actual).toEqualImmutable(expectedPerson)
     });
 
     xit('can remove unavailable date', () => {

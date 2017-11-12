@@ -6,6 +6,7 @@ module.exports = function (config) {
 
         frameworks: [
             'jasmine'
+            // 'jasmine-matchers'
         ],
 
         files: [{

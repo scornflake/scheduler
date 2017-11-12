@@ -1,7 +1,7 @@
 {
   "name": "scheduler",
   "version": "0.0.1",
-  "author": "Ionic Framework",
+  "author": "Neil Clayton",
   "homepage": "http://ionicframework.com/",
   "private": true,
   "scripts": {
@@ -62,5 +62,5 @@
     "ts-node": "^3.3.0",
     "typescript": "2.3.4"
   },
-  "description": "An Ionic project"
+  "description": "Scheduler"
 }
