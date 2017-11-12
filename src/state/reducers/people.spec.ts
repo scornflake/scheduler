@@ -1,15 +1,15 @@
-import Immutable from 'immutable';
+// import Immutable from 'immutable';
 import {IAllPersons, IPerson, peopleReducer} from "./people";
 import {PersonActions} from "../actions/person";
 import {MockNgRedux} from "@angular-redux/store/lib/testing";
 // import {addJasmineMatchers} from "../../utils/jasmine-matchers";
-import * as matchers from "jasmine-immutable-matchers";
+// import * as matchers from "jasmine-immutable-matchers";
 
 describe('people, ', () => {
     let firstPerson: IPerson = {
         uuid: '1234',
         name: 'neilos',
-        unavailable: Immutable.List<Date>()
+        unavailable: []
     };
 
     let state: IAllPersons;
@@ -20,19 +20,20 @@ describe('people, ', () => {
 
     beforeEach(() => {
         // addJasmineMatchers();
-        jasmine.addMatchers(matchers);
-        state = Immutable.Map({'1234': firstPerson});
+        // jasmine.addMatchers(matchers);
+        state = {'1234': firstPerson};
     });
 
     it('can be unavailable', () => {
         let expectedPerson: IPerson = {
             ...firstPerson,
-            unavailable: Immutable.List<Date>([someDate])
+            unavailable: [someDate]
         };
-        let expected: IAllPersons = Immutable.Map<string, IPerson>().set(expectedPerson.uuid, expectedPerson);
+        let expected: IAllPersons;
+        expected[expectedPerson.uuid] = expectedPerson;
         expect(
             reducer(state, actions.addUnavailability(firstPerson, someDate))
-        ).toEqualImmutable(expected)
+        ).toEqual(expected)
     });
 
     xit('can remove unavailable date', () => {
@@ -49,10 +50,10 @@ describe('people, ', () => {
         let newPerson: IPerson = {
             uuid: '4321',
             name: 'john',
-            unavailable: Immutable.List<Date>()
+            unavailable: []
         };
 
-        let expected: IAllPersons = Immutable.Map<string, IPerson>();
+        let expected: IAllPersons = {};
         expected[firstPerson.uuid] = firstPerson;
         expected[newPerson.uuid] = newPerson;
         expect(reducer(state, actions.addPerson(newPerson)))
