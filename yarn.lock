@@ -2518,10 +2518,6 @@ immediate@~3.0.5:
   version "3.0.6"
   resolved "https://registry.yarnpkg.com/immediate/-/immediate-3.0.6.tgz#9db1dbd0faf8de6fbe0f5dd5e56bb606280de69b"
 
-immutable@^3.8.1:
-  version "3.8.2"
-  resolved "https://registry.yarnpkg.com/immutable/-/immutable-3.8.2.tgz#c2439951455bb39913daf281376f1530e104adf3"
-
 in-publish@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/in-publish/-/in-publish-2.0.0.tgz#e20ff5e3a2afc2690320b6dc552682a9c7fadf51"
@@ -2788,10 +2784,6 @@ isstream@~0.1.2:
 jasmine-core@~2.8.0:
   version "2.8.0"
   resolved "https://registry.yarnpkg.com/jasmine-core/-/jasmine-core-2.8.0.tgz#bcc979ae1f9fd05701e45e52e65d3a5d63f1a24e"
-
-jasmine-immutable-matchers@^1.5.0:
-  version "1.5.0"
-  resolved "https://registry.yarnpkg.com/jasmine-immutable-matchers/-/jasmine-immutable-matchers-1.5.0.tgz#81fbc1e2ca87fd8fa83b2314e3f1383f6b34a0f6"
 
 jasmine-spec-reporter@^4.2.1:
   version "4.2.1"

@@ -1,42 +1,51 @@
-import Immutable from 'immutable';
 import {AnyAction} from "redux";
 import {PersonActions} from "../actions/person";
 
-export type IAllPersons = Immutable.Map<string, IPerson>;
+export type IAllPersons = Map<string, IPerson>;
 
 export interface IPerson {
     uuid: string,
-    name: string;
-    unavailable: Immutable.List<Date>;
+    name: string,
+    unavailable: Array<Date>;
 }
 
 let defaultPersonState: IPerson = {
     uuid: "0",
     name: "",
-    unavailable: Immutable.List<Date>()
+    unavailable: []
 };
-let defaultPersons: IAllPersons = Immutable.Map<string, IPerson>();
+let defaultPersons: IAllPersons = new Map<string, IPerson>();
 
 export let personReducer = (state: IPerson = defaultPersonState, action: AnyAction): IPerson => {
-    let newPerson: IPerson;
-    switch (action.type) {
-        case PersonActions.ADD_UNAVAILABLE:
-            newPerson = Object.assign({}, state);
-            newPerson.unavailable = newPerson.unavailable.push(action.payload);
-            return newPerson;
+        let newPerson: IPerson;
+        switch (action.type) {
+            case PersonActions.ADD_UNAVAILABLE:
+                newPerson = {
+                    ...state,
+                    unavailable: [
+                        ...state.unavailable,
+                        ...[action.payload]
+                    ]
+                };
+                return newPerson;
 
-        case PersonActions.REMOVE_UNAVAILABLE:
-            newPerson = Object.assign({}, state);
-            let index = newPerson.unavailable.indexOf(action.payload);
-            if (index != -1) {
-                newPerson.unavailable = newPerson.unavailable.remove(index);
-            } else {
-                console.log("didn't remove, didn't find");
-            }
-            return newPerson;
+            case PersonActions.REMOVE_UNAVAILABLE:
+                let index = state.unavailable.indexOf(action.payload);
+                if (index != -1) {
+                    return {
+                        ...state,
+                        unavailable:
+                            [
+                                ...state.unavailable.slice(0, index),
+                                ...state.unavailable.slice(index + 1)
+                            ]
+                    };
+                }
+                return state;
+        }
+        return state;
     }
-    return state;
-};
+;
 
 export let peopleReducer = (state: IAllPersons = defaultPersons, action: AnyAction): IAllPersons => {
         if (action.type.startsWith("person/")) {
@@ -46,18 +55,24 @@ export let peopleReducer = (state: IAllPersons = defaultPersons, action: AnyActi
             }
 
             let person: IPerson = state.get(uuid);
-            let modifiedPerson: IPerson = personReducer(person, action);
-            return state.set(modifiedPerson.uuid, modifiedPerson);
+            let newState = Object.assign({}, state);
+            newState[uuid] = personReducer(person, action);
+            return newState;
         }
 
         switch (action.type) {
             case PersonActions.ADD_PERSON:
             case PersonActions.UPDATE_PERSON:
                 let person: IPerson = action.payload;
-                return state.merge({[person.uuid]: person});
+                return {
+                    ...state,
+                    [person.uuid]: person,
+                };
 
             case PersonActions.REMOVE_PERSON:
-                return state.remove(action.payload);
+                let new_state = Object.assign({}, state);
+                delete  new_state[action.uuid];
+                return new_state;
         }
     }
 ;
