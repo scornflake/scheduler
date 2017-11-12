@@ -30,6 +30,8 @@ export let personReducer = (state: IPerson = defaultPersonState, action: AnyActi
             let index = newPerson.unavailable.indexOf(action.payload);
             if (index != -1) {
                 newPerson.unavailable = newPerson.unavailable.remove(index);
+            } else {
+                console.log("didn't remove, didn't find");
             }
             return newPerson;
     }

@@ -9,7 +9,8 @@
       "es2015"
     ],
     "types": [
-      "jasmine"
+      "jasmine",
+      "jasmine-immutable-matchers"
     ],
     "module": "es2015",
     "moduleResolution": "node",
@@ -20,7 +21,8 @@
     "src/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src/**/*.spec.ts"
   ],
   "compileOnSave": false,
   "atom": {

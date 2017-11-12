@@ -5,8 +5,8 @@ module.exports = function (config) {
         basePath: '',
 
         frameworks: [
-            'jasmine',
-            'jasmine-matchers'
+            'jasmine'
+            // 'jasmine-matchers'
         ],
 
         files: [{
