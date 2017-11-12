@@ -25,9 +25,8 @@ describe('people, ', () => {
     let expected: IAllPersons = new Map<string, IPerson>();
 
     beforeEach(() => {
-        state = new Map<string, IPerson>([
-            ['1234', firstPerson]
-        ]);
+        state = new Map<string, IPerson>();
+        state['1234'] = firstPerson;
     });
 
     it('can add unavailable date', () => {
@@ -37,32 +36,35 @@ describe('people, ', () => {
         };
         expected[expectedPerson.uuid] = expectedPerson;
 
-        let actual = reducer(state, actions.addUnavailability(firstPerson, someDate));
-        expect(actual["1234"]).toEqual(expectedPerson)
+        let allPersons = reducer(state, actions.addUnavailability(firstPerson, someDate));
+        // console.log("Pre State: " + JSON.stringify(state));
+        // console.log("All State: " + JSON.stringify(allPersons));
+        expect(allPersons["1234"]).toEqual(expectedPerson)
     });
 
-    // xit('can remove unavailable date', () => {
-    //     let unavailablePerson = reducer(state, actions.addUnavailability(firstPerson, someDate));
-    //
-    //     // a new date instance
-    //     let recreatedDate = new Date(2010, 10, 3);
-    //     expect(
-    //         reducer(unavailablePerson, actions.removeUnavailability(firstPerson, recreatedDate))
-    //     ).toEqual(state);
-    // });
-    //
-    // xit('can add to people', () => {
-    //     let newPerson: IPerson = {
-    //         uuid: '4321',
-    //         name: 'john',
-    //         unavailable: []
-    //     };
-    //
-    //     let expected: IAllPersons = {};
-    //     expected[firstPerson.uuid] = firstPerson;
-    //     expected[newPerson.uuid] = newPerson;
-    //     expect(reducer(state, actions.addPerson(newPerson)))
-    //         .toEqual(expected)
-    // });
+
+    it('can remove unavailable date', () => {
+        let personsWithAnUnavailabilityDate = reducer(state, actions.addUnavailability(firstPerson, someDate));
+
+        // a new date instance
+        let recreatedDate = new Date(2010, 10, 3);
+        let allPersons = expect(
+            reducer(personsWithAnUnavailabilityDate, actions.removeUnavailability(firstPerson, recreatedDate))
+        );
+        expect(allPersons.toEqual(state));
+    });
+
+    it('can add to people', () => {
+        let newPerson: IPerson = {
+            uuid: '4321',
+            name: 'john',
+            unavailable: []
+        };
+
+        let expected: IAllPersons = new Map<string, IPerson>();
+        expected[newPerson.uuid] = newPerson;
+        expect(reducer(state, actions.addPerson(newPerson)))
+            .toEqual(expected)
+    });
 
 });

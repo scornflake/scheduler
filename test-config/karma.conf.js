@@ -35,7 +35,7 @@ module.exports = function (config) {
         },
 
         // reporters: ['kjhtml', 'dots'],
-        reporters: ['kjhtml'],
+        reporters: ['dots'],
         port: 9876,
         colors: true,
         logLevel: config.LOG_INFO,
