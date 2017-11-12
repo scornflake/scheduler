@@ -15,28 +15,28 @@ export class PersonActions {
 
     }
 
-    addPerson(person: IPerson) {
+    static addPerson(person: IPerson) {
         return {
             type: PersonActions.ADD_PERSON,
             payload: person
         }
     }
 
-    removePerson(person: IPerson) {
+    static removePerson(person: IPerson) {
         return {
             type: PersonActions.REMOVE_PERSON,
             payload: person.uuid
         }
     }
 
-    updatePerson(person: IPerson) {
+    static updatePerson(person: IPerson) {
         return {
             type: PersonActions.UPDATE_PERSON,
             payload: person
         }
     }
 
-    addUnavailability(person: IPerson, date: Date) {
+    static addUnavailability(person: IPerson, date: Date) {
         return {
             type: PersonActions.ADD_UNAVAILABLE,
             uuid: person.uuid,
@@ -44,7 +44,7 @@ export class PersonActions {
         }
     }
 
-    removeUnavailability(person: IPerson, date: Date) {
+    static removeUnavailability(person: IPerson, date: Date) {
         return {
             type: PersonActions.REMOVE_UNAVAILABLE,
             uuid: person.uuid,

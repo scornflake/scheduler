@@ -21,7 +21,7 @@ export let personReducer = (state: IPerson = defaultPersonState, action: AnyActi
     let newPerson: IPerson;
     switch (action.type) {
         case PersonActions.ADD_UNAVAILABLE:
-            console.log("Modify: " + JSON.stringify(state));
+            // console.log("Modify: " + JSON.stringify(state));
             newPerson = {
                 ...state,
                 unavailable: [
