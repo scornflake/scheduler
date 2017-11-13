@@ -15,6 +15,7 @@ let defaultPersonState: IPerson = {
     name: "",
     unavailable: []
 };
+
 let defaultPersons: IAllPersons = new Map<string, IPerson>();
 
 export let personReducer = (state: IPerson = defaultPersonState, action: AnyAction): IPerson => {
@@ -82,3 +83,5 @@ export let peopleReducer = (state: IAllPersons = defaultPersons, action: AnyActi
         }
     }
 ;
+
+export let emptyPerson = defaultPersonState;

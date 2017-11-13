@@ -1,13 +1,15 @@
 import {NgRedux} from "@angular-redux/store";
 import {combineReducers} from "redux";
 import {IAllPersons, peopleReducer} from "./reducers/people";
+import {roleReducer} from "./reducers/roles";
 
 export interface IAppState {
     people: IAllPersons
 }
 
 let reducers = combineReducers<IAppState>({
-    people: peopleReducer
+    people: peopleReducer,
+    roles: roleReducer
 });
 
 let enhancers = [];

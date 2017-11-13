@@ -5,14 +5,15 @@ module.exports = function (config) {
         basePath: '',
 
         frameworks: [
-            'jasmine'
-            // 'jasmine-matchers'
+            'jasmine',
+            'jasmine-matchers'
         ],
 
-        files: [{
-            pattern: './karma-test-shim.js',
-            watched: true
-        }],
+        files: [
+            {
+                pattern: './karma-test-shim.js',
+                watched: true
+            }],
 
         preprocessors: {
             './karma-test-shim.js': ['webpack', 'sourcemap']
@@ -36,6 +37,7 @@ module.exports = function (config) {
 
         // reporters: ['kjhtml', 'dots'],
         reporters: ['dots'],
+        // reporters: ['kjhtml'],
         port: 9876,
         colors: true,
         logLevel: config.LOG_INFO,

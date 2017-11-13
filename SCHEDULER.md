@@ -1,5 +1,7 @@
+For schedule:
+ * Every sunday. Every N days. 3rd sat of month, etc.
+
 For people:
- * Unavailable dates. They cannot be scheduled on that day
  * Preferred regularity: every 3 weeks, etc. With strict, or flexible option. Strict would mean "don't move / can't move". Flexible would mean we can move around a bit.
  * Preferred leader (strict or flexible): name of someone in a leader role
  * Slip override: override global aggressiveness, if strict == false
@@ -57,4 +59,9 @@ Algorithm
     1. Place the 'next free person' at the this date.  If no free people, skip this date for now.
     1. Evaluate the rules for this person and placement date, which creates scheduling exclusion zones for this person
 
- 
+Notes
+=====
+
+1. How are we going to handle CRUD? The reducers are quite painful in this regard. There is redux-clerk, havn't tried it yet.
+  1. Roles
+1. Got to the point of laying out a single person across a date range. This begins to get into the algorithm, at which point I realized I don't have roles etc (all the inputs) defined. Which led me to thinking about CRUD.  However; we've only got ... Roles and People? So, do I need to care?
