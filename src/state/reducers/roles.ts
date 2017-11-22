@@ -1,77 +1,64 @@
-import {AnyAction} from "redux";
-import {RoleActions} from "../actions/roles";
+import {observable} from "mobx-angular";
 import ShortUniqueId from 'short-unique-id';
 
-export interface IRole {
-    uuid: string,
-    name: string,
+export class Role {
+    @observable uuid: string;
+    @observable name: string;
+    @observable layout_priority: number;
+
+    constructor(name: string, uuid: string = null, priority = 0) {
+        if (uuid == null) {
+            let uuid_gen = new ShortUniqueId();
+            uuid = uuid_gen.randomUUID(8);
+        }
+        this.uuid = uuid;
+        this.name = name;
+        this.layout_priority = priority;
+    }
 }
 
-let defaultMusicianRole: IRole = {
-    uuid: "0",
-    name: "Musician",
-};
-let defaultLeaderRole: IRole = {
-    uuid: "1",
-    name: "Leader",
-};
-let defaultSoundRole: IRole = {
-    uuid: "2",
-    name: "Sound",
-};
-let defaultComputerRole: IRole = {
-    uuid: "3",
-    name: "Computer",
-};
-
-let defaultRoles: IRole[] = [
-    defaultLeaderRole,
-    defaultSoundRole,
-    defaultMusicianRole,
-    defaultComputerRole,
-];
+let defaultMusicianRole = new Role("Musician", null, 1);
+let defaultLeaderRole = new Role("Worship Leader", null, 10);
+let defaultSoundRole = new Role("Sound", null);
+let defaultDrumsRole = new Role("Drums", null, 8);
+let defaultVocalsRole = new Role("Vocals", null, 7);
+let defaultComputerRole = new Role("Computer", null);
 
 
-export let roleReducer = (state: IRole[] = defaultRoles, action: AnyAction): IRole[] => {
-        switch (action.type) {
-            case RoleActions.ADD_ROLE:
-                // If it's already here, based on UUID, don't add twice
-                let role: IRole = action.payload;
-                let existing_index = Array.from(state).findIndex(v => {
-                    return v.uuid == role.uuid;
-                });
-                if (existing_index != -1) {
-                    return state;
-                }
-                if (role.uuid == null || role.uuid == "0") {
-                    let uuid = new ShortUniqueId();
-                    role.uuid = uuid.randomUUID(8);
-                }
-                return [
-                    ...state,
-                    ...[action.payload]
-                ];
+export class RolesStore {
+    @observable roles: Array<Role>;
 
-            case RoleActions.UPDATE_ROLE: {
-                let new_state = Object.assign({}, state);
-                let index = Array.from(new_state).findIndex(i => {
-                    return i.uuid == action.uuid
-                });
-
-                if (index == -1) {
-                    return state;
-                }
-
-                new_state[index] = action.payload;
-                return new_state;
-            }
-
-            case RoleActions.REMOVE_ROLE: {
-                let new_state = Array.from(state);
-                return new_state.filter(v => {
-                    return v.uuid != action.payload
-                });
-            }
-        }
+    constructor() {
+        this.roles = [];
     }
-;
+
+    addRole(r: Role) {
+        let foundIndex = this.roles.findIndex(role => {
+            return r.uuid == role.uuid;
+        });
+        // console.log("Index of " + r.uuid + " is " + foundIndex);
+        if (foundIndex >= 0) {
+            return null;
+        }
+
+        this.roles.push(r);
+        // console.log("Added role: " + JSON.stringify(r));
+        return r;
+    }
+
+    removeRole(r: Role) {
+        this.roles = this.roles.filter(role => role.uuid != r.uuid);
+    }
+
+    get rolesInLayoutOrder() {
+        return this.roles.sort((a: Role, b: Role) => {
+            if(a.layout_priority < b.layout_priority) {
+                return 1;
+            } else if(a.layout_priority > b.layout_priority) {
+                return -1;
+            }
+            return 0;
+        });
+    }
+}
+

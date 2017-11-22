@@ -1,36 +1,34 @@
 ///<reference path="../../node_modules/@types/jasmine-expect/index.d.ts"/>
-import {emptyPerson, IAllPersons, IPerson} from "../state/reducers/people";
+import {PeopleStore, Person} from "../state/reducers/people";
 import {PeopleScheduler} from "./scheduler";
 
 describe('schedule', () => {
-    let everyone: IAllPersons;
+    let person_store: PeopleStore;
 
-    let neil: IPerson = emptyPerson;
+    let neil: Person;
     let end_date: Date = new Date();
     let start_date: Date = new Date();
     let scheduler: PeopleScheduler = new PeopleScheduler();
 
     beforeEach(() => {
-        everyone = new Map<string, IPerson>();
-        neil.uuid = '1234';
-        neil.name = 'Neil';
-
+        person_store = new PeopleStore();
+        neil = new Person("1234", "Neil");
         end_date.setDate(Date.now() + 60);
         scheduler.period_in_days_between_steps = 7;
     });
 
     it('can create empty', () => {
-        let schedule = scheduler.CreateSchedule(everyone, start_date, end_date);
+        let schedule = scheduler.CreateSchedule(person_store, start_date, end_date);
         expect(schedule).not.toBeNull();
         expect(schedule.tasks).toBeEmptyArray();
     });
 
     xit('can schedule neil weekly', () => {
-        everyone[neil.uuid] = neil;
+        person_store.addPerson(neil);
 
-        let schedule = scheduler.CreateSchedule(everyone, start_date, end_date);
+        let schedule = scheduler.CreateSchedule(person_store, start_date, end_date);
         expect(schedule).not.toBeNull();
-        expect(schedule.tasks).not.toBeEmptyArray();
+        expect(schedule.tasks.length).not.toEqual(0);
 
 
     })

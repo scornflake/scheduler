@@ -1,26 +1,26 @@
-import {IAllPersons, IPerson} from "../state/reducers/people";
+import {IAllPersons, PeopleStore, Person} from "../state/reducers/people";
 
 // Want to represent X people doing tasks Xy for week/time W
 // This is to represent
-interface IScheduleTasks {
+class ScheduleTask {
     label: string;
-    person: IPerson;
+    person: Person;
 }
 
-export interface IScheduledPeople {
+export class ScheduledPeople {
     start_date: Date;
     end_date: Date;
 
-    tasks: IScheduleTasks[];
-    all_people: IPerson[];
+    tasks: ScheduleTask[];
+    all_people: Person[];
 }
 
 export class PeopleScheduler {
     period_in_days_between_steps: number = 7;
 
-    private schedule: IScheduledPeople;
+    private schedule: ScheduledPeople;
 
-    public CreateSchedule(people: IAllPersons, start_date: Date, end_date: Date): IScheduledPeople {
+    public CreateSchedule(people: PeopleStore, start_date: Date, end_date: Date): ScheduledPeople {
         this.schedule = {
             start_date: start_date,
             end_date: end_date,
@@ -34,7 +34,7 @@ export class PeopleScheduler {
         return this.schedule;
     }
 
-    private create_tasks_for_dates(): IScheduleTasks[] {
+    private create_tasks_for_dates(): ScheduleTask[] {
         let date = this.schedule.start_date;
         while (date <= this.schedule.end_date) {
 

@@ -1,70 +1,40 @@
-import {IAllPersons, IPerson, peopleReducer} from "./people";
-import {PersonActions} from "../actions/person";
-import {MockNgRedux} from "@angular-redux/store/lib/testing";
-
-function buildMap(obj) {
-    let map = new Map();
-    Object.keys(obj).forEach(key => {
-        map.set(key, obj[key]);
-    });
-    return map;
-}
+import {PeopleStore, Person} from "./people";
 
 describe('people, ', () => {
-    let firstPerson: IPerson = {
-        uuid: '1234',
-        name: 'neilos',
-        unavailable: []
-    };
+    let firstPerson: Person;
 
-    let state: IAllPersons;
-
-    let reducer = peopleReducer;
-    let actions = new PersonActions(MockNgRedux.getInstance());
+    let person_store: PeopleStore;
     let someDate: Date = new Date(2010, 10, 3);
-    let expected: IAllPersons = new Map<string, IPerson>();
 
     beforeEach(() => {
-        state = new Map<string, IPerson>();
-        state['1234'] = firstPerson;
+        firstPerson = new Person('1234', 'neilos');
+        person_store = new PeopleStore();
+        person_store.addPerson(firstPerson);
     });
 
     it('can add unavailable date', () => {
-        let expectedPerson: IPerson = {
-            ...firstPerson,
-            unavailable: [someDate]
-        };
-        expected[expectedPerson.uuid] = expectedPerson;
+        firstPerson.addUnavailable(someDate);
 
-        let allPersons = reducer(state, PersonActions.addUnavailability(firstPerson, someDate));
         // console.log("Pre State: " + JSON.stringify(state));
         // console.log("All State: " + JSON.stringify(allPersons));
-        expect(allPersons["1234"]).toEqual(expectedPerson)
+        expect(firstPerson.unavailable).toContain(someDate)
     });
 
-
     it('can remove unavailable date', () => {
-        let personsWithAnUnavailabilityDate = reducer(state, PersonActions.addUnavailability(firstPerson, someDate));
+        firstPerson.addUnavailable(someDate);
 
         // a new date instance
         let recreatedDate = new Date(2010, 10, 3);
-        let allPersons = expect(
-            reducer(personsWithAnUnavailabilityDate, PersonActions.removeUnavailability(firstPerson, recreatedDate))
-        );
-        expect(allPersons.toEqual(state));
+        firstPerson.removeUnavailable(recreatedDate);
+        expect(firstPerson.unavailable).not.toContain(someDate)
     });
 
     it('can add to people', () => {
-        let newPerson: IPerson = {
-            uuid: '4321',
-            name: 'john',
-            unavailable: []
-        };
+        let newPerson: Person = new Person('4321', 'John');
 
-        let expected: IAllPersons = new Map<string, IPerson>();
-        expected[newPerson.uuid] = newPerson;
-        expect(reducer(state, PersonActions.addPerson(newPerson)))
-            .toEqual(expected)
+        person_store.addPerson(newPerson);
+        expect(person_store.people).toContain(newPerson);
+        expect(person_store.people).toContain(firstPerson);
     });
 
 });

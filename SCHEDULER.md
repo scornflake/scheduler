@@ -14,7 +14,7 @@ For roles:
  * Layout priority. i.e: Leaders first. Their dates must be right. Then drums, then vocals, etc.  The idea being that laying out some roles (leaders) has major impact on others (drums)
 
 For scheduling:
- * Slip aggressiveness: 0 = adhere to people's wishes. 1 = allow 1 week distance slip. 2 = 2 weeks. 
+ * Slip aggressiveness: 0 = adhere to people's wishes. 1 = allow 1 'period' distance slip. 2 = 2 periods weeks. 
  * Repeat/Fill aggressiveness: 0 = adhere to peoples wishes. 1 = allow one fill in persons preferred regularity. 2 = allow 2 fills, etc.
 
 For dates:
