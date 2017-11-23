@@ -1,17 +1,20 @@
 import {observable} from "mobx-angular";
 import {Role} from "./roles";
+import {SchedulePrefs} from "./scheduling";
 
 export class Person {
     @observable uuid: string;
     @observable name: string;
     @observable roles: Array<Role>;
     @observable unavailable: Array<Date>;
+    @observable prefs: SchedulePrefs;
 
     constructor(uuid: string, name: string) {
         this.uuid = uuid;
         this.name = name;
         this.roles = [];
         this.unavailable = [];
+        this.prefs = new SchedulePrefs();
     }
 
     addRole(r: Role) {

@@ -29,6 +29,17 @@ export class RolesStore {
     @observable roles: Array<Role>;
 
     constructor() {
+        this.roles = [
+            defaultLeaderRole,
+            defaultMusicianRole,
+            defaultSoundRole,
+            defaultDrumsRole,
+            defaultVocalsRole,
+            defaultComputerRole
+        ];
+    }
+
+    removeAllRoles() {
         this.roles = [];
     }
 
@@ -50,15 +61,24 @@ export class RolesStore {
         this.roles = this.roles.filter(role => role.uuid != r.uuid);
     }
 
-    get rolesInLayoutOrder() {
+    get roles_in_layout_order(): Array<Role> {
         return this.roles.sort((a: Role, b: Role) => {
-            if(a.layout_priority < b.layout_priority) {
+            if (a.layout_priority < b.layout_priority) {
                 return 1;
-            } else if(a.layout_priority > b.layout_priority) {
+            } else if (a.layout_priority > b.layout_priority) {
                 return -1;
             }
             return 0;
         });
+    }
+
+    find_role(role_name: string) {
+        for (let role of this.roles) {
+            if (role.name.toLowerCase() == role_name.toLowerCase()) {
+                return role;
+            }
+        }
+        return null;
     }
 }
 

@@ -11,7 +11,6 @@ import {TabsPage} from '../pages/tabs/tabs';
 import {StatusBar} from '@ionic-native/status-bar';
 import {SplashScreen} from '@ionic-native/splash-screen';
 import {ScheduleCreatorProvider} from '../providers/schedule-creator/schedule-creator';
-import {NgReduxModule} from "@angular-redux/store";
 
 @NgModule({
     declarations: [
@@ -23,7 +22,6 @@ import {NgReduxModule} from "@angular-redux/store";
     ],
     imports: [
         BrowserModule,
-        NgReduxModule,
         IonicModule.forRoot(MyApp)
     ],
     bootstrap: [IonicApp],

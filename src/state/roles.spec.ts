@@ -5,6 +5,7 @@ describe('roles', () => {
 
     beforeEach(() => {
         role_store = new RolesStore();
+        role_store.removeAllRoles();
     });
 
     it('adding assigns a new uuid', () => {
@@ -55,14 +56,14 @@ describe('roles', () => {
     });
 
     it('can return roles sorted by layout order', () => {
-        let r = role_store.addRole(new Role("Foo", "44"));
-        let r2 = role_store.addRole(new Role("Bar", "45"));
+        let r = role_store.addRole(new Role("Foo"));
+        let r2 = role_store.addRole(new Role("Bar"));
 
         r.layout_priority = 1;
         r2.layout_priority = 3;
 
         // Highest first
-        let sorted = role_store.rolesInLayoutOrder;
+        let sorted = role_store.roles_in_layout_order;
         expect(sorted[0]).toEqual(r2);
         expect(sorted[1]).toEqual(r);
     });
