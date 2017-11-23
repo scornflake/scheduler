@@ -35,7 +35,7 @@ describe('scheduler', () => {
     //     comp = fixture.componentInstance;
     // });
     //
-    // it('can schedule for a date', () => {
+    // it('can dates for a date', () => {
     //     expect(comp instanceof ScheduleCreatorProvider).toBe(true);
     // })
 });

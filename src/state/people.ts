@@ -1,6 +1,7 @@
 import {observable} from "mobx-angular";
 import {Role} from "./roles";
 import {SchedulePrefs} from "./scheduling";
+import includes from 'lodash/includes';
 
 export class Person {
     @observable uuid: string;
@@ -18,6 +19,9 @@ export class Person {
     }
 
     addRole(r: Role) {
+        if(includes(this.roles, r)) {
+            return;
+        }
         this.roles.push(r);
     }
 
@@ -52,6 +56,17 @@ export class PeopleStore {
     removePerson(p: Person) {
         this.people = this.people.filter(per => {
             return per.uuid != p.uuid
+        });
+    }
+
+    people_with_role(role: Role) {
+        return this.people.filter(person => {
+            for(let person_role of person.roles) {
+                if(role.uuid == person_role.uuid) {
+                    return true;
+                }
+            }
+            return false;
         });
     }
 }

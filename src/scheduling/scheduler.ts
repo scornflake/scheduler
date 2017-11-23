@@ -25,21 +25,28 @@ export class ScheduleInput {
     }
 }
 
-// Want to represent X people doing schedule Xy for some date
+// Want to represent X people doing dates Xy for some date
 class ScheduleAtDate {
     date: Date;
     people_score: Map<Person, ScheduleScore>;
 
-    constructor() {
+    constructor(date: Date) {
+        this.date = date;
         this.people_score = new Map<Person, ScheduleScore>();
     }
 
-    schedule_for(p: Person) {
+    score_for(p: Person) {
         return this.people_score.get(p);
     }
 
     get people(): Array<Person> {
         return Array.from(this.people_score.keys());
+    }
+
+    add_person(person: Person, role: Role) {
+        let score = new ScheduleScore();
+        console.log("Schedule " + person.name + " for " + role.name + " on " + this.date);
+        this.people_score.set(person, score);
     }
 }
 
@@ -48,20 +55,41 @@ function daysBetween(startDate: Date, endDate: Date): number {
     return (endDate.valueOf() - startDate.valueOf()) / msPerDay;
 }
 
-export class ScheduledPeople {
+export class Exclusion {
     start_date: Date;
     end_date: Date;
-    period_in_days_between_steps: number;
+    caused_by: string;
 
-    schedule: ScheduleAtDate[];
+    constructor(start: Date, end: Date, cause: string) {
+        this.start_date = start;
+        this.end_date = end;
+        if (this.duration_in_days < 0) {
+            throw Error("Cannot have an exclusion zone with a -ve duration");
+        }
+        this.caused_by = cause;
+    }
+
+    includes_date(date: Date) {
+        return this.start_date <= date && date <= this.end_date;
+    }
+
+    get duration_in_days(): number {
+        return daysBetween(this.start_date, this.end_date);
+    }
+}
+
+export class ScheduledPeople {
+    dates: Map<Date, ScheduleAtDate>;
+    exclusion_zones: Map<Person, Array<Exclusion>>;
+
+    private params: ScheduleInput;
 
     constructor(params: ScheduleInput) {
-        this.start_date = params.start_date;
-        this.end_date = params.end_date;
-        this.period_in_days_between_steps = params.days_per_period;
-        this.schedule = [];
+        this.params = params;
+        this.dates = new Map<Date, ScheduleAtDate>();
+        this.exclusion_zones = new Map<Person, Array<Exclusion>>();
 
-        if (this.period_in_days_between_steps < 1) {
+        if (this.days_per_period < 1) {
             throw new Error("Period must be > 1");
         }
 
@@ -73,12 +101,132 @@ export class ScheduledPeople {
         }
 
         if (this.schedule_duration_in_days <= 0) {
-            throw new Error("The schedule has no sensible length (0 or -ve)");
+            throw new Error("The dates has no sensible length (0 or -ve)");
         }
+    }
+
+    get start_date(): Date {
+        return this.params.start_date;
+    }
+
+    get end_date(): Date {
+        return this.params.end_date;
+    }
+
+    get days_per_period(): number {
+        return this.params.days_per_period;
     }
 
     get schedule_duration_in_days(): number {
         return daysBetween(this.start_date, this.end_date);
+    }
+
+    get_schedule_for_date(date: Date) {
+        let schedule = this.dates.get(date);
+        if (schedule == null) {
+            // console.log("Create new schedule for " + date);
+            schedule = new ScheduleAtDate(date);
+            this.dates.set(new Date(date), schedule);
+            return schedule;
+        } else {
+            // console.log("Reuse schedule for " + date);
+            return schedule;
+        }
+    }
+
+    create_schedule() {
+        console.log("Working from " + this.params.start_date + " to: " + this.params.end_date);
+        let schedule_duration = this.schedule_duration_in_days;
+        console.log("Schedule is " + schedule_duration + " days long");
+
+        let iterations = 0;
+
+        // Work through all roles first, by date.
+        let roles_store = this.params.roles;
+        let people_store = this.params.people;
+
+        let roles = roles_store.roles_in_layout_order;
+        for (let role of roles) {
+            let current_date = this.params.start_date;
+            console.log("Laying out role: " + role.name);
+
+            // Setup our available people (which at the beginning, is 'everyone')
+            let people_for_this_role = people_store.people_with_role(role);
+            if (people_for_this_role.length == 0) {
+                console.log("Skipping role, there's no one that can do it");
+                continue;
+            }
+            console.log("Considering: " + JSON.stringify(people_for_this_role.map(p => {
+                return p.name;
+            })));
+
+            // Iterate through all dates
+            while (current_date.valueOf() <= this.params.end_date.valueOf()) {
+                console.log("Examining: " + current_date);
+                for (let person of people_for_this_role) {
+                    if (this.has_exclusion_for(current_date, person, role)) {
+                        continue;
+                    }
+
+                    // ok. We can put someone in this slot then.
+                    let specific_day = this.get_schedule_for_date(current_date);
+                    if (!specific_day) {
+                        throw Error("What? Unable to get a schedule for " + current_date);
+                    }
+                    specific_day.add_person(person, role);
+                    this.record_exclusions(current_date, person, role);
+                }
+
+                // Move to the next date
+                current_date = this.choose_next_schedule_date(current_date);
+
+                // This is taking 10,000 reasons too far!
+                iterations++;
+                if (iterations > 10000) {
+                    console.error("Max iterations - bug!?");
+                    break
+                }
+            }
+
+        }
+    }
+
+    private choose_next_schedule_date(date: Date): Date {
+        let next_date = new Date(date);
+        // console.log("Moving from date ... : " + next_date);
+        next_date.setDate(date.getDate() + this.days_per_period);
+        // console.log(".... to date ... : " + next_date);
+        return next_date;
+    }
+
+    private has_exclusion_for(date: Date, person: Person, role: Role) {
+        // Is this person excluded for this date?
+        let exclusions_for_person = this.exclusion_zones.get(person);
+        if (!exclusions_for_person) {
+            return false;
+        }
+        for (let exclusion of exclusions_for_person) {
+            if (exclusion.includes_date(date)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private record_exclusions(date: Date, person: Person, role: Role) {
+        let exclusions_for_person = this.exclusion_zones.get(person);
+        if (!exclusions_for_person) {
+            exclusions_for_person = [];
+        }
+
+        // make the exclusion
+        let availability = person.prefs.availability;
+
+        let end_date = availability.get_end_date_from(date);
+        let exclusion = new Exclusion(date, end_date, "scheduled for " + role.name);
+        exclusions_for_person.push(exclusion);
+        console.log("Recorded exclusion for " + person.name + " from " + date + " for " + exclusion.duration_in_days + " days");
+        this.exclusion_zones.set(person, exclusions_for_person);
     }
 }
 
@@ -95,64 +243,12 @@ export class PeopleScheduler {
         this.params = params;
 
         if (params.roles.roles_in_layout_order.length == 0) {
-            throw Error("The schedule parameters don't define any roles.");
+            throw Error("The dates parameters don't define any roles.");
         }
 
         this.schedule = new ScheduledPeople(params);
-        this.schedule.schedule = this.create_tasks_for_dates();
+        this.schedule.create_schedule();
         return this.schedule;
-    }
-
-    private create_tasks_for_dates(): Array<ScheduleAtDate> {
-        console.log("Creating schedule from " + this.params.start_date + " to: " + this.params.end_date);
-        let schedule_duration = this.schedule.schedule_duration_in_days;
-        console.log("Schedule is " + schedule_duration + " days long");
-        let solutions = [];
-
-        let iterations = 0;
-
-        // Work through all roles first, by date.
-        let roles = this.params.roles.roles_in_layout_order;
-        for (let role of roles) {
-            let current_date = this.params.start_date;
-            console.log("Laying out role: " + role.name);
-
-            // Iterate through all dates
-            while (current_date.valueOf() <= this.params.end_date.valueOf()) {
-                console.log("Creating schedule for: " + current_date + " end: " + this.params.end_date);
-                let schedule = this.create_schedule_for_date(current_date);
-                solutions.push(schedule);
-
-                current_date = this.choose_next_schedule_date(current_date);
-
-                // This is taking 10,000 reasons too far!
-                iterations++;
-                if (iterations > 10000) {
-                    console.error("Max iterations - bug!?");
-                    break
-                }
-            }
-
-        }
-        return solutions;
-    }
-
-    private choose_next_schedule_date(date: Date): Date {
-        let next_date = new Date(date);
-        // console.log("Moving from date ... : " + next_date);
-        next_date.setDate(date.getDate() + this.schedule.period_in_days_between_steps);
-        // console.log(".... to date ... : " + next_date);
-        return next_date;
-    }
-
-    private create_schedule_for_date(date: Date) {
-        let schedule = new ScheduleAtDate();
-        schedule.date = date;
-
-        let roles = this.params.roles.roles_in_layout_order;
-
-
-        return schedule;
     }
 }
 
