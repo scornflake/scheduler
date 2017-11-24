@@ -1,5 +1,5 @@
 ///<reference path="../../node_modules/@types/jasmine-expect/index.d.ts"/>
-import {PeopleStore, Person} from "../state/people";
+import {PeopleStore, Person, Unavailablity} from "../state/people";
 import {PeopleScheduler, ScheduleByExclusion, ScheduleInput} from "./scheduler";
 import {defaultAccousticGuitar, defaultSoundRole, Role, RolesStore} from "../state/roles";
 import {Availability, AvailabilityUnit} from "../state/scheduling-types";
@@ -77,7 +77,7 @@ describe('schedule', () => {
 
     it('truncates dates to the hour', () => {
         let morning = new Date(2017, 11, 1, 10, 30, 44);
-        let byHour = ScheduleByExclusion.dayAndHourForDate(morning);
+        let byHour = Unavailablity.dayAndHourForDate(morning);
         expect(byHour).toEqual("2017/11/1 10:00");
     });
 

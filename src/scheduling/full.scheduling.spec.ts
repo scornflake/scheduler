@@ -41,6 +41,7 @@ let andre_l: Person = new Person("Andre Legg");
 let jeremy_w: Person = new Person("Jeremy Watson");
 let john: Person = new Person("John Sutherland");
 
+christine.addUnavailableRange(new Date(2018, 3, 0), new Date(2050, 1, 1));
 
 describe('full schedule', () => {
     let person_store: PeopleStore;
@@ -69,7 +70,7 @@ describe('full schedule', () => {
 
         person_store.addPerson(jeremy_selfe)
             .with_roles([defaultAccousticGuitar, defaultElectricGuitar])
-            .with_dep_role(defaultLeaderRole, [defaultAccousticGuitar, defaultElectricGuitar])
+            .with_dep_role(defaultLeaderRole, [defaultElectricGuitar])
             .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.addPerson(ralph)

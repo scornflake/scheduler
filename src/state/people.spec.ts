@@ -20,10 +20,17 @@ describe('people, ', () => {
         // console.log("Pre State: " + JSON.stringify(state));
         // console.log("All State: " + JSON.stringify(allPersons));
         expect(firstPerson.unavailable).toContain(someDate);
-
         expect(firstPerson.is_unavailable_on(someDate)).toBeTrue();
-
     });
+
+    it('can add unavailability range', () => {
+        expect(firstPerson.is_unavailable_on(someDate)).toBeFalse();
+        firstPerson.addUnavailableRange(new Date(2010, 5, 1), new Date(2010, 11, 1));
+        expect(firstPerson.is_unavailable_on(new Date(2010, 5, 1)));
+        expect(firstPerson.is_unavailable_on(new Date(2010, 9, 1)));
+        expect(firstPerson.is_unavailable_on(new Date(2011, 9, 1)));
+    });
+
 
     it('can remove unavailable date', () => {
         firstPerson.addUnavailable(someDate);

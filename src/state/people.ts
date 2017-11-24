@@ -4,19 +4,60 @@ import {AvailabilityUnit, SchedulePrefs} from "./scheduling-types";
 import includes from 'lodash/includes';
 import ShortUniqueId from 'short-unique-id';
 
-export class Person {
+class Unavailablity {
+    from_date: Date = null;
+    to_date: Date = null;
+
+    constructor(from: Date, to: Date = null) {
+        if (from == null) {
+            throw new Error("From date cannot be null");
+        }
+        this.from_date = from;
+        this.to_date = to;
+    }
+
+    public static dayAndHourForDate(date: Date): string {
+        return date.getFullYear() + "/" + date.getMonth() + "/" + date.getDate() + "@" + date.getHours();
+    }
+
+    get is_date_range(): boolean {
+        return this.from_date != null && this.to_date != null;
+    }
+
+    matches_single_date(d: Date) {
+        if (this.to_date != null) {
+            return false;
+        }
+        let thisDate = Unavailablity.dayAndHourForDate(this.from_date);
+        let otherDate = Unavailablity.dayAndHourForDate(d);
+        return thisDate == otherDate;
+    }
+
+    contains_date(date: Date) {
+        let start = this.from_date;
+
+        // By default, be one day in length
+        let the_end_date = new Date(start);
+        the_end_date.setDate(start.getDate() + 1);
+
+        if (this.is_date_range) {
+            the_end_date = this.to_date;
+        }
+        return date >= start && date < the_end_date;
+    }
+}
+
+class Person {
     @observable uuid: string;
     @observable name: string;
     @observable primary_roles: Array<Role>;
-    @observable secondary_roles: Map<string, Array<Role>>;
-    @observable unavailable: Array<Date>;
+    @observable unavailable: Array<Unavailablity>;
     @observable prefs: SchedulePrefs;
 
     // Need to store a role, and also for this person, if they are in this role what
     // other roles they can also fullfill. However; mobx doesn't like using objects as keys
     // in maps, which is a pain.
-    //
-    //
+    @observable secondary_roles: Map<string, Array<Role>>;
 
     constructor(name: string, uuid: string = null) {
         if (uuid == null) {
@@ -31,7 +72,7 @@ export class Person {
         this.prefs = new SchedulePrefs();
     }
 
-    get roles():Array<Role> {
+    get roles(): Array<Role> {
         return this.primary_roles;
     }
 
@@ -46,7 +87,7 @@ export class Person {
         return this;
     }
 
-    with_dep_role(role:Role, other_roles:Array<Role>): Person {
+    with_dep_role(role: Role, other_roles: Array<Role>): Person {
         this.addRole(role);
         this.secondary_roles.set(role.uuid, other_roles);
         return this;
@@ -81,22 +122,23 @@ export class Person {
     }
 
     addUnavailable(d: Date) {
-        this.unavailable.push(d);
+        this.unavailable.push(new Unavailablity(d));
+    }
+
+    addUnavailableRange(from: Date, to: Date) {
+        this.unavailable.push(new Unavailablity(from, to));
     }
 
     removeUnavailable(d: Date) {
         this.unavailable = this.unavailable.filter(ud => {
-            return ud.getTime() != d.getTime();
+            return !ud.matches_single_date(d);
         });
     }
 
     is_unavailable_on(date: Date) {
         // See if this date is inside the unavailable date ranges
-        for (let start_date of this.unavailable) {
-            let end_date = new Date(start_date);
-            end_date.setDate(start_date.getDate() + 1);
-
-            if (date >= start_date && date < end_date) {
+        for (let unavail of this.unavailable) {
+            if (unavail.contains_date(date)) {
                 return true;
             }
         }
@@ -104,7 +146,7 @@ export class Person {
     }
 }
 
-export class PeopleStore {
+class PeopleStore {
     @observable people: Array<Person>;
 
     constructor() {
@@ -134,3 +176,9 @@ export class PeopleStore {
     }
 }
 
+
+export {
+    Unavailablity,
+    PeopleStore,
+    Person
+}

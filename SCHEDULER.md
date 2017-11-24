@@ -51,18 +51,18 @@ Runtime:
 Algorithm
 =========
 
-1. Sort roles by layout priority
-1. Lay down by role, then person
+1. [done] Sort roles by layout priority
+1. [done] Lay down by role, then person
 1. For each role:
-  1. Iterate over the schedule dates, for this role
-    1. Find the next free person (people in the role, who are not excluded from this date)
-    1. Place the 'next free person' at the this date.  If no free people, skip this date for now.
-    1. Evaluate the rules for this person and placement date, which creates scheduling exclusion zones for this person
+  1. [done] Iterate over the schedule dates, for this role
+    1. [done] Find the next free person (people in the role, who are not excluded from this date)
+    1. [done] Place the 'next free person' at the this date.  If no free people, skip this date for now.
+    1. [done] Evaluate the rules for this person and placement date, which creates scheduling exclusion zones for this person
 
 Missing
 =======
 1. Can do a leader role AND be on guitar and vocal. Need to specify roles that can co-exist, i.e: if I am on X I can also do Y/Z.
-1. When iterating roles for a position, need to push recently used roles to the end, so there's a rotation of people.
+1. [done] When iterating roles for a position, need to push recently used roles to the end, so there's a rotation of people.
 1. Need to make roles, by default, mutually exclusive. If you get put on drums, you can't be doing bass! (Daniel)s
 1. [done] Need to limit the fill. At the moment it fills all possible positions. We need a "max" for a role.
 

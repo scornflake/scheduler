@@ -1,4 +1,4 @@
-import {PeopleStore, Person} from "../state/people";
+import {PeopleStore, Person, Unavailablity} from "../state/people";
 import {SchedulePrefs} from "../state/scheduling-types";
 import {Role, RolesStore} from "../state/roles";
 
@@ -153,7 +153,7 @@ export class ScheduleByExclusion {
     }
 
     get_schedule_for_date(date: Date) {
-        let dateAtHour = ScheduleByExclusion.dayAndHourForDate(date);
+        let dateAtHour = Unavailablity.dayAndHourForDate(date);
         let schedule = this.dates.get(dateAtHour);
         if (schedule == null) {
             console.log("Create new schedule for " + dateAtHour);
@@ -258,11 +258,6 @@ export class ScheduleByExclusion {
         next_date.setDate(date.getDate() + this.days_per_period);
         // console.log(".... to date ... : " + next_date);
         return next_date;
-    }
-
-    public static dayAndHourForDate(date: Date): string {
-        // console.log(date.toString() + " = " + dateString);
-        return date.getFullYear() + "/" + date.getMonth() + "/" + date.getDate() + " " + date.getHours() + ":00";
     }
 
     private has_exclusion_for(date: Date, person: Person, role: Role) {
