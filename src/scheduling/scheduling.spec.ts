@@ -1,6 +1,6 @@
 ///<reference path="../../node_modules/@types/jasmine-expect/index.d.ts"/>
 import {PeopleStore, Person, Unavailablity} from "../state/people";
-import {PeopleScheduler, ScheduleByExclusion, ScheduleInput} from "./scheduler";
+import {ScheduleByExclusion, ScheduleInput} from "./scheduler";
 import {defaultAccousticGuitar, defaultSoundRole, Role, RolesStore} from "../state/roles";
 import {Availability, AvailabilityUnit} from "../state/scheduling-types";
 import includes from 'lodash/includes';
@@ -13,7 +13,7 @@ describe('schedule', () => {
     let end_date: Date;
     let start_date: Date;
     let sound: Role;
-    let scheduler: PeopleScheduler = new PeopleScheduler();
+    let schedule: ScheduleByExclusion;
 
     beforeAll(() => {
         start_date = new Date();
@@ -41,7 +41,8 @@ describe('schedule', () => {
         params.end_date = start_date;
         person_store.removePerson(neil);
         expect(() => {
-            scheduler.CreateSchedule(params)
+            schedule = new ScheduleByExclusion(params);
+            schedule.create_schedule()
         }).toThrow();
     });
 
@@ -50,9 +51,10 @@ describe('schedule', () => {
         params.end_date = new Date(2017, 9, 25);
         neil.addRole(params.roles.find_role("Sound"));
 
-        let schedule = scheduler.CreateSchedule(params);
+        schedule = new ScheduleByExclusion(params);
         expect(schedule).not.toBeNull();
-        // console.log("Ended up with " + schedule.dates.size + " dates");
+
+        schedule.create_schedule();
 
         // expect to see neil on once per week, for N weeks.
         let dates_map = schedule.dates;
@@ -75,13 +77,6 @@ describe('schedule', () => {
         expect(dates_map.get(dates[3]).date.getDate()).toEqual(22);
     });
 
-    it('truncates dates to the hour', () => {
-        let morning = new Date(2017, 11, 1, 10, 30, 44);
-        let byHour = Unavailablity.dayAndHourForDate(morning);
-        expect(byHour).toEqual("2017/11/1 10:00");
-    });
-
-
     it('exclusions affect the layout', () => {
         params.start_date = new Date(2017, 9, 1);
         params.end_date = new Date(2017, 9, 25);
@@ -90,8 +85,10 @@ describe('schedule', () => {
         // Make myself available every 2 weeks, we should see a change to the schedule
         neil.prefs.availability = new Availability(2, AvailabilityUnit.EVERY_N_WEEKS);
 
-        let schedule = scheduler.CreateSchedule(params);
+        schedule = new ScheduleByExclusion(params);
         expect(schedule).not.toBeNull();
+
+        schedule.create_schedule();
 
         // Find the dates that have Neil doing something. Should be two.
         let all_scheduled = Array.from(schedule.dates.values());
@@ -113,8 +110,9 @@ describe('schedule', () => {
         // If unavailability affects exclusions we should end up with not being able to schedule on the first date
         neil.addUnavailable(params.start_date);
 
-        let schedule = scheduler.CreateSchedule(params);
+        schedule = new ScheduleByExclusion(params);
         expect(schedule).not.toBeNull();
+        schedule.create_schedule();
 
         let all_scheduled = Array.from(schedule.dates.values());
         let dates_with_neil = all_scheduled.filter(sad => {
@@ -146,7 +144,8 @@ describe('schedule', () => {
 
         // Do a schedule. For one week.
         // We should see just ONE person on guitar.
-        let schedule = scheduler.CreateSchedule(params);
+        schedule = new ScheduleByExclusion(params);
+        schedule.create_schedule();
 
         let firstSchedule = Array.from(schedule.dates.values())[0];
         expect(firstSchedule).not.toBeNull();
@@ -169,7 +168,8 @@ describe('schedule', () => {
         person_store.addPerson(ben);
         ben.addRole(defaultSoundRole);
 
-        let schedule = scheduler.CreateSchedule(params);
+        schedule = new ScheduleByExclusion(params);
+        schedule.create_schedule();
         let schedules = Array.from(schedule.dates.values());
 
         // console.log(schedule.jsonResult(true));

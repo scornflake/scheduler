@@ -14,12 +14,7 @@ describe('people, ', () => {
 
     it('can add unavailable date', () => {
         expect(firstPerson.is_unavailable_on(someDate)).toBeFalse();
-
         firstPerson.addUnavailable(someDate);
-
-        // console.log("Pre State: " + JSON.stringify(state));
-        // console.log("All State: " + JSON.stringify(allPersons));
-        expect(firstPerson.unavailable).toContain(someDate);
         expect(firstPerson.is_unavailable_on(someDate)).toBeTrue();
     });
 
@@ -34,11 +29,12 @@ describe('people, ', () => {
 
     it('can remove unavailable date', () => {
         firstPerson.addUnavailable(someDate);
+        expect(firstPerson.is_unavailable_on(someDate)).toBeTrue();
 
         // a new date instance
         let recreatedDate = new Date(2010, 10, 3);
         firstPerson.removeUnavailable(recreatedDate);
-        expect(firstPerson.unavailable).not.toContain(someDate)
+        expect(firstPerson.is_unavailable_on(someDate)).toBeFalse();
     });
 
     it('can add to people', () => {

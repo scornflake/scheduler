@@ -13,7 +13,7 @@ import {
 } from "../state/roles";
 
 import {AvailabilityUnit} from "../state/scheduling-types";
-import {PeopleScheduler, ScheduleInput} from "./scheduler";
+import {ScheduleByExclusion, ScheduleInput} from "./scheduler";
 import {CSVExporter} from "./csv.exporter";
 
 let neil: Person = new Person("Neil Clayton");
@@ -149,10 +149,10 @@ describe('full schedule', () => {
         params.start_date = new Date(2017, 12, 31);
         params.end_date = new Date(2018, 4, 1);
 
-        let scheduler: PeopleScheduler = new PeopleScheduler();
-        let schedule = scheduler.CreateSchedule(params);
+        let scheduler = new ScheduleByExclusion(params);
+        scheduler.create_schedule();
 
-        let exporter = new CSVExporter(schedule);
+        let exporter = new CSVExporter(scheduler);
         exporter.write_to_file("~/Desktop/schedule.csv");
     })
 });

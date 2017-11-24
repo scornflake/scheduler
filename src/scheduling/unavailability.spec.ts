@@ -34,4 +34,10 @@ describe('unavailability', () => {
 
     });
 
+    it('truncates dates to the hour', () => {
+        let morning = new Date(2017, 11, 1, 10, 30, 44);
+        let byHour = Unavailablity.dayAndHourForDate(morning);
+        expect(byHour).toEqual("2017/11/1@10");
+    });
+
 });

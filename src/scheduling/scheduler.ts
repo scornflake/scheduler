@@ -120,6 +120,10 @@ export class ScheduleByExclusion {
         this.dates = new Map<string, ScheduleAtDate>();
         this.exclusion_zones = new Map<Person, Array<Exclusion>>();
 
+        if (params.roles.roles_in_layout_order.length == 0) {
+            throw Error("The dates parameters don't define any roles.");
+        }
+
         if (this.days_per_period < 1) {
             throw new Error("Period must be > 1");
         }
@@ -166,7 +170,7 @@ export class ScheduleByExclusion {
         }
     }
 
-    private create_schedule() {
+    public create_schedule() {
         console.log("Working from " + this.params.start_date + " to: " + this.params.end_date);
         let schedule_duration = this.schedule_duration_in_days;
         console.log("Schedule is " + schedule_duration + " days long");
@@ -345,24 +349,6 @@ export class ScheduleByExclusion {
             "date",
             ...field_names
         ]
-    }
-}
-
-
-export class PeopleScheduler {
-    private schedule: ScheduleByExclusion;
-    private params: ScheduleInput;
-
-    public CreateSchedule(params: ScheduleInput): ScheduleByExclusion {
-        this.params = params;
-
-        if (params.roles.roles_in_layout_order.length == 0) {
-            throw Error("The dates parameters don't define any roles.");
-        }
-
-        this.schedule = new ScheduleByExclusion(params);
-        this.schedule.create_schedule();
-        return this.schedule;
     }
 }
 
