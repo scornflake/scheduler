@@ -1,4 +1,5 @@
 import {PeopleStore, Person} from "./people";
+import {defaultKeysRole, defaultLeaderRole} from "./roles";
 
 describe('people, ', () => {
     let firstPerson: Person;
@@ -44,5 +45,16 @@ describe('people, ', () => {
         expect(person_store.people).toContain(newPerson);
         expect(person_store.people).toContain(firstPerson);
     });
+
+    it('can add dependent roles', () => {
+        let cherilyn = new Person("Cherilyn");
+        person_store.addPerson(cherilyn)
+            .with_dep_role(defaultLeaderRole, [defaultKeysRole]);
+
+        expect(cherilyn.roles.length).toEqual(1);
+        let dependentRolesFor = Array.from(cherilyn.dependent_roles_for(defaultLeaderRole));
+        expect(dependentRolesFor).toEqual([defaultKeysRole]);
+    });
+
 
 });

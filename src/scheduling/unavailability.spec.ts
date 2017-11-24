@@ -31,7 +31,6 @@ describe('unavailability', () => {
 
         expect(unavil.contains_date(new Date(2010, 10, 0))).toBeFalse();
         expect(unavil.contains_date(new Date(2010, 11, 2))).toBeFalse();
-
     });
 
     it('truncates dates to the hour', () => {

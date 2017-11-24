@@ -1,7 +1,7 @@
 ///<reference path="../../node_modules/@types/jasmine-expect/index.d.ts"/>
-import {PeopleStore, Person, Unavailablity} from "../state/people";
+import {PeopleStore, Person} from "../state/people";
 import {ScheduleByExclusion, ScheduleInput} from "./scheduler";
-import {defaultAccousticGuitar, defaultSoundRole, Role, RolesStore} from "../state/roles";
+import {defaultAccousticGuitar, defaultSoundRole, Role} from "../state/roles";
 import {Availability, AvailabilityUnit} from "../state/scheduling-types";
 import includes from 'lodash/includes';
 
@@ -116,7 +116,6 @@ describe('schedule', () => {
 
         let all_scheduled = Array.from(schedule.dates.values());
         let dates_with_neil = all_scheduled.filter(sad => {
-            console.log("Check " + JSON.stringify(sad.people));
             return includes(sad.people, neil);
         });
 

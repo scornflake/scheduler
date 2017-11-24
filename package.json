@@ -36,6 +36,7 @@
     "rxjs": "5.4.0",
     "short-unique-id": "^1.1.0",
     "sw-toolbox": "3.6.0",
+    "webpack": "^3.8.1",
     "zone.js": "0.8.12"
   },
   "devDependencies": {
@@ -52,6 +53,7 @@
     "html-loader": "^0.5.1",
     "ionic": "3.8.1",
     "jasmine": "^2.7.0",
+    "jasmine-core": "^2.8.0",
     "jasmine-matchers": "^0.2.3",
     "jasmine-spec-reporter": "^4.2.1",
     "karma": "^1.7.0",

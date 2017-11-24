@@ -4,13 +4,18 @@ import {Role, RolesStore} from "../state/roles";
 
 // Score for this person, for some date
 export class ScheduleScore {
-    role: Role;
+    roles: Array<Role>;
     layout_weight: number;
     roster_weight: number;
     score: number;
 
-    constructor(r: Role) {
-        this.role = r;
+    constructor(roles: Array<Role>) {
+        this.roles = roles;
+    }
+
+    has_role(role: Role) {
+        let matching = this.roles.filter(r => role.uuid == r.uuid);
+        return matching.length > 0;
     }
 }
 
@@ -62,15 +67,20 @@ class ScheduleAtDate {
     }
 
     add_person(person: Person, role: Role) {
-        let score = new ScheduleScore(role);
-        console.log("Schedule " + person.name + " for " + role.name + " on " + this.date);
+        let roles = [role];
+        let dependent_roles = person.dependent_roles_for(role);
+        if (dependent_roles.length > 0) {
+            roles = [role, ...Array.from(dependent_roles)];
+        }
+        console.log("Schedule " + person.name + " for " + JSON.stringify(roles.map(r => r.name)) + " on " + this.date);
+        let score = new ScheduleScore(roles);
         this.people_score.set(person, score);
     }
 
     people_in_role(role: Role): Array<Person> {
         return this.people.filter(p => {
             let score = this.people_score.get(p);
-            return score.role.uuid == role.uuid;
+            return score.has_role(role);
         });
     }
 }
@@ -216,7 +226,7 @@ export class ScheduleByExclusion {
 
                     let person = people_for_this_role[actulal_index];
 
-                    if (this.has_exclusion_for(current_date, person, role)) {
+                    if (this.has_exclusion_for(current_date, person)) {
                         continue;
                     }
 
@@ -233,10 +243,6 @@ export class ScheduleByExclusion {
 
                     // OK. Have we reached the max?
                     let peopleInRole = specific_day.people_in_role(role);
-                    let names = peopleInRole.map(r => {
-                        return r.name
-                    });
-                    console.log("People in role: " + role.name + " (max:" + role.maximum_count + ") = " + names);
                     if (peopleInRole.length >= role.maximum_count) {
                         // Done. We can move on.
                         break;
@@ -264,7 +270,7 @@ export class ScheduleByExclusion {
         return next_date;
     }
 
-    private has_exclusion_for(date: Date, person: Person, role: Role) {
+    private has_exclusion_for(date: Date, person: Person) {
         // Is this person unavailable on this date?
         if (person.is_unavailable_on(date)) {
             return true;

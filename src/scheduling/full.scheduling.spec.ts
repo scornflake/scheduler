@@ -14,7 +14,8 @@ import {
 
 import {AvailabilityUnit} from "../state/scheduling-types";
 import {ScheduleByExclusion, ScheduleInput} from "./scheduler";
-import {CSVExporter} from "./csv.exporter";
+import {CSVExporter} from "../exporters/csv.exporter";
+import {GoogleSheetExporter} from "../exporters/sheets.exporter";
 
 let neil: Person = new Person("Neil Clayton");
 let cherilyn: Person = new Person("Cherilyn Clayton");
@@ -60,7 +61,7 @@ describe('full schedule', () => {
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.addPerson(christine)
-            .with_roles([defaultLeaderRole])
+            .with_dep_role(defaultLeaderRole, [defaultVocalsRole])
             .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.addPerson(stuart)
@@ -83,7 +84,7 @@ describe('full schedule', () => {
 
         person_store.addPerson(craig)
             .with_roles([defaultDrumsRole])
-            .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
+            .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.addPerson(ben)
             .with_roles([defaultBass, defaultDrumsRole])
@@ -123,11 +124,12 @@ describe('full schedule', () => {
             .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.addPerson(chris)
-            .with_roles([defaultElectricGuitar, defaultSoundRole])
+            // .with_roles([defaultElectricGuitar, defaultSoundRole])
+            .with_roles([defaultSoundRole])
             .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.addPerson(jeremy_l)
-            .with_roles([defaultSoundRole])
+            .with_roles([defaultSoundRole, defaultComputerRole])
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.addPerson(andre_l)
@@ -154,5 +156,7 @@ describe('full schedule', () => {
 
         let exporter = new CSVExporter(scheduler);
         exporter.write_to_file("~/Desktop/schedule.csv");
+        // let exporter = new GoogleSheetExporter(scheduler);
+        // exporter.write_to_sheet("Schedule");
     })
 });

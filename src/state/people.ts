@@ -89,7 +89,9 @@ class Person {
 
     with_dep_role(role: Role, other_roles: Array<Role>): Person {
         this.addRole(role);
-        this.secondary_roles.set(role.uuid, other_roles);
+        if(other_roles.length > 0) {
+            this.secondary_roles.set(role.uuid, other_roles);
+        }
         return this;
     }
 
@@ -143,6 +145,10 @@ class Person {
             }
         }
         return false;
+    }
+
+    dependent_roles_for(role: Role) {
+        return this.secondary_roles.get(role.uuid) || [];
     }
 }
 
