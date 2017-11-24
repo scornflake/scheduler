@@ -15,7 +15,6 @@ import {
 import {AvailabilityUnit} from "../state/scheduling-types";
 import {ScheduleByExclusion, ScheduleInput} from "./scheduler";
 import {CSVExporter} from "../exporters/csv.exporter";
-import {GoogleSheetExporter} from "../exporters/sheets.exporter";
 
 let neil: Person = new Person("Neil Clayton");
 let cherilyn: Person = new Person("Cherilyn Clayton");

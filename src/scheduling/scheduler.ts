@@ -85,10 +85,6 @@ class ScheduleAtDate {
     }
 }
 
-function dayMonthYear(date: Date): string {
-    return date.getDate() + "/" + date.getMonth() + "/" + date.getFullYear();
-}
-
 function daysBetween(startDate: Date, endDate: Date): number {
     let msPerDay = 1000 * 60 * 60 * 24;
     return (endDate.valueOf() - startDate.valueOf()) / msPerDay;
@@ -190,62 +186,65 @@ export class ScheduleByExclusion {
         // Work through all roles first, by date.
         let roles_store = this.params.roles;
         let people_store = this.params.people;
-        let roles = roles_store.roles_in_layout_order;
-        let role_names = roles.map(r => r.name);
+        let roles_groups = roles_store.roles_in_layout_order_grouped;
+        let role_names = roles_groups.map(g => JSON.stringify(g.map(r => r.name)));
         console.log("Roles (in order of importance): " + JSON.stringify(role_names));
 
-        for (let role of roles) {
+        for (let role_group of roles_groups) {
             let current_date = this.params.start_date;
             console.log("");
-
-            let people_for_this_role = people_store.people_with_role(role);
-            // Setup our available people (which at the beginning, is 'everyone')
-            if (people_for_this_role.length == 0) {
-                console.log("Laying out role: " + role.name + " ... skipping (no one to do it)");
-                continue;
-            }
-            console.log("Laying out role: " + role.name);
-
-            console.log("Considering: " + JSON.stringify(people_for_this_role.map(p => {
-                return p.name;
-            })));
+            console.log("Next group: " + JSON.stringify(role_group.map(r => r.name)));
 
             // Iterate through all dates
             while (current_date.valueOf() < this.params.end_date.valueOf()) {
                 console.log("Next date: " + current_date);
 
-                // Iterate all the people, but do so from the last used index.
-                // This is so we give everyone who can do that role the chance.
-                for (let person_index = 0; person_index < people_for_this_role.length; person_index++) {
-                    let last_role_index = this.role_index.get(role);
-                    if (last_role_index === undefined) {
-                        last_role_index = 0;
-                    }
-                    let actulal_index = person_index + last_role_index;
-                    actulal_index = actulal_index % people_for_this_role.length;
+                // For this date, try to layout all people
+                for (let role of role_group) {
+                    let people_for_this_role = people_store.people_with_role(role);
 
-                    let person = people_for_this_role[actulal_index];
-
-                    if (this.has_exclusion_for(current_date, person)) {
+                    // Setup our available people (which at the beginning, is 'everyone')
+                    if (people_for_this_role.length == 0) {
+                        console.log("Laying out role: " + role.name + " ... skipping (no one to do it)");
                         continue;
                     }
+                    console.log("Considering: " + JSON.stringify(people_for_this_role.map(p => {
+                        return p.name;
+                    })) + " for role " + role.name);
 
-                    // ok. We can put someone in this slot then.
-                    let specific_day = this.get_schedule_for_date(current_date);
-                    if (!specific_day) {
-                        throw Error("What? Unable to get a schedule for " + current_date);
-                    }
-                    specific_day.add_person(person, role);
-                    this.record_exclusions(current_date, person, role);
+                    // Iterate all the people, but do so from the last used index.
+                    // This is so we give everyone who can do that role the chance.
+                    for (let person_index = 0; person_index < people_for_this_role.length; person_index++) {
+                        let last_role_index = this.role_index.get(role);
+                        if (last_role_index === undefined) {
+                            last_role_index = 0;
+                        }
+                        let actulal_index = person_index + last_role_index;
+                        actulal_index = actulal_index % people_for_this_role.length;
 
-                    // record that we used this index
-                    this.role_index.set(role, actulal_index + 1);
+                        let person = people_for_this_role[actulal_index];
 
-                    // OK. Have we reached the max?
-                    let peopleInRole = specific_day.people_in_role(role);
-                    if (peopleInRole.length >= role.maximum_count) {
-                        // Done. We can move on.
-                        break;
+                        if (this.has_exclusion_for(current_date, person)) {
+                            continue;
+                        }
+
+                        // ok. We can put someone in this slot then.
+                        let specific_day = this.get_schedule_for_date(current_date);
+                        if (!specific_day) {
+                            throw Error("What? Unable to get a schedule for " + current_date);
+                        }
+                        specific_day.add_person(person, role);
+                        this.record_exclusions(current_date, person, role);
+
+                        // record that we used this index
+                        this.role_index.set(role, actulal_index + 1);
+
+                        // OK. Have we reached the max?
+                        let peopleInRole = specific_day.people_in_role(role);
+                        if (peopleInRole.length >= role.maximum_count) {
+                            // Done. We can move on.
+                            break;
+                        }
                     }
                 }
 
@@ -321,7 +320,7 @@ export class ScheduleByExclusion {
             // We create a dict, in order, for EVERY key of ordered_roles
             let rowDict = {};
 
-            rowDict['date'] = dateString;
+            rowDict['date'] = schedule_for_day.date.toDateString();
 
             // Look at each known role. Fill in the people fulfilling that role
             for (let role of ordered_roles) {

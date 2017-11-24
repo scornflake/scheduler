@@ -67,4 +67,16 @@ describe('roles', () => {
         expect(sorted[0]).toEqual(r2);
         expect(sorted[1]).toEqual(r);
     });
+
+    it('can sort roles by priority, into groups', () => {
+        let r = role_store.addRole(new Role("Foo1", null, 1));
+        let r2 = role_store.addRole(new Role("Foo2", null, 3));
+        let r3 = role_store.addRole(new Role("Foo3", null, 3));
+
+        let groups = role_store.roles_in_layout_order_grouped;
+        expect(groups.length).toEqual(2);
+        expect(groups[0].length).toEqual(2);
+        expect(groups[1].length).toEqual(1);
+    });
+
 });

@@ -19,17 +19,20 @@ export class Role {
     }
 }
 
-let defaultKeysRole = new Role("Keys", null, 1);
-let defaultAccousticGuitar = new Role("Guitar (Accoustic)", null, 1);
-let defaultElectricGuitar = new Role("Guitar (Electric)", null, 1);
-let defaultBass = new Role("Bass", null, 1);
-let defaultDrumsRole = new Role("Drums", null, 8);
-let defaultVocalsRole = new Role("Vocals", null, 7);
+let defaultLeaderRole = new Role("Worship Leader", null, 11);
+
+let defaultSoundRole = new Role("Sound", null, 10);
+let defaultComputerRole = new Role("Computer", null, 10);
+
+let defaultBass = new Role("Bass", null, 9);
+let defaultDrumsRole = new Role("Drums", null, 9);
+let defaultKeysRole = new Role("Keys", null, 9);
+let defaultAccousticGuitar = new Role("Guitar (Accoustic)", null, 9);
+let defaultElectricGuitar = new Role("Guitar (Electric)", null, 9);
+
+let defaultVocalsRole = new Role("Vocals", null, 5);
 let defaultSaxRole = new Role("Sax", null, 1);
 
-let defaultLeaderRole = new Role("Worship Leader", null, 10);
-let defaultSoundRole = new Role("Sound", null);
-let defaultComputerRole = new Role("Computer", null);
 
 defaultLeaderRole.maximum_count = 1;
 defaultSoundRole.maximum_count = 1;
@@ -82,6 +85,25 @@ export class RolesStore {
 
     removeRole(r: Role) {
         this.roles = this.roles.filter(role => role.uuid != r.uuid);
+    }
+
+    get roles_in_layout_order_grouped(): Array<Array<Role>> {
+        // Add all roles into a map
+        let roles_in_order = this.roles_in_layout_order;
+        let intermediate = new Map<number, Array<Role>>();
+        for(let role of roles_in_order) {
+            if(!intermediate.has(role.layout_priority)) {
+                intermediate.set(role.layout_priority, []);
+            }
+            intermediate.set(role.layout_priority, [...intermediate.get(role.layout_priority), role]);
+        }
+
+        // Turn into an array
+        let result = [];
+        intermediate.forEach((list, key:number) => {
+            result.push(list);
+        });
+        return result;
     }
 
     get roles_in_layout_order(): Array<Role> {
