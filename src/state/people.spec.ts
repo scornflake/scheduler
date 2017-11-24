@@ -7,17 +7,22 @@ describe('people, ', () => {
     let someDate: Date = new Date(2010, 10, 3);
 
     beforeEach(() => {
-        firstPerson = new Person('1234', 'neilos');
+        firstPerson = new Person('neilos', '1234');
         person_store = new PeopleStore();
         person_store.addPerson(firstPerson);
     });
 
     it('can add unavailable date', () => {
+        expect(firstPerson.is_unavailable_on(someDate)).toBeFalse();
+
         firstPerson.addUnavailable(someDate);
 
         // console.log("Pre State: " + JSON.stringify(state));
         // console.log("All State: " + JSON.stringify(allPersons));
-        expect(firstPerson.unavailable).toContain(someDate)
+        expect(firstPerson.unavailable).toContain(someDate);
+
+        expect(firstPerson.is_unavailable_on(someDate)).toBeTrue();
+
     });
 
     it('can remove unavailable date', () => {
@@ -30,7 +35,7 @@ describe('people, ', () => {
     });
 
     it('can add to people', () => {
-        let newPerson: Person = new Person('4321', 'John');
+        let newPerson: Person = new Person('John', '4321');
 
         person_store.addPerson(newPerson);
         expect(person_store.people).toContain(newPerson);

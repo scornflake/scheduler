@@ -1,8 +1,8 @@
 ///<reference path="../../node_modules/@types/jasmine-expect/index.d.ts"/>
 import {PeopleStore, Person} from "../state/people";
-import {PeopleScheduler, ScheduleInput} from "./scheduler";
-import {Role, RolesStore} from "../state/roles";
-import {Availability, AvailabilityUnit} from "../state/scheduling";
+import {PeopleScheduler, ScheduleByExclusion, ScheduleInput} from "./scheduler";
+import {defaultAccousticGuitar, defaultSoundRole, Role, RolesStore} from "../state/roles";
+import {Availability, AvailabilityUnit} from "../state/scheduling-types";
 import includes from 'lodash/includes';
 
 describe('schedule', () => {
@@ -12,6 +12,7 @@ describe('schedule', () => {
     let params: ScheduleInput;
     let end_date: Date;
     let start_date: Date;
+    let sound: Role;
     let scheduler: PeopleScheduler = new PeopleScheduler();
 
     beforeAll(() => {
@@ -23,20 +24,22 @@ describe('schedule', () => {
     beforeEach(() => {
         person_store = new PeopleStore();
 
-        params = new ScheduleInput();
+        params = new ScheduleInput(person_store);
         params.start_date = start_date;
         params.end_date = end_date;
-        params.roles = new RolesStore();
         params.people = person_store;
 
-        let sound: Role = params.roles.find_role("Sound");
+        sound = params.roles.find_role("Sound");
         expect(sound).not.toBeNull();
-        neil = new Person("1234", "Neil");
+
+        neil = new Person("Neil", "1234");
         neil.addRole(sound);
+        person_store.addPerson(neil);
     });
 
     it('cannot create empty', () => {
         params.end_date = start_date;
+        person_store.removePerson(neil);
         expect(() => {
             scheduler.CreateSchedule(params)
         }).toThrow();
@@ -46,7 +49,6 @@ describe('schedule', () => {
         params.start_date = new Date(2017, 9, 1);
         params.end_date = new Date(2017, 9, 25);
         neil.addRole(params.roles.find_role("Sound"));
-        person_store.addPerson(neil);
 
         let schedule = scheduler.CreateSchedule(params);
         expect(schedule).not.toBeNull();
@@ -73,9 +75,12 @@ describe('schedule', () => {
         expect(dates_map.get(dates[3]).date.getDate()).toEqual(22);
     });
 
-    xit('unavailable dates are turned into day long exclusion zones', () => {
-
+    it('truncates dates to the hour', () => {
+        let morning = new Date(2017, 11, 1, 10, 30, 44);
+        let byHour = ScheduleByExclusion.dayAndHourForDate(morning);
+        expect(byHour).toEqual("2017/11/1 10:00");
     });
+
 
     it('exclusions affect the layout', () => {
         params.start_date = new Date(2017, 9, 1);
@@ -83,21 +88,97 @@ describe('schedule', () => {
         neil.addRole(params.roles.find_role("Sound"));
 
         // Make myself available every 2 weeks, we should see a change to the schedule
-        neil.prefs.availability = new Availability(2, AvailabilityUnit.AVAIL_WEEKS);
-        person_store.addPerson(neil);
+        neil.prefs.availability = new Availability(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         let schedule = scheduler.CreateSchedule(params);
         expect(schedule).not.toBeNull();
 
         // Find the dates that have Neil doing something. Should be two.
         let all_scheduled = Array.from(schedule.dates.values());
-        // console.log("All scheduled: " + JSON.stringify(all_scheduled));
 
         let dates_with_neil = all_scheduled.filter(sad => {
             console.log("Check " + JSON.stringify(sad.people));
             return includes(sad.people, neil);
         });
         expect(dates_with_neil.length).toEqual(2);
+    });
+
+    it('unavailable dates act like exclusion zones', () => {
+        params.start_date = new Date(2017, 9, 1);
+        params.end_date = new Date(2017, 9, 25);
+        neil.removeRole(sound);
+        neil.prefs.availability = new Availability(2, AvailabilityUnit.EVERY_N_WEEKS);
+        neil.addRole(params.roles.find_role("Computer"));
+
+        // If unavailability affects exclusions we should end up with not being able to schedule on the first date
+        neil.addUnavailable(params.start_date);
+
+        let schedule = scheduler.CreateSchedule(params);
+        expect(schedule).not.toBeNull();
+
+        let all_scheduled = Array.from(schedule.dates.values());
+        let dates_with_neil = all_scheduled.filter(sad => {
+            console.log("Check " + JSON.stringify(sad.people));
+            return includes(sad.people, neil);
+        });
+
+        expect(dates_with_neil.length).toEqual(2);
+        expect(dates_with_neil[0].date.getDate()).toEqual(8);
+        expect(dates_with_neil[1].date.getDate()).toEqual(22);
+    });
+
+    it('limits placements based on max count', () => {
+        // One week
+        params.start_date = new Date(2017, 10, 1);
+        params.end_date = new Date(2017, 10, 3);
+
+        // Put neil on Guitar
+        // And daniel on guitar as well
+        neil.removeRole(sound);
+        neil.prefs.availability = new Availability(1, AvailabilityUnit.AVAIL_ANYTIME);
+        neil.addRole(defaultAccousticGuitar);
+
+        let daniel = new Person("Daniel");
+        person_store.addPerson(daniel);
+        daniel.addRole(defaultAccousticGuitar);
+
+        defaultAccousticGuitar.maximum_count = 1;
+
+        // Do a schedule. For one week.
+        // We should see just ONE person on guitar.
+        let schedule = scheduler.CreateSchedule(params);
+
+        let firstSchedule = Array.from(schedule.dates.values())[0];
+        expect(firstSchedule).not.toBeNull();
+        expect(firstSchedule.people_in_role(defaultAccousticGuitar).length).toBe(1);
+        // console.log(schedule.jsonResult());
+    });
+
+    it('distributes among roles evenly', () => {
+        // Make a 6 day schedule with 3 people, all available every day.
+        // Expect to see a rotation, rather than the first person picked all the time
+        params.start_date = new Date(2017, 10, 1);
+        params.end_date = new Date(2017, 10, 6);
+        params.days_per_period = 1;
+
+        let daniel = new Person("Daniel");
+        person_store.addPerson(daniel);
+        daniel.addRole(defaultSoundRole);
+
+        let ben = new Person("Ben");
+        person_store.addPerson(ben);
+        ben.addRole(defaultSoundRole);
+
+        let schedule = scheduler.CreateSchedule(params);
+        let schedules = Array.from(schedule.dates.values());
+
+        // console.log(schedule.jsonResult(true));
+
+        expect(schedules[0].people_in_role(defaultSoundRole)[0].name).toEqual("Neil");
+        expect(schedules[1].people_in_role(defaultSoundRole)[0].name).toEqual("Daniel");
+        expect(schedules[2].people_in_role(defaultSoundRole)[0].name).toEqual("Ben");
+        expect(schedules[3].people_in_role(defaultSoundRole)[0].name).toEqual("Neil");
+        expect(schedules[4].people_in_role(defaultSoundRole)[0].name).toEqual("Daniel");
     });
 
 });

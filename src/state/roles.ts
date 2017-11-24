@@ -4,6 +4,7 @@ import ShortUniqueId from 'short-unique-id';
 export class Role {
     @observable uuid: string;
     @observable name: string;
+    @observable maximum_count: number;
     @observable layout_priority: number;
 
     constructor(name: string, uuid: string = null, priority = 0) {
@@ -13,17 +14,35 @@ export class Role {
         }
         this.uuid = uuid;
         this.name = name;
+        this.maximum_count = 1;
         this.layout_priority = priority;
     }
 }
 
-let defaultMusicianRole = new Role("Musician", null, 1);
-let defaultLeaderRole = new Role("Worship Leader", null, 10);
-let defaultSoundRole = new Role("Sound", null);
+let defaultKeysRole = new Role("Keys", null, 1);
+let defaultAccousticGuitar = new Role("Guitar (Accoustic)", null, 1);
+let defaultElectricGuitar = new Role("Guitar (Electric)", null, 1);
+let defaultBass = new Role("Bass", null, 1);
 let defaultDrumsRole = new Role("Drums", null, 8);
 let defaultVocalsRole = new Role("Vocals", null, 7);
+let defaultSaxRole = new Role("Sax", null, 1);
+
+let defaultLeaderRole = new Role("Worship Leader", null, 10);
+let defaultSoundRole = new Role("Sound", null);
 let defaultComputerRole = new Role("Computer", null);
 
+defaultLeaderRole.maximum_count = 1;
+defaultSoundRole.maximum_count = 1;
+defaultComputerRole.maximum_count = 1;
+defaultKeysRole.maximum_count = 1;
+
+defaultAccousticGuitar.maximum_count = 2;
+
+defaultVocalsRole.maximum_count = 3;
+
+defaultElectricGuitar.maximum_count = 1;
+defaultBass.maximum_count = 1;
+defaultDrumsRole.maximum_count = 1;
 
 export class RolesStore {
     @observable roles: Array<Role>;
@@ -31,11 +50,15 @@ export class RolesStore {
     constructor() {
         this.roles = [
             defaultLeaderRole,
-            defaultMusicianRole,
             defaultSoundRole,
             defaultDrumsRole,
             defaultVocalsRole,
-            defaultComputerRole
+            defaultComputerRole,
+            defaultKeysRole,
+            defaultAccousticGuitar,
+            defaultElectricGuitar,
+            defaultBass,
+            defaultSaxRole
         ];
     }
 
@@ -82,3 +105,15 @@ export class RolesStore {
     }
 }
 
+export {
+    defaultLeaderRole,
+    defaultSoundRole,
+    defaultDrumsRole,
+    defaultVocalsRole,
+    defaultComputerRole,
+    defaultKeysRole,
+    defaultAccousticGuitar,
+    defaultElectricGuitar,
+    defaultBass,
+    defaultSaxRole
+}

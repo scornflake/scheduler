@@ -3,8 +3,8 @@ import {Person} from "./people";
 
 export enum AvailabilityUnit {
     AVAIL_ANYTIME,
-    AVAIL_DAYS,
-    AVAIL_WEEKS,
+    EVERY_N_DAYS,
+    EVERY_N_WEEKS,
 }
 
 export class Availability {
@@ -23,15 +23,20 @@ export class Availability {
                 end_date.setDate(date.getDate() + 1);
                 break;
 
-            case AvailabilityUnit.AVAIL_DAYS:
+            case AvailabilityUnit.EVERY_N_DAYS:
                 end_date.setDate(date.getDate() + this.period);
                 break;
 
-            case AvailabilityUnit.AVAIL_WEEKS:
+            case AvailabilityUnit.EVERY_N_WEEKS:
                 end_date.setDate(date.getDate() + 7 * this.period);
                 break;
         }
         return end_date;
+    }
+
+    every(a_number: number, unit: AvailabilityUnit) {
+        this.period = a_number;
+        this.unit = unit;
     }
 }
 
