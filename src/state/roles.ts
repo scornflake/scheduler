@@ -1,4 +1,4 @@
-import {observable} from "mobx-angular";
+import {action, observable} from "mobx-angular";
 import ShortUniqueId from 'short-unique-id';
 
 export class Role {
@@ -69,11 +69,11 @@ export class RolesStore {
         ];
     }
 
-    removeAllRoles() {
+    @action removeAllRoles() {
         this.roles = [];
     }
 
-    addRole(r: Role) {
+    @action addRole(r: Role) {
         let foundIndex = this.roles.findIndex(role => {
             return r.uuid == role.uuid;
         });
@@ -87,7 +87,7 @@ export class RolesStore {
         return r;
     }
 
-    removeRole(r: Role) {
+    @action removeRole(r: Role) {
         this.roles = this.roles.filter(role => role.uuid != r.uuid);
     }
 

@@ -1,11 +1,29 @@
 <ion-header>
-    <ion-navbar>
-        <ion-title>Home</ion-title>
-    </ion-navbar>
+    <ion-toolbar>
+        <ion-title>
+            Schedule <span *ngIf="store.ui_store.have_selection">for {{store.ui_store.selected_person?.name}}</span>
+        </ion-title>
+        <ion-buttons end>
+            <button ion-button
+                    (click)="clear_selection()"
+                    [disabled]="store.ui_store.selected_person == null">Deselect
+            </button>
+        </ion-buttons>
+    </ion-toolbar>
 </ion-header>
 
 <ion-content padding>
-    <h2>Scheduler</h2>
-
-    <schedule-viewer></schedule-viewer>
+    <ion-grid>
+        <ion-row>
+            <ion-col col-10>
+                <schedule-viewer></schedule-viewer>
+            </ion-col>
+            <ion-col *ngIf="store.ui_store.have_selection">
+                <person-editor
+                        [schedule]="store.ui_store.schedule"
+                        [person]="store.ui_store.selected_person">
+                </person-editor>
+            </ion-col>
+        </ion-row>
+    </ion-grid>
 </ion-content>

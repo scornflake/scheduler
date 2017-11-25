@@ -64,11 +64,7 @@ class ScheduleAtDate {
     }
 
     add_person(person: Person, role: Role) {
-        let roles = [role];
-        let dependent_roles = person.dependent_roles_for(role);
-        if (dependent_roles.length > 0) {
-            roles = [role, ...Array.from(dependent_roles)];
-        }
+        let roles = person.role_include_dependents_of(role);
         console.log("Schedule " + person.name + " for " + JSON.stringify(roles.map(r => r.name)) + " on " + this.date);
         let score = new ScheduleScore(roles);
         this.people_score.set(person, score);
@@ -285,7 +281,7 @@ export class ScheduleByExclusion {
         return false;
     }
 
-    private record_exclusions(date: Date, person: Person, role: Role) {
+    private record_exclusions(date: Date, person: Person, primary_role: Role) {
         let exclusions_for_person = this.exclusion_zones.get(person);
         if (!exclusions_for_person) {
             exclusions_for_person = [];
@@ -295,10 +291,12 @@ export class ScheduleByExclusion {
         let availability = person.prefs.availability;
 
         let end_date = availability.get_end_date_from(date);
-        let exclusion = new Exclusion(date, end_date, role);
-        exclusions_for_person.push(exclusion);
-        console.log("Recorded exclusion for " + person.name + " from " + date + " for " + exclusion.duration_in_days + " days");
-        this.exclusion_zones.set(person, exclusions_for_person);
+        for(let role of person.role_include_dependents_of(primary_role)) {
+            let exclusion = new Exclusion(date, end_date, role);
+            exclusions_for_person.push(exclusion);
+            console.log("Recorded exclusion for " + person.name + " from " + date + " for " + exclusion.duration_in_days + " days");
+            this.exclusion_zones.set(person, exclusions_for_person);
+        }
     }
 
     jsonResult(minimized: boolean = false) {

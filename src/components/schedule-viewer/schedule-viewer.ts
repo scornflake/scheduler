@@ -4,7 +4,6 @@ import {ScheduleByExclusion} from "../../scheduling/scheduler";
 import {isArray} from "util";
 import {StoreProvider} from "../../providers/store/store";
 import {Person} from "../../state/people";
-import includes from 'lodash/includes';
 
 @Component({
     selector: 'schedule-viewer',
@@ -40,7 +39,7 @@ export class ScheduleViewerComponent {
     }
 
     get schedule(): ScheduleByExclusion {
-        return this.creator.schedule;
+        return this.store.ui_store.schedule;
     }
 
     /*
@@ -79,16 +78,19 @@ export class ScheduleViewerComponent {
     Want to mark if:
     a) The person within this cell == the selected person
      */
-    selected_and_in_role(row, role_name) {
+    selected_and_in_role(a_person: Person, role_name) {
         let person = this.selected_person;
         if (!person) {
+            return false;
+        }
+        if(a_person.uuid != person.uuid) {
             return false;
         }
         let role = this.store.role_store.find_role(role_name);
         if (!role) {
             return false;
         }
-        return includes(this.value_as_array(row[role_name].map(p => p.name)), person.name);
+        return true;
     }
 
     select(person) {

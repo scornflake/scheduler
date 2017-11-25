@@ -1,8 +1,9 @@
-import {observable} from "mobx-angular";
+import {action, computed, observable} from "mobx-angular";
 import {Role} from "./roles";
 import {AvailabilityUnit, SchedulePrefs} from "./scheduling-types";
 import includes from 'lodash/includes';
 import ShortUniqueId from 'short-unique-id';
+import {Observable} from "rxjs/Observable";
 
 class Unavailablity {
     from_date: Date = null;
@@ -72,10 +73,12 @@ class Person {
         this.prefs = new SchedulePrefs();
     }
 
+    @computed
     get roles(): Array<Role> {
         return this.primary_roles;
     }
 
+    @computed
     get highest_role_layout_priority(): number {
         return this.roles.reduce((previousMax, role) => {
             return Math.max(previousMax, role.layout_priority);
@@ -87,6 +90,7 @@ class Person {
         return this;
     }
 
+    @action
     with_dep_role(role: Role, other_roles: Array<Role>): Person {
         this.addRole(role);
         if (other_roles.length > 0) {
@@ -95,6 +99,7 @@ class Person {
         return this;
     }
 
+    @action
     with_roles(roles: Array<Role>): Person {
         for (let role of roles) {
             this.addRole(role);
@@ -109,6 +114,7 @@ class Person {
         return matching_roles.length > 0;
     }
 
+    @action
     addRole(r: Role) {
         if (includes(this.roles, r)) {
             return;
@@ -116,6 +122,7 @@ class Person {
         this.roles.push(r);
     }
 
+    @action
     removeRole(r: Role) {
         this.primary_roles = this.roles.filter(role => {
             return role.uuid != r.uuid;
@@ -123,6 +130,7 @@ class Person {
         this.secondary_roles.delete(r.uuid);
     }
 
+    @action
     addUnavailable(d: Date) {
         this.unavailable.push(new Unavailablity(d));
     }
@@ -147,8 +155,15 @@ class Person {
         return false;
     }
 
-    dependent_roles_for(role: Role) {
-        return this.secondary_roles.get(role.uuid) || [];
+    role_include_dependents_of(role: Role): Array<Role> {
+        let secondary = this.secondary_roles.get(role.uuid);
+        if (secondary) {
+            return [
+                role,
+                ...Array.from(this.secondary_roles.get(role.uuid))
+            ]
+        }
+        return [role];
     }
 }
 
@@ -159,11 +174,13 @@ class PeopleStore {
         this.people = [];
     }
 
+    @action
     addPerson(p: Person): Person {
         this.people.push(p);
         return p;
     }
 
+    @action
     removePerson(p: Person) {
         this.people = this.people.filter(per => {
             return per.uuid != p.uuid

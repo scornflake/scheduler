@@ -1,7 +1,7 @@
 <div>
-    <h6>
-        Showing detail for : {{hover}}
-    </h6>
+    <!--<h6>-->
+        <!--Showing detail for : {{hover}}-->
+    <!--</h6>-->
 
     <ion-grid>
         <ion-row>
@@ -14,7 +14,7 @@
             <ion-col *ngFor="let key of keys_for_row(row)"
                      [ngClass]="{'range':in_exclusion_zone(row, key)}">
                 <div *ngFor="let person of value_as_array(row[key])"
-                     [ngClass]="{'selected':selected_and_in_role(row, key)}"
+                     [ngClass]="{'selected':selected_and_in_role(person, key)}"
                      (click)="select(person)">
                     {{person.name}}
                 </div>
