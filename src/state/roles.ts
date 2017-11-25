@@ -19,19 +19,23 @@ export class Role {
     }
 }
 
-let defaultLeaderRole = new Role("Worship Leader", null, 11);
+let leaderPriority = 11;
+let soundPriority = 10; // 10
+let instrumentPriority = 10;// 9
 
-let defaultSoundRole = new Role("Sound", null, 10);
-let defaultComputerRole = new Role("Computer", null, 10);
+let defaultLeaderRole = new Role("Worship Leader", null, leaderPriority);
 
-let defaultBass = new Role("Bass", null, 9);
-let defaultDrumsRole = new Role("Drums", null, 9);
-let defaultKeysRole = new Role("Keys", null, 9);
-let defaultAccousticGuitar = new Role("Guitar (Accoustic)", null, 9);
-let defaultElectricGuitar = new Role("Guitar (Electric)", null, 9);
+let defaultSoundRole = new Role("Sound", null, soundPriority);
+let defaultComputerRole = new Role("Computer", null, soundPriority);
 
-let defaultVocalsRole = new Role("Vocals", null, 5);
-let defaultSaxRole = new Role("Sax", null, 1);
+let defaultBass = new Role("Bass", null, instrumentPriority);
+let defaultDrumsRole = new Role("Drums", null, instrumentPriority);
+let defaultKeysRole = new Role("Keys", null, instrumentPriority);
+let defaultAccousticGuitar = new Role("Guitar (Accoustic)", null, instrumentPriority);
+let defaultElectricGuitar = new Role("Guitar (Electric)", null, instrumentPriority);
+
+let defaultVocalsRole = new Role("Vocals", null, instrumentPriority);
+let defaultSaxRole = new Role("Sax", null, instrumentPriority);
 
 
 defaultLeaderRole.maximum_count = 1;
@@ -54,13 +58,13 @@ export class RolesStore {
         this.roles = [
             defaultLeaderRole,
             defaultSoundRole,
-            defaultDrumsRole,
-            defaultVocalsRole,
             defaultComputerRole,
             defaultKeysRole,
+            defaultVocalsRole,
+            defaultBass,
+            defaultDrumsRole,
             defaultAccousticGuitar,
             defaultElectricGuitar,
-            defaultBass,
             defaultSaxRole
         ];
     }

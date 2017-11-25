@@ -11,6 +11,10 @@ import {TabsPage} from '../pages/tabs/tabs';
 import {StatusBar} from '@ionic-native/status-bar';
 import {SplashScreen} from '@ionic-native/splash-screen';
 import {ScheduleCreatorProvider} from '../providers/schedule-creator/schedule-creator';
+import {MobxAngularModule} from 'mobx-angular';
+import {ComponentsModule} from "../components/components.module";
+import {StoreProvider} from '../providers/store/store';
+import {NgPipesModule} from "angular-pipes";
 
 @NgModule({
     declarations: [
@@ -22,7 +26,10 @@ import {ScheduleCreatorProvider} from '../providers/schedule-creator/schedule-cr
     ],
     imports: [
         BrowserModule,
-        IonicModule.forRoot(MyApp)
+        NgPipesModule,
+        IonicModule.forRoot(MyApp),
+        ComponentsModule,
+        MobxAngularModule
     ],
     bootstrap: [IonicApp],
     entryComponents: [
@@ -36,7 +43,8 @@ import {ScheduleCreatorProvider} from '../providers/schedule-creator/schedule-cr
         StatusBar,
         SplashScreen,
         {provide: ErrorHandler, useClass: IonicErrorHandler},
-        ScheduleCreatorProvider
+        StoreProvider,
+        ScheduleCreatorProvider,
     ]
 })
 export class AppModule {

@@ -1,5 +1,4 @@
 import {PeopleStore, Person, Unavailablity} from "../state/people";
-import {SchedulePrefs} from "../state/scheduling-types";
 import {Role, RolesStore} from "../state/roles";
 
 // Score for this person, for some date
@@ -26,13 +25,11 @@ export class ScheduleInput {
 
     roles: RolesStore;
     people: PeopleStore;
-    settings: SchedulePrefs;
 
     constructor(people: PeopleStore = new PeopleStore(), roles: RolesStore = new RolesStore()) {
         this.days_per_period = 7;
         this.people = people;
         this.roles = roles;
-        this.settings = new SchedulePrefs();
     }
 }
 
@@ -93,15 +90,15 @@ function daysBetween(startDate: Date, endDate: Date): number {
 export class Exclusion {
     start_date: Date;
     end_date: Date;
-    caused_by: string;
+    role: Role;
 
-    constructor(start: Date, end: Date, cause: string) {
+    constructor(start: Date, end: Date, because: Role) {
         this.start_date = start;
         this.end_date = end;
+        this.role = because;
         if (this.duration_in_days < 0) {
             throw Error("Cannot have an exclusion zone with a -ve duration");
         }
-        this.caused_by = cause;
     }
 
     includes_date(date: Date) {
@@ -269,7 +266,7 @@ export class ScheduleByExclusion {
         return next_date;
     }
 
-    private has_exclusion_for(date: Date, person: Person) {
+    has_exclusion_for(date: Date, person: Person) {
         // Is this person unavailable on this date?
         if (person.is_unavailable_on(date)) {
             return true;
@@ -298,7 +295,7 @@ export class ScheduleByExclusion {
         let availability = person.prefs.availability;
 
         let end_date = availability.get_end_date_from(date);
-        let exclusion = new Exclusion(date, end_date, "scheduled for " + role.name);
+        let exclusion = new Exclusion(date, end_date, role);
         exclusions_for_person.push(exclusion);
         console.log("Recorded exclusion for " + person.name + " from " + date + " for " + exclusion.duration_in_days + " days");
         this.exclusion_zones.set(person, exclusions_for_person);
@@ -320,23 +317,22 @@ export class ScheduleByExclusion {
             // We create a dict, in order, for EVERY key of ordered_roles
             let rowDict = {};
 
-            rowDict['date'] = schedule_for_day.date.toDateString();
+            rowDict['date'] = schedule_for_day.date;
+            rowDict['date_key'] = dateString;
 
             // Look at each known role. Fill in the people fulfilling that role
             for (let role of ordered_roles) {
                 // Do we have a value, for this?
-                let value = null;
                 let peopleInRole = schedule_for_day.people_in_role(role);
-                if (peopleInRole.length > 0) {
-                    let names = peopleInRole.map(r => {
-                        return r.name
-                    });
-                    rowDict[role.name] = names.join(",");
-                } else {
-                    if (!minimized) {
-                        rowDict[role.name] = "";
-                    }
-                }
+                rowDict[role.name] = peopleInRole;
+                // if (peopleInRole.length > 0) {
+                //     let names = peopleInRole.map(r => r.name);
+                //     rowDict[role.name] = names.join(",");
+                // } else {
+                //     if (!minimized) {
+                //         rowDict[role.name] = "";
+                //     }
+                // }
             }
 
             // Add the row

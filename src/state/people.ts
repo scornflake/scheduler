@@ -89,7 +89,7 @@ class Person {
 
     with_dep_role(role: Role, other_roles: Array<Role>): Person {
         this.addRole(role);
-        if(other_roles.length > 0) {
+        if (other_roles.length > 0) {
             this.secondary_roles.set(role.uuid, other_roles);
         }
         return this;
