@@ -1,28 +1,31 @@
-import {Component} from '@angular/core';
-import {ScheduleCreatorProvider} from "../../providers/schedule-creator/schedule-creator";
+import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
 import {ScheduleByExclusion} from "../../scheduling/scheduler";
 import {isArray} from "util";
-import {StoreProvider} from "../../providers/store/store";
 import {Person} from "../../state/people";
+import {RootStore} from "../../state/root";
 
 @Component({
+    // changeDetection: ChangeDetectionStrategy.OnPush,
     selector: 'schedule-viewer',
     templateUrl: 'schedule-viewer.html'
 })
 export class ScheduleViewerComponent {
-    constructor(private creator: ScheduleCreatorProvider,
-                private store: StoreProvider) {
-    }
+    @Input() schedule: ScheduleByExclusion;
 
-    ngOnInit() {
-        this.creator.get_new_schedule();
+    constructor(private store: RootStore) {
     }
 
     get headers(): Array<string> {
+        if (!this.schedule) {
+            return [];
+        }
         return this.schedule.jsonFields();
     }
 
     get rows(): Array<Object> {
+        if (!this.schedule) {
+            return [];
+        }
         return this.schedule.jsonResult();
     }
 
@@ -36,10 +39,6 @@ export class ScheduleViewerComponent {
             return value;
         }
         return [value];
-    }
-
-    get schedule(): ScheduleByExclusion {
-        return this.store.ui_store.schedule;
     }
 
     /*
@@ -56,7 +55,7 @@ export class ScheduleViewerComponent {
         if (!person) {
             return false;
         }
-        let role = this.store.role_store.find_role(role_name);
+        let role = this.store.roles_store.find_role(role_name);
         if (!role) {
             return false;
         }
@@ -83,10 +82,10 @@ export class ScheduleViewerComponent {
         if (!person) {
             return false;
         }
-        if(a_person.uuid != person.uuid) {
+        if (a_person.uuid != person.uuid) {
             return false;
         }
-        let role = this.store.role_store.find_role(role_name);
+        let role = this.store.roles_store.find_role(role_name);
         if (!role) {
             return false;
         }

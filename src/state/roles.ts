@@ -61,19 +61,21 @@ export class RolesStore {
             defaultComputerRole,
             defaultKeysRole,
             defaultVocalsRole,
-            defaultBass,
             defaultDrumsRole,
+            defaultBass,
             defaultAccousticGuitar,
             defaultElectricGuitar,
             defaultSaxRole
         ];
     }
 
-    @action removeAllRoles() {
+    @action
+    removeAllRoles() {
         this.roles = [];
     }
 
-    @action addRole(r: Role) {
+    @action
+    addRole(r: Role) {
         let foundIndex = this.roles.findIndex(role => {
             return r.uuid == role.uuid;
         });
@@ -87,7 +89,8 @@ export class RolesStore {
         return r;
     }
 
-    @action removeRole(r: Role) {
+    @action
+    removeRole(r: Role) {
         this.roles = this.roles.filter(role => role.uuid != r.uuid);
     }
 
@@ -95,8 +98,8 @@ export class RolesStore {
         // Add all roles into a map
         let roles_in_order = this.roles_in_layout_order;
         let intermediate = new Map<number, Array<Role>>();
-        for(let role of roles_in_order) {
-            if(!intermediate.has(role.layout_priority)) {
+        for (let role of roles_in_order) {
+            if (!intermediate.has(role.layout_priority)) {
                 intermediate.set(role.layout_priority, []);
             }
             intermediate.set(role.layout_priority, [...intermediate.get(role.layout_priority), role]);
@@ -104,7 +107,7 @@ export class RolesStore {
 
         // Turn into an array
         let result = [];
-        intermediate.forEach((list, key:number) => {
+        intermediate.forEach((list, key: number) => {
             result.push(list);
         });
         return result;

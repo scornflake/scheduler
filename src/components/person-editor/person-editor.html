@@ -3,7 +3,7 @@
         <ion-list-header color="light">Info</ion-list-header>
         <ion-item>
             <ion-label>Name</ion-label>
-            <ion-input [value]="person.name"></ion-input>
+            <ion-input [(ngModel)]="person.name"></ion-input>
         </ion-item>
 
         <ion-list-header color="light">Roles</ion-list-header>
@@ -13,7 +13,7 @@
 
         <ion-list-header color="light">Dates</ion-list-header>
         <ion-item *ngFor="let sd of scheduled_dates()">
-            {{sd|date}}
+            {{sd.date|date}} - {{sd.score_for(person).roles|pluck:'name'|join:", "}}
         </ion-item>
     </ion-list>
 </div>

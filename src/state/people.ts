@@ -3,7 +3,6 @@ import {Role} from "./roles";
 import {AvailabilityUnit, SchedulePrefs} from "./scheduling-types";
 import includes from 'lodash/includes';
 import ShortUniqueId from 'short-unique-id';
-import {Observable} from "rxjs/Observable";
 
 class Unavailablity {
     from_date: Date = null;
@@ -49,8 +48,20 @@ class Unavailablity {
 }
 
 class Person {
+    private _name: string;
+
     @observable uuid: string;
-    @observable name: string;
+
+    @computed
+    get name(): string {
+        return this._name;
+    }
+
+    set name(value: string) {
+        this._name = value;
+        // console.log("Set name to " + value);
+    }
+
     @observable primary_roles: Array<Role>;
     @observable unavailable: Array<Unavailablity>;
     @observable prefs: SchedulePrefs;

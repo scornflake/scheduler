@@ -1,5 +1,3 @@
-import {Injectable} from '@angular/core';
-
 import {
     defaultAccousticGuitar,
     defaultBass,
@@ -10,14 +8,12 @@ import {
     defaultLeaderRole,
     defaultSaxRole,
     defaultSoundRole,
-    defaultVocalsRole,
-    RolesStore
+    defaultVocalsRole
 } from "../../state/roles";
 
 import {PeopleStore, Person} from "../../state/people";
 import {AvailabilityUnit} from "../../state/scheduling-types";
 import {RootStore} from "../../state/root";
-import {UIStore} from "../../state/UIState";
 
 let neil: Person = new Person("Neil Clayton");
 let cherilyn: Person = new Person("Cherilyn Clayton");
@@ -45,29 +41,16 @@ let jeremy_w: Person = new Person("Jeremy Watson");
 let john: Person = new Person("John Sutherland");
 
 christine.addUnavailableRange(new Date(2018, 3, 0), new Date(2050, 1, 1));
+craig.addUnavailable(new Date(2018, 0, 0));
 
-@Injectable()
-export class StoreProvider {
-    private root_store: RootStore;
-
+export class TestStoreConstruction {
     constructor() {
-        this.root_store = new RootStore();
-        StoreProvider.setup_people_store(this.root_store.people_store);
+
     }
 
-    get ui_store(): UIStore {
-        return this.root_store.ui_state;
-    }
+    static SetupStore(root_store: RootStore) {
+        let person_store: PeopleStore = root_store.people_store;
 
-    get person_store(): PeopleStore {
-        return this.root_store.people_store;
-    }
-
-    get role_store(): RolesStore {
-        return this.root_store.roles_store;
-    }
-
-    private static setup_people_store(person_store) {
         person_store.addPerson(neil)
             .with_roles([defaultSoundRole, defaultSaxRole])
             .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
@@ -87,7 +70,7 @@ export class StoreProvider {
             .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.addPerson(jeremy_selfe)
-            // .with_roles([defaultAccousticGuitar, defaultElectricGuitar])
+        // .with_roles([defaultAccousticGuitar, defaultElectricGuitar])
             .with_dep_role(defaultLeaderRole, [defaultElectricGuitar])
             .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
 
@@ -101,7 +84,7 @@ export class StoreProvider {
 
         person_store.addPerson(craig)
             .with_roles([defaultDrumsRole])
-            .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
+            .avail_every(5, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.addPerson(ben)
             .with_roles([defaultBass, defaultDrumsRole])

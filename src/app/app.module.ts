@@ -10,11 +10,10 @@ import {PeoplePage} from "../pages/people/people";
 
 import {StatusBar} from '@ionic-native/status-bar';
 import {SplashScreen} from '@ionic-native/splash-screen';
-import {ScheduleCreatorProvider} from '../providers/schedule-creator/schedule-creator';
 import {MobxAngularModule} from 'mobx-angular';
 import {ComponentsModule} from "../components/components.module";
-import {StoreProvider} from '../providers/store/store';
 import {NgPipesModule} from "angular-pipes";
+import {RootStore} from "../state/root";
 
 @NgModule({
     declarations: [
@@ -42,9 +41,8 @@ import {NgPipesModule} from "angular-pipes";
     providers: [
         StatusBar,
         SplashScreen,
+        RootStore,
         {provide: ErrorHandler, useClass: IonicErrorHandler},
-        StoreProvider,
-        ScheduleCreatorProvider,
     ]
 })
 export class AppModule {

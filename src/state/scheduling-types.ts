@@ -24,11 +24,11 @@ export class Availability {
                 break;
 
             case AvailabilityUnit.EVERY_N_DAYS:
-                end_date.setDate(date.getDate() + this.period);
+                end_date.setDate(date.getDate() + this.period - 1);
                 break;
 
             case AvailabilityUnit.EVERY_N_WEEKS:
-                end_date.setDate(date.getDate() + 7 * this.period);
+                end_date.setDate(date.getDate() + (7 * this.period) - 1);
                 break;
         }
         return end_date;

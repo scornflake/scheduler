@@ -21,6 +21,7 @@ export class PersonEditorComponent {
             return includes(v.people, this.person);
         });
 
-        return schedules.map(s => s.date);
+        return schedules;
+        // return schedules.map(s => s.date);
     }
 }

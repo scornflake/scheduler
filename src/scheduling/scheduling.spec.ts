@@ -116,12 +116,12 @@ describe('schedule', () => {
 
         let all_scheduled = Array.from(schedule.dates.values());
         let dates_with_neil = all_scheduled.filter(sad => {
+            // console.log("Check: " + JSON.stringify(sad));
             return includes(sad.people, neil);
         });
 
-        expect(dates_with_neil.length).toEqual(2);
+        expect(dates_with_neil.length).toEqual(1);
         expect(dates_with_neil[0].date.getDate()).toEqual(8);
-        expect(dates_with_neil[1].date.getDate()).toEqual(22);
     });
 
     it('limits placements based on max count', () => {

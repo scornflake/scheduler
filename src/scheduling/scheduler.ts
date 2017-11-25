@@ -1,5 +1,6 @@
 import {PeopleStore, Person, Unavailablity} from "../state/people";
 import {Role, RolesStore} from "../state/roles";
+import includes from 'lodash/includes';
 
 // Score for this person, for some date
 export class ScheduleScore {
@@ -97,6 +98,13 @@ export class Exclusion {
         }
     }
 
+    overlap_with(other: Exclusion) {
+        return this.includes_date(other.start_date) ||
+            this.includes_date(other.end_date) ||
+            other.includes_date(this.start_date) ||
+            other.includes_date(this.end_date);
+    }
+
     includes_date(date: Date) {
         return this.start_date <= date && date < this.end_date;
     }
@@ -114,10 +122,8 @@ export class ScheduleByExclusion {
     private params: ScheduleInput;
 
     constructor(params: ScheduleInput) {
-        this.role_index = new Map<Role, number>();
         this.params = params;
-        this.dates = new Map<string, ScheduleAtDate>();
-        this.exclusion_zones = new Map<Person, Array<Exclusion>>();
+        this.clear_working_state();
 
         if (params.roles.roles_in_layout_order.length == 0) {
             throw Error("The dates parameters don't define any roles.");
@@ -137,6 +143,12 @@ export class ScheduleByExclusion {
         if (this.schedule_duration_in_days <= 0) {
             throw new Error("The dates has no sensible length (0 or -ve)");
         }
+    }
+
+    private clear_working_state() {
+        this.role_index = new Map<Role, number>();
+        this.dates = new Map<string, ScheduleAtDate>();
+        this.exclusion_zones = new Map<Person, Array<Exclusion>>();
     }
 
     get start_date(): Date {
@@ -170,6 +182,7 @@ export class ScheduleByExclusion {
     }
 
     public create_schedule() {
+        this.clear_working_state();
         console.log("Working from " + this.params.start_date + " to: " + this.params.end_date);
         let schedule_duration = this.schedule_duration_in_days;
         console.log("Schedule is " + schedule_duration + " days long");
@@ -198,12 +211,12 @@ export class ScheduleByExclusion {
 
                     // Setup our available people (which at the beginning, is 'everyone')
                     if (people_for_this_role.length == 0) {
-                        console.log("Laying out role: " + role.name + " ... skipping (no one to do it)");
+                        // console.log("Laying out role: " + role.name + " ... skipping (no one to do it)");
                         continue;
                     }
                     console.log("Considering: " + JSON.stringify(people_for_this_role.map(p => {
                         return p.name;
-                    })) + " for role " + role.name);
+                    })) + " for role " + role.name + " on " + current_date.toDateString());
 
                     // Iterate all the people, but do so from the last used index.
                     // This is so we give everyone who can do that role the chance.
@@ -217,12 +230,20 @@ export class ScheduleByExclusion {
 
                         let person = people_for_this_role[actulal_index];
 
-                        if (this.has_exclusion_for(current_date, person)) {
+                        // If already in this role, skip
+                        let specific_day = this.get_schedule_for_date(current_date);
+                        if (includes(specific_day.people_in_role(role), person)) {
+                            console.log("Skipping " + person.name + ", they are already on it");
+                            continue;
+                        }
+
+                        let [has_exclusion, reason] = this.has_exclusion_for(current_date, person, role);
+                        if (has_exclusion) {
+                            console.log(person.name + " cant do it, they have an exclusion: " + reason);
                             continue;
                         }
 
                         // ok. We can put someone in this slot then.
-                        let specific_day = this.get_schedule_for_date(current_date);
                         if (!specific_day) {
                             throw Error("What? Unable to get a schedule for " + current_date);
                         }
@@ -262,23 +283,29 @@ export class ScheduleByExclusion {
         return next_date;
     }
 
-    has_exclusion_for(date: Date, person: Person) {
+    has_exclusion_for(date: Date, person: Person, role: Role): any[] {
         // Is this person unavailable on this date?
         if (person.is_unavailable_on(date)) {
-            return true;
+            return [true, "unavailable"];
         }
 
         // Is this person excluded for this date?
         let exclusions_for_person = this.exclusion_zones.get(person);
         if (!exclusions_for_person) {
-            return false;
+            return [false, "no exclusions for " + person.name];
         }
+
+        // Does the exclusion zone for this person overlap with any existing?
+        let availability = person.prefs.availability;
+        let end_date = availability.get_end_date_from(date);
+        let new_exclusion = new Exclusion(date, end_date, role);
+
         for (let exclusion of exclusions_for_person) {
-            if (exclusion.includes_date(date)) {
-                return true;
+            if (exclusion.overlap_with(new_exclusion)) {
+                return [true, "overlap with existing " + JSON.stringify(exclusion)];
             }
         }
-        return false;
+        return [false, "clear!"];
     }
 
     private record_exclusions(date: Date, person: Person, primary_role: Role) {
@@ -289,9 +316,9 @@ export class ScheduleByExclusion {
 
         // make the exclusion
         let availability = person.prefs.availability;
-
         let end_date = availability.get_end_date_from(date);
-        for(let role of person.role_include_dependents_of(primary_role)) {
+
+        for (let role of person.role_include_dependents_of(primary_role)) {
             let exclusion = new Exclusion(date, end_date, role);
             exclusions_for_person.push(exclusion);
             console.log("Recorded exclusion for " + person.name + " from " + date + " for " + exclusion.duration_in_days + " days");

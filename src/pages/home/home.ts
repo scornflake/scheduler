@@ -1,6 +1,6 @@
 import {Component} from '@angular/core';
 import {NavController} from 'ionic-angular';
-import {StoreProvider} from "../../providers/store/store";
+import {RootStore} from "../../state/root";
 
 @Component({
     selector: 'page-home',
@@ -8,7 +8,7 @@ import {StoreProvider} from "../../providers/store/store";
 })
 export class HomePage {
 
-    constructor(public navCtrl: NavController, private store: StoreProvider) {
+    constructor(public navCtrl: NavController, private store: RootStore) {
     }
 
     clear_selection() {

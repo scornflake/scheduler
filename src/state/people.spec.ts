@@ -55,6 +55,4 @@ describe('people, ', () => {
         let dependentRolesFor = Array.from(cherilyn.role_include_dependents_of(defaultLeaderRole));
         expect(dependentRolesFor).toEqual([defaultLeaderRole, defaultKeysRole]);
     });
-
-
 });
