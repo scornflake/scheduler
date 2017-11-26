@@ -1,4 +1,4 @@
-import {ScheduleByExclusion} from "../scheduling/scheduler";
+import {ScheduleByExclusion} from "../scheduling/by_exclusion/scheduler";
 import json2csv from "json2csv";
 import fileSaver from "file-saver";
 

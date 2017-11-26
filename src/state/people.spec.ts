@@ -1,5 +1,5 @@
 import {PeopleStore, Person} from "./people";
-import {defaultKeysRole, defaultLeaderRole} from "./roles";
+import {defaultKeysRole, defaultLeaderRole, Role, RolesStore} from "./roles";
 
 describe('people, ', () => {
     let firstPerson: Person;
@@ -54,5 +54,27 @@ describe('people, ', () => {
         expect(cherilyn.roles.length).toEqual(1);
         let dependentRolesFor = Array.from(cherilyn.role_include_dependents_of(defaultLeaderRole));
         expect(dependentRolesFor).toEqual([defaultLeaderRole, defaultKeysRole]);
+    });
+
+    it('can sort people by role layout priority', () => {
+        // people are in roles. Get a list of people based on their max role layout priority
+        let role_store = new RolesStore();
+        let leader = role_store.addRole(new Role("Leader", null, 10));
+        let keys = role_store.addRole(new Role("Keys", null, 5));
+        let gopher = role_store.addRole(new Role("Gopher", null, 1));
+
+        // Tim = Keys
+        let p2 = person_store.addPerson(new Person("Tim").addRole(keys));
+        // Janice = Gopher
+        let p3 = person_store.addPerson(new Person("Janice").addRole(gopher));
+        // Neil = Gopher + Leader
+        let p1 = person_store.addPerson(new Person("Neil").addRole(gopher).addRole(leader));
+
+        // Expect Neil, Tim, Janice
+        let ordered = person_store.order_people_by_role_layout_priority();
+        expect(ordered[0]).toEqual(p1);
+        expect(ordered[1]).toEqual(p2);
+        expect(ordered[2]).toEqual(p3);
+
     });
 });

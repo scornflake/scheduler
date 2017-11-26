@@ -1,5 +1,5 @@
 import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
-import {ScheduleByExclusion} from "../../scheduling/scheduler";
+import {ScheduleByExclusion} from "../../scheduling/by_exclusion/scheduler";
 import {isArray} from "util";
 import {Person} from "../../state/people";
 import {RootStore} from "../../state/root";

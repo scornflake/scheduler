@@ -1,9 +1,10 @@
-///<reference path="../../node_modules/@types/jasmine-expect/index.d.ts"/>
-import {PeopleStore, Person} from "../state/people";
-import {ScheduleByExclusion, ScheduleInput} from "./scheduler";
-import {defaultAccousticGuitar, defaultSoundRole, Role} from "../state/roles";
-import {Availability, AvailabilityUnit} from "../state/scheduling-types";
+///<reference path="../../../node_modules/@types/jasmine-expect/index.d.ts"/>
+import {PeopleStore, Person} from "../../state/people";
+import {ScheduleByExclusion} from "./scheduler";
+import {defaultAccousticGuitar, defaultSoundRole, Role} from "../../state/roles";
+import {Availability, AvailabilityUnit} from "../../state/scheduling-types";
 import includes from 'lodash/includes';
+import {ScheduleInput} from "../common";
 
 describe('schedule', () => {
     let person_store: PeopleStore;

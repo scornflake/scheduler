@@ -101,6 +101,12 @@ class Person {
         return this;
     }
 
+    get max_role_layout_priority(): number {
+        return this.roles.reduce((prev, role) => {
+            return Math.max(prev, role.layout_priority);
+        }, 0);
+    }
+
     @action
     with_dep_role(role: Role, other_roles: Array<Role>): Person {
         this.addRole(role);
@@ -126,19 +132,21 @@ class Person {
     }
 
     @action
-    addRole(r: Role) {
+    addRole(r: Role): Person {
         if (includes(this.roles, r)) {
             return;
         }
         this.roles.push(r);
+        return this;
     }
 
     @action
-    removeRole(r: Role) {
+    removeRole(r: Role): Person {
         this.primary_roles = this.roles.filter(role => {
             return role.uuid != r.uuid;
         });
         this.secondary_roles.delete(r.uuid);
+        return this;
     }
 
     @action
@@ -206,6 +214,14 @@ class PeopleStore {
                 }
             }
             return false;
+        });
+    }
+
+    order_people_by_role_layout_priority() {
+        return this.people.sort((p1: Person, p2: Person) => {
+            let maxlp1 = p1.max_role_layout_priority;
+            let maxlp2 = p2.max_role_layout_priority;
+            return maxlp1 < maxlp2 ? 1 : maxlp1 > maxlp2 ? -1 : 0;
         });
     }
 }

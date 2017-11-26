@@ -1,4 +1,4 @@
-import {ScheduleByExclusion} from "../scheduling/scheduler";
+import {ScheduleByExclusion} from "../scheduling/by_exclusion/scheduler";
 // import {GoogleApis} from "googleapis";
 // const google = new GoogleApis();
 

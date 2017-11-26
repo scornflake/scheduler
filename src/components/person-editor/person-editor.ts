@@ -1,6 +1,6 @@
 import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
 import {Person} from "../../state/people";
-import {ScheduleByExclusion} from "../../scheduling/scheduler";
+import {ScheduleByExclusion} from "../../scheduling/by_exclusion/scheduler";
 import includes from 'lodash/includes';
 
 @Component({

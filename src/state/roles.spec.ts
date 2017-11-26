@@ -78,5 +78,4 @@ describe('roles', () => {
         expect(groups[0].length).toEqual(2);
         expect(groups[1].length).toEqual(1);
     });
-
 });

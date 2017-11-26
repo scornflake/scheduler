@@ -1,11 +1,11 @@
 import {PeopleStore} from "./people";
 import {RolesStore} from "./roles";
 import {UIStore} from "./UIState";
-import {computed, observable} from "mobx-angular";
-import {ScheduleByExclusion, ScheduleInput} from "../scheduling/scheduler";
+import {ScheduleByExclusion} from "../scheduling/by_exclusion/scheduler";
 import {Injectable} from "@angular/core";
 import {TestStoreConstruction} from "../providers/store/test.store";
 import {autorunAsync, IReactionDisposer} from "mobx";
+import {ScheduleInput} from "../scheduling/common";
 
 @Injectable()
 class RootStore {

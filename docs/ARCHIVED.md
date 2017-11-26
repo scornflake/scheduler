@@ -65,13 +65,15 @@ Missing
 =======
 1. [done] Can do a leader role AND be on guitar and vocal. Need to specify roles that can co-exist, i.e: if I am on X I can also do Y/Z.
 1. [done] When iterating roles for a position, need to push recently used roles to the end, so there's a rotation of people.
-1. Need to make roles, by default, mutually exclusive. If you get put on drums, you can't be doing bass! (Daniel)s
+1. [done] Need to make roles, by default, mutually exclusive. If you get put on drums, you can't be doing bass! (Daniel)s
 1. [done] Need to limit the fill. At the moment it fills all possible positions. We need a "max" for a role.
 
 Notes
 =====
 
 1. Currently the algorithm is role based. It tries to fill a role depth first (for entire date set) before choosing another role.
-  1. Could try a change where we layout roles in descending order, but many roles can have the same priority. In that case, we lay them out breadth then depth. i.e: all roles for this date, next date (the reverse of what happens now)
-    1. This would mean role iteration would iterate 'arrays' of roles.
+  1. [done] Could try a change where we layout roles in descending order, but many roles can have the same priority. In that case, we lay them out breadth then depth. i.e: all roles for this date, next date (the reverse of what happens now)
+    1. [done] This would mean role iteration would iterate 'arrays' of roles.
 1. The algorithm above stops if it can't find a space. Currently there is no concept of score, or trying to be 'flexible'
+
+

@@ -1,4 +1,4 @@
-import {Exclusion} from "../scheduling/scheduler";
+import {Exclusion} from "../scheduling/by_exclusion/scheduler";
 import {Role} from "./roles";
 
 describe('exclusions', () => {

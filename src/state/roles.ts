@@ -1,5 +1,6 @@
 import {action, observable} from "mobx-angular";
 import ShortUniqueId from 'short-unique-id';
+import {Person} from "./people";
 
 export class Role {
     @observable uuid: string;
