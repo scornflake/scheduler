@@ -16,10 +16,9 @@ How might weighted roles work?
     - has roles, role rules & placement rules.
     - Roles are just a list. Possibilities.
     - default rule might be "in sequence (round robbin)"
+        - which is just a weighted with even weighting?
     - Alternative might be "Weighted: Sax 80%, Sound 20%"
     - Another "Weighted: Leader 90%, Guitar: 10%"
-    - not on this date
-    - not on this date range
 - Placement
     - date
     - original role
@@ -29,9 +28,16 @@ How might weighted roles work?
     - Group of PickRule
 - Pick Rule
     - execute(state):Person
+    - usage weighted sequential
+    - not on this date
+    - not on this date range
 - Role Rules
     - Group of RoleRule
     - execute(state):Role
+- Role Rule
+    - weighting
+    - execute(state):Role
+    - on this date I want role X
 
 #### Algorithm
 - Iterate all dates, in order

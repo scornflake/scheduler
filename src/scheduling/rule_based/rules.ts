@@ -1,6 +1,10 @@
 import {Person} from "../../state/people";
 import includes from 'lodash/includes';
-import {iterator} from "rxjs/symbol/iterator";
+import {Role} from "../../state/roles";
+import sum from 'lodash/sum';
+import sumBy from 'lodash/sumBy';
+import sortBy from 'lodash/sortBy';
+import {isUndefined} from "ionic-angular/util/util";
 
 let priority_comparator = (r1: Rule, r2: Rule) => {
     return r1.priority < r2.priority ? -1 : r1.priority > r2.priority ? 1 : 0;
@@ -8,6 +12,7 @@ let priority_comparator = (r1: Rule, r2: Rule) => {
 
 class RuleState {
     date: Date;
+    person: Person;
 }
 
 class Rule {
@@ -66,9 +71,169 @@ class Rules {
             }
         }
     }
+
+    use_this_role(role: Role) {
+        this.use_this(role);
+    }
+
+    use_this_person(person: Person) {
+        this.use_this(person);
+    }
+
+    private use_this(thing: Object) {
+        this.rules.forEach((r) => {
+            if (r instanceof RoleRule && thing instanceof Role) {
+                r.use_this_role(thing)
+            }
+            if (r instanceof PickRule && thing instanceof Person) {
+                r.use_this_person(thing)
+            }
+        });
+    }
 }
 
-class PickRules extends Rules {
+class RoleRule extends Rule {
+    execute(state: RuleState): Iterator<Role> {
+        throw new Error("Need implementation")
+    }
+
+    use_this_role(r: Role) {
+    }
+}
+
+class Score {
+    weighting: number; // 0..1
+    usage_count: number; // number of times this element has been used
+
+    constructor(weighting, score = 0) {
+        this.weighting = weighting;
+        this.usage_count = 0;
+    }
+
+    valueOf() {
+        return "Weighting: " + this.weighting + ", usage: " + this.usage_count;
+    }
+}
+
+class FixedRoleOnDate extends RoleRule {
+    date: Date;
+    role: Role;
+
+    constructor(date: Date, r: Role, priority = 0) {
+        super(priority);
+        this.date = date;
+        this.role = r;
+    }
+
+    execute(state: RuleState): Iterator<Role> {
+        return {
+            next: () => {
+                if (this.date == state.date) {
+                    return {
+                        done: false,
+                        value: this.role
+                    }
+                }
+
+                return {
+                    done: true, value: null
+                }
+            }
+        };
+    }
+}
+
+class WeightedRoles extends RoleRule {
+    weightedRoles: Map<Role, number>;
+    scoring: Map<Role, Score>;
+
+    constructor(weightedRules: Map<Role, number>) {
+        super();
+        this.weightedRoles = weightedRules;
+        this.clearScores();
+        this.normalizeWeights();
+    }
+
+    private clearScores() {
+        this.scoring = new Map<Role, Score>();
+    }
+
+    get roles_sorted_by_score(): Array<Role> {
+        return sortBy(Array.from(this.weightedRoles.keys()), (o) => {
+            return this.score_for_role(o).usage_count;
+        });
+    }
+
+    get roles_sorted_by_weight(): Array<Role> {
+        return sortBy(Array.from(this.weightedRoles.keys()), (o) => {
+            return this.weightedRoles.get(o);
+        });
+    }
+
+    execute(state: RuleState): Iterator<Role> {
+        return {
+            next: () => {
+                // sort by current score, highest first.
+                let roles_in_weight_order = this.roles_sorted_by_weight;
+                let total_usages = this.total_uses;
+
+                // console.log("Total usages: " + total_usages);
+
+                if (total_usages == 0) {
+                    return {
+                        done: false,
+                        value: roles_in_weight_order[0]
+                    }
+                }
+
+                // Choose the next role
+                for (let role of roles_in_weight_order) {
+                    let role_weighting = this.weightedRoles.get(role);
+
+                    let current_score = this.score_for_role(role);
+                    let runtime_weighting = current_score.usage_count / total_usages;
+                    // console.log(role.name + ", weight: " + role_weighting + ". Has score: " + current_score + ". Runtime weight: " + runtime_weighting);
+                    if (runtime_weighting <= role_weighting) {
+                        return {
+                            done: false,
+                            value: role
+                        }
+                    }
+                }
+
+                return {done: true, value: null}
+            }
+        }
+    }
+
+    get total_uses(): number {
+        return sumBy(Array.from(this.scoring.values(), (o) => o.usage_count))
+    }
+
+    score_for_role(r: Role): Score {
+        let weighting = this.weightedRoles.get(r);
+        if (isUndefined(weighting)) {
+            throw Error("No weighting for this role, " + r.name);
+        }
+        if (this.scoring.has(r)) {
+            return this.scoring.get(r);
+        }
+        return new Score(weighting);
+    }
+
+    use_this_role(r: Role) {
+        let score = this.score_for_role(r);
+        score.usage_count++;
+        this.scoring.set(r, score);
+    }
+
+    private normalizeWeights() {
+        let total_weight: number = sum(Array.from(this.weightedRoles.values()));
+        // console.log("Total weights: " + total_weight);
+        this.weightedRoles.forEach((num, key) => {
+            this.weightedRoles.set(key, num / total_weight);
+        });
+    }
 }
 
 class PickRule extends Rule {
@@ -77,7 +242,6 @@ class PickRule extends Rule {
     }
 
     use_this_person(p: Person) {
-
     }
 }
 
@@ -161,9 +325,11 @@ class UsageWeightedSequential extends PickRule {
 
 export {
     UsageWeightedSequential,
+    WeightedRoles,
+    FixedRoleOnDate,
     RuleState,
     OnThisDate,
     PickRule,
-    PickRules,
+    Rules,
     Rule
 }
