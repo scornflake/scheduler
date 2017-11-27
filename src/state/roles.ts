@@ -1,6 +1,7 @@
 import {action, observable} from "mobx-angular";
 import ShortUniqueId from 'short-unique-id';
-import {Person} from "./people";
+import {PeopleStore} from "./people";
+import {OnThisDate, PickRule, Rule, Rules, UsageWeightedSequential} from "../scheduling/rule_based/rules";
 
 export class Role {
     @observable uuid: string;
@@ -17,6 +18,10 @@ export class Role {
         this.name = name;
         this.maximum_count = 1;
         this.layout_priority = priority;
+    }
+
+    valueOf() {
+        return "Role " + this.name + "[ " + this.uuid + "]";
     }
 }
 
@@ -54,8 +59,10 @@ defaultDrumsRole.maximum_count = 1;
 
 export class RolesStore {
     @observable roles: Array<Role>;
+    rules: Array<Rule>;
 
     constructor() {
+        this.rules = [];
         this.roles = [
             defaultLeaderRole,
             defaultSoundRole,
@@ -88,6 +95,13 @@ export class RolesStore {
         this.roles.push(r);
         // console.log("Added role: " + JSON.stringify(r));
         return r;
+    }
+
+    @action
+    addRoles(roles: Array<Role>) {
+        for (let role of roles) {
+            this.addRole(role);
+        }
     }
 
     @action
@@ -132,6 +146,41 @@ export class RolesStore {
             }
         }
         return null;
+    }
+
+    pick_rules(people_store: PeopleStore): Map<Role, Rules> {
+        let rule_map = new Map<Role, Rules>();
+        for (let role of this.roles_in_layout_order) {
+            let rules = new Rules();
+
+            // Find any specific rules for this date.
+            rules.addRules(this.rules_for_role(role));
+
+            // Ordering people sequentially
+            let uws = new UsageWeightedSequential(people_store.people_with_role(role));
+            rules.addRule(uws);
+
+            rule_map.set(role, rules);
+        }
+        return rule_map;
+    }
+
+    addPickRule(rule: PickRule) {
+        /*
+        When putting rules together, user specified pick rules must come before the
+        UWS rules when executing. So we make sure they have a higher priority.
+        */
+        rule.priority = 10;
+        this.rules.push(rule);
+    }
+
+    private rules_for_role(role: Role) {
+        return this.rules.filter(r => {
+            if (r instanceof OnThisDate) {
+                return r.role.uuid == role.uuid;
+            }
+            return false;
+        });
     }
 }
 

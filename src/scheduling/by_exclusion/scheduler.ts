@@ -1,7 +1,7 @@
 import {Person, Unavailablity} from "../../state/people";
 import {Role} from "../../state/roles";
 import includes from 'lodash/includes';
-import {daysBetween, Exclusion, ScheduleAtDate, ScheduleInput} from "../common";
+import {Exclusion, ScheduleAtDate, ScheduleInput} from "../common";
 
 export class ScheduleByExclusion {
     role_index: Map<Role, number>;
@@ -12,26 +12,8 @@ export class ScheduleByExclusion {
 
     constructor(params: ScheduleInput) {
         this.params = params;
+        this.params.validate();
         this.clear_working_state();
-
-        if (params.roles.roles_in_layout_order.length == 0) {
-            throw Error("The dates parameters don't define any roles.");
-        }
-
-        if (this.days_per_period < 1) {
-            throw new Error("Period must be > 1");
-        }
-
-        if (!this.start_date || isNaN(this.start_date.valueOf())) {
-            throw new Error("No start date, or start date is invalid");
-        }
-        if (!this.end_date || isNaN(this.end_date.valueOf())) {
-            throw new Error("No end date, or end date is invalid");
-        }
-
-        if (this.schedule_duration_in_days <= 0) {
-            throw new Error("The dates has no sensible length (0 or -ve)");
-        }
     }
 
     private clear_working_state() {
@@ -53,7 +35,7 @@ export class ScheduleByExclusion {
     }
 
     get schedule_duration_in_days(): number {
-        return daysBetween(this.start_date, this.end_date);
+        return this.params.schedule_duration_in_days;
     }
 
     get_schedule_for_date(date: Date) {

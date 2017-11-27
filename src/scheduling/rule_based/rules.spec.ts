@@ -1,19 +1,18 @@
 import {
     FixedRoleOnDate,
     OnThisDate,
-    PickRules,
     Rules,
     RuleState,
     UsageWeightedSequential,
     WeightedRoles
 } from "./rules";
 import {PeopleStore, Person} from "../../state/people";
-import {Role} from "../../state/roles";
+import {defaultSoundRole, Role} from "../../state/roles";
 
 describe('rules', () => {
     let store = new PeopleStore();
     let state;
-    let p1, p2, p3: Person;
+    let neil, bob, tim: Person;
     let date: Date;
 
     beforeEach(() => {
@@ -21,13 +20,13 @@ describe('rules', () => {
         state = new RuleState();
 
         // If we have people in order, it just returns sequentially
-        p1 = store.addPerson(new Person("Neil"));
-        p2 = store.addPerson(new Person("Bob"));
-        p3 = store.addPerson(new Person("Tim"));
+        neil = store.addPerson(new Person("Neil").addRole(defaultSoundRole));
+        bob = store.addPerson(new Person("Bob"));
+        tim = store.addPerson(new Person("Tim").addRole(defaultSoundRole));
 
         date = new Date(2010, 10, 0);
         state.date = date;
-        state.person = p1;
+        state.person = neil;
     });
 
     describe('role rules', () => {
@@ -125,7 +124,6 @@ describe('rules', () => {
         it('can return fixed role on date', () => {
             let rule = new FixedRoleOnDate(date, role2);
             expect(rule.execute(state).next().value).toEqual(role2);
-            state.date = new Date(2013, 3, 4);
             expect(rule.execute(state).next().value).toEqual(null);
         });
 
@@ -153,8 +151,6 @@ describe('rules', () => {
 
             let iterator = rules.execute(state);
             expect(iterator.next().value).toEqual(role2);
-
-            state.date = new Date(2011, 1, 1);
             expect(iterator.next().value).toEqual(null);
         });
 
@@ -167,10 +163,11 @@ describe('rules', () => {
             let iterator = rules.execute(state);
             expect(iterator.next().value).toEqual(role2);
 
-            state.date = new Date(2011, 1, 1);
             let next_role = iterator.next().value;
             expect(next_role).toEqual(role1);
+
             rules.use_this_role(next_role);
+
             expect(iterator.next().value).toEqual(role2);
             rules.use_this_role(next_role);
         });
@@ -178,28 +175,28 @@ describe('rules', () => {
     });
 
     describe('pick rules', () => {
-        it('simple sequential', () => {
+        it('can do sequentially', () => {
             // If we have people in order, it just returns sequentially
             let uw = new UsageWeightedSequential(store.people);
 
-            expect(uw.execute(state).next().value).toEqual(p1);
-            uw.use_this_person(p1);
+            expect(uw.execute(state).next().value).toEqual(neil);
+            uw.use_this_person(neil);
 
-            expect(uw.execute(state).next().value).toEqual(p2);
-            uw.use_this_person(p2);
+            expect(uw.execute(state).next().value).toEqual(bob);
+            uw.use_this_person(bob);
 
-            expect(uw.execute(state).next().value).toEqual(p3);
-            uw.use_this_person(p3);
+            expect(uw.execute(state).next().value).toEqual(tim);
+            uw.use_this_person(tim);
 
-            expect(uw.execute(state).next().value).toEqual(p1);
+            expect(uw.execute(state).next().value).toEqual(neil);
         });
 
-        it('on this date rule', () => {
-            let dateRule = new OnThisDate(date, p1);
+        it('can pick a person for a role on a date', () => {
+            let dateRule = new OnThisDate(date, neil, defaultSoundRole);
 
             // Execute for this date. Should work.
             let iterator = dateRule.execute(state);
-            expect(iterator.next().value).toEqual(p1);
+            expect(iterator.next().value).toEqual(neil);
             expect(iterator.next().value).toEqual(null);
 
             // Do it for a different date that doesn't match, shouldn't come back with anything.
@@ -209,56 +206,58 @@ describe('rules', () => {
         });
 
 
-        it('test unavailable', () => {
+        it('simulated unavailability affects scoring', () => {
             let uw = new UsageWeightedSequential(store.people);
 
             let series_of_people = uw.execute(state);
 
             // Lets say p1 isn't available (so we don't call increment)
-            expect(series_of_people.next().value).toEqual(p1);
+            expect(series_of_people.next().value).toEqual(neil);
 
-            expect(series_of_people.next().value).toEqual(p2);
+            expect(series_of_people.next().value).toEqual(bob);
             // We DO use p2.
-            uw.use_this_person(p2);
+            uw.use_this_person(bob);
 
             // Now when we come to do this again, we want to see p1 first
             series_of_people = uw.execute(state);
-            expect(series_of_people.next().value).toEqual(p1);
+            expect(series_of_people.next().value).toEqual(neil);
 
             // then p3 (because p2 was used, above)
-            expect(series_of_people.next().value).toEqual(p3);
+            expect(series_of_people.next().value).toEqual(tim);
 
             // THEN p2
-            expect(series_of_people.next().value).toEqual(p2);
+            expect(series_of_people.next().value).toEqual(bob);
         });
 
         it('a group of one rule looks like it has just one rule', () => {
             let rules = new Rules();
-            let dateRule = new OnThisDate(date, p3, 5);
+            let dateRule = new OnThisDate(date, tim, defaultSoundRole);
             rules.addRule(dateRule);
 
             let iterator = rules.execute(state);
-            expect(iterator.next().value).toEqual(p3);
+            expect(iterator.next().value).toEqual(tim);
             expect(iterator.next().value).toEqual(null);
         });
 
         it('can execute many rules', () => {
             let rules = new Rules();
+            state.date = date;
 
             // Means: choose Tim on date 'date'
-            let dateRule = new OnThisDate(date, p3, 5);
+            // Make sure this rule runs before the UWS (pri:10)
+            let dateRule = new OnThisDate(date, tim, defaultSoundRole, 10);
+            rules.addRule(dateRule);
 
             // Means, use weighted sequential (Neil, Bob, Tim).
-            let uw = new UsageWeightedSequential(store.people, 1);
+            let uw = new UsageWeightedSequential(store.people);
             rules.addRule(uw);
-            rules.addRule(dateRule);
 
             // Running on date = date, should get Tim, Neil, Bob, Tim
             let iterator = rules.execute(state);
-            expect(iterator.next().value).toEqual(p3);
-            expect(iterator.next().value).toEqual(p1);
-            expect(iterator.next().value).toEqual(p2);
-            expect(iterator.next().value).toEqual(p3);
+            expect(iterator.next().value).toEqual(tim);
+            expect(iterator.next().value).toEqual(neil);
+            expect(iterator.next().value).toEqual(bob);
+            expect(iterator.next().value).toEqual(tim);
             expect(iterator.next().value).toEqual(null);
         });
     });

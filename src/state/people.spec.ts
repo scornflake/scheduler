@@ -1,5 +1,6 @@
 import {PeopleStore, Person} from "./people";
-import {defaultKeysRole, defaultLeaderRole, Role, RolesStore} from "./roles";
+import {defaultKeysRole, defaultLeaderRole, defaultSaxRole, defaultSoundRole, Role, RolesStore} from "./roles";
+import {UsageWeightedSequential} from "../scheduling/rule_based/rules";
 
 describe('people, ', () => {
     let firstPerson: Person;
@@ -75,6 +76,15 @@ describe('people, ', () => {
         expect(ordered[0]).toEqual(p1);
         expect(ordered[1]).toEqual(p2);
         expect(ordered[2]).toEqual(p3);
+    });
+
+    describe('rules', () => {
+        it('can have role weightings', () => {
+            // let neil = new Person("neil");
+            // neil.addRole(defaultSaxRole, 3);
+            // neil.addRole(defaultSoundRole, 1);
+
+        });
 
     });
 });

@@ -1,4 +1,6 @@
-import {Role, RolesStore} from "./roles";
+import {defaultBass, defaultSaxRole, defaultSoundRole, Role, RolesStore} from "./roles";
+import {PeopleStore, Person} from "./people";
+import {FixedRoleOnDate, OnThisDate, RuleState} from "../scheduling/rule_based/rules";
 
 describe('roles', () => {
     let role_store: RolesStore;
@@ -78,4 +80,66 @@ describe('roles', () => {
         expect(groups[0].length).toEqual(2);
         expect(groups[1].length).toEqual(1);
     });
+
+    describe('rules', () => {
+        let neil, rob: Person;
+        let people_store;
+        let state: RuleState;
+        let date: Date;
+
+        beforeEach(() => {
+            date = new Date(2017, 10, 1);
+
+            rob = new Person("rob");
+            rob.addRole(defaultBass);
+            rob.addRole(defaultSoundRole);
+
+            neil = new Person("neil");
+            neil.addRole(defaultSaxRole, 3);
+            neil.addRole(defaultSoundRole, 1);
+
+            people_store = new PeopleStore();
+            people_store.addPerson(neil);
+            people_store.addPerson(rob);
+
+            role_store.addRoles(people_store.roles_for_all_people);
+
+            state = new RuleState();
+            state.date = date;
+        });
+
+        it('creates role rules given people', () => {
+            let pick_roles = role_store.pick_rules(people_store);
+            expect(pick_roles.size).toEqual(3);
+
+            let just_roles = Array.from(pick_roles.keys());
+            expect(just_roles).toContain(defaultSaxRole);
+            expect(just_roles).toContain(defaultSoundRole);
+            expect(just_roles).toContain(defaultBass);
+
+            // If we choose sound, we should get neil/rob/neil/rob
+            let sound_rules = pick_roles.get(defaultSoundRole);
+            let iterator = sound_rules.execute(state);
+            expect(iterator.next().value).toEqual(neil);
+            expect(iterator.next().value).toEqual(rob);
+        });
+
+        it('a person can have a fixed role on a date', () => {
+            // This would be the normal order
+            //expect(iterator.next().value).toEqual(neil);
+            //expect(iterator.next().value).toEqual(rob);
+
+            role_store.addPickRule(new OnThisDate(date, rob, defaultSoundRole));
+
+            let pick_rules = role_store.pick_rules(people_store);
+            let sound_rules = pick_rules.get(defaultSoundRole);
+            let iterator = sound_rules.execute(state);
+
+            // If however; we give rob a 'fixed date' then we expect this to be reversed
+            expect(iterator.next().value).toEqual(rob);
+            expect(iterator.next().value).toEqual(neil);
+
+        });
+
+    })
 });

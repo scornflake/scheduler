@@ -1,8 +1,8 @@
 import {action, computed, observable} from "mobx-angular";
 import {Role} from "./roles";
 import {AvailabilityUnit, SchedulePrefs} from "./scheduling-types";
-import includes from 'lodash/includes';
 import ShortUniqueId from 'short-unique-id';
+import * as _ from "lodash";
 
 class Unavailablity {
     from_date: Date = null;
@@ -62,14 +62,14 @@ class Person {
         // console.log("Set name to " + value);
     }
 
-    @observable primary_roles: Array<Role>;
+    primary_roles: Map<Role, number>;
     @observable unavailable: Array<Unavailablity>;
     @observable prefs: SchedulePrefs;
 
     // Need to store a role, and also for this person, if they are in this role what
     // other roles they can also fullfill. However; mobx doesn't like using objects as keys
     // in maps, which is a pain.
-    @observable secondary_roles: Map<string, Array<Role>>;
+    secondary_roles: Map<string, Array<Role>>;
 
     constructor(name: string, uuid: string = null) {
         if (uuid == null) {
@@ -78,7 +78,7 @@ class Person {
         }
         this.uuid = uuid;
         this.name = name;
-        this.primary_roles = [];
+        this.primary_roles = new Map<Role, number>();
         this.secondary_roles = new Map<string, Array<Role>>();
         this.unavailable = [];
         this.prefs = new SchedulePrefs();
@@ -86,7 +86,7 @@ class Person {
 
     @computed
     get roles(): Array<Role> {
-        return this.primary_roles;
+        return Array.from(this.primary_roles.keys());
     }
 
     @computed
@@ -132,19 +132,14 @@ class Person {
     }
 
     @action
-    addRole(r: Role): Person {
-        if (includes(this.roles, r)) {
-            return;
-        }
-        this.roles.push(r);
+    addRole(r: Role, weighting = 1): Person {
+        this.primary_roles.set(r, weighting);
         return this;
     }
 
     @action
     removeRole(r: Role): Person {
-        this.primary_roles = this.roles.filter(role => {
-            return role.uuid != r.uuid;
-        });
+        this.primary_roles.delete(r);
         this.secondary_roles.delete(r.uuid);
         return this;
     }
@@ -215,6 +210,11 @@ class PeopleStore {
             }
             return false;
         });
+    }
+
+    get roles_for_all_people(): Array<Role> {
+        let all_roles = _.flatMap(this.people, (p) => p.roles);
+        return _.uniqBy(all_roles, (r) => r.uuid);
     }
 
     order_people_by_role_layout_priority() {

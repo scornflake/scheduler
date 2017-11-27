@@ -13,6 +13,10 @@ let priority_comparator = (r1: Rule, r2: Rule) => {
 class RuleState {
     date: Date;
     person: Person;
+
+    valueOf() {
+        return JSON.stringify(this);
+    }
 }
 
 class Rule {
@@ -29,6 +33,8 @@ class Rule {
             }
         }
     }
+
+
 }
 
 class Rules {
@@ -38,6 +44,12 @@ class Rules {
 
     constructor() {
         this.rules = [];
+    }
+
+    addRules(rules: Array<Rule>) {
+        for (let rule of rules) {
+            this.addRule(rule);
+        }
     }
 
     addRule(rule: Rule) {
@@ -50,14 +62,22 @@ class Rules {
         this.current_iterator = null;
         this.iterators_to_iterate = [];
         for (let rule of this.rules.sort(priority_comparator)) {
-            this.iterators_to_iterate.push(rule.execute(state));
+            let iterator = rule.execute(state);
+            this.iterators_to_iterate.push(iterator);
         }
 
         this.current_iterator = this.iterators_to_iterate.pop();
         return {
             next: () => {
+                if (this.iterators_to_iterate == null || isUndefined(this.iterators_to_iterate)) {
+                    return {
+                        done: true, value: null
+                    }
+                }
+
                 // get the next value and maybe choose the next iterator
                 let next_value = this.current_iterator.next();
+                // console.log("Next value is: " + next_value.value);
                 while (next_value.done) {
                     this.current_iterator = this.iterators_to_iterate.pop();
                     if (this.current_iterator == null) {
@@ -118,17 +138,21 @@ class Score {
 class FixedRoleOnDate extends RoleRule {
     date: Date;
     role: Role;
+    private haveReturnedValue: boolean;
 
     constructor(date: Date, r: Role, priority = 0) {
         super(priority);
         this.date = date;
         this.role = r;
+        this.haveReturnedValue = false;
     }
 
     execute(state: RuleState): Iterator<Role> {
         return {
             next: () => {
-                if (this.date == state.date) {
+                // console.log("Execute for date: " + this.date + ". Run yet: " + this.haveReturnedValue);
+                if (this.date == state.date && !this.haveReturnedValue) {
+                    this.haveReturnedValue = true;
                     return {
                         done: false,
                         value: this.role
@@ -246,13 +270,16 @@ class PickRule extends Rule {
 }
 
 class OnThisDate extends PickRule {
-    private date: Date;
-    private person: Person;
+    role: Role;
+    date: Date;
+    person: Person;
+
     private haveReturnedValue: boolean;
 
-    constructor(date: Date, person: Person, priority: number = 0) {
+    constructor(date: Date, person: Person, role: Role, priority: number = 0) {
         super(priority);
         this.date = date;
+        this.role = role;
         this.person = person;
         this.haveReturnedValue = false;
     }
@@ -260,7 +287,8 @@ class OnThisDate extends PickRule {
     execute(state: RuleState): Iterator<Person> {
         return {
             next: () => {
-                if (state.date == this.date && !this.haveReturnedValue) {
+                let hasPrimaryRole = this.person.has_primary_role(this.role);
+                if (state.date == this.date && hasPrimaryRole && !this.haveReturnedValue) {
                     this.haveReturnedValue = true;
                     return {
                         done: false,

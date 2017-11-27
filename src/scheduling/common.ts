@@ -30,6 +30,32 @@ class ScheduleInput {
         this.people = people;
         this.roles = roles;
     }
+
+    validate() {
+        if (this.roles.roles_in_layout_order.length == 0) {
+            throw Error("The dates parameters don't define any roles.");
+        }
+
+        if (this.days_per_period < 1) {
+            throw new Error("Period must be > 1");
+        }
+
+        if (!this.start_date || isNaN(this.start_date.valueOf())) {
+            throw new Error("No start date, or start date is invalid");
+        }
+        if (!this.end_date || isNaN(this.end_date.valueOf())) {
+            throw new Error("No end date, or end date is invalid");
+        }
+
+        if (this.schedule_duration_in_days <= 0) {
+            throw new Error("The dates has no sensible length (0 or -ve)");
+        }
+    }
+
+    get schedule_duration_in_days(): number {
+        return daysBetween(this.start_date, this.end_date);
+    }
+
 }
 
 function daysBetween(startDate: Date, endDate: Date): number {
