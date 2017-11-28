@@ -1,6 +1,6 @@
 import {PeopleStore, Person} from "./people";
 import {defaultKeysRole, defaultLeaderRole, defaultSaxRole, defaultSoundRole, Role, RolesStore} from "./roles";
-import {UsageWeightedSequential} from "../scheduling/rule_based/rules";
+import {RuleState, UsageWeightedSequential} from "../scheduling/rule_based/rules";
 
 describe('people, ', () => {
     let firstPerson: Person;
@@ -80,11 +80,26 @@ describe('people, ', () => {
 
     describe('rules', () => {
         it('can have role weightings', () => {
-            // let neil = new Person("neil");
-            // neil.addRole(defaultSaxRole, 3);
-            // neil.addRole(defaultSoundRole, 1);
+            let neil = new Person("neil");
+            neil.addRole(defaultSaxRole, 3);
+            neil.addRole(defaultSoundRole, 1);
 
+            let rules = neil.role_rules();
+            expect(rules.length).toEqual(1);
+
+            let state = new RuleState();
+            let iterator = rules.execute(state);
+
+            expect(iterator.next().value).toEqual(defaultSoundRole);
+            rules.use_this_role(defaultSoundRole);
+            expect(iterator.next().value).toEqual(defaultSaxRole);
+            rules.use_this_role(defaultSaxRole);
+            expect(iterator.next().value).toEqual(defaultSaxRole);
+            rules.use_this_role(defaultSaxRole);
+            expect(iterator.next().value).toEqual(defaultSaxRole);
+            rules.use_this_role(defaultSaxRole);
+            expect(iterator.next().value).toEqual(defaultSoundRole);
+            rules.use_this_role(defaultSoundRole);
         });
-
     });
 });

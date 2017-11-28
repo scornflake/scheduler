@@ -3,6 +3,8 @@ import {Role} from "./roles";
 import {AvailabilityUnit, SchedulePrefs} from "./scheduling-types";
 import ShortUniqueId from 'short-unique-id';
 import * as _ from "lodash";
+import {isUndefined} from "util";
+import {Rules, WeightedRoles} from "../scheduling/rule_based/rules";
 
 class Unavailablity {
     from_date: Date = null;
@@ -84,6 +86,20 @@ class Person {
         this.prefs = new SchedulePrefs();
     }
 
+    role_rules(): Rules {
+        let rules = new Rules();
+
+        // TODO: Hmm. Could add unavailability dates as rules?
+        // Have a rule that returns NO roles if the person is unavailable.
+        // Could do that on the Pick as well. Here might be a little cleaner, model wise.
+
+        // Add in weighted role distribution
+        let weighting = new WeightedRoles(this.primary_roles);
+        rules.addRule(weighting);
+
+        return rules;
+    }
+
     @computed
     get roles(): Array<Role> {
         return Array.from(this.primary_roles.keys());
@@ -133,6 +149,9 @@ class Person {
 
     @action
     addRole(r: Role, weighting = 1): Person {
+        if (r == null || isUndefined(r)) {
+            throw Error("Cannot add a nil or undefined role");
+        }
         this.primary_roles.set(r, weighting);
         return this;
     }

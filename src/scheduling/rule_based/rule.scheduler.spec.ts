@@ -49,7 +49,7 @@ describe('role scheduler', () => {
     it('can schedule neil weekly', () => {
         params.start_date = new Date(2017, 9, 1);
         params.end_date = new Date(2017, 9, 25);
-        neil.addRole(params.roles.find_role("Sound"));
+        neil.addRole(defaultSoundRole);
 
         schedule = new ScheduleWithRules(params);
         expect(schedule).not.toBeNull();
@@ -115,13 +115,15 @@ describe('role scheduler', () => {
         schedule.create_schedule();
 
         let all_scheduled = Array.from(schedule.dates.values());
+        // console.log("ALL: " + JSON.stringify(all_scheduled));
         let dates_with_neil = all_scheduled.filter(sad => {
-            // console.log("Check: " + JSON.stringify(sad));
+            console.log("Check: " + JSON.stringify(sad));
             return includes(sad.people, neil);
         });
 
-        expect(dates_with_neil.length).toEqual(1);
+        expect(dates_with_neil.length).toEqual(2);
         expect(dates_with_neil[0].date.getDate()).toEqual(8);
+        expect(dates_with_neil[1].date.getDate()).toEqual(22);
     });
 
     it('limits placements based on max count', () => {
@@ -172,6 +174,10 @@ describe('role scheduler', () => {
         let schedules = Array.from(schedule.dates.values());
 
         // console.log(schedule.jsonResult(true));
+
+        schedule.dates.forEach(sc => {
+            console.log("" + sc);
+        });
 
         expect(schedules[0].people_in_role(defaultSoundRole)[0].name).toEqual("Neil");
         expect(schedules[1].people_in_role(defaultSoundRole)[0].name).toEqual("Daniel");

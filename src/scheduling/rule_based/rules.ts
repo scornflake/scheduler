@@ -46,6 +46,10 @@ class Rules {
         this.rules = [];
     }
 
+    get length(): number {
+        return this.rules.length;
+    }
+
     addRules(rules: Array<Rule>) {
         for (let rule of rules) {
             this.addRule(rule);
@@ -247,6 +251,7 @@ class WeightedRoles extends RoleRule {
 
     use_this_role(r: Role) {
         let score = this.score_for_role(r);
+        console.log("Increment score for '" + r.name + "' from " + score.usage_count + " to " + (score.usage_count + 1));
         score.usage_count++;
         this.scoring.set(r, score);
     }
@@ -347,7 +352,9 @@ class UsageWeightedSequential extends PickRule {
     }
 
     use_this_person(p: Person) {
-        this.usages.set(p, this.usages.get(p) + 1);
+        let existing = this.usages.get(p);
+        console.log("Increment usage for " + p.name + " from " + existing + " to " + (existing + 1));
+        this.usages.set(p, existing + 1);
     }
 }
 

@@ -1,5 +1,6 @@
 import {Role, RolesStore} from "../state/roles";
 import {PeopleStore, Person} from "../state/people";
+import * as _ from 'lodash';
 
 class ScheduleScore {
     roles: Array<Role>;
@@ -9,11 +10,16 @@ class ScheduleScore {
 
     constructor(roles: Array<Role>) {
         this.roles = roles;
+        this.score = 0;
     }
 
     has_role(role: Role) {
-        let matching = this.roles.filter(r => role.uuid == r.uuid);
-        return matching.length > 0;
+        return _.includes(this.roles, role);
+    }
+
+    valueOf() {
+        let role_names = _.join(this.roles.map(r => r.name), ', ');
+        return "Score: " + this.score + " for roles: " + role_names;
     }
 }
 
@@ -91,6 +97,10 @@ class Exclusion {
     get duration_in_days(): number {
         return daysBetween(this.start_date, this.end_date);
     }
+
+    valueOf() {
+        return JSON.stringify(this);
+    }
 }
 
 // Score for this person, for some date
@@ -135,6 +145,13 @@ class ScheduleAtDate {
             let score = this.people_score.get(p);
             return score.has_role(role);
         });
+    }
+
+    valueOf() {
+        let names_with_tasks = this.people_sorted_by_role_priority.map(p => {
+            return p.name + "=" + this.people_score.get(p);
+        });
+        return this.date.toDateString() + " - " + _.join(names_with_tasks, ',');
     }
 }
 

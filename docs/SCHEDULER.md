@@ -43,12 +43,12 @@ How might weighted roles work?
 - Iterate all dates, in order
 - Initialize pick rules
 - [done] Sort people by the max role layout priority they are in. This puts leaders, sound and computer guys first in the list (meaning they are chosen first)
-- Choose the next role to look at (using existing role priority groups as a way to perform grouped layouts)
-- Find people suitable for this role (subset)
-- Choose the next person using the pick rule for that role
+- [done] Choose the next role to look at (using existing role priority groups as a way to perform grouped layouts)
+- [done] Find people suitable for this role (subset)
+- [done] Choose the next person using the pick rule for that role
   - This assumes we've created a pick rule for e.g:'worship leader'
-- It would then *re-pick the role* in which to place the person.
-  - This is done with the role rules of the person.
+- [done] It would then *re-pick the role* in which to place the person.
+  - [done] This is done with the role rules of the person.
   - Execute each active rule in priority order.
     - A rule returns a set of possible roles, in order. If no roles, can't place.
     - Input to the rule is the last ordered set of roles.

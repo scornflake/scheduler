@@ -21,7 +21,7 @@ export class Role {
     }
 
     valueOf() {
-        return "Role " + this.name + "[ " + this.uuid + "]";
+        return "Role: " + this.name;
     }
 }
 

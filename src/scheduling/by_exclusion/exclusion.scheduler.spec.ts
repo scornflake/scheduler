@@ -47,10 +47,10 @@ describe('schedule', () => {
         }).toThrow();
     });
 
-    it('can schedule neil weekly', () => {
+    it('schedule neil weekly', () => {
         params.start_date = new Date(2017, 9, 1);
         params.end_date = new Date(2017, 9, 25);
-        neil.addRole(params.roles.find_role("Sound"));
+        neil.addRole(defaultSoundRole);
 
         schedule = new ScheduleByExclusion(params);
         expect(schedule).not.toBeNull();

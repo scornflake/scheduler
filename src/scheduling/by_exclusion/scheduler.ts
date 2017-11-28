@@ -103,6 +103,10 @@ export class ScheduleByExclusion {
 
                         // If already in this role, skip
                         let specific_day = this.get_schedule_for_date(current_date);
+                        if (!specific_day) {
+                            throw Error("What? Unable to get a schedule for " + current_date);
+                        }
+
                         if (includes(specific_day.people_in_role(role), person)) {
                             console.log("Skipping " + person.name + ", they are already on it");
                             continue;
@@ -115,9 +119,6 @@ export class ScheduleByExclusion {
                         }
 
                         // ok. We can put someone in this slot then.
-                        if (!specific_day) {
-                            throw Error("What? Unable to get a schedule for " + current_date);
-                        }
                         specific_day.add_person(person, role);
                         this.record_exclusions(current_date, person, role);
 
