@@ -11,7 +11,7 @@ import {PersonEditorComponent} from './person-editor/person-editor';
     ],
     imports: [
         IonicModule,
-        NgPipesModule
+        NgPipesModule,
     ],
     exports: [
         ScheduleViewerComponent,

@@ -1,16 +1,19 @@
 import {Role, RolesStore} from "../state/roles";
 import {PeopleStore, Person} from "../state/people";
 import * as _ from 'lodash';
+import {RuleState} from "./rule_based/rules";
 
 class ScheduleScore {
     roles: Array<Role>;
+    decisions: Array<string>;
     layout_weight: number;
     roster_weight: number;
     score: number;
 
-    constructor(roles: Array<Role>) {
+    constructor(roles: Array<Role>, decisions: Array<string> = []) {
         this.roles = roles;
         this.score = 0;
+        this.decisions = decisions;
     }
 
     has_role(role: Role) {
@@ -133,10 +136,9 @@ class ScheduleAtDate {
         });
     }
 
-    add_person(person: Person, role: Role) {
+    add_person(person: Person, role: Role, facts: RuleState = null) {
         let roles = person.role_include_dependents_of(role);
-        console.log("Schedule " + person.name + " for " + JSON.stringify(roles.map(r => r.name)) + " on " + this.date);
-        let score = new ScheduleScore(roles);
+        let score = new ScheduleScore(roles, facts ? facts.decisions : []);
         this.people_score.set(person, score);
     }
 

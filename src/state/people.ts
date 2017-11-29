@@ -132,13 +132,13 @@ class Person {
         return this;
     }
 
-    @action
-    with_roles(roles: Array<Role>): Person {
-        for (let role of roles) {
-            this.addRole(role);
-        }
-        return this;
-    }
+    // @action
+    // with_roles(roles: Array<Role>): Person {
+    //     for (let role of roles) {
+    //         this.addRole(role);
+    //     }
+    //     return this;
+    // }
 
     has_primary_role(role: Role) {
         let matching_roles = this.roles.filter(r => {

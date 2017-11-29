@@ -26,6 +26,7 @@ export class ScheduleViewerComponent {
         if (!this.schedule) {
             return [];
         }
+        // console.log(JSON.stringify(this.schedule.jsonResult()));
         return this.schedule.jsonResult();
     }
 
@@ -62,6 +63,9 @@ export class ScheduleViewerComponent {
 
         let date_for_row = row['date'];
         let exclusion_zones = this.schedule.exclusion_zones.get(person);
+        if(!exclusion_zones) {
+            return false;
+        }
 
         // lets find those zones relating directly to this role
         let zones_matching_role = exclusion_zones.filter(z => z.role.uuid == role.uuid);
@@ -78,6 +82,10 @@ export class ScheduleViewerComponent {
     a) The person within this cell == the selected person
      */
     selected_and_in_role(a_person: Person, role_name) {
+        if(a_person == null) {
+            console.error("a_person is null. This seems bad");
+            return false;
+        }
         let person = this.selected_person;
         if (!person) {
             return false;
@@ -93,6 +101,7 @@ export class ScheduleViewerComponent {
     }
 
     select(person) {
+        console.log("Selecting: " + person + " - " + person.constructor.name);
         this.store.ui_store.selected_person = person;
     }
 

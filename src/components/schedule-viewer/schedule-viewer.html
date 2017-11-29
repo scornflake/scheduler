@@ -8,11 +8,12 @@
                 {{row['date'].toDateString()}}
             </ion-col>
             <ion-col *ngFor="let key of keys_for_row(row)"
-                     [ngClass]="{'range':in_exclusion_zone(row, key)}">
-                <div *ngFor="let person of value_as_array(row[key])"
-                     [ngClass]="{'selected':selected_and_in_role(person, key)}"
-                     (click)="select(person)">
-                    {{person.name}}
+                     [ngClass]="{'range':in_exclusion_zone(row, key)}"
+            >
+                <div *ngFor="let val of value_as_array(row[key])"
+                     [ngClass]="{'selected':selected_and_in_role(val, key)}"
+                     (click)="select(val)">
+                    {{val.name}}
                 </div>
             </ion-col>
         </ion-row>

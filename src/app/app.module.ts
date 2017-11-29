@@ -28,7 +28,7 @@ import {RootStore} from "../state/root";
         NgPipesModule,
         IonicModule.forRoot(MyApp),
         ComponentsModule,
-        MobxAngularModule
+        MobxAngularModule,
     ],
     bootstrap: [IonicApp],
     entryComponents: [

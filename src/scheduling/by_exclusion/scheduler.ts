@@ -222,14 +222,6 @@ export class ScheduleByExclusion {
                 // Do we have a value, for this?
                 let peopleInRole = schedule_for_day.people_in_role(role);
                 rowDict[role.name] = peopleInRole;
-                // if (peopleInRole.length > 0) {
-                //     let names = peopleInRole.map(r => r.name);
-                //     rowDict[role.name] = names.join(",");
-                // } else {
-                //     if (!minimized) {
-                //         rowDict[role.name] = "";
-                //     }
-                // }
             }
 
             // Add the row

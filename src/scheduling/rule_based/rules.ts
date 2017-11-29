@@ -13,10 +13,26 @@ let priority_comparator = (r1: Rule, r2: Rule) => {
 class RuleState {
     date: Date;
     person: Person;
+    decisions: Array<string>;
 
     valueOf() {
         return JSON.stringify(this);
     }
+
+    start_fresh() {
+        this.decisions = [];
+    }
+
+    add_decision(text: string, log: boolean = true) {
+        if (!text) {
+            return;
+        }
+        if (log) {
+            console.log(text);
+        }
+        this.decisions.push(text);
+    }
+
 }
 
 class Rule {
