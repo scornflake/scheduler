@@ -1,8 +1,11 @@
-import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
+import {Component, Input} from '@angular/core';
 import {ScheduleByExclusion} from "../../scheduling/by_exclusion/scheduler";
 import {isArray} from "util";
 import {Person} from "../../state/people";
 import {RootStore} from "../../state/root";
+import {PopoverController} from "ionic-angular";
+import {ReasonsComponent} from "../reasons/reasons";
+import {Role} from "../../state/roles";
 
 @Component({
     // changeDetection: ChangeDetectionStrategy.OnPush,
@@ -12,7 +15,8 @@ import {RootStore} from "../../state/root";
 export class ScheduleViewerComponent {
     @Input() schedule: ScheduleByExclusion;
 
-    constructor(private store: RootStore) {
+    constructor(private store: RootStore,
+                public popoverCtrl: PopoverController) {
     }
 
     get headers(): Array<string> {
@@ -28,6 +32,15 @@ export class ScheduleViewerComponent {
         }
         // console.log(JSON.stringify(this.schedule.jsonResult()));
         return this.schedule.jsonResult();
+    }
+
+    presentPopover(myEvent) {
+        let popover = this.popoverCtrl.create(ReasonsComponent, {
+            // reasons:this.store.ui_store.s
+        });
+        popover.present({
+            ev: myEvent
+        });
     }
 
     keys_for_row(row) {
@@ -63,7 +76,7 @@ export class ScheduleViewerComponent {
 
         let date_for_row = row['date'];
         let exclusion_zones = this.schedule.exclusion_zones.get(person);
-        if(!exclusion_zones) {
+        if (!exclusion_zones) {
             return false;
         }
 
@@ -82,7 +95,7 @@ export class ScheduleViewerComponent {
     a) The person within this cell == the selected person
      */
     selected_and_in_role(a_person: Person, role_name) {
-        if(a_person == null) {
+        if (a_person == null) {
             console.error("a_person is null. This seems bad");
             return false;
         }
@@ -93,16 +106,16 @@ export class ScheduleViewerComponent {
         if (a_person.uuid != person.uuid) {
             return false;
         }
-        let role = this.store.roles_store.find_role(role_name);
-        if (!role) {
-            return false;
-        }
-        return true;
+        return this.store.roles_store.find_role(role_name);
+
     }
 
-    select(person) {
-        console.log("Selecting: " + person + " - " + person.constructor.name);
+    select(person: Person, date: Date, role_name: string) {
+        let role = this.store.roles_store.find_role(role_name);
+        console.log("Selecting: " + person + " on " + date.toDateString() + " for " + role.name);
         this.store.ui_store.selected_person = person;
+        this.store.ui_store.selected_date = date;
+        this.store.ui_store.selected_role = role;
     }
 
     get selected_person(): Person {

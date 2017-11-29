@@ -1,6 +1,6 @@
 import {action, observable} from "mobx-angular";
 import ShortUniqueId from 'short-unique-id';
-import {PeopleStore} from "./people";
+import {PeopleStore, Person} from "./people";
 import {OnThisDate, PickRule, Rule, Rules, UsageWeightedSequential} from "../scheduling/rule_based/rules";
 
 export class Role {
@@ -21,7 +21,7 @@ export class Role {
     }
 
     valueOf() {
-        return "Role: " + this.name;
+        return "[" + this.name + "]";
     }
 }
 
@@ -161,6 +161,14 @@ export class RolesStore {
             rules.addRule(uws);
 
             rule_map.set(role, rules);
+        }
+        return rule_map;
+    }
+
+    role_rules(people_store:PeopleStore): Map<Person, Rules> {
+        let rule_map = new Map<Person, Rules>();
+        for (let person of people_store.people) {
+            rule_map.set(person, person.role_rules());
         }
         return rule_map;
     }

@@ -10,10 +10,12 @@ let priority_comparator = (r1: Rule, r2: Rule) => {
     return r1.priority < r2.priority ? -1 : r1.priority > r2.priority ? 1 : 0;
 };
 
-class RuleState {
+class RuleFacts {
     date: Date;
-    person: Person;
     decisions: Array<string>;
+
+    all_pick_rules: Map<Role, Rules>;
+    all_role_rules: Map<Person, Rules>;
 
     valueOf() {
         return JSON.stringify(this);
@@ -32,7 +34,6 @@ class RuleState {
         }
         this.decisions.push(text);
     }
-
 }
 
 class Rule {
@@ -42,7 +43,7 @@ class Rule {
         this.priority = priority;
     }
 
-    execute(state: RuleState): Iterator<any> {
+    execute(state: RuleFacts): Iterator<any> {
         return {
             next: () => {
                 return {done: true, value: null}
@@ -78,7 +79,7 @@ class Rules {
         }
     }
 
-    execute(state: RuleState): Iterator<any> {
+    execute(state: RuleFacts): Iterator<any> {
         this.current_iterator = null;
         this.iterators_to_iterate = [];
         for (let rule of this.rules.sort(priority_comparator)) {
@@ -133,7 +134,7 @@ class Rules {
 }
 
 class RoleRule extends Rule {
-    execute(state: RuleState): Iterator<Role> {
+    execute(state: RuleFacts): Iterator<Role> {
         throw new Error("Need implementation")
     }
 
@@ -167,7 +168,7 @@ class FixedRoleOnDate extends RoleRule {
         this.haveReturnedValue = false;
     }
 
-    execute(state: RuleState): Iterator<Role> {
+    execute(state: RuleFacts): Iterator<Role> {
         return {
             next: () => {
                 // console.log("Execute for date: " + this.date + ". Run yet: " + this.haveReturnedValue);
@@ -214,7 +215,7 @@ class WeightedRoles extends RoleRule {
         });
     }
 
-    execute(state: RuleState): Iterator<Role> {
+    execute(state: RuleFacts): Iterator<Role> {
         return {
             next: () => {
                 // sort by current score, highest first.
@@ -282,7 +283,7 @@ class WeightedRoles extends RoleRule {
 }
 
 class PickRule extends Rule {
-    execute(state: RuleState): Iterator<Person> {
+    execute(state: RuleFacts): Iterator<Person> {
         throw new Error("Need implementation")
     }
 
@@ -305,7 +306,7 @@ class OnThisDate extends PickRule {
         this.haveReturnedValue = false;
     }
 
-    execute(state: RuleState): Iterator<Person> {
+    execute(state: RuleFacts): Iterator<Person> {
         return {
             next: () => {
                 let hasPrimaryRole = this.person.has_primary_role(this.role);
@@ -340,7 +341,7 @@ class UsageWeightedSequential extends PickRule {
         });
     }
 
-    execute(state: RuleState): Iterator<Person> {
+    execute(state: RuleFacts): Iterator<Person> {
         // Sort by number
         let peopleInUsageOrder = Array.from(this.usages.keys()).sort((p1: Person, p2: Person) => {
             let usageForP1 = this.usages.get(p1);
@@ -378,7 +379,7 @@ export {
     UsageWeightedSequential,
     WeightedRoles,
     FixedRoleOnDate,
-    RuleState,
+    RuleFacts,
     OnThisDate,
     PickRule,
     Rules,

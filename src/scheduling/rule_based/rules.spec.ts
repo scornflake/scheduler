@@ -2,7 +2,7 @@ import {
     FixedRoleOnDate,
     OnThisDate,
     Rules,
-    RuleState,
+    RuleFacts,
     UsageWeightedSequential,
     WeightedRoles
 } from "./rules";
@@ -17,7 +17,7 @@ describe('rules', () => {
 
     beforeEach(() => {
         store = new PeopleStore();
-        state = new RuleState();
+        state = new RuleFacts();
 
         // If we have people in order, it just returns sequentially
         neil = store.addPerson(new Person("Neil").addRole(defaultSoundRole));
@@ -26,7 +26,6 @@ describe('rules', () => {
 
         date = new Date(2010, 10, 0);
         state.date = date;
-        state.person = neil;
     });
 
     describe('role rules', () => {

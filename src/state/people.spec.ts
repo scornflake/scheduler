@@ -1,6 +1,6 @@
 import {PeopleStore, Person} from "./people";
 import {defaultKeysRole, defaultLeaderRole, defaultSaxRole, defaultSoundRole, Role, RolesStore} from "./roles";
-import {RuleState, UsageWeightedSequential} from "../scheduling/rule_based/rules";
+import {RuleFacts, UsageWeightedSequential} from "../scheduling/rule_based/rules";
 
 describe('people, ', () => {
     let firstPerson: Person;
@@ -87,7 +87,7 @@ describe('people, ', () => {
             let rules = neil.role_rules();
             expect(rules.length).toEqual(1);
 
-            let state = new RuleState();
+            let state = new RuleFacts();
             let iterator = rules.execute(state);
 
             expect(iterator.next().value).toEqual(defaultSoundRole);

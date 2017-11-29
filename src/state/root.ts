@@ -37,7 +37,7 @@ class RootStore {
         // for testing, create some fake
         let params = new ScheduleInput(this.people_store, this.roles_store);
         params.start_date = new Date(2018, 0, 7);
-        params.end_date = new Date(2018, 0, 15);
+        params.end_date = new Date(2018, 4, 1);
 
         if (!this.schedule) {
             this.schedule = new ScheduleWithRules(params);

@@ -1,7 +1,7 @@
 import {Role, RolesStore} from "../state/roles";
 import {PeopleStore, Person} from "../state/people";
 import * as _ from 'lodash';
-import {RuleState} from "./rule_based/rules";
+import {RuleFacts} from "./rule_based/rules";
 
 class ScheduleScore {
     roles: Array<Role>;
@@ -136,7 +136,7 @@ class ScheduleAtDate {
         });
     }
 
-    add_person(person: Person, role: Role, facts: RuleState = null) {
+    add_person(person: Person, role: Role, facts: RuleFacts = null) {
         let roles = person.role_include_dependents_of(role);
         let score = new ScheduleScore(roles, facts ? facts.decisions : []);
         this.people_score.set(person, score);

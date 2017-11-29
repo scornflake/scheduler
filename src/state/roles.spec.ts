@@ -1,6 +1,6 @@
 import {defaultBass, defaultSaxRole, defaultSoundRole, Role, RolesStore} from "./roles";
 import {PeopleStore, Person} from "./people";
-import {FixedRoleOnDate, OnThisDate, RuleState} from "../scheduling/rule_based/rules";
+import {FixedRoleOnDate, OnThisDate, RuleFacts} from "../scheduling/rule_based/rules";
 
 describe('roles', () => {
     let role_store: RolesStore;
@@ -84,7 +84,7 @@ describe('roles', () => {
     describe('rules', () => {
         let neil, rob: Person;
         let people_store;
-        let state: RuleState;
+        let state: RuleFacts;
         let date: Date;
 
         beforeEach(() => {
@@ -104,7 +104,7 @@ describe('roles', () => {
 
             role_store.addRoles(people_store.roles_for_all_people);
 
-            state = new RuleState();
+            state = new RuleFacts();
             state.date = date;
         });
 

@@ -25,6 +25,10 @@
                         [schedule]="store.schedule"
                         [person]="store.ui_store.selected_person">
                 </person-editor>
+                <reasons
+                    [decisions]="store.schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"
+                >
+                </reasons>
             </ion-col>
         </ion-row>
     </ion-grid>

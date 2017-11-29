@@ -3,11 +3,13 @@ import {ScheduleViewerComponent} from './schedule-viewer/schedule-viewer';
 import {IonicModule} from "ionic-angular";
 import {NgPipesModule} from "angular-pipes";
 import {PersonEditorComponent} from './person-editor/person-editor';
+import {ReasonsComponent} from './reasons/reasons';
 
 @NgModule({
     declarations: [
         ScheduleViewerComponent,
-        PersonEditorComponent
+        PersonEditorComponent,
+        ReasonsComponent
     ],
     imports: [
         IonicModule,
@@ -15,7 +17,8 @@ import {PersonEditorComponent} from './person-editor/person-editor';
     ],
     exports: [
         ScheduleViewerComponent,
-        PersonEditorComponent
+        PersonEditorComponent,
+        ReasonsComponent
     ]
 })
 export class ComponentsModule {
