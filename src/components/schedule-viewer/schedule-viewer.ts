@@ -1,11 +1,10 @@
 import {Component, Input} from '@angular/core';
-import {ScheduleByExclusion} from "../../scheduling/by_exclusion/scheduler";
 import {isArray} from "util";
 import {Person} from "../../state/people";
 import {RootStore} from "../../state/root";
 import {PopoverController} from "ionic-angular";
 import {ReasonsComponent} from "../reasons/reasons";
-import {Role} from "../../state/roles";
+import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
 
 @Component({
     // changeDetection: ChangeDetectionStrategy.OnPush,
@@ -13,7 +12,7 @@ import {Role} from "../../state/roles";
     templateUrl: 'schedule-viewer.html'
 })
 export class ScheduleViewerComponent {
-    @Input() schedule: ScheduleByExclusion;
+    @Input() schedule: ScheduleWithRules;
 
     constructor(private store: RootStore,
                 public popoverCtrl: PopoverController) {
@@ -75,19 +74,7 @@ export class ScheduleViewerComponent {
         }
 
         let date_for_row = row['date'];
-        let exclusion_zones = this.schedule.exclusion_zones.get(person);
-        if (!exclusion_zones) {
-            return false;
-        }
-
-        // lets find those zones relating directly to this role
-        let zones_matching_role = exclusion_zones.filter(z => z.role.uuid == role.uuid);
-        if (!zones_matching_role.length) {
-            return false;
-        }
-
-        let containining_this_date = zones_matching_role.filter(z => z.includes_date(date_for_row));
-        return containining_this_date.length > 0;
+        return this.schedule.is_person_in_exclusion_zone(person, role, date_for_row);
     }
 
     /*

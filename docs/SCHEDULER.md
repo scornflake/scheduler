@@ -145,3 +145,39 @@ It'd make extending it MUCH easier.
 
 
 
+
+Rule Execution / Iterators
+==========================
+
+So. Have iterators. And they suck.
+
+The original idea was that i'd be lazily returning state. Now, with RuleFacts, I can't think of a good reason to continue doing it (and it doesn't read well in code either)
+
+Rather: Shouldn't the rules ALWAYS return the same state, given the same RuleFacts?
+So the usage of people over time, state currently baked into the rules themselves... shouldn't this be moved into RuleFacts?
+
+Then:
+1. Rules execute, and use current facts to return a result.
+2. Facts are modified
+3. When rules next execute - because facts are different, we get a different result.
+
+
+Rather than having 'Rules' objects, just have one Rules(Engine)
+This contains all rules. We gather rules to execute based on criteria (e.g: all for this role, or this person, or this day) and execute those. We get a result.
+
+The caller no longer needs to know the rule that triggered, because it'll be updating FACT state not rule state.
+
+Hmm. Does this mean the schedule itself becomes part of the facts? Probably.
+Basically the rules need to be able to ask:
+
+- How many times has this person been scheduled on for this role?
+- What is the original ordering of people, for this role?
+- Is this person in role X?
+
+
+
+
+
+TODO v3
+=======
+- Exclusions should be turned into rules (and can then be part of 'next suitable person')

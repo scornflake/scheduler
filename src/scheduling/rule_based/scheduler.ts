@@ -1,13 +1,12 @@
 import {Exclusion, ScheduleAtDate, ScheduleInput} from "../common";
-import {Role, RolesStore} from "../../state/roles";
-import {Rules, RuleFacts} from "./rules";
+import {Role} from "../../state/roles";
+import {RuleFacts} from "./rules";
 import {Person, Unavailablity} from "../../state/people";
 import * as _ from 'lodash';
 
 class ScheduleWithRules {
     dates: Map<string, ScheduleAtDate>;
     params: ScheduleInput;
-    exclusion_zones: Map<Person, Array<Exclusion>>;
     facts: RuleFacts;
 
     constructor(input: ScheduleInput) {
@@ -27,16 +26,11 @@ class ScheduleWithRules {
         let role_names = role_groups.map(g => JSON.stringify(g.map(r => r.name)));
         console.log("Roles (in order of importance): " + JSON.stringify(role_names));
 
-        // This is all PickRules, for all roles
-        this.facts.all_pick_rules = role_store.pick_rules(this.params.people);
-        this.facts.all_role_rules = role_store.role_rules(this.params.people);
-
         role_groups.forEach(rg => this.process_role_group(rg));
     }
 
     process_role_group(role_group: Array<Role>) {
-        let role_store = this.params.roles;
-        let people_store = this.params.people;
+        this.facts.begin_new_role_group(role_group);
 
         let current_date = this.params.start_date;
         console.log("\r\nNext group: " + JSON.stringify(role_group.map(r => r.name)));
@@ -48,8 +42,7 @@ class ScheduleWithRules {
             console.log("Next date: " + current_date);
 
             for (let role of role_group) {
-                this.facts.start_fresh();
-                this.facts.date = current_date;
+                this.facts.begin_new_role(current_date);
                 this.process_role(current_date, role, role_group);
             }
 
@@ -66,13 +59,19 @@ class ScheduleWithRules {
         }
     }
 
+    is_role_filled_for_date(role:Role, date:Date) {
+        let specific_day = this.get_schedule_for_date(date);
+        let peopleInRole = specific_day.people_in_role(role);
+        return peopleInRole.length >= role.maximum_count;
+
+    }
+
     process_role(current_date: Date, role: Role, role_group: Array<Role>) {
         let specific_day = this.get_schedule_for_date(current_date);
-        let all_pick_rules = this.facts.all_pick_rules;
+        // let all_pick_rules = this.facts.all_pick_rules;
 
         // If already at max for this role, ignore it.
-        let peopleInRole = specific_day.people_in_role(role);
-        if (peopleInRole.length >= role.maximum_count) {
+        if(this.is_role_filled_for_date(role, current_date)) {
             console.log("Not processing " + role.name + ", already have " + role.maximum_count + " slotted in");
             return;
         }
@@ -88,63 +87,49 @@ class ScheduleWithRules {
 
         this.facts.add_decision("Role: " + role.name, false);
 
-        for (let person of people_for_this_role) {
-            let message = "Can " + person.name + " do role " + role.name + "?";
-            this.facts.add_decision(message);
+        let iteration_max = people_for_this_role.length;
+        while(iteration_max > 0) {
+            iteration_max--;
 
-            let pick_rules_for_role = all_pick_rules.get(role);
-            if (pick_rules_for_role == null) {
-                throw Error("No pick rules setup for role: " + role.name)
-            }
-
-            let next_suitable_person_iterator = pick_rules_for_role.execute(this.facts);
-            let next_suitable_person = next_suitable_person_iterator.next().value;
+            let next_suitable_person = this.facts.get_next_suitable_person_for(role);
             if (next_suitable_person == null) {
                 this.facts.add_decision("No people suitable for role " + role.name);
-                continue;
+                break;
             }
 
-            this.facts.add_decision("Next suitable is: " + next_suitable_person.name);
+            let message = "Can " + next_suitable_person.name + " do role " + role.name + "?";
+            this.facts.add_decision(message);
 
-            if (_.includes(specific_day.people_in_role(role), person) ||
-                _.includes(specific_day.people_in_role(role), next_suitable_person)) {
-                let message = "Skipping " + person.name + ", they are already on it";
+            if (_.includes(specific_day.people_in_role(role), next_suitable_person)) {
+                let message = "Skipping " + next_suitable_person.name + ", they are already on it";
+                // TODO: Fix? this is a hack to make sure we don't infinite loop. If we get here, looping would bring us right back unless we change engine state
+                this.facts.use_this_person_in_role(next_suitable_person, role);
                 this.facts.add_decision(message);
                 continue;
             }
 
-            // Is the person available according to their availability preference?
-            let [has_exclusion, reason] = this.has_exclusion_for(current_date, next_suitable_person, role);
-            if (has_exclusion) {
-                this.facts.add_decision(next_suitable_person.name + " cant do it, they have an exclusion: " + reason);
-                continue;
-            }
-
-            let persons_role_rules = this.facts.all_role_rules.get(next_suitable_person);
-            let next_wanted_role = persons_role_rules.execute(this.facts).next().value;
+            let next_wanted_role_for_person = this.facts.get_next_suitable_role_for_person(next_suitable_person);
 
             // Only let this happen if the role is withing the current group being processed
-            if(next_wanted_role in role_group) {
-                if (next_wanted_role.uuid != role.uuid) {
-                    this.facts.add_decision("Putting " + next_suitable_person.name + " into " + next_wanted_role + " instead of " + role + " due to a role weighting");
+            // TODO: This could be optional (might not want role_groups being mutually exclusive like this)
+            if(_.includes(role_group, next_wanted_role_for_person) && !this.is_role_filled_for_date(next_wanted_role_for_person, current_date)) {
+                if (next_wanted_role_for_person.uuid != role.uuid) {
+                    this.facts.add_decision("Putting " + next_suitable_person.name + " into " + next_wanted_role_for_person + " instead of " + role + " due to a role weighting");
+
+                    this.place_person_in_role(next_suitable_person, next_wanted_role_for_person, current_date);
+                    this.facts.use_this_person_in_role(next_suitable_person, next_wanted_role_for_person);
+
+                    this.facts.add_decision("Check role " + role + " again because of weighted placement");
 
                     // now continue with the loop, because we still havn't found someone for the role we were originally looking for.
-                    let pick_rule = all_pick_rules.get(next_wanted_role);
-                    pick_rule.use_this_person(next_suitable_person);
-                    persons_role_rules.use_this_role(next_wanted_role);
-
-                    this.place_person_in_role(next_suitable_person, next_wanted_role, current_date);
-                    this.facts.add_decision("Check role " + role + " again because of weighted placement");
                     continue;
                 }
             }
 
-
             // OK. So. Turns out the role is the same.
             // Place the person, and we're done filling this role.
             this.place_person_in_role(next_suitable_person, role, current_date);
-            pick_rules_for_role.use_this_person(next_suitable_person);
-            persons_role_rules.use_this_role(next_wanted_role);
+            this.facts.use_this_person_in_role(next_suitable_person, next_wanted_role_for_person);
 
             let peopleInRole = specific_day.people_in_role(role);
             if (peopleInRole.length >= role.maximum_count) {
@@ -152,31 +137,6 @@ class ScheduleWithRules {
                 return;
             }
         }
-    }
-
-    has_exclusion_for(date: Date, person: Person, role: Role): any[] {
-        // Is this person unavailable on this date?
-        if (person.is_unavailable_on(date)) {
-            return [true, "unavailable"];
-        }
-
-        // Is this person excluded for this date?
-        let exclusions_for_person = this.exclusion_zones.get(person);
-        if (!exclusions_for_person) {
-            return [false, "no exclusions for " + person.name];
-        }
-
-        // Does the exclusion zone for this person overlap with any existing?
-        let availability = person.prefs.availability;
-        let end_date = availability.get_end_date_from(date);
-        let new_exclusion = new Exclusion(date, end_date, role);
-
-        for (let exclusion of exclusions_for_person) {
-            if (exclusion.overlap_with(new_exclusion)) {
-                return [true, "overlap with existing " + exclusion];
-            }
-        }
-        return [false, "clear!"];
     }
 
     get_schedule_for_date(date: Date) {
@@ -194,21 +154,7 @@ class ScheduleWithRules {
     }
 
     private place_person_in_role(person: Person, role: Role, date: Date) {
-        let exclusions_for_person = this.exclusion_zones.get(person);
-        if (!exclusions_for_person) {
-            exclusions_for_person = [];
-        }
-
-        // make the exclusion
-        let availability = person.prefs.availability;
-        let end_date = availability.get_end_date_from(date);
-
-        for (let r of person.role_include_dependents_of(role)) {
-            let exclusion = new Exclusion(date, end_date, r);
-            exclusions_for_person.push(exclusion);
-            this.facts.add_decision("Recorded exclusion for " + person.name + " from " + date + " for " + exclusion.duration_in_days + " days");
-            this.exclusion_zones.set(person, exclusions_for_person);
-        }
+        this.facts.add_exclusion_for(person, role, date);
 
         let specific_day = this.get_schedule_for_date(date);
         this.facts.add_decision("Placing " + person.name + " into " + role);
@@ -224,9 +170,8 @@ class ScheduleWithRules {
     }
 
     private clear_working_state() {
-        this.exclusion_zones = new Map<Person, Array<Exclusion>>();
         this.dates = new Map<string, ScheduleAtDate>();
-        this.facts = new RuleFacts();
+        this.facts = new RuleFacts(this.params.people, this.params.roles);
     }
 
     jsonResult(minimized: boolean = false) {
@@ -278,6 +223,10 @@ class ScheduleWithRules {
             return score.decisions;
         }
         return [];
+    }
+
+    is_person_in_exclusion_zone(person: Person, role: Role, date_for_row: Date) {
+        return this.facts.is_person_in_exclusion_zone(person, role, date_for_row);
     }
 }
 

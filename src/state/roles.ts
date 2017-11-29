@@ -1,7 +1,7 @@
 import {action, observable} from "mobx-angular";
 import ShortUniqueId from 'short-unique-id';
 import {PeopleStore, Person} from "./people";
-import {OnThisDate, PickRule, Rule, Rules, UsageWeightedSequential} from "../scheduling/rule_based/rules";
+import {OnThisDate, Rule, UsageWeightedSequential} from "../scheduling/rule_based/rules";
 
 export class Role {
     @observable uuid: string;
@@ -27,7 +27,7 @@ export class Role {
 
 let leaderPriority = 11;
 let soundPriority = 10; // 10
-let instrumentPriority = 10;// 9
+let instrumentPriority = 10;
 
 let defaultLeaderRole = new Role("Worship Leader", null, leaderPriority);
 
@@ -148,32 +148,32 @@ export class RolesStore {
         return null;
     }
 
-    pick_rules(people_store: PeopleStore): Map<Role, Rules> {
-        let rule_map = new Map<Role, Rules>();
+    pick_rules(people_store: PeopleStore): Map<Role, Array<Rule>> {
+        let rule_map = new Map<Role, Array<Rule>>();
         for (let role of this.roles_in_layout_order) {
-            let rules = new Rules();
+            let rules = [];
 
             // Find any specific rules for this date.
-            rules.addRules(this.rules_for_role(role));
+            rules.concat(this.rules_for_role(role));
 
             // Ordering people sequentially
             let uws = new UsageWeightedSequential(people_store.people_with_role(role));
-            rules.addRule(uws);
+            rules.push(uws);
 
             rule_map.set(role, rules);
         }
         return rule_map;
     }
 
-    role_rules(people_store:PeopleStore): Map<Person, Rules> {
-        let rule_map = new Map<Person, Rules>();
+    role_rules(people_store: PeopleStore): Map<Person, Array<Rule>> {
+        let rule_map = new Map<Person, Array<Rule>>();
         for (let person of people_store.people) {
             rule_map.set(person, person.role_rules());
         }
         return rule_map;
     }
 
-    addPickRule(rule: PickRule) {
+    addPickRule(rule: Rule) {
         /*
         When putting rules together, user specified pick rules must come before the
         UWS rules when executing. So we make sure they have a higher priority.

@@ -4,7 +4,6 @@ import {RuleFacts, UsageWeightedSequential} from "../scheduling/rule_based/rules
 
 describe('people, ', () => {
     let firstPerson: Person;
-
     let person_store: PeopleStore;
     let someDate: Date = new Date(2010, 10, 3);
 
@@ -76,30 +75,5 @@ describe('people, ', () => {
         expect(ordered[0]).toEqual(p1);
         expect(ordered[1]).toEqual(p2);
         expect(ordered[2]).toEqual(p3);
-    });
-
-    describe('rules', () => {
-        it('can have role weightings', () => {
-            let neil = new Person("neil");
-            neil.addRole(defaultSaxRole, 3);
-            neil.addRole(defaultSoundRole, 1);
-
-            let rules = neil.role_rules();
-            expect(rules.length).toEqual(1);
-
-            let state = new RuleFacts();
-            let iterator = rules.execute(state);
-
-            expect(iterator.next().value).toEqual(defaultSoundRole);
-            rules.use_this_role(defaultSoundRole);
-            expect(iterator.next().value).toEqual(defaultSaxRole);
-            rules.use_this_role(defaultSaxRole);
-            expect(iterator.next().value).toEqual(defaultSaxRole);
-            rules.use_this_role(defaultSaxRole);
-            expect(iterator.next().value).toEqual(defaultSaxRole);
-            rules.use_this_role(defaultSaxRole);
-            expect(iterator.next().value).toEqual(defaultSoundRole);
-            rules.use_this_role(defaultSoundRole);
-        });
     });
 });

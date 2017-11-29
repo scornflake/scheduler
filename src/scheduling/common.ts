@@ -86,7 +86,7 @@ class Exclusion {
         }
     }
 
-    overlap_with(other: Exclusion) {
+    overlap_with(other: Exclusion, role: Role) {
         return this.includes_date(other.start_date) ||
             this.includes_date(other.end_date) ||
             other.includes_date(this.start_date) ||
@@ -138,7 +138,7 @@ class ScheduleAtDate {
 
     add_person(person: Person, role: Role, facts: RuleFacts = null) {
         let roles = person.role_include_dependents_of(role);
-        let score = new ScheduleScore(roles, facts ? facts.decisions : []);
+        let score = new ScheduleScore(roles, facts ? facts.decisions_for_date : []);
         this.people_score.set(person, score);
     }
 

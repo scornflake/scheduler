@@ -2,9 +2,9 @@ import {action, computed, observable} from "mobx-angular";
 import {Role} from "./roles";
 import {AvailabilityUnit, SchedulePrefs} from "./scheduling-types";
 import ShortUniqueId from 'short-unique-id';
-import * as _ from "lodash";
 import {isUndefined} from "util";
-import {Rules, WeightedRoles} from "../scheduling/rule_based/rules";
+import {Rule, WeightedRoles} from "../scheduling/rule_based/rules";
+import * as _ from "lodash";
 
 class Unavailablity {
     from_date: Date = null;
@@ -86,8 +86,8 @@ class Person {
         this.prefs = new SchedulePrefs();
     }
 
-    role_rules(): Rules {
-        let rules = new Rules();
+    role_rules(): Array<Rule> {
+        let rules = [];
 
         // TODO: Hmm. Could add unavailability dates as rules?
         // Have a rule that returns NO roles if the person is unavailable.
@@ -95,7 +95,7 @@ class Person {
 
         // Add in weighted role distribution
         let weighting = new WeightedRoles(this.primary_roles);
-        rules.addRule(weighting);
+        rules.push(weighting);
 
         return rules;
     }

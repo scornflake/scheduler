@@ -66,15 +66,16 @@ export class TestStoreConstruction {
             .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.addPerson(stuart)
+            .addRole(defaultAccousticGuitar)
             .addRole(defaultVocalsRole)
             .with_dep_role(defaultLeaderRole, [defaultAccousticGuitar, defaultVocalsRole])
-            .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
+            .avail_every(6, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.addPerson(jeremy_selfe)
             .addRole(defaultLeaderRole, 2)
             .addRole(defaultElectricGuitar)
             .with_dep_role(defaultLeaderRole, [defaultElectricGuitar])
-            .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
+            .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.addPerson(ralph)
             .with_dep_role(defaultLeaderRole, [defaultAccousticGuitar, defaultVocalsRole])
@@ -132,7 +133,7 @@ export class TestStoreConstruction {
         person_store.addPerson(chris)
             .addRole(defaultSoundRole)
             // .addRole(defaultElectricGuitar)
-            .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
+            .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.addPerson(jeremy_l)
             .addRole(defaultSoundRole)
@@ -145,7 +146,7 @@ export class TestStoreConstruction {
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.addPerson(jeremy_w)
-            .addRole(defaultSoundRole)
+            .addRole(defaultSoundRole, 2)
             .addRole(defaultComputerRole)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 

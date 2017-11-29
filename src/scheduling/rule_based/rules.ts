@@ -1,28 +1,61 @@
-import {Person} from "../../state/people";
-import includes from 'lodash/includes';
-import {Role} from "../../state/roles";
-import sum from 'lodash/sum';
-import sumBy from 'lodash/sumBy';
-import sortBy from 'lodash/sortBy';
-import {isUndefined} from "ionic-angular/util/util";
+import * as _ from 'lodash';
+import {Role, RolesStore} from "../../state/roles";
+import {PeopleStore, Person} from "../../state/people";
+import {Exclusion} from "../common";
 
 let priority_comparator = (r1: Rule, r2: Rule) => {
     return r1.priority < r2.priority ? -1 : r1.priority > r2.priority ? 1 : 0;
 };
 
-class RuleFacts {
-    date: Date;
-    decisions: Array<string>;
+class RuleExecution {
+    object: any;
+    trigger: Rule;
 
-    all_pick_rules: Map<Role, Rules>;
-    all_role_rules: Map<Person, Rules>;
-
-    valueOf() {
-        return JSON.stringify(this);
+    constructor(obj, trigger: Rule) {
+        this.object = obj;
+        this.trigger = trigger;
     }
 
-    start_fresh() {
-        this.decisions = [];
+    get empty(): boolean {
+        return this.object == null && this.trigger == null;
+    }
+
+    public static EMPTY() {
+        return new RuleExecution(null, null);
+    }
+}
+
+class RuleFacts {
+    date: Date;
+    decisions_for_date: Array<string>;
+
+    private all_pick_rules: Map<Role, Array<Rule>>;
+    private all_role_rules: Map<Person, Array<Rule>>;
+
+    private exclusion_zones: Map<Person, Array<Exclusion>>;
+    private people: PeopleStore;
+    private roles: RolesStore;
+
+    private usage_counts: Map<Role, Map<Person, number>>;
+
+    constructor(people: PeopleStore, roles: RolesStore) {
+        this.people = people;
+        this.roles = roles;
+        this.exclusion_zones = new Map<Person, Array<Exclusion>>();
+
+        // This is all PickRules, for all roles
+        this.all_pick_rules = this.roles.pick_rules(this.people);
+        this.all_role_rules = this.roles.role_rules(this.people);
+
+        this.usage_counts = new Map<Role, Map<Person, number>>();
+    }
+
+    begin_new_role_group(role_group: Array<Role>) {
+    }
+
+    begin_new_role(date: Date) {
+        this.date = date;
+        this.decisions_for_date = [];
     }
 
     add_decision(text: string, log: boolean = true) {
@@ -32,7 +65,169 @@ class RuleFacts {
         if (log) {
             console.log(text);
         }
-        this.decisions.push(text);
+        this.decisions_for_date.push(text);
+    }
+
+    has_exclusion_for(date: Date, person: Person, role: Role): any[] {
+        // Is this person unavailable on this date?
+        if (person.is_unavailable_on(date)) {
+            return [true, "unavailable"];
+        }
+
+        // Is this person excluded for this date?
+        let exclusions_for_person = this.exclusion_zones.get(person);
+        if (!exclusions_for_person) {
+            return [false, "no exclusions for " + person.name];
+        }
+
+        // Does the exclusion zone for this person overlap with any existing?
+        let availability = person.prefs.availability;
+        let end_date = availability.get_end_date_from(date);
+        let new_exclusion = new Exclusion(date, end_date, role);
+
+        for (let exclusion of exclusions_for_person) {
+            if (exclusion.overlap_with(new_exclusion, role)) {
+                return [true, "overlap with existing " + exclusion];
+            }
+        }
+        return [false, "clear!"];
+    }
+
+    get_next_suitable_person_for(role: Role): Person {
+        // runs the pick rules for this role
+        let pick_rules = this.all_pick_rules.get(role);
+        if (!pick_rules) {
+            return null;
+        }
+        for (let rule of pick_rules) {
+            if (rule instanceof OnThisDate) {
+                let result = rule.execute(this);
+                if (result) return result;
+            }
+            if (rule instanceof UsageWeightedSequential) {
+                let people = rule.execute(this, role);
+                if (people.length) {
+                    for (let possible_person of people) {
+                        // can't already be in the role on this date
+                        let [has_exclusion, reason] = this.has_exclusion_for(this.date, possible_person, role);
+                        if (has_exclusion) {
+
+                            this.add_decision(possible_person.name + " cant do it, they have an exclusion: " + reason);
+                            continue;
+                        }
+
+                        return possible_person;
+                    }
+
+                }
+
+                return null;
+            }
+        }
+    }
+
+    get_next_suitable_role_for_person(person: Person) {
+        let role_rules = this.all_role_rules.get(person);
+        if (!role_rules) {
+            return null;
+        }
+        for (let rule of role_rules) {
+            if (rule instanceof FixedRoleOnDate) {
+                let result = rule.execute(this);
+                if (result) return result;
+            }
+            if (rule instanceof WeightedRoles) {
+                let result = rule.execute(this, person);
+                return result[0];
+            }
+        }
+        return null;
+    }
+
+    private get_person_count_for_role(role: Role, person: Person): Map<Person, number> {
+        if (role == null
+        ) {
+            throw new Error("Role cannot be null here");
+        }
+        if (person == null) {
+            throw new Error("Person cannot be null here");
+        }
+        if (!this.usage_counts.has(role)) {
+            console.log("Creating new role counter for " + role.name);
+            let new_count = new Map<Person, number>();
+            this.usage_counts.set(role, new_count);
+        }
+
+        let by_person = this.usage_counts.get(role);
+        if (!by_person.has(person)) {
+            console.log("Starting count at 0 for " + person.name);
+            by_person.set(person, 0);
+        }
+        return by_person;
+    }
+
+    number_of_times_role_used_by_person(role: Role, person: Person): number {
+        if (role == null) {
+            throw new Error("Role cannot be null here");
+        }
+        if (person == null) {
+            throw new Error("Person cannot be null here");
+        }
+        return this.get_person_count_for_role(role, person).get(person);
+    }
+
+    total_number_of_times_person_placed_in_roles(person: Person, roles: Array<Role>): number {
+        let total = 0;
+        for (let role of roles) {
+            let person_counter_for_role = this.get_person_count_for_role(role, person);
+            total = total + person_counter_for_role.get(person);
+        }
+        return total;
+    }
+
+    index_of_person_in_role_group(person: Person, role: Role) {
+        return 0;
+    }
+
+    use_this_person_in_role(person: Person, role: Role) {
+        let person_counter = this.get_person_count_for_role(role, person);
+        let current_count = person_counter.get(person);
+        person_counter.set(person, (current_count + 1));
+        // console.log("Up to " + person_counter.get(person));
+    }
+
+    add_exclusion_for(person: Person, role: Role, date: Date) {
+        let exclusions_for_person = this.exclusion_zones.get(person);
+        if (!exclusions_for_person) {
+            exclusions_for_person = [];
+        }
+
+        // make the exclusion
+        let availability = person.prefs.availability;
+        let end_date = availability.get_end_date_from(date);
+
+        for (let r of person.role_include_dependents_of(role)) {
+            let exclusion = new Exclusion(date, end_date, r);
+            exclusions_for_person.push(exclusion);
+            this.add_decision("Recorded exclusion for " + person.name + " from " + date.toDateString() + " for " + exclusion.duration_in_days + " days on " + role.name);
+            this.exclusion_zones.set(person, exclusions_for_person);
+        }
+    }
+
+    is_person_in_exclusion_zone(person: Person, role: Role, date_for_row: Date) {
+        let exclusion_zones = this.exclusion_zones.get(person);
+        if (!exclusion_zones) {
+            return false;
+        }
+
+        // lets find those zones relating directly to this role
+        let zones_matching_role = exclusion_zones.filter(z => z.role.uuid == role.uuid);
+        if (!zones_matching_role.length) {
+            return false;
+        }
+
+        let containining_this_date = zones_matching_role.filter(z => z.includes_date(date_for_row));
+        return containining_this_date.length > 0;
     }
 }
 
@@ -42,239 +237,70 @@ class Rule {
     constructor(priority: number = 0) {
         this.priority = priority;
     }
-
-    execute(state: RuleFacts): Iterator<any> {
-        return {
-            next: () => {
-                return {done: true, value: null}
-            }
-        }
-    }
-
-
 }
 
-class Rules {
-    protected rules: Array<Rule>;
-    protected current_iterator: Iterator<Person>;
-    protected iterators_to_iterate: Array<Iterator<Person>>;
-
-    constructor() {
-        this.rules = [];
-    }
-
-    get length(): number {
-        return this.rules.length;
-    }
-
-    addRules(rules: Array<Rule>) {
-        for (let rule of rules) {
-            this.addRule(rule);
-        }
-    }
-
-    addRule(rule: Rule) {
-        if (!includes(this.rules, rule)) {
-            this.rules.push(rule);
-        }
-    }
-
-    execute(state: RuleFacts): Iterator<any> {
-        this.current_iterator = null;
-        this.iterators_to_iterate = [];
-        for (let rule of this.rules.sort(priority_comparator)) {
-            let iterator = rule.execute(state);
-            this.iterators_to_iterate.push(iterator);
-        }
-
-        this.current_iterator = this.iterators_to_iterate.pop();
-        return {
-            next: () => {
-                if (this.iterators_to_iterate == null || isUndefined(this.iterators_to_iterate)) {
-                    return {
-                        done: true, value: null
-                    }
-                }
-
-                // get the next value and maybe choose the next iterator
-                let next_value = this.current_iterator.next();
-                // console.log("Next value is: " + next_value.value);
-                while (next_value.done) {
-                    this.current_iterator = this.iterators_to_iterate.pop();
-                    if (this.current_iterator == null) {
-                        return {
-                            done: true, value: null
-                        }
-                    }
-                    next_value = this.current_iterator.next();
-                }
-                return next_value;
-            }
-        }
-    }
-
-    use_this_role(role: Role) {
-        this.use_this(role);
-    }
-
-    use_this_person(person: Person) {
-        this.use_this(person);
-    }
-
-    private use_this(thing: Object) {
-        this.rules.forEach((r) => {
-            if (r instanceof RoleRule && thing instanceof Role) {
-                r.use_this_role(thing)
-            }
-            if (r instanceof PickRule && thing instanceof Person) {
-                r.use_this_person(thing)
-            }
-        });
-    }
-}
-
-class RoleRule extends Rule {
-    execute(state: RuleFacts): Iterator<Role> {
-        throw new Error("Need implementation")
-    }
-
-    use_this_role(r: Role) {
-    }
-}
-
-class Score {
-    weighting: number; // 0..1
-    usage_count: number; // number of times this element has been used
-
-    constructor(weighting, score = 0) {
-        this.weighting = weighting;
-        this.usage_count = 0;
-    }
-
-    valueOf() {
-        return "Weighting: " + this.weighting + ", usage: " + this.usage_count;
-    }
-}
-
-class FixedRoleOnDate extends RoleRule {
+class FixedRoleOnDate extends Rule {
     date: Date;
     role: Role;
-    private haveReturnedValue: boolean;
 
     constructor(date: Date, r: Role, priority = 0) {
         super(priority);
         this.date = date;
         this.role = r;
-        this.haveReturnedValue = false;
     }
 
-    execute(state: RuleFacts): Iterator<Role> {
-        return {
-            next: () => {
-                // console.log("Execute for date: " + this.date + ". Run yet: " + this.haveReturnedValue);
-                if (this.date == state.date && !this.haveReturnedValue) {
-                    this.haveReturnedValue = true;
-                    return {
-                        done: false,
-                        value: this.role
-                    }
-                }
-
-                return {
-                    done: true, value: null
-                }
-            }
-        };
+    execute(state: RuleFacts): Role {
+        if (this.date == state.date) {
+            return this.role;
+        }
+        return null;
     }
 }
 
-class WeightedRoles extends RoleRule {
+class WeightedRoles extends Rule {
     weightedRoles: Map<Role, number>;
-    scoring: Map<Role, Score>;
 
     constructor(weightedRules: Map<Role, number>) {
         super();
         this.weightedRoles = weightedRules;
-        this.clearScores();
-        this.normalizeWeights();
-    }
-
-    private clearScores() {
-        this.scoring = new Map<Role, Score>();
-    }
-
-    get roles_sorted_by_score(): Array<Role> {
-        return sortBy(Array.from(this.weightedRoles.keys()), (o) => {
-            return this.score_for_role(o).usage_count;
-        });
+        this.normalize_weights();
     }
 
     get roles_sorted_by_weight(): Array<Role> {
-        return sortBy(Array.from(this.weightedRoles.keys()), (o) => {
+        return _.sortBy(Array.from(this.weightedRoles.keys()), (o) => {
             return this.weightedRoles.get(o);
         });
     }
 
-    execute(state: RuleFacts): Iterator<Role> {
-        return {
-            next: () => {
-                // sort by current score, highest first.
-                let roles_in_weight_order = this.roles_sorted_by_weight;
-                let total_usages = this.total_uses;
+    execute(state: RuleFacts, person: Person): Array<Role> {
+        // sort by current score, highest first.
+        let roles_in_weight_order = this.roles_sorted_by_weight;
 
-                // console.log("Total usages: " + total_usages);
+        let roles = Array.from(this.weightedRoles.keys());
+        let total_usages = state.total_number_of_times_person_placed_in_roles(person, roles);
+        if (total_usages == 0) {
+            return roles_in_weight_order;
+        }
 
-                if (total_usages == 0) {
-                    return {
-                        done: false,
-                        value: roles_in_weight_order[0]
-                    }
-                }
+        // Sort based on realtime score
+        return _.sortBy(roles_in_weight_order, role => {
+            let role_weighting = this.weightedRoles.get(role);
 
-                // Choose the next role
-                for (let role of roles_in_weight_order) {
-                    let role_weighting = this.weightedRoles.get(role);
+            let current_score = state.number_of_times_role_used_by_person(role, person);
+            let runtime_weighting = current_score / total_usages;
+            // console.log(role.name + ", weight: " + role_weighting + ". Has score: " + current_score + ". Runtime weight: " + runtime_weighting);
 
-                    let current_score = this.score_for_role(role);
-                    let runtime_weighting = current_score.usage_count / total_usages;
-                    // console.log(role.name + ", weight: " + role_weighting + ". Has score: " + current_score + ". Runtime weight: " + runtime_weighting);
-                    if (runtime_weighting <= role_weighting) {
-                        return {
-                            done: false,
-                            value: role
-                        }
-                    }
-                }
-
-                return {done: true, value: null}
+            if (runtime_weighting < role_weighting) {
+                return -1;
+            } else if (runtime_weighting > role_weighting) {
+                return 1;
             }
-        }
+            return 0;
+        });
     }
 
-    get total_uses(): number {
-        return sumBy(Array.from(this.scoring.values(), (o) => o.usage_count))
-    }
-
-    score_for_role(r: Role): Score {
-        let weighting = this.weightedRoles.get(r);
-        if (isUndefined(weighting)) {
-            throw Error("No weighting for this role, " + r.name);
-        }
-        if (this.scoring.has(r)) {
-            return this.scoring.get(r);
-        }
-        return new Score(weighting);
-    }
-
-    use_this_role(r: Role) {
-        let score = this.score_for_role(r);
-        console.log("Increment score for '" + r.name + "' from " + score.usage_count + " to " + (score.usage_count + 1));
-        score.usage_count++;
-        this.scoring.set(r, score);
-    }
-
-    private normalizeWeights() {
-        let total_weight: number = sum(Array.from(this.weightedRoles.values()));
+    private normalize_weights() {
+        let total_weight: number = _.sum(Array.from(this.weightedRoles.values()));
         // console.log("Total weights: " + total_weight);
         this.weightedRoles.forEach((num, key) => {
             this.weightedRoles.set(key, num / total_weight);
@@ -282,51 +308,28 @@ class WeightedRoles extends RoleRule {
     }
 }
 
-class PickRule extends Rule {
-    execute(state: RuleFacts): Iterator<Person> {
-        throw new Error("Need implementation")
-    }
-
-    use_this_person(p: Person) {
-    }
-}
-
-class OnThisDate extends PickRule {
+class OnThisDate extends Rule {
     role: Role;
     date: Date;
     person: Person;
-
-    private haveReturnedValue: boolean;
 
     constructor(date: Date, person: Person, role: Role, priority: number = 0) {
         super(priority);
         this.date = date;
         this.role = role;
         this.person = person;
-        this.haveReturnedValue = false;
     }
 
-    execute(state: RuleFacts): Iterator<Person> {
-        return {
-            next: () => {
-                let hasPrimaryRole = this.person.has_primary_role(this.role);
-                if (state.date == this.date && hasPrimaryRole && !this.haveReturnedValue) {
-                    this.haveReturnedValue = true;
-                    return {
-                        done: false,
-                        value: this.person
-                    }
-                }
-                return {
-                    done: true,
-                    value: null
-                }
-            }
+    execute(state: RuleFacts): Person {
+        let hasPrimaryRole = this.person.has_primary_role(this.role);
+        if (state.date == this.date && hasPrimaryRole) {
+            return this.person;
         }
+        return null;
     }
 }
 
-class UsageWeightedSequential extends PickRule {
+class UsageWeightedSequential extends Rule {
     private usages: Map<Person, number>;
     private original_index: Map<Person, number>;
 
@@ -341,11 +344,11 @@ class UsageWeightedSequential extends PickRule {
         });
     }
 
-    execute(state: RuleFacts): Iterator<Person> {
+    execute(state: RuleFacts, role: Role): Array<Person> {
         // Sort by number
-        let peopleInUsageOrder = Array.from(this.usages.keys()).sort((p1: Person, p2: Person) => {
-            let usageForP1 = this.usages.get(p1);
-            let usageForP2 = this.usages.get(p2);
+        return Array.from(this.usages.keys()).sort((p1: Person, p2: Person) => {
+            let usageForP1 = state.number_of_times_role_used_by_person(role, p1);
+            let usageForP2 = state.number_of_times_role_used_by_person(role, p2);
             if (usageForP1 < usageForP2) {
                 return -1;
             } else if (usageForP1 > usageForP2) {
@@ -353,8 +356,8 @@ class UsageWeightedSequential extends PickRule {
             }
 
             // Compare by index
-            let p1Index = this.original_index.get(p1);
-            let p2Index = this.original_index.get(p2);
+            let p1Index = state.index_of_person_in_role_group(p1, role);
+            let p2Index = state.index_of_person_in_role_group(p2, role);
             if (p1Index < p2Index) {
                 return -1;
             } else if (p1Index > p2Index) {
@@ -362,16 +365,6 @@ class UsageWeightedSequential extends PickRule {
             }
             return 0;
         });
-        if (peopleInUsageOrder.length > 0) {
-            return peopleInUsageOrder.values();
-        }
-        return null;
-    }
-
-    use_this_person(p: Person) {
-        let existing = this.usages.get(p);
-        console.log("Increment usage for " + p.name + " from " + existing + " to " + (existing + 1));
-        this.usages.set(p, existing + 1);
     }
 }
 
@@ -381,7 +374,5 @@ export {
     FixedRoleOnDate,
     RuleFacts,
     OnThisDate,
-    PickRule,
-    Rules,
     Rule
 }

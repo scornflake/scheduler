@@ -104,7 +104,7 @@ describe('roles', () => {
 
             role_store.addRoles(people_store.roles_for_all_people);
 
-            state = new RuleFacts();
+            state = new RuleFacts(people_store, role_store);
             state.date = date;
         });
 
@@ -117,11 +117,10 @@ describe('roles', () => {
             expect(just_roles).toContain(defaultSoundRole);
             expect(just_roles).toContain(defaultBass);
 
-            // If we choose sound, we should get neil/rob/neil/rob
+            // If we choose sound, we should get a single UsageWeightedRule at the moment
             let sound_rules = pick_roles.get(defaultSoundRole);
-            let iterator = sound_rules.execute(state);
-            expect(iterator.next().value).toEqual(neil);
-            expect(iterator.next().value).toEqual(rob);
+            expect(sound_rules.length).toEqual(1);
+            expect(sound_rules[0].constructor.name).toEqual("UsageWeightedSequential")
         });
 
         it('a person can have a fixed role on a date', () => {
@@ -133,11 +132,15 @@ describe('roles', () => {
 
             let pick_rules = role_store.pick_rules(people_store);
             let sound_rules = pick_rules.get(defaultSoundRole);
-            let iterator = sound_rules.execute(state);
 
             // If however; we give rob a 'fixed date' then we expect this to be reversed
-            expect(iterator.next().value).toEqual(rob);
-            expect(iterator.next().value).toEqual(neil);
+            let person = state.get_next_suitable_person_for(defaultSoundRole);
+            expect(person).toEqual(rob);
+
+            // Move to the next date, and it'll be OK.
+            state.date = new Date(2000, 1, 1);
+            state.get_next_suitable_person_for(defaultSoundRole);
+            expect(person).toEqual(neil);
 
         });
 
