@@ -21,9 +21,9 @@ describe('rules', () => {
         state = new RuleFacts(people_store, role_store);
 
         // If we have people in order, it just returns sequentially
-        neil = people_store.addPerson(new Person("Neil").addRole(defaultSoundRole));
-        bob = people_store.addPerson(new Person("Bob").addRole(defaultSoundRole));
-        tim = people_store.addPerson(new Person("Tim").addRole(defaultSoundRole));
+        neil = people_store.add_person(new Person("Neil").add_role(defaultSoundRole));
+        bob = people_store.add_person(new Person("Bob").add_role(defaultSoundRole));
+        tim = people_store.add_person(new Person("Tim").add_role(defaultSoundRole));
 
         date = new Date(2010, 10, 0);
         state.current_date = date;

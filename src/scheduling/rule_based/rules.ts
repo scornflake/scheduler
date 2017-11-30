@@ -3,10 +3,6 @@ import {Role, RolesStore} from "../../state/roles";
 import {PeopleStore, Person, Unavailablity} from "../../state/people";
 import {Exclusion, ScheduleAtDate} from "../common";
 
-let priority_comparator = (r1: Rule, r2: Rule) => {
-    return r1.priority < r2.priority ? -1 : r1.priority > r2.priority ? 1 : 0;
-};
-
 class RuleExecution {
     object: any;
     trigger: Rule;
@@ -27,6 +23,7 @@ class RuleExecution {
 
 class RuleFacts {
     current_date: Date;
+    current_person: Person;
     decisions_for_date: Array<string>;
 
     private all_pick_rules: Map<Role, Array<Rule>>;
@@ -40,6 +37,8 @@ class RuleFacts {
 
     // This is the schedule, as it's being built
     private dates: Map<string, ScheduleAtDate>;
+    private follow_on_actions: Array<Rule>;
+    private decision_depth: number;
 
     constructor(people: PeopleStore, roles: RolesStore) {
         this.people = people;
@@ -51,7 +50,7 @@ class RuleFacts {
         return Array.from(this.dates.values());
     }
 
-    get_schedule_for_date(date: Date) {
+    get_schedule_for_date(date: Date): ScheduleAtDate {
         let dateAtHour = Unavailablity.dayAndHourForDate(date);
         let schedule = this.dates.get(dateAtHour);
         if (schedule == null) {
@@ -68,6 +67,7 @@ class RuleFacts {
     begin() {
         // This is all PickRules, for all roles
         this.all_pick_rules = this.roles.pick_rules(this.people);
+        this.decision_depth = 0;
         // this.logPickRules();
 
         this.all_role_rules = this.roles.role_rules(this.people);
@@ -75,17 +75,18 @@ class RuleFacts {
 
         this.usage_counts = new Map<Role, Map<Person, number>>();
         this.dates = new Map<string, ScheduleAtDate>();
+        this.follow_on_actions = [];
     }
 
-    private logPickRules() {
-        console.log("Pick rules:");
-        this.all_pick_rules.forEach((list, role) => {
-            console.log(" - " + role.name);
-            list.forEach(r => {
-                console.log(" --- " + r.constructor.name + " = " + JSON.stringify(r));
-            })
-        });
-    }
+    // private logPickRules() {
+    //     console.log("Pick rules:");
+    //     this.all_pick_rules.forEach((list, role) => {
+    //         console.log(" - " + role.name);
+    //         list.forEach(r => {
+    //             console.log(" --- " + r.constructor.name + " = " + JSON.stringify(r));
+    //         })
+    //     });
+    // }
 
     begin_new_role_group(role_group: Array<Role>) {
     }
@@ -99,6 +100,7 @@ class RuleFacts {
         if (!text) {
             return;
         }
+        text = "--- ".repeat(this.decision_depth) + text;
         if (log) {
             console.log(text);
         }
@@ -244,12 +246,10 @@ class RuleFacts {
         let availability = person.prefs.availability;
         let end_date = availability.get_end_date_from(date);
 
-        for (let r of person.role_include_dependents_of(role)) {
-            let exclusion = new Exclusion(date, end_date, r);
-            exclusions_for_person.push(exclusion);
-            this.add_decision("Recorded exclusion for " + person.name + ", " + role.name + " for " + exclusion.duration_in_days + " days");
-            this.exclusion_zones.set(person, exclusions_for_person);
-        }
+        let exclusion = new Exclusion(date, end_date, role);
+        exclusions_for_person.push(exclusion);
+        this.add_decision("Recorded exclusion for " + person.name + ", " + role.name + " for " + exclusion.duration_in_days + " days");
+        this.exclusion_zones.set(person, exclusions_for_person);
     }
 
     is_person_in_exclusion_zone(person: Person, role: Role, date_for_row: Date) {
@@ -266,6 +266,46 @@ class RuleFacts {
 
         let containining_this_date = zones_matching_role.filter(z => z.includes_date(date_for_row));
         return containining_this_date.length > 0;
+    }
+
+    place_person_in_role(person: Person, role: Role, date: Date, record_usage_stats = true) {
+        this.current_person = person;
+
+        this.add_exclusion_for(person, role, date);
+
+        let specific_day = this.get_schedule_for_date(date);
+        specific_day.add_person(person, role);
+        this.add_decision("Placing " + person.name + " into " + role);
+
+        if (record_usage_stats) {
+            this.use_this_person_in_role(person, role);
+        }
+
+        this.follow_on_actions = this.follow_on_actions.concat(this.placement_consequences(person, role));
+    }
+
+    private placement_consequences(person: Person, role: Role): Array<Rule> {
+        // Find out what placement rules this person has
+        return person.placement_rules_for_role(role);
+    }
+
+    drain_follow_ons(person: Person, role: Role) {
+        // these actions are for THIS person and role
+        this.decision_depth++;
+        while (this.follow_on_actions.length) {
+            let next = this.follow_on_actions.pop();
+
+            if (next instanceof DependentPlacementRule) {
+                next.execute(this, role)
+            }
+        }
+        this.decision_depth--;
+    }
+
+    end_role(person: Person, role: Role, date: Date) {
+        let specific_day = this.get_schedule_for_date(date);
+        specific_day.set_facts(person, role, this.decisions_for_date);
+        this.decisions_for_date = [];
     }
 }
 
@@ -406,18 +446,37 @@ class UsageWeightedSequential extends Rule {
     }
 }
 
-class PlacementRule extends Rule {
-    private person: Person;
+class TogetherPlacementRule extends Rule {
     private role: Role;
+    private also_place: Person;
+    private into_role: Role;
 
-    constructor(person: Person, role: Role) {
+    constructor(role: Role, also_place: Person, into_role: Role) {
         super();
-        this.person = person;
         this.role = role;
+        this.also_place = also_place;
+        this.into_role = into_role;
     }
 
-    execute(state: RuleFacts) {
+    execute(state: RuleFacts, role: Role) {
+        if (role.uuid == this.role.uuid) {
+            state.place_person_in_role(this.also_place, this.into_role, state.current_date);
+        }
+    }
+}
 
+class DependentPlacementRule extends Rule {
+    additional_roles: Array<Role>;
+
+    constructor(additional_roles: Array<Role>) {
+        super();
+        this.additional_roles = additional_roles;
+    }
+
+    execute(state: RuleFacts, role: Role) {
+        for (let role of this.additional_roles) {
+            state.place_person_in_role(state.current_person, role, state.current_date);
+        }
     }
 }
 
@@ -427,5 +486,7 @@ export {
     FixedRoleOnDate,
     RuleFacts,
     OnThisDate,
+    DependentPlacementRule,
+    TogetherPlacementRule,
     Rule
 }

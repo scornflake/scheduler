@@ -33,13 +33,13 @@ describe('role scheduler', () => {
         expect(sound).not.toBeNull();
 
         neil = new Person("Neil", "1234");
-        neil.addRole(sound);
-        person_store.addPerson(neil);
+        neil.add_role(sound);
+        person_store.add_person(neil);
     });
 
     it('cannot create empty', () => {
         params.end_date = start_date;
-        person_store.removePerson(neil);
+        person_store.remove_person(neil);
         expect(() => {
             schedule = new ScheduleWithRules(params);
             schedule.create_schedule()
@@ -49,7 +49,7 @@ describe('role scheduler', () => {
     it('can schedule neil weekly', () => {
         params.start_date = new Date(2017, 9, 1);
         params.end_date = new Date(2017, 9, 25);
-        neil.addRole(defaultSoundRole);
+        neil.add_role(defaultSoundRole);
 
         schedule = new ScheduleWithRules(params);
         expect(schedule).not.toBeNull();
@@ -79,7 +79,7 @@ describe('role scheduler', () => {
     it('exclusions affect the layout', () => {
         params.start_date = new Date(2017, 9, 1);
         params.end_date = new Date(2017, 9, 25);
-        neil.addRole(params.roles.find_role("Sound"));
+        neil.add_role(params.roles.find_role("Sound"));
 
         // Make myself available every 2 weeks, we should see a change to the schedule
         neil.prefs.availability = new Availability(2, AvailabilityUnit.EVERY_N_WEEKS);
@@ -102,12 +102,12 @@ describe('role scheduler', () => {
     it('unavailable dates act like exclusion zones', () => {
         params.start_date = new Date(2017, 9, 1);
         params.end_date = new Date(2017, 9, 25);
-        neil.removeRole(sound);
+        neil.remove_role(sound);
         neil.prefs.availability = new Availability(2, AvailabilityUnit.EVERY_N_WEEKS);
-        neil.addRole(params.roles.find_role("Computer"));
+        neil.add_role(params.roles.find_role("Computer"));
 
         // If unavailability affects exclusions we should end up with not being able to schedule on the first date
-        neil.addUnavailable(params.start_date);
+        neil.add_unavailable(params.start_date);
 
         schedule = new ScheduleWithRules(params);
         expect(schedule).not.toBeNull();
@@ -132,13 +132,13 @@ describe('role scheduler', () => {
 
         // Put neil on Guitar
         // And daniel on guitar as well
-        neil.removeRole(sound);
+        neil.remove_role(sound);
         neil.prefs.availability = new Availability(1, AvailabilityUnit.AVAIL_ANYTIME);
-        neil.addRole(defaultAccousticGuitar);
+        neil.add_role(defaultAccousticGuitar);
 
         let daniel = new Person("Daniel");
-        person_store.addPerson(daniel);
-        daniel.addRole(defaultAccousticGuitar);
+        person_store.add_person(daniel);
+        daniel.add_role(defaultAccousticGuitar);
 
         defaultAccousticGuitar.maximum_count = 1;
 
@@ -161,12 +161,12 @@ describe('role scheduler', () => {
         params.days_per_period = 1;
 
         let daniel = new Person("Daniel");
-        person_store.addPerson(daniel);
-        daniel.addRole(defaultSoundRole);
+        person_store.add_person(daniel);
+        daniel.add_role(defaultSoundRole);
 
         let ben = new Person("Ben");
-        person_store.addPerson(ben);
-        ben.addRole(defaultSoundRole);
+        person_store.add_person(ben);
+        ben.add_role(defaultSoundRole);
 
         schedule = new ScheduleWithRules(params);
         schedule.create_schedule();

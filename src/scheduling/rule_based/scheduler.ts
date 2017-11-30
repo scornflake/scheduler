@@ -119,10 +119,10 @@ class ScheduleWithRules {
                 if (next_wanted_role_for_person.uuid != role.uuid) {
                     this.facts.add_decision("Putting " + next_suitable_person.name + " into " + next_wanted_role_for_person + " instead of " + role + " due to a role weighting");
 
-                    this.place_person_in_role(next_suitable_person, next_wanted_role_for_person, current_date);
-                    this.facts.use_this_person_in_role(next_suitable_person, next_wanted_role_for_person);
+                    this.facts.place_person_in_role(next_suitable_person, next_wanted_role_for_person, current_date);
 
                     this.facts.add_decision("Check role " + role + " again because of weighted placement");
+                    this.facts.drain_follow_ons(next_suitable_person, next_wanted_role_for_person);
 
                     // now continue with the loop, because we still havn't found someone for the role we were originally looking for.
                     continue;
@@ -131,23 +131,21 @@ class ScheduleWithRules {
 
             // OK. So. Turns out the role is the same.
             // Place the person, and we're done filling this role.
-            this.place_person_in_role(next_suitable_person, role, current_date);
-            this.facts.use_this_person_in_role(next_suitable_person, next_wanted_role_for_person);
+            this.facts.place_person_in_role(next_suitable_person, role, current_date);
+            this.facts.drain_follow_ons(next_suitable_person, role);
 
-            let peopleInRole = specific_day.people_in_role(role);
-            if (peopleInRole.length >= role.maximum_count) {
-                this.facts.add_decision("Done with " + role.name + ", have " + role.maximum_count + " slotted in");
-                return;
+            try {
+                let peopleInRole = specific_day.people_in_role(role);
+                if (peopleInRole.length >= role.maximum_count) {
+                    this.facts.add_decision("" + peopleInRole.length + " in " + role + ". Max is " + role.maximum_count + ". Role complete.");
+                    return;
+                } else {
+                    this.facts.add_decision("" + peopleInRole.length + " in " + role + ". Max is " + role.maximum_count + ". continue...");
+                }
+            } finally {
+                this.facts.end_role(next_suitable_person, role, current_date);
             }
         }
-    }
-
-    private place_person_in_role(person: Person, role: Role, date: Date) {
-        this.facts.add_exclusion_for(person, role, date);
-
-        let specific_day = this.facts.get_schedule_for_date(date);
-        this.facts.add_decision("Placing " + person.name + " into " + role);
-        specific_day.add_person(person, role, this.facts);
     }
 
     private choose_next_schedule_date(date: Date): Date {

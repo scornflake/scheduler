@@ -53,3 +53,4 @@ Don't put person X on more than Y times with person Z
 TODO v3
 =======
 - Exclusions should be turned into rules (and can then be part of 'next suitable person')
+- people_in_role() isn't tested.

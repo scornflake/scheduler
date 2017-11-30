@@ -6,14 +6,12 @@ import {RuleFacts} from "./rule_based/rules";
 class ScheduleScore {
     roles: Array<Role>;
     decisions: Array<string>;
-    layout_weight: number;
-    roster_weight: number;
     score: number;
 
-    constructor(roles: Array<Role>, decisions: Array<string> = []) {
-        this.roles = roles;
+    constructor(role: Role) {
+        this.roles = [role];
         this.score = 0;
-        this.decisions = decisions;
+        this.decisions = [];
     }
 
     has_role(role: Role) {
@@ -21,8 +19,11 @@ class ScheduleScore {
     }
 
     valueOf() {
-        let role_names = _.join(this.roles.map(r => r.name), ', ');
-        return "Score: " + this.score + " for roles: " + role_names;
+        return "Score: " + this.score + " for role: " + this.roles.join(", ");
+    }
+
+    add_role(role: Role) {
+        this.roles.push(role);
     }
 }
 
@@ -120,7 +121,7 @@ class ScheduleAtDate {
         return Unavailablity.dayAndHourForDate(this.date);
     }
 
-    score_for(p: Person) {
+    score_for(p: Person): ScheduleScore {
         return this.people_score.get(p);
     }
 
@@ -140,13 +141,17 @@ class ScheduleAtDate {
         });
     }
 
-    add_person(person: Person, role: Role, facts: RuleFacts = null) {
-        let roles = person.role_include_dependents_of(role);
-        let score = new ScheduleScore(roles, facts ? facts.decisions_for_date : []);
-        this.people_score.set(person, score);
+    add_person(person: Person, role: Role) {
+        if (!this.people_score.get(person)) {
+            this.people_score.set(person, new ScheduleScore(role));
+        } else {
+            let score = this.people_score.get(person);
+            score.add_role(role);
+        }
     }
 
     people_in_role(role: Role): Array<Person> {
+        // Return all people that have some score that records this role
         return this.people.filter(p => {
             let score = this.people_score.get(p);
             return score.has_role(role);
@@ -158,6 +163,14 @@ class ScheduleAtDate {
             return p.name + "=" + this.people_score.get(p);
         });
         return this.date.toDateString() + " - " + _.join(names_with_tasks, ',');
+    }
+
+    set_facts(person: Person, role: Role, decisions: Array<string>) {
+        if(!this.people_score.has(person)) {
+            throw Error("Cant set facts, no person");
+        }
+        let person_score = this.people_score.get(person);
+        person_score.decisions = decisions;
     }
 }
 

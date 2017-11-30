@@ -3,7 +3,7 @@ import {Role} from "./roles";
 import {AvailabilityUnit, SchedulePrefs} from "./scheduling-types";
 import ShortUniqueId from 'short-unique-id';
 import {isUndefined} from "util";
-import {Rule, WeightedRoles} from "../scheduling/rule_based/rules";
+import {DependentPlacementRule, Rule, WeightedRoles} from "../scheduling/rule_based/rules";
 import * as _ from "lodash";
 
 class Unavailablity {
@@ -68,20 +68,22 @@ class Person {
     @observable unavailable: Array<Unavailablity>;
     @observable prefs: SchedulePrefs;
 
+    private placement_rules: Map<Role, Array<Rule>>;
+
     // Need to store a role, and also for this person, if they are in this role what
     // other roles they can also fullfill. However; mobx doesn't like using objects as keys
     // in maps, which is a pain.
-    secondary_roles: Map<string, Array<Role>>;
+    // secondary_roles: Map<string, Array<Role>>;
 
     constructor(name: string, uuid: string = null) {
         if (uuid == null) {
             let uuid_gen = new ShortUniqueId();
             uuid = uuid_gen.randomUUID(8);
         }
+        this._name = name;
         this.uuid = uuid;
-        this.name = name;
         this.primary_roles = new Map<Role, number>();
-        this.secondary_roles = new Map<string, Array<Role>>();
+        this.placement_rules = new Map<Role, Array<Rule>>();
         this.unavailable = [];
         this.prefs = new SchedulePrefs();
     }
@@ -112,6 +114,7 @@ class Person {
         }, 0);
     }
 
+    @action
     avail_every(a_number: number, unit: AvailabilityUnit): Person {
         this.prefs.availability.every(a_number, unit);
         return this;
@@ -124,21 +127,14 @@ class Person {
     }
 
     @action
-    with_dep_role(role: Role, other_roles: Array<Role>): Person {
-        this.addRole(role);
-        if (other_roles.length > 0) {
-            this.secondary_roles.set(role.uuid, other_roles);
-        }
+    when_in_role(role: Role, also_put_me_in: Array<Role>): Person {
+        this.add_role(role);
+
+        let existing = this.get_placement_rules(role);
+        existing.push(new DependentPlacementRule(also_put_me_in));
+
         return this;
     }
-
-    // @action
-    // with_roles(roles: Array<Role>): Person {
-    //     for (let role of roles) {
-    //         this.addRole(role);
-    //     }
-    //     return this;
-    // }
 
     has_primary_role(role: Role) {
         let matching_roles = this.roles.filter(r => {
@@ -148,7 +144,7 @@ class Person {
     }
 
     @action
-    addRole(r: Role, weighting = 1): Person {
+    add_role(r: Role, weighting = 1): Person {
         if (r == null || isUndefined(r)) {
             throw Error("Cannot add a nil or undefined role");
         }
@@ -157,22 +153,22 @@ class Person {
     }
 
     @action
-    removeRole(r: Role): Person {
+    remove_role(r: Role): Person {
         this.primary_roles.delete(r);
-        this.secondary_roles.delete(r.uuid);
+        this.placement_rules.delete(r);
         return this;
     }
 
     @action
-    addUnavailable(d: Date) {
+    add_unavailable(d: Date) {
         this.unavailable.push(new Unavailablity(d));
     }
 
-    addUnavailableRange(from: Date, to: Date) {
+    add_unavailable_range(from: Date, to: Date) {
         this.unavailable.push(new Unavailablity(from, to));
     }
 
-    removeUnavailable(d: Date) {
+    remove_unavailable(d: Date) {
         this.unavailable = this.unavailable.filter(ud => {
             return !ud.matches_single_date(d);
         });
@@ -188,15 +184,26 @@ class Person {
         return false;
     }
 
-    role_include_dependents_of(role: Role): Array<Role> {
-        let secondary = this.secondary_roles.get(role.uuid);
-        if (secondary) {
-            return [
-                role,
-                ...Array.from(this.secondary_roles.get(role.uuid))
-            ]
+    // role_including_dependents_of(role: Role): Array<Role> {
+    //     let secondary = this.secondary_roles.get(role.uuid);
+    //     if (secondary) {
+    //         return [
+    //             role,
+    //             ...Array.from(this.secondary_roles.get(role.uuid))
+    //         ]
+    //     }
+    //     return [role];
+    // }
+
+    placement_rules_for_role(role: Role): Array<Rule> {
+        return this.get_placement_rules(role);
+    }
+
+    private get_placement_rules(role: Role) {
+        if(!this.placement_rules.has(role)) {
+            this.placement_rules.set(role, []);
         }
-        return [role];
+        return this.placement_rules.get(role);
     }
 }
 
@@ -208,13 +215,13 @@ class PeopleStore {
     }
 
     @action
-    addPerson(p: Person): Person {
+    add_person(p: Person): Person {
         this.people.push(p);
         return p;
     }
 
     @action
-    removePerson(p: Person) {
+    remove_person(p: Person) {
         this.people = this.people.filter(per => {
             return per.uuid != p.uuid
         });

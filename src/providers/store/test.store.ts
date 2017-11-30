@@ -14,6 +14,7 @@ import {
 import {PeopleStore, Person} from "../../state/people";
 import {AvailabilityUnit} from "../../state/scheduling-types";
 import {RootStore} from "../../state/root";
+import {DependentPlacementRule} from "../../scheduling/rule_based/rules";
 
 let neil: Person = new Person("Neil Clayton");
 let cherilyn: Person = new Person("Cherilyn Clayton");
@@ -40,8 +41,8 @@ let andre_l: Person = new Person("Andre Legg");
 let jeremy_w: Person = new Person("Jeremy Watson");
 let john: Person = new Person("John Sutherland");
 
-christine.addUnavailableRange(new Date(2018, 3, 0), new Date(2050, 1, 1));
-craig.addUnavailable(new Date(2018, 0, 0));
+christine.add_unavailable_range(new Date(2018, 3, 0), new Date(2050, 1, 1));
+craig.add_unavailable(new Date(2018, 0, 0));
 
 export class TestStoreConstruction {
     constructor() {
@@ -51,108 +52,108 @@ export class TestStoreConstruction {
     static SetupStore(root_store: RootStore) {
         let person_store: PeopleStore = root_store.people_store;
 
-        person_store.addPerson(neil)
-            .addRole(defaultSoundRole, 1)
-            .addRole(defaultSaxRole, 3)
+        person_store.add_person(neil)
+            .add_role(defaultSoundRole, 1)
+            .add_role(defaultSaxRole, 3)
             .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(cherilyn)
-            .addRole(defaultKeysRole)
-            .with_dep_role(defaultLeaderRole, [defaultKeysRole])
+        person_store.add_person(cherilyn)
+            .add_role(defaultKeysRole)
+            .when_in_role(defaultLeaderRole, [defaultKeysRole])
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(christine)
-            .with_dep_role(defaultLeaderRole, [defaultVocalsRole])
+        person_store.add_person(christine)
+            .when_in_role(defaultLeaderRole, [defaultVocalsRole])
             .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(stuart)
-            .addRole(defaultAccousticGuitar)
-            .addRole(defaultVocalsRole)
-            .with_dep_role(defaultLeaderRole, [defaultAccousticGuitar, defaultVocalsRole])
+        person_store.add_person(stuart)
+            .add_role(defaultAccousticGuitar)
+            .add_role(defaultVocalsRole)
+            .when_in_role(defaultLeaderRole, [defaultAccousticGuitar, defaultVocalsRole])
             .avail_every(6, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(jeremy_selfe)
-            .addRole(defaultLeaderRole, 2)
-            .addRole(defaultElectricGuitar)
-            .with_dep_role(defaultLeaderRole, [defaultElectricGuitar])
+        person_store.add_person(jeremy_selfe)
+            .add_role(defaultLeaderRole, 2)
+            .add_role(defaultElectricGuitar)
+            .when_in_role(defaultLeaderRole, [defaultElectricGuitar])
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(ralph)
-            .with_dep_role(defaultLeaderRole, [defaultAccousticGuitar, defaultVocalsRole])
+        person_store.add_person(ralph)
+            .when_in_role(defaultLeaderRole, [defaultAccousticGuitar, defaultVocalsRole])
             .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
 
 
-        person_store.addPerson(daniel)
-            .addRole(defaultDrumsRole, 3)
-            .addRole(defaultBass);
+        person_store.add_person(daniel)
+            .add_role(defaultDrumsRole, 3)
+            .add_role(defaultBass);
 
-        person_store.addPerson(craig)
-            .addRole(defaultDrumsRole)
+        person_store.add_person(craig)
+            .add_role(defaultDrumsRole)
             .avail_every(5, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(ben)
-            .addRole(defaultDrumsRole, 1)
-            .addRole(defaultBass, 3)
+        person_store.add_person(ben)
+            .add_role(defaultDrumsRole, 1)
+            .add_role(defaultBass, 3)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(courtney)
-            .addRole(defaultVocalsRole)
+        person_store.add_person(courtney)
+            .add_role(defaultVocalsRole)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(robp)
-            .addRole(defaultBass, 3)
-            .addRole(defaultSoundRole)
+        person_store.add_person(robp)
+            .add_role(defaultBass, 3)
+            .add_role(defaultSoundRole)
             .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(robs)
-            .addRole(defaultBass)
+        person_store.add_person(robs)
+            .add_role(defaultBass)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(dave)
-            .addRole(defaultAccousticGuitar)
-            .addRole(defaultVocalsRole)
-            .with_dep_role(defaultAccousticGuitar, [defaultVocalsRole])
+        person_store.add_person(dave)
+            .add_role(defaultAccousticGuitar)
+            .add_role(defaultVocalsRole)
+            .when_in_role(defaultAccousticGuitar, [defaultVocalsRole])
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(anita)
-            .addRole(defaultVocalsRole)
+        person_store.add_person(anita)
+            .add_role(defaultVocalsRole)
             .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(annie)
-            .addRole(defaultVocalsRole)
+        person_store.add_person(annie)
+            .add_role(defaultVocalsRole)
             .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(jo)
-            .addRole(defaultVocalsRole)
+        person_store.add_person(jo)
+            .add_role(defaultVocalsRole)
             .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(allie)
-            .addRole(defaultVocalsRole)
+        person_store.add_person(allie)
+            .add_role(defaultVocalsRole)
             .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(chris)
-            .addRole(defaultSoundRole)
+        person_store.add_person(chris)
+            .add_role(defaultSoundRole)
             // .addRole(defaultElectricGuitar)
             .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(jeremy_l)
-            .addRole(defaultSoundRole)
-            .addRole(defaultComputerRole)
+        person_store.add_person(jeremy_l)
+            .add_role(defaultSoundRole)
+            .add_role(defaultComputerRole)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(andre_l)
-            .addRole(defaultSoundRole)
-            .addRole(defaultElectricGuitar)
+        person_store.add_person(andre_l)
+            .add_role(defaultSoundRole)
+            .add_role(defaultElectricGuitar)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(jeremy_w)
-            .addRole(defaultSoundRole, 2)
-            .addRole(defaultComputerRole)
+        person_store.add_person(jeremy_w)
+            .add_role(defaultSoundRole, 2)
+            .add_role(defaultComputerRole)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
-        person_store.addPerson(john)
-            .addRole(defaultSoundRole)
-            .addRole(defaultComputerRole, 2)
+        person_store.add_person(john)
+            .add_role(defaultSoundRole)
+            .add_role(defaultComputerRole, 2)
             .avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
     }
 }

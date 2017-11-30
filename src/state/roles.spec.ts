@@ -1,6 +1,6 @@
 import {defaultBass, defaultSaxRole, defaultSoundRole, Role, RolesStore} from "./roles";
 import {PeopleStore, Person} from "./people";
-import {FixedRoleOnDate, OnThisDate, RuleFacts} from "../scheduling/rule_based/rules";
+import {OnThisDate, RuleFacts} from "../scheduling/rule_based/rules";
 
 describe('roles', () => {
     let role_store: RolesStore;
@@ -91,16 +91,16 @@ describe('roles', () => {
             date = new Date(2017, 10, 1);
 
             rob = new Person("rob");
-            rob.addRole(defaultBass);
-            rob.addRole(defaultSoundRole);
+            rob.add_role(defaultBass);
+            rob.add_role(defaultSoundRole);
 
             neil = new Person("neil");
-            neil.addRole(defaultSaxRole, 3);
-            neil.addRole(defaultSoundRole, 1);
+            neil.add_role(defaultSaxRole, 3);
+            neil.add_role(defaultSoundRole, 1);
 
             people_store = new PeopleStore();
-            people_store.addPerson(neil);
-            people_store.addPerson(rob);
+            people_store.add_person(neil);
+            people_store.add_person(rob);
 
             role_store.addRoles(people_store.roles_for_all_people);
 
