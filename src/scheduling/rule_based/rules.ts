@@ -254,7 +254,7 @@ class RuleFacts {
 
         let exclusion = new Exclusion(date, end_date, role);
         exclusions_for_person.push(exclusion);
-        this.add_decision("Recorded exclusion for " + person.name + ", " + role.name + " for " + exclusion.duration_in_days + " days");
+        this.add_decision("Recorded exclusion for " + person.name + ", " + role.name + " for " + Math.floor(exclusion.duration_in_days) + " days");
         this.exclusion_zones.set(person, exclusions_for_person);
     }
 

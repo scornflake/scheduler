@@ -160,7 +160,6 @@ class Person {
     @action
     remove_role(r: Role): Person {
         this.primary_roles.delete(r);
-        this.placement_rules.delete(r);
         return this;
     }
 
@@ -187,6 +186,10 @@ class Person {
             }
         }
         return false;
+    }
+
+    get unavailable_by_date() : Array<Unavailablity> {
+        return _.sortBy(this.unavailable, u => u.from_date);
     }
 
     valueOf() {

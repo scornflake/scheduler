@@ -41,6 +41,7 @@ let andre_l: Person = new Person("Andre Legg");
 let jeremy_w: Person = new Person("Jeremy Watson");
 let john: Person = new Person("John Sutherland");
 
+allie.add_unavailable_range(new Date(2017, 11, 24), new Date(2018, 0, 7));
 christine.add_unavailable_range(new Date(2018, 2, 0), new Date(2050, 1, 1));
 craig.add_unavailable(new Date(2018, 0, 0));
 
@@ -83,7 +84,7 @@ export class TestStoreConstruction {
             .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
         ralph.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(ralph, defaultAccousticGuitar));
         ralph.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(ralph, defaultVocalsRole));
-        ralph.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(anita, defaultVocalsRole))
+        ralph.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(anita, defaultVocalsRole));
 
 
         person_store.add_person(daniel)

@@ -134,11 +134,13 @@ class ScheduleWithRules {
 
             try {
                 let peopleInRole = specific_day.people_in_role(role);
+                let message = peopleInRole.length + "/" + role.maximum_count + " in " + role;
                 if (peopleInRole.length >= role.maximum_count) {
-                    this.facts.add_decision("" + peopleInRole.length + " in " + role + ". Max is " + role.maximum_count + ". Role complete.");
+                    message += ". Done with role.";
+                    this.facts.add_decision(message);
                     return;
                 } else {
-                    this.facts.add_decision("" + peopleInRole.length + " in " + role + ". Max is " + role.maximum_count + ". continue...");
+                    this.facts.add_decision(message);
                 }
             } finally {
                 this.facts.end_role(next_suitable_person, role, current_date);
