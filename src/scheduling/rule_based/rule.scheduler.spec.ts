@@ -57,12 +57,11 @@ describe('role scheduler', () => {
         schedule.create_schedule();
 
         // expect to see neil on once per week, for N weeks.
-        let dates_map = schedule.dates;
-        expect(dates_map.size).toEqual(4);
+        let dates = schedule.dates;
+        expect(dates.length).toEqual(4);
 
         // expect to see dates 7 days apart
-        let dates = Array.from(dates_map.keys());
-        let first_schedule = dates_map.get(dates[0]);
+        let first_schedule = dates[0];
         // console.log("All: " + JSON.stringify(dates));
         // console.log("First: " + JSON.stringify(first_schedule));
         expect(first_schedule.date.getDate()).toEqual(1);
@@ -72,9 +71,9 @@ describe('role scheduler', () => {
         expect(people.length).toEqual(1);
         expect(people[0].name).toEqual("Neil");
 
-        expect(dates_map.get(dates[1]).date.getDate()).toEqual(8);
-        expect(dates_map.get(dates[2]).date.getDate()).toEqual(15);
-        expect(dates_map.get(dates[3]).date.getDate()).toEqual(22);
+        expect(dates[1].date.getDate()).toEqual(8);
+        expect(dates[2].date.getDate()).toEqual(15);
+        expect(dates[3].date.getDate()).toEqual(22);
     });
 
     it('exclusions affect the layout', () => {

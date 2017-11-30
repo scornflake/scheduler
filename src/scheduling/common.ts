@@ -1,5 +1,5 @@
 import {Role, RolesStore} from "../state/roles";
-import {PeopleStore, Person} from "../state/people";
+import {PeopleStore, Person, Unavailablity} from "../state/people";
 import * as _ from 'lodash';
 import {RuleFacts} from "./rule_based/rules";
 
@@ -114,6 +114,10 @@ class ScheduleAtDate {
     constructor(date: Date) {
         this.date = date;
         this.people_score = new Map<Person, ScheduleScore>();
+    }
+
+    get date_key(): string {
+        return Unavailablity.dayAndHourForDate(this.date);
     }
 
     score_for(p: Person) {

@@ -1,11 +1,11 @@
-import {ScheduleByExclusion} from "../scheduling/by_exclusion/scheduler";
 import json2csv from "json2csv";
 import fileSaver from "file-saver";
+import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 
 class CSVExporter {
-    private schedule: ScheduleByExclusion;
+    private schedule: ScheduleWithRules;
 
-    constructor(schedule: ScheduleByExclusion) {
+    constructor(schedule: ScheduleWithRules) {
         this.schedule = schedule;
     }
 
@@ -15,7 +15,7 @@ class CSVExporter {
             fields: this.schedule.jsonFields()
         });
 
-        let data = new Blob([result], {type:'text/csv'});
+        let data = new Blob([result], {type: 'text/csv'});
         fileSaver.saveAs(data, "schedule.csv");
 
         console.log(result);

@@ -26,7 +26,7 @@ describe('rules', () => {
         tim = people_store.addPerson(new Person("Tim").addRole(defaultSoundRole));
 
         date = new Date(2010, 10, 0);
-        state.date = date;
+        state.current_date = date;
     });
 
     describe('role rules', () => {
@@ -108,7 +108,7 @@ describe('rules', () => {
             let rule = new FixedRoleOnDate(date, role2);
             expect(rule.execute(state)).toEqual(role2);
 
-            state.date = new Date(2000, 0, 0);
+            state.current_date = new Date(2000, 0, 0);
             expect(rule.execute(state)).toEqual(null);
         });
 
@@ -180,7 +180,7 @@ describe('rules', () => {
             expect(value).toEqual(neil);
 
             // Do it for a different date that doesn't match, shouldn't come back with anything.
-            state.date = new Date(2012, 1, 2);
+            state.current_date = new Date(2012, 1, 2);
             value = dateRule.execute(state);
             expect(value).toEqual(null);
         });

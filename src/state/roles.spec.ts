@@ -105,7 +105,7 @@ describe('roles', () => {
             role_store.addRoles(people_store.roles_for_all_people);
 
             state = new RuleFacts(people_store, role_store);
-            state.date = date;
+            state.current_date = date;
         });
 
         it('creates role rules given people', () => {
@@ -125,21 +125,19 @@ describe('roles', () => {
 
         it('a person can have a fixed role on a date', () => {
             // This would be the normal order
-            //expect(iterator.next().value).toEqual(neil);
-            //expect(iterator.next().value).toEqual(rob);
+            // [neil, rob]
 
             role_store.addPickRule(new OnThisDate(date, rob, defaultSoundRole));
-
-            let pick_rules = role_store.pick_rules(people_store);
-            let sound_rules = pick_rules.get(defaultSoundRole);
+            state.begin();
+            state.begin_new_role(date);
 
             // If however; we give rob a 'fixed date' then we expect this to be reversed
             let person = state.get_next_suitable_person_for(defaultSoundRole);
             expect(person).toEqual(rob);
 
             // Move to the next date, and it'll be OK.
-            state.date = new Date(2000, 1, 1);
-            state.get_next_suitable_person_for(defaultSoundRole);
+            state.current_date = new Date(2000, 1, 1);
+            person = state.get_next_suitable_person_for(defaultSoundRole);
             expect(person).toEqual(neil);
 
         });

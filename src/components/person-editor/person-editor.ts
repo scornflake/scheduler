@@ -1,7 +1,7 @@
 import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
 import {Person} from "../../state/people";
-import {ScheduleByExclusion} from "../../scheduling/by_exclusion/scheduler";
 import includes from 'lodash/includes';
+import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
 
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -10,18 +10,15 @@ import includes from 'lodash/includes';
 })
 export class PersonEditorComponent {
     @Input() person: Person;
-    @Input() schedule: ScheduleByExclusion;
+    @Input() schedule: ScheduleWithRules;
 
     constructor() {
     }
 
     scheduled_dates() {
         // Find a list of schedules for this person
-        let schedules = Array.from(this.schedule.dates.values()).filter(v => {
+        return Array.from(this.schedule.dates.values()).filter(v => {
             return includes(v.people, this.person);
         });
-
-        return schedules;
-        // return schedules.map(s => s.date);
     }
 }

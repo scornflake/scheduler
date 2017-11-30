@@ -59,7 +59,7 @@ defaultDrumsRole.maximum_count = 1;
 
 export class RolesStore {
     @observable roles: Array<Role>;
-    rules: Array<Rule>;
+    @observable rules: Array<Rule>;
 
     constructor() {
         this.rules = [];
@@ -154,7 +154,7 @@ export class RolesStore {
             let rules = [];
 
             // Find any specific rules for this date.
-            rules.concat(this.rules_for_role(role));
+            rules = rules.concat(this.rules_for_role(role));
 
             // Ordering people sequentially
             let uws = new UsageWeightedSequential(people_store.people_with_role(role));
@@ -180,6 +180,7 @@ export class RolesStore {
         */
         rule.priority = 10;
         this.rules.push(rule);
+        // console.log("Rules now " + JSON.stringify(this.rules));
     }
 
     private rules_for_role(role: Role) {

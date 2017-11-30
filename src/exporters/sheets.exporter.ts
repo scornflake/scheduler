@@ -1,4 +1,3 @@
-import {ScheduleByExclusion} from "../scheduling/by_exclusion/scheduler";
 // import {GoogleApis} from "googleapis";
 // const google = new GoogleApis();
 
@@ -17,8 +16,10 @@ import {ScheduleByExclusion} from "../scheduling/by_exclusion/scheduler";
 //     }
 // };
 
+import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
+
 class GoogleSheetExporter {
-    constructor(scheduler: ScheduleByExclusion) {
+    constructor(scheduler: ScheduleWithRules) {
 
     }
 

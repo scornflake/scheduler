@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import {Role, RolesStore} from "../../state/roles";
-import {PeopleStore, Person} from "../../state/people";
-import {Exclusion} from "../common";
+import {PeopleStore, Person, Unavailablity} from "../../state/people";
+import {Exclusion, ScheduleAtDate} from "../common";
 
 let priority_comparator = (r1: Rule, r2: Rule) => {
     return r1.priority < r2.priority ? -1 : r1.priority > r2.priority ? 1 : 0;
@@ -26,7 +26,7 @@ class RuleExecution {
 }
 
 class RuleFacts {
-    date: Date;
+    current_date: Date;
     decisions_for_date: Array<string>;
 
     private all_pick_rules: Map<Role, Array<Rule>>;
@@ -38,23 +38,60 @@ class RuleFacts {
 
     private usage_counts: Map<Role, Map<Person, number>>;
 
+    // This is the schedule, as it's being built
+    private dates: Map<string, ScheduleAtDate>;
+
     constructor(people: PeopleStore, roles: RolesStore) {
         this.people = people;
         this.roles = roles;
-        this.exclusion_zones = new Map<Person, Array<Exclusion>>();
+        this.begin();
+    }
 
+    get schedule_dates(): Array<ScheduleAtDate> {
+        return Array.from(this.dates.values());
+    }
+
+    get_schedule_for_date(date: Date) {
+        let dateAtHour = Unavailablity.dayAndHourForDate(date);
+        let schedule = this.dates.get(dateAtHour);
+        if (schedule == null) {
+            console.log("Create new schedule for " + dateAtHour);
+            schedule = new ScheduleAtDate(date);
+            this.dates.set(dateAtHour, schedule);
+            return schedule;
+        } else {
+            // console.log("Reuse schedule for " + dateAtHour + " = " + date);
+            return schedule;
+        }
+    }
+
+    begin() {
         // This is all PickRules, for all roles
         this.all_pick_rules = this.roles.pick_rules(this.people);
+        // this.logPickRules();
+
         this.all_role_rules = this.roles.role_rules(this.people);
+        this.exclusion_zones = new Map<Person, Array<Exclusion>>();
 
         this.usage_counts = new Map<Role, Map<Person, number>>();
+        this.dates = new Map<string, ScheduleAtDate>();
+    }
+
+    private logPickRules() {
+        console.log("Pick rules:");
+        this.all_pick_rules.forEach((list, role) => {
+            console.log(" - " + role.name);
+            list.forEach(r => {
+                console.log(" --- " + r.constructor.name + " = " + JSON.stringify(r));
+            })
+        });
     }
 
     begin_new_role_group(role_group: Array<Role>) {
     }
 
     begin_new_role(date: Date) {
-        this.date = date;
+        this.current_date = date;
         this.decisions_for_date = [];
     }
 
@@ -100,6 +137,7 @@ class RuleFacts {
             return null;
         }
         for (let rule of pick_rules) {
+            // console.log("Using rule " + rule.constructor.name + ", " + JSON.stringify(rule) + " next...");
             if (rule instanceof OnThisDate) {
                 let result = rule.execute(this);
                 if (result) return result;
@@ -109,7 +147,7 @@ class RuleFacts {
                 if (people.length) {
                     for (let possible_person of people) {
                         // can't already be in the role on this date
-                        let [has_exclusion, reason] = this.has_exclusion_for(this.date, possible_person, role);
+                        let [has_exclusion, reason] = this.has_exclusion_for(this.current_date, possible_person, role);
                         if (has_exclusion) {
 
                             this.add_decision(possible_person.name + " cant do it, they have an exclusion: " + reason);
@@ -209,7 +247,7 @@ class RuleFacts {
         for (let r of person.role_include_dependents_of(role)) {
             let exclusion = new Exclusion(date, end_date, r);
             exclusions_for_person.push(exclusion);
-            this.add_decision("Recorded exclusion for " + person.name + " from " + date.toDateString() + " for " + exclusion.duration_in_days + " days on " + role.name);
+            this.add_decision("Recorded exclusion for " + person.name + ", " + role.name + " for " + exclusion.duration_in_days + " days");
             this.exclusion_zones.set(person, exclusions_for_person);
         }
     }
@@ -250,7 +288,7 @@ class FixedRoleOnDate extends Rule {
     }
 
     execute(state: RuleFacts): Role {
-        if (this.date == state.date) {
+        if (this.date == state.current_date) {
             return this.role;
         }
         return null;
@@ -322,7 +360,7 @@ class OnThisDate extends Rule {
 
     execute(state: RuleFacts): Person {
         let hasPrimaryRole = this.person.has_primary_role(this.role);
-        if (state.date == this.date && hasPrimaryRole) {
+        if (state.current_date == this.date && hasPrimaryRole) {
             return this.person;
         }
         return null;
@@ -365,6 +403,21 @@ class UsageWeightedSequential extends Rule {
             }
             return 0;
         });
+    }
+}
+
+class PlacementRule extends Rule {
+    private person: Person;
+    private role: Role;
+
+    constructor(person: Person, role: Role) {
+        super();
+        this.person = person;
+        this.role = role;
+    }
+
+    execute(state: RuleFacts) {
+
     }
 }
 
