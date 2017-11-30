@@ -23,7 +23,6 @@ class RuleExecution {
 
 class RuleFacts {
     current_date: Date;
-    current_person: Person;
     decisions_for_date: Array<string>;
 
     private all_pick_rules: Map<Role, Array<Rule>>;
@@ -37,7 +36,6 @@ class RuleFacts {
 
     // This is the schedule, as it's being built
     private dates: Map<string, ScheduleAtDate>;
-    private follow_on_actions: Array<Rule>;
     private decision_depth: number;
 
     constructor(people: PeopleStore, roles: RolesStore) {
@@ -48,6 +46,15 @@ class RuleFacts {
 
     get schedule_dates(): Array<ScheduleAtDate> {
         return Array.from(this.dates.values());
+    }
+
+    exec_sub_decision(callback) {
+        this.decision_depth++;
+        try {
+            callback();
+        } finally {
+            this.decision_depth--;
+        }
     }
 
     get_schedule_for_date(date: Date): ScheduleAtDate {
@@ -75,7 +82,6 @@ class RuleFacts {
 
         this.usage_counts = new Map<Role, Map<Person, number>>();
         this.dates = new Map<string, ScheduleAtDate>();
-        this.follow_on_actions = [];
     }
 
     // private logPickRules() {
@@ -269,8 +275,6 @@ class RuleFacts {
     }
 
     place_person_in_role(person: Person, role: Role, date: Date, record_usage_stats = true) {
-        this.current_person = person;
-
         this.add_exclusion_for(person, role, date);
 
         let specific_day = this.get_schedule_for_date(date);
@@ -281,25 +285,12 @@ class RuleFacts {
             this.use_this_person_in_role(person, role);
         }
 
-        this.follow_on_actions = this.follow_on_actions.concat(this.placement_consequences(person, role));
-    }
-
-    private placement_consequences(person: Person, role: Role): Array<Rule> {
-        // Find out what placement rules this person has
-        return person.placement_rules_for_role(role);
-    }
-
-    drain_follow_ons(person: Person, role: Role) {
-        // these actions are for THIS person and role
-        this.decision_depth++;
-        while (this.follow_on_actions.length) {
-            let next = this.follow_on_actions.pop();
-
-            if (next instanceof DependentPlacementRule) {
-                next.execute(this, role)
-            }
-        }
-        this.decision_depth--;
+        // Execute any conditional actions on the person
+        person.conditional_rules.forEach(r => {
+            this.exec_sub_decision(() => {
+                r.run(this, person, role);
+            });
+        });
     }
 
     end_role(person: Person, role: Role, date: Date) {
@@ -446,25 +437,6 @@ class UsageWeightedSequential extends Rule {
     }
 }
 
-class TogetherPlacementRule extends Rule {
-    private role: Role;
-    private also_place: Person;
-    private into_role: Role;
-
-    constructor(role: Role, also_place: Person, into_role: Role) {
-        super();
-        this.role = role;
-        this.also_place = also_place;
-        this.into_role = into_role;
-    }
-
-    execute(state: RuleFacts, role: Role) {
-        if (role.uuid == this.role.uuid) {
-            state.place_person_in_role(this.also_place, this.into_role, state.current_date);
-        }
-    }
-}
-
 class DependentPlacementRule extends Rule {
     additional_roles: Array<Role>;
 
@@ -473,10 +445,69 @@ class DependentPlacementRule extends Rule {
         this.additional_roles = additional_roles;
     }
 
-    execute(state: RuleFacts, role: Role) {
+    execute(state: RuleFacts, person: Person) {
         for (let role of this.additional_roles) {
-            state.place_person_in_role(state.current_person, role, state.current_date);
+            state.place_person_in_role(person, role, state.current_date);
         }
+    }
+}
+
+class ConditionalRule extends Rule {
+    private actions: Array<ConditionAction>;
+
+    constructor() {
+        super();
+        this.actions = [];
+    }
+
+    condition(stat: RuleFacts, person: Person, role: Role) {
+        return false;
+    }
+
+    run(stat: RuleFacts, person: Person, role: Role) {
+        if (this.condition(stat, person, role)) {
+            _.sortBy(this.actions, o => o.priority).forEach(r => {
+                r.executeAction(stat, person, role);
+            });
+        }
+    }
+
+    then(action: ConditionAction) {
+        this.actions.push(action);
+    }
+}
+
+class AssignedToRoleCondition extends ConditionalRule {
+    private role: Role;
+
+    constructor(role: Role) {
+        super();
+        this.role = role;
+    }
+
+    condition(stat: RuleFacts, person: Person, role: Role): boolean {
+        return this.role.uuid == role.uuid;
+    }
+}
+
+class ConditionAction extends Rule {
+    executeAction(stat: RuleFacts, person: Person, role: Role) {
+    }
+}
+
+class ScheduleOn extends ConditionAction {
+    private person: Person;
+    private role: Role;
+
+    constructor(person: Person, role: Role) {
+        super();
+        this.person = person;
+        this.role = role;
+    }
+
+    executeAction(stat: RuleFacts, person: Person, role: Role) {
+        stat.add_decision("" + this.constructor.name + " executed, adding " + this.person + " to role " + this.role);
+        stat.place_person_in_role(this.person, this.role, stat.current_date);
     }
 }
 
@@ -486,7 +517,9 @@ export {
     FixedRoleOnDate,
     RuleFacts,
     OnThisDate,
-    DependentPlacementRule,
-    TogetherPlacementRule,
+    AssignedToRoleCondition,
+    ConditionalRule,
+    ConditionAction,
+    ScheduleOn,
     Rule
 }

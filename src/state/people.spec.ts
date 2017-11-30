@@ -1,6 +1,6 @@
 import {PeopleStore, Person} from "./people";
-import {defaultKeysRole, defaultLeaderRole, defaultSaxRole, defaultSoundRole, Role, RolesStore} from "./roles";
-import {DependentPlacementRule, RuleFacts, UsageWeightedSequential} from "../scheduling/rule_based/rules";
+import {defaultKeysRole, defaultLeaderRole, Role, RolesStore} from "./roles";
+import {AssignedToRoleCondition, ScheduleOn} from "../scheduling/rule_based/rules";
 
 describe('people, ', () => {
     let firstPerson: Person;
@@ -49,19 +49,17 @@ describe('people, ', () => {
     it('can add dependent roles', () => {
         let cherilyn = new Person("Cherilyn");
         person_store.add_person(cherilyn)
-            .when_in_role(defaultLeaderRole, [defaultKeysRole]);
+            .if_assigned_to(defaultLeaderRole).then(new ScheduleOn(cherilyn, defaultKeysRole))
 
         expect(cherilyn.roles.length).toEqual(1);
-        let rules = cherilyn.placement_rules_for_role(defaultLeaderRole);
-
+        let rules = cherilyn.conditional_rules;
         expect(rules.length).toEqual(1);
 
         let first_rule = rules[0];
-        expect(first_rule instanceof DependentPlacementRule).toBeTrue();
+        expect(first_rule instanceof AssignedToRoleCondition).toBeTrue();
 
-        if (first_rule instanceof DependentPlacementRule) {
-            expect(first_rule.additional_roles).toEqual([defaultKeysRole]);
-        }
+        // TODO: could do more here
+        // We don't test that the condition has actions, or that they fire
     });
 
     it('can sort people by role layout priority', () => {

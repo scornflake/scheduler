@@ -122,7 +122,6 @@ class ScheduleWithRules {
                     this.facts.place_person_in_role(next_suitable_person, next_wanted_role_for_person, current_date);
 
                     this.facts.add_decision("Check role " + role + " again because of weighted placement");
-                    this.facts.drain_follow_ons(next_suitable_person, next_wanted_role_for_person);
 
                     // now continue with the loop, because we still havn't found someone for the role we were originally looking for.
                     continue;
@@ -132,7 +131,6 @@ class ScheduleWithRules {
             // OK. So. Turns out the role is the same.
             // Place the person, and we're done filling this role.
             this.facts.place_person_in_role(next_suitable_person, role, current_date);
-            this.facts.drain_follow_ons(next_suitable_person, role);
 
             try {
                 let peopleInRole = specific_day.people_in_role(role);

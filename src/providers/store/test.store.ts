@@ -14,7 +14,7 @@ import {
 import {PeopleStore, Person} from "../../state/people";
 import {AvailabilityUnit} from "../../state/scheduling-types";
 import {RootStore} from "../../state/root";
-import {DependentPlacementRule} from "../../scheduling/rule_based/rules";
+import {ScheduleOn} from "../../scheduling/rule_based/rules";
 
 let neil: Person = new Person("Neil Clayton");
 let cherilyn: Person = new Person("Cherilyn Clayton");
@@ -41,7 +41,7 @@ let andre_l: Person = new Person("Andre Legg");
 let jeremy_w: Person = new Person("Jeremy Watson");
 let john: Person = new Person("John Sutherland");
 
-christine.add_unavailable_range(new Date(2018, 3, 0), new Date(2050, 1, 1));
+christine.add_unavailable_range(new Date(2018, 2, 0), new Date(2050, 1, 1));
 craig.add_unavailable(new Date(2018, 0, 0));
 
 export class TestStoreConstruction {
@@ -59,28 +59,31 @@ export class TestStoreConstruction {
 
         person_store.add_person(cherilyn)
             .add_role(defaultKeysRole)
-            .when_in_role(defaultLeaderRole, [defaultKeysRole])
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+        cherilyn.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(cherilyn, defaultKeysRole));
 
         person_store.add_person(christine)
-            .when_in_role(defaultLeaderRole, [defaultVocalsRole])
             .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
+        christine.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(christine, defaultVocalsRole));
 
         person_store.add_person(stuart)
             .add_role(defaultAccousticGuitar)
             .add_role(defaultVocalsRole)
-            .when_in_role(defaultLeaderRole, [defaultAccousticGuitar, defaultVocalsRole])
             .avail_every(6, AvailabilityUnit.EVERY_N_WEEKS);
+        stuart.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(stuart, defaultAccousticGuitar));
+        stuart.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(stuart, defaultVocalsRole));
 
         person_store.add_person(jeremy_selfe)
             .add_role(defaultLeaderRole, 2)
             .add_role(defaultElectricGuitar)
-            .when_in_role(defaultLeaderRole, [defaultElectricGuitar])
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+        jeremy_selfe.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(jeremy_selfe, defaultElectricGuitar));
 
         person_store.add_person(ralph)
-            .when_in_role(defaultLeaderRole, [defaultAccousticGuitar, defaultVocalsRole])
             .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
+        ralph.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(ralph, defaultAccousticGuitar));
+        ralph.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(ralph, defaultVocalsRole));
+        ralph.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(anita, defaultVocalsRole))
 
 
         person_store.add_person(daniel)
@@ -112,8 +115,8 @@ export class TestStoreConstruction {
         person_store.add_person(dave)
             .add_role(defaultAccousticGuitar)
             .add_role(defaultVocalsRole)
-            .when_in_role(defaultAccousticGuitar, [defaultVocalsRole])
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+        dave.if_assigned_to(defaultAccousticGuitar).then(new ScheduleOn(dave, defaultVocalsRole));
 
         person_store.add_person(anita)
             .add_role(defaultVocalsRole)

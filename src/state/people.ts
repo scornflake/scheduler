@@ -3,7 +3,10 @@ import {Role} from "./roles";
 import {AvailabilityUnit, SchedulePrefs} from "./scheduling-types";
 import ShortUniqueId from 'short-unique-id';
 import {isUndefined} from "util";
-import {DependentPlacementRule, Rule, WeightedRoles} from "../scheduling/rule_based/rules";
+import {
+    AssignedToRoleCondition, ConditionalRule, Rule,
+    WeightedRoles
+} from "../scheduling/rule_based/rules";
 import * as _ from "lodash";
 
 class Unavailablity {
@@ -68,7 +71,7 @@ class Person {
     @observable unavailable: Array<Unavailablity>;
     @observable prefs: SchedulePrefs;
 
-    private placement_rules: Map<Role, Array<Rule>>;
+    private condition_rules: Array<ConditionalRule>;
 
     // Need to store a role, and also for this person, if they are in this role what
     // other roles they can also fullfill. However; mobx doesn't like using objects as keys
@@ -83,7 +86,7 @@ class Person {
         this._name = name;
         this.uuid = uuid;
         this.primary_roles = new Map<Role, number>();
-        this.placement_rules = new Map<Role, Array<Rule>>();
+        this.condition_rules = [];
         this.unavailable = [];
         this.prefs = new SchedulePrefs();
     }
@@ -126,14 +129,16 @@ class Person {
         }, 0);
     }
 
-    @action
-    when_in_role(role: Role, also_put_me_in: Array<Role>): Person {
+    get conditional_rules(): Array<ConditionalRule> {
+        return this.condition_rules;
+    }
+
+    if_assigned_to(role: Role): ConditionalRule {
         this.add_role(role);
 
-        let existing = this.get_placement_rules(role);
-        existing.push(new DependentPlacementRule(also_put_me_in));
-
-        return this;
+        let roleRule = new AssignedToRoleCondition(role);
+        this.condition_rules.push(roleRule);
+        return roleRule;
     }
 
     has_primary_role(role: Role) {
@@ -184,26 +189,8 @@ class Person {
         return false;
     }
 
-    // role_including_dependents_of(role: Role): Array<Role> {
-    //     let secondary = this.secondary_roles.get(role.uuid);
-    //     if (secondary) {
-    //         return [
-    //             role,
-    //             ...Array.from(this.secondary_roles.get(role.uuid))
-    //         ]
-    //     }
-    //     return [role];
-    // }
-
-    placement_rules_for_role(role: Role): Array<Rule> {
-        return this.get_placement_rules(role);
-    }
-
-    private get_placement_rules(role: Role) {
-        if(!this.placement_rules.has(role)) {
-            this.placement_rules.set(role, []);
-        }
-        return this.placement_rules.get(role);
+    valueOf() {
+        return "[Person:" + this.name + "]";
     }
 }
 
