@@ -29,7 +29,7 @@ e.g: if considering stuart, we might have:
 - Available every 2 weeks to play
 
 
-People often play together
+[done] People often play together
 ==========================
 
 Anita pretty much always sings with Ralph.
@@ -46,11 +46,12 @@ Could be modelled on person, as rules (the placement rules).
 Avoidance
 =========
 
-Don't put person X on more than Y times with person Z
+Don't put person X on more than Y times with person Z.
+This at the moment can only work with/for people in roles that have already been scheduled.
+That is, while we stay with a one pass solution.
 
 
 
 TODO v3
 =======
 - Exclusions should be turned into rules (and can then be part of 'next suitable person')
-- people_in_role() isn't tested.

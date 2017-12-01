@@ -13,7 +13,7 @@ class RootStore {
     roles_store: RolesStore;
     ui_store: UIStore;
 
-    private schedule: ScheduleWithRules;
+    schedule: ScheduleWithRules;
     private regenerator: IReactionDisposer;
 
     constructor() {
@@ -26,10 +26,6 @@ class RootStore {
         this.regenerator = autorunAsync(() => {
             console.log("Generate schedule...");
             this.generate_schedule();
-
-            // this.schedule.dates.forEach(sc => {
-            //     console.log("" + sc);
-            // });
         });
     }
 

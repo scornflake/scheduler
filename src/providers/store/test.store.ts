@@ -141,7 +141,7 @@ export class TestStoreConstruction {
             .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(jeremy_l)
-            .add_role(defaultSoundRole)
+            .add_role(defaultSoundRole, 2)
             .add_role(defaultComputerRole)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
