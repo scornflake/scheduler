@@ -5,6 +5,7 @@ import {RootStore} from "../../state/root";
 import {PopoverController} from "ionic-angular";
 import {ReasonsComponent} from "../reasons/reasons";
 import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
+import {action, computed} from "mobx-angular";
 
 @Component({
     // changeDetection: ChangeDetectionStrategy.OnPush,
@@ -18,6 +19,7 @@ export class ScheduleViewerComponent {
                 public popoverCtrl: PopoverController) {
     }
 
+    @computed
     get headers(): Array<string> {
         if (!this.schedule) {
             return [];
@@ -25,6 +27,7 @@ export class ScheduleViewerComponent {
         return this.schedule.jsonFields();
     }
 
+    @computed
     get rows(): Array<Object> {
         if (!this.schedule) {
             return [];
@@ -97,6 +100,7 @@ export class ScheduleViewerComponent {
 
     }
 
+    @action
     select(person: Person, date: Date, role_name: string) {
         let role = this.store.roles_store.find_role(role_name);
         console.log("Selecting: " + person + " on " + date.toDateString() + " for " + role.name);
@@ -105,6 +109,7 @@ export class ScheduleViewerComponent {
         this.store.ui_store.selected_role = role;
     }
 
+    @computed
     get selected_person(): Person {
         if (!this.store.ui_store || this.store.ui_store.selected_person == null) {
             return null;

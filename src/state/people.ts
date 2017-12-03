@@ -20,6 +20,9 @@ class Unavailablity extends ObjectWithUUID {
     }
 
     public static dayAndHourForDate(date: Date): string {
+        if (date == null) {
+            return "";
+        }
         return date.getFullYear() + "/" + date.getMonth() + "/" + date.getDate() + "@" + date.getHours();
     }
 
@@ -51,17 +54,7 @@ class Unavailablity extends ObjectWithUUID {
 }
 
 class Person extends ObjectWithUUID {
-    private _name: string;
-
-    @computed
-    get name(): string {
-        return this._name;
-    }
-
-    set name(value: string) {
-        this._name = value;
-        // console.log("Set name to " + value);
-    }
+    public name: string;
 
     primary_roles: Map<Role, number>;
     @observable unavailable: Array<Unavailablity>;
@@ -76,7 +69,7 @@ class Person extends ObjectWithUUID {
 
     constructor(name: string) {
         super();
-        this._name = name;
+        this.name = name;
         this.primary_roles = new Map<Role, number>();
         this.condition_rules = [];
         this.unavailable = [];

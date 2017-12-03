@@ -1,4 +1,4 @@
-import {observable} from "mobx-angular";
+import {action, observable} from "mobx-angular";
 import ShortUniqueId from 'short-unique-id';
 import * as _ from 'lodash';
 
@@ -29,6 +29,7 @@ class BaseStore<T extends ObjectWithUUID> {
         this.items = [];
     }
 
+    @action
     protected add_object_to_array(instance: T): T {
         if (_.findIndex(this.items, o => o.uuid == instance.uuid) >= 0) {
             return null;
@@ -37,14 +38,17 @@ class BaseStore<T extends ObjectWithUUID> {
         return instance;
     }
 
+    @action
     protected add_objects_to_array(many_items: T[]) {
         many_items.forEach(i => this.add_object_to_array(i));
     }
 
+    @action
     protected remove_object_from_array(instance: T) {
         this.items = this.items.filter(o => o.uuid != instance.uuid);
     }
 
+    @action
     protected clear_all_objects_from_array() {
         this.items = []
     }

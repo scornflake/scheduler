@@ -1,15 +1,16 @@
-import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
+import {Component, Input} from '@angular/core';
 import {Person} from "../../state/people";
 import includes from 'lodash/includes';
 import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
 
 @Component({
-    changeDetection: ChangeDetectionStrategy.OnPush,
+    // changeDetection: ChangeDetectionStrategy.OnPush,
     selector: 'person-editor',
     templateUrl: 'person-editor.html'
 })
 export class PersonEditorComponent {
     @Input() person: Person;
+
     @Input() schedule: ScheduleWithRules;
 
     constructor() {

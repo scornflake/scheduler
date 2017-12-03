@@ -5,7 +5,7 @@
         </ion-row>
         <ion-row *ngFor="let row of rows">
             <ion-col>
-                {{row['date'].toDateString()}}
+                {{row['date']?.toDateString()}}
             </ion-col>
             <ion-col *ngFor="let key of keys_for_row(row)"
                      [ngClass]="{'range':in_exclusion_zone(row, key)}"
