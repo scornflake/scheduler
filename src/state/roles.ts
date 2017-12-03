@@ -1,8 +1,7 @@
 import {action, observable} from "mobx-angular";
-import ShortUniqueId from 'short-unique-id';
 import {PeopleStore, Person} from "./people";
 import {OnThisDate, Rule, UsageWeightedSequential} from "../scheduling/rule_based/rules";
-import {ObjectWithUUID} from "./common";
+import {BaseStore, ObjectWithUUID} from "./common";
 
 export class Role extends ObjectWithUUID {
     @observable name: string;
@@ -53,13 +52,13 @@ defaultElectricGuitar.maximum_count = 1;
 defaultBass.maximum_count = 1;
 defaultDrumsRole.maximum_count = 1;
 
-export class RolesStore {
-    @observable roles: Array<Role>;
+export class RolesStore extends BaseStore<Role> {
     @observable rules: Array<Rule>;
 
     constructor() {
+        super();
         this.rules = [];
-        this.roles = [
+        this.add_objects_to_array([
             defaultLeaderRole,
             defaultSoundRole,
             defaultComputerRole,
@@ -70,39 +69,31 @@ export class RolesStore {
             defaultAccousticGuitar,
             defaultElectricGuitar,
             defaultSaxRole
-        ];
+        ]);
+    }
+
+    get roles(): Array<Role> {
+        return this.items;
     }
 
     @action
     removeAllRoles() {
-        this.roles = [];
+        this.clear_all_objects_from_array();
     }
 
     @action
-    addRole(r: Role) {
-        let foundIndex = this.roles.findIndex(role => {
-            return r.uuid == role.uuid;
-        });
-        // console.log("Index of " + r.uuid + " is " + foundIndex);
-        if (foundIndex >= 0) {
-            return null;
-        }
-
-        this.roles.push(r);
-        // console.log("Added role: " + JSON.stringify(r));
-        return r;
+    addRole(r: Role): Role {
+        return this.add_object_to_array(r);
     }
 
     @action
     addRoles(roles: Array<Role>) {
-        for (let role of roles) {
-            this.addRole(role);
-        }
+        this.add_objects_to_array(roles);
     }
 
     @action
     removeRole(r: Role) {
-        this.roles = this.roles.filter(role => role.uuid != r.uuid);
+        this.remove_object_from_array(r);
     }
 
     get roles_in_layout_order_grouped(): Array<Array<Role>> {

@@ -22,7 +22,7 @@ describe('roles', () => {
     });
 
     it('can update role, uuid is never changed', () => {
-        let r = role_store.addRole(new Role("Foo"));
+        let r:Role = role_store.addRole(new Role("Foo"));
 
         // While its possible to update the UUID, that's what is used to find the role, so it'll actually fail.
 
@@ -51,7 +51,7 @@ describe('roles', () => {
         role_store.removeRole(r);
         expect(role_store.roles.length).toEqual(2);
 
-        let index = Array.from(role_store.roles).findIndex(v => {
+        let index = role_store.findIndex(v => {
             return v.name == "Scud";
         });
         expect(index).toEqual(1);
