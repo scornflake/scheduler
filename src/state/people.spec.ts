@@ -8,7 +8,7 @@ describe('people, ', () => {
     let someDate: Date = new Date(2010, 10, 3);
 
     beforeEach(() => {
-        firstPerson = new Person('neilos', '1234');
+        firstPerson = new Person('neilos');
         person_store = new PeopleStore();
         person_store.add_person(firstPerson);
     });
@@ -39,7 +39,7 @@ describe('people, ', () => {
     });
 
     it('can add to people', () => {
-        let newPerson: Person = new Person('John', '4321');
+        let newPerson: Person = new Person('John');
 
         person_store.add_person(newPerson);
         expect(person_store.people).toContain(newPerson);
@@ -65,9 +65,9 @@ describe('people, ', () => {
     it('can sort people by role layout priority', () => {
         // people are in roles. Get a list of people based on their max role layout priority
         let role_store = new RolesStore();
-        let leader = role_store.addRole(new Role("Leader", null, 10));
-        let keys = role_store.addRole(new Role("Keys", null, 5));
-        let gopher = role_store.addRole(new Role("Gopher", null, 1));
+        let leader = role_store.addRole(new Role("Leader", 10));
+        let keys = role_store.addRole(new Role("Keys", 5));
+        let gopher = role_store.addRole(new Role("Gopher", 1));
 
         // Tim = Keys
         let p2 = person_store.add_person(new Person("Tim").add_role(keys));

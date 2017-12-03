@@ -131,7 +131,7 @@ class RuleFacts {
         let new_exclusion = new Exclusion(date, end_date, role);
 
         for (let exclusion of exclusions_for_person) {
-            if (exclusion.overlap_with(new_exclusion, role)) {
+            if (exclusion.overlap_with(new_exclusion)) {
                 return [true, "overlap with existing " + exclusion];
             }
         }

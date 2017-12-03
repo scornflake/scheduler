@@ -1,0 +1,4 @@
+targets:
+  prod: shared-us-west-2/cjannijk90slv0145gtu44uv5
+  default: prod
+  dev: local/cjappeb6800060106se2hh01u

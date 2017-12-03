@@ -1,19 +1,17 @@
 import {action, computed, observable} from "mobx-angular";
 import {Role} from "./roles";
 import {AvailabilityUnit, SchedulePrefs} from "./scheduling-types";
-import ShortUniqueId from 'short-unique-id';
 import {isUndefined} from "util";
-import {
-    AssignedToRoleCondition, ConditionalRule, Rule,
-    WeightedRoles
-} from "../scheduling/rule_based/rules";
+import {AssignedToRoleCondition, ConditionalRule, Rule, WeightedRoles} from "../scheduling/rule_based/rules";
 import * as _ from "lodash";
+import {BaseStore, ObjectWithUUID} from "./common";
 
-class Unavailablity {
+class Unavailablity extends ObjectWithUUID {
     from_date: Date = null;
     to_date: Date = null;
 
     constructor(from: Date, to: Date = null) {
+        super();
         if (from == null) {
             throw new Error("From date cannot be null");
         }
@@ -52,10 +50,8 @@ class Unavailablity {
     }
 }
 
-class Person {
+class Person extends ObjectWithUUID {
     private _name: string;
-
-    @observable uuid: string;
 
     @computed
     get name(): string {
@@ -78,13 +74,9 @@ class Person {
     // in maps, which is a pain.
     // secondary_roles: Map<string, Array<Role>>;
 
-    constructor(name: string, uuid: string = null) {
-        if (uuid == null) {
-            let uuid_gen = new ShortUniqueId();
-            uuid = uuid_gen.randomUUID(8);
-        }
+    constructor(name: string) {
+        super();
         this._name = name;
-        this.uuid = uuid;
         this.primary_roles = new Map<Role, number>();
         this.condition_rules = [];
         this.unavailable = [];
@@ -188,7 +180,7 @@ class Person {
         return false;
     }
 
-    get unavailable_by_date() : Array<Unavailablity> {
+    get unavailable_by_date(): Array<Unavailablity> {
         return _.sortBy(this.unavailable, u => u.from_date);
     }
 
@@ -197,24 +189,23 @@ class Person {
     }
 }
 
-class PeopleStore {
-    @observable people: Array<Person>;
-
+class PeopleStore extends BaseStore<Person> {
     constructor() {
-        this.people = [];
+        super();
     }
 
     @action
     add_person(p: Person): Person {
-        this.people.push(p);
-        return p;
+        return this.add_object_to_array(p);
     }
 
     @action
     remove_person(p: Person) {
-        this.people = this.people.filter(per => {
-            return per.uuid != p.uuid
-        });
+        this.remove_object_from_array(p);
+    }
+
+    get people(): Array<Person> {
+        return this.items;
     }
 
     people_with_role(role: Role) {

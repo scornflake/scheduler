@@ -15,6 +15,7 @@ import {PeopleStore, Person} from "../../state/people";
 import {AvailabilityUnit} from "../../state/scheduling-types";
 import {RootStore} from "../../state/root";
 import {ScheduleOn} from "../../scheduling/rule_based/rules";
+import {Organization} from "../../state/organization";
 
 let neil: Person = new Person("Neil Clayton");
 let cherilyn: Person = new Person("Cherilyn Clayton");
@@ -52,6 +53,9 @@ export class TestStoreConstruction {
 
     static SetupStore(root_store: RootStore) {
         let person_store: PeopleStore = root_store.people_store;
+        let org_store = root_store.organization_store;
+
+        org_store.addOrganizaton(new Organization("North Porirua Baptist Church"));
 
         person_store.add_person(neil)
             .add_role(defaultSoundRole, 1)

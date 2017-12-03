@@ -14,6 +14,15 @@ import {MobxAngularModule} from 'mobx-angular';
 import {ComponentsModule} from "../components/components.module";
 import {NgPipesModule} from "angular-pipes";
 import {RootStore} from "../state/root";
+import {Apollo, ApolloModule} from "apollo-angular";
+import {HttpLink, HttpLinkModule} from "apollo-angular-link-http";
+import {HttpClientModule} from "@angular/common/http";
+import {DataStoreProvider} from '../providers/data-store/data-store';
+import {defaultConfiguration} from "../config/configuration";
+
+export function defaultDSPSetup(store, apollo, link) {
+    return new DataStoreProvider(apollo, link, store, defaultConfiguration);
+}
 
 @NgModule({
     declarations: [
@@ -24,11 +33,14 @@ import {RootStore} from "../state/root";
         TabsPage
     ],
     imports: [
+        HttpClientModule,
         BrowserModule,
         NgPipesModule,
         IonicModule.forRoot(MyApp),
         ComponentsModule,
         MobxAngularModule,
+        ApolloModule,
+        HttpLinkModule,
     ],
     bootstrap: [IonicApp],
     entryComponents: [
@@ -43,6 +55,11 @@ import {RootStore} from "../state/root";
         SplashScreen,
         RootStore,
         {provide: ErrorHandler, useClass: IonicErrorHandler},
+        {
+            provide: DataStoreProvider,
+            useFactory: defaultDSPSetup,
+            deps: [RootStore, Apollo, HttpLink]
+        }
     ]
 })
 export class AppModule {

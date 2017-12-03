@@ -2,6 +2,7 @@ import {Component} from '@angular/core';
 import {NavController} from 'ionic-angular';
 import {RootStore} from "../../state/root";
 import {CSVExporter} from "../../exporters/csv.exporter";
+import {DataStoreProvider} from "../../providers/data-store/data-store";
 
 @Component({
     selector: 'page-home',
@@ -9,7 +10,9 @@ import {CSVExporter} from "../../exporters/csv.exporter";
 })
 export class HomePage {
 
-    constructor(public navCtrl: NavController, private store: RootStore) {
+    constructor(public navCtrl: NavController,
+                private store: RootStore,
+                private provider: DataStoreProvider) {
     }
 
     clear_selection() {

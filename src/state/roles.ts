@@ -2,19 +2,15 @@ import {action, observable} from "mobx-angular";
 import ShortUniqueId from 'short-unique-id';
 import {PeopleStore, Person} from "./people";
 import {OnThisDate, Rule, UsageWeightedSequential} from "../scheduling/rule_based/rules";
+import {ObjectWithUUID} from "./common";
 
-export class Role {
-    @observable uuid: string;
+export class Role extends ObjectWithUUID {
     @observable name: string;
     @observable maximum_count: number;
     @observable layout_priority: number;
 
-    constructor(name: string, uuid: string = null, priority = 0) {
-        if (uuid == null) {
-            let uuid_gen = new ShortUniqueId();
-            uuid = uuid_gen.randomUUID(8);
-        }
-        this.uuid = uuid;
+    constructor(name: string, priority = 0) {
+        super();
         this.name = name;
         this.maximum_count = 1;
         this.layout_priority = priority;
@@ -29,19 +25,19 @@ let leaderPriority = 11;
 let soundPriority = 10; // 10
 let instrumentPriority = 10;
 
-let defaultLeaderRole = new Role("Worship Leader", null, leaderPriority);
+let defaultLeaderRole = new Role("Worship Leader", leaderPriority);
 
-let defaultSoundRole = new Role("Sound", null, soundPriority);
-let defaultComputerRole = new Role("Computer", null, soundPriority);
+let defaultSoundRole = new Role("Sound", soundPriority);
+let defaultComputerRole = new Role("Computer", soundPriority);
 
-let defaultBass = new Role("Bass", null, instrumentPriority);
-let defaultDrumsRole = new Role("Drums", null, instrumentPriority);
-let defaultKeysRole = new Role("Keys", null, instrumentPriority);
-let defaultAccousticGuitar = new Role("Guitar (Accoustic)", null, instrumentPriority);
-let defaultElectricGuitar = new Role("Guitar (Electric)", null, instrumentPriority);
+let defaultBass = new Role("Bass", instrumentPriority);
+let defaultDrumsRole = new Role("Drums", instrumentPriority);
+let defaultKeysRole = new Role("Keys", instrumentPriority);
+let defaultAccousticGuitar = new Role("Guitar (Accoustic)", instrumentPriority);
+let defaultElectricGuitar = new Role("Guitar (Electric)", instrumentPriority);
 
-let defaultVocalsRole = new Role("Vocals", null, instrumentPriority);
-let defaultSaxRole = new Role("Sax", null, instrumentPriority);
+let defaultVocalsRole = new Role("Vocals", instrumentPriority);
+let defaultSaxRole = new Role("Sax", instrumentPriority);
 
 
 defaultLeaderRole.maximum_count = 1;

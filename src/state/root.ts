@@ -6,11 +6,13 @@ import {TestStoreConstruction} from "../providers/store/test.store";
 import {autorunAsync, IReactionDisposer} from "mobx";
 import {ScheduleInput} from "../scheduling/common";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
+import {Organization, OrganizationStore} from "./organization";
 
 @Injectable()
 class RootStore {
     people_store: PeopleStore;
     roles_store: RolesStore;
+    organization_store: OrganizationStore;
     ui_store: UIStore;
 
     schedule: ScheduleWithRules;
@@ -19,6 +21,7 @@ class RootStore {
     constructor() {
         this.people_store = new PeopleStore();
         this.roles_store = new RolesStore();
+        this.organization_store = new OrganizationStore();
         this.ui_store = new UIStore();
 
         TestStoreConstruction.SetupStore(this);

@@ -87,7 +87,7 @@ class Exclusion {
         }
     }
 
-    overlap_with(other: Exclusion, role: Role) {
+    overlap_with(other: Exclusion) {
         return this.includes_date(other.start_date) ||
             this.includes_date(other.end_date) ||
             other.includes_date(this.start_date) ||
