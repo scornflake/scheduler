@@ -19,6 +19,9 @@ import {HttpLink, HttpLinkModule} from "apollo-angular-link-http";
 import {HttpClientModule} from "@angular/common/http";
 import {DataStoreProvider} from '../providers/data-store/data-store';
 import {defaultConfiguration} from "../config/configuration";
+import {IonicStorageModule} from "@ionic/storage";
+import {GAPIS} from "../common/gapis-auth";
+import {SheetSelectionPage} from "../pages/sheet-selection/sheet-selection";
 
 export function defaultDSPSetup(store, apollo, link) {
     return new DataStoreProvider(apollo, link, store, defaultConfiguration);
@@ -30,6 +33,7 @@ export function defaultDSPSetup(store, apollo, link) {
         AboutPage,
         PeoplePage,
         HomePage,
+        SheetSelectionPage,
         TabsPage
     ],
     imports: [
@@ -37,6 +41,7 @@ export function defaultDSPSetup(store, apollo, link) {
         BrowserModule,
         NgPipesModule,
         IonicModule.forRoot(MyApp),
+        IonicStorageModule.forRoot(),
         ComponentsModule,
         MobxAngularModule,
         ApolloModule,
@@ -48,7 +53,8 @@ export function defaultDSPSetup(store, apollo, link) {
         AboutPage,
         PeoplePage,
         HomePage,
-        TabsPage
+        TabsPage,
+        SheetSelectionPage,
     ],
     providers: [
         StatusBar,
@@ -59,8 +65,10 @@ export function defaultDSPSetup(store, apollo, link) {
             provide: DataStoreProvider,
             useFactory: defaultDSPSetup,
             deps: [RootStore, Apollo, HttpLink]
-        }
+        },
+        GAPIS
     ]
 })
+
 export class AppModule {
 }

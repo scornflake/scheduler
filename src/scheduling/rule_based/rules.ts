@@ -437,21 +437,6 @@ class UsageWeightedSequential extends Rule {
     }
 }
 
-class DependentPlacementRule extends Rule {
-    additional_roles: Array<Role>;
-
-    constructor(additional_roles: Array<Role>) {
-        super();
-        this.additional_roles = additional_roles;
-    }
-
-    execute(state: RuleFacts, person: Person) {
-        for (let role of this.additional_roles) {
-            state.place_person_in_role(person, role, state.current_date);
-        }
-    }
-}
-
 class ConditionalRule extends Rule {
     private actions: Array<ConditionAction>;
 

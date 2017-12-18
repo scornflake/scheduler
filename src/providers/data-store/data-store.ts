@@ -10,8 +10,6 @@ import {Organization} from "../../state/organization";
 import "rxjs/add/operator/map";
 import {RootStore} from "../../state/root";
 
-let __DataStoreProvider_fragments = {};
-
 
 const __createRole = gql`
 mutation createRole($name:String!) {
@@ -39,7 +37,7 @@ export class DataStoreProvider {
                 private store: RootStore,
                 configuration = defaultConfiguration) {
 
-        let link = httpLink.create({uri: configuration.graphcool_uri});
+        let link = this.httpLink.create({uri: configuration.graphcool_uri});
 
         apollo.create({
             link: link,

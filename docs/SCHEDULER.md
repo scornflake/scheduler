@@ -9,6 +9,21 @@ Rules have:
 I think the actions were normally supposed to affect engine state.
 Hmm.  Wonder if I need to change anything?
 
+No way to set special events
+============================
+Need a way to say "we're gonna do accoustic here", and setup a manual team.
+Then I want the scheduler to flow around that date. Basically, just skip it and work around it.
+
+
+Honouring a persons perferences can lead to gaps you don't want
+===============================================================
+e.g: daniel wants to be on bass sometimes. Yet this can lead to a gap where there's no one on drums..
+Because: It has chosen daniel, seen that he wants to be on bass, figured "yep, it's about time" and put him on bass. BUT there' no one scheduled for drums.
+
+Solution to be to take a 2nd pass that does a 'non optimal' rearrangement, whereby  you move people to other roles if those roles need to be filled.
+
+We don't currently have a 'need to fill' flag. Could also do this with a role ordering (which we already have), but then how do you decide?  I think a role needs a flag 'required to be filled'.
+
 
 Availability can lead to lean layouts
 =====================================

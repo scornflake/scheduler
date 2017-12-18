@@ -1,4 +1,4 @@
-import {Component, Input} from '@angular/core';
+import {Component} from '@angular/core';
 import {isArray} from "util";
 import {Person} from "../../state/people";
 import {RootStore} from "../../state/root";
@@ -13,10 +13,13 @@ import {action, computed} from "mobx-angular";
     templateUrl: 'schedule-viewer.html'
 })
 export class ScheduleViewerComponent {
-    @Input() schedule: ScheduleWithRules;
-
     constructor(private store: RootStore,
                 public popoverCtrl: PopoverController) {
+    }
+
+    @computed
+    get schedule(): ScheduleWithRules {
+        return this.store.schedule;
     }
 
     @computed
@@ -100,13 +103,11 @@ export class ScheduleViewerComponent {
 
     }
 
-    @action
     select(person: Person, date: Date, role_name: string) {
         let role = this.store.roles_store.find_role(role_name);
         console.log("Selecting: " + person + " on " + date.toDateString() + " for " + role.name);
-        this.store.ui_store.selected_person = person;
-        this.store.ui_store.selected_date = date;
-        this.store.ui_store.selected_role = role;
+
+        this.store.ui_store.select(person, date, role);
     }
 
     @computed

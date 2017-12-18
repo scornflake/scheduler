@@ -7,15 +7,16 @@ import {autorunAsync, IReactionDisposer} from "mobx";
 import {ScheduleInput} from "../scheduling/common";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import {Organization, OrganizationStore} from "./organization";
+import {action, observable} from "mobx-angular";
 
 @Injectable()
 class RootStore {
-    people_store: PeopleStore;
-    roles_store: RolesStore;
-    organization_store: OrganizationStore;
-    ui_store: UIStore;
+    @observable people_store: PeopleStore;
+    @observable roles_store: RolesStore;
+    @observable organization_store: OrganizationStore;
+    @observable ui_store: UIStore;
 
-    schedule: ScheduleWithRules;
+    @observable schedule: ScheduleWithRules;
     private regenerator: IReactionDisposer;
 
     constructor() {
@@ -32,6 +33,7 @@ class RootStore {
         });
     }
 
+    @action
     generate_schedule(): ScheduleWithRules {
         // for testing, create some fake
         let params = new ScheduleInput(this.people_store, this.roles_store);

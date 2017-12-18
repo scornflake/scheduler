@@ -16,6 +16,7 @@ import {AvailabilityUnit} from "../../state/scheduling-types";
 import {RootStore} from "../../state/root";
 import {ScheduleOn} from "../../scheduling/rule_based/rules";
 import {Organization} from "../../state/organization";
+import {csd} from "../../common/date-utils";
 
 let neil: Person = new Person("Neil Clayton");
 let cherilyn: Person = new Person("Cherilyn Clayton");
@@ -45,6 +46,26 @@ let john: Person = new Person("John Sutherland");
 allie.add_unavailable_range(new Date(2017, 11, 24), new Date(2018, 0, 7));
 christine.add_unavailable_range(new Date(2018, 2, 0), new Date(2050, 1, 1));
 craig.add_unavailable(new Date(2018, 0, 0));
+
+jeremy_selfe.add_unavailable_range(csd(2018, 1, 7), csd(2018, 2, 4));
+jeremy_selfe.add_unavailable(csd(2018, 3, 18));
+jeremy_selfe.add_unavailable(csd(2018, 4, 1), "Easter Camp");
+
+courtney.add_unavailable_range(csd(2018, 1, 8), csd(2018, 1, 12));
+
+daniel.add_unavailable_range(csd(2018, 1, 25), csd(2018, 1, 29));
+daniel.add_unavailable(csd(2018, 4, 1), "Easter Camp");
+
+dave.add_unavailable_range(csd(2018, 1, 1), csd(2018, 1, 9), "After Jan 9th");
+
+robp.add_unavailable_range(csd(2017, 4, 20), csd(2017, 4, 22));
+
+neil.add_unavailable_range(csd(2018, 1, 4), csd(2018, 1, 28), "Brother over");
+
+anita.add_unavailable_range(csd(2018, 3, 25), csd(2018, 3, 26));
+ralph.add_unavailable_range(csd(2018, 3, 25), csd(2018, 3, 26));
+
+john.add_unavailable(csd(2018, 4, 22));
 
 export class TestStoreConstruction {
     constructor() {
@@ -100,7 +121,7 @@ export class TestStoreConstruction {
             .avail_every(5, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(ben)
-            .add_role(defaultDrumsRole, 1)
+        // .add_role(defaultDrumsRole, 1)
             .add_role(defaultBass, 3)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 

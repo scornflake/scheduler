@@ -1,6 +1,7 @@
 import {PeopleStore, Person} from "./people";
 import {defaultKeysRole, defaultLeaderRole, Role, RolesStore} from "./roles";
 import {AssignedToRoleCondition, ScheduleOn} from "../scheduling/rule_based/rules";
+import {csd} from "../common/date-utils";
 
 describe('people, ', () => {
     let firstPerson: Person;
@@ -22,11 +23,23 @@ describe('people, ', () => {
     it('can add unavailability range', () => {
         expect(firstPerson.is_unavailable_on(someDate)).toBeFalse();
         firstPerson.add_unavailable_range(new Date(2010, 5, 1), new Date(2010, 11, 1));
-        expect(firstPerson.is_unavailable_on(new Date(2010, 5, 1)));
-        expect(firstPerson.is_unavailable_on(new Date(2010, 9, 1)));
-        expect(firstPerson.is_unavailable_on(new Date(2011, 9, 1)));
+        expect(firstPerson.is_unavailable_on(new Date(2010, 5, 1))).toBeTrue();
+        expect(firstPerson.is_unavailable_on(new Date(2010, 9, 1))).toBeTrue();
+        expect(firstPerson.is_unavailable_on(new Date(2011, 9, 1))).toBeFalse();
     });
 
+    it('unavailability range is inclusive of specified dates', function () {
+        // Example from Jeremy, where he wasn't available on the 4th.
+        let from = csd(2018, 1, 7);
+        let to = csd(2018, 2, 4);
+        firstPerson.add_unavailable_range(from, to);
+
+        expect(firstPerson.is_unavailable_on(from)).toBeTrue();
+        expect(firstPerson.is_unavailable_on(to)).toBeTrue();
+
+        // Should expect the next day to be OK
+        expect(firstPerson.is_unavailable_on(csd(2018, 2, 5))).toBeFalse();
+    });
 
     it('can remove unavailable date', () => {
         firstPerson.add_unavailable(someDate);

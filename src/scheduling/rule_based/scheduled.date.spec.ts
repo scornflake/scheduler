@@ -1,8 +1,15 @@
 import {ScheduleAtDate} from "../common";
 import {Person} from "../../state/people";
 import {defaultBass, defaultSoundRole} from "../../state/roles";
+import {constructSensibleDate} from "../../common/date-utils";
 
 describe('schedule', () => {
+    it('should be able to construct non retarded dates', function () {
+        // For some bizzare reason 'month' starts at zero. Day doesn't. NICE one.
+        let date = constructSensibleDate(2018, 1, 5);
+        expect(date.toDateString()).toEqual("Fri Jan 05 2018");
+    });
+
     it('can return people in a role', () => {
         let neil = new Person("neil");
         let daniel = new Person("daniel");

@@ -13,7 +13,7 @@ describe('datastore', () => {
     let injector: TestBed;
     let data_store: DataStoreProvider;
 
-    beforeEach(() => {
+    beforeEach((done) => {
         TestBed.configureTestingModule({
             imports: [
                 MobxAngularModule,
@@ -35,6 +35,8 @@ describe('datastore', () => {
             graphcool_uri: "http://localhost:60000/simple/v1/cjappeb6800060106se2hh01u",
             graphcool_connectToDevTools: true
         };
+
+        done();
 
         data_store = new DataStoreProvider(apollo, link, store, config);
         expect(data_store).not.toBeNull();

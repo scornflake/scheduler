@@ -1,7 +1,6 @@
 import {Role, RolesStore} from "../state/roles";
 import {PeopleStore, Person, Unavailablity} from "../state/people";
 import * as _ from 'lodash';
-import {RuleFacts} from "./rule_based/rules";
 
 class ScheduleScore {
     roles: Array<Role>;

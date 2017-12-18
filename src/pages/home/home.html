@@ -1,15 +1,24 @@
 <ion-header>
     <ion-toolbar>
         <ion-title>
-            Schedule <span *ngIf="store.ui_store.have_selection">for {{store.ui_store.selected_person?.name}}</span>
+            Schedule <span *ngIf="rootStore.ui_store.have_selection">for {{rootStore.ui_store.selected_person?.name}}</span>
         </ion-title>
         <ion-buttons end>
             <button ion-button
                     (click)="clear_selection()"
-                    [disabled]="!store.ui_store.have_selection">Deselect
+                    [disabled]="!rootStore.ui_store.have_selection">Deselect
             </button>
             <button ion-button
                     (click)="export_as_csv()">CSV
+            </button>
+            <button ion-button *ngIf="rootStore.ui_store.signed_in"
+                    (click)="export_as_sheets()">Sheets
+            </button>
+            <button ion-button *ngIf="!rootStore.ui_store.signed_in"
+                    (click)="login()">Login
+            </button>
+            <button ion-button *ngIf="rootStore.ui_store.signed_in"
+                    (click)="logout()">Logout
             </button>
         </ion-buttons>
     </ion-toolbar>
@@ -19,17 +28,12 @@
     <ion-grid>
         <ion-row>
             <ion-col auto>
-                <schedule-viewer
-                        [schedule]="store.schedule"
-                ></schedule-viewer>
+                <schedule-viewer></schedule-viewer>
             </ion-col>
-            <ion-col *ngIf="store.ui_store.have_selection" col-3>
-                <person-editor
-                        [schedule]="store.schedule"
-                        [person]="store.ui_store.selected_person">
-                </person-editor>
+            <ion-col *ngIf="rootStore.ui_store.have_selection" col-3>
+                <person-editor></person-editor>
                 <reasons
-                    [decisions]="store.schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"
+                    [decisions]="rootStore.schedule.reasons_for(rootStore.ui_store.selected_person, rootStore.ui_store.selected_date)"
                 >
                 </reasons>
             </ion-col>

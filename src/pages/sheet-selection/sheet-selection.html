@@ -1,0 +1,15 @@
+<ion-header>
+
+    <ion-navbar>
+        <ion-title>Select a sheet to use</ion-title>
+    </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+    <ion-spinner *ngIf="loading"></ion-spinner>
+    <ion-list>
+        <ion-item *ngFor="let s of sheets">{{s.name}}</ion-item>
+    </ion-list>
+</ion-content>

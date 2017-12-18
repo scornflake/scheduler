@@ -9,14 +9,16 @@ import {BaseStore, ObjectWithUUID} from "./common";
 class Unavailablity extends ObjectWithUUID {
     from_date: Date = null;
     to_date: Date = null;
+    reason: string = null;
 
-    constructor(from: Date, to: Date = null) {
+    constructor(from: Date, to: Date = null, reason = null) {
         super();
         if (from == null) {
             throw new Error("From date cannot be null");
         }
         this.from_date = from;
         this.to_date = to;
+        this.reason = reason;
     }
 
     public static dayAndHourForDate(date: Date): string {
@@ -49,7 +51,7 @@ class Unavailablity extends ObjectWithUUID {
         if (this.is_date_range) {
             the_end_date = this.to_date;
         }
-        return date >= start && date < the_end_date;
+        return date >= start && date <= the_end_date;
     }
 }
 
@@ -149,12 +151,12 @@ class Person extends ObjectWithUUID {
     }
 
     @action
-    add_unavailable(d: Date) {
-        this.unavailable.push(new Unavailablity(d));
+    add_unavailable(d: Date, reason = null) {
+        this.unavailable.push(new Unavailablity(d, null, reason));
     }
 
-    add_unavailable_range(from: Date, to: Date) {
-        this.unavailable.push(new Unavailablity(from, to));
+    add_unavailable_range(from: Date, to: Date, reason = null) {
+        this.unavailable.push(new Unavailablity(from, to, reason));
     }
 
     remove_unavailable(d: Date) {
