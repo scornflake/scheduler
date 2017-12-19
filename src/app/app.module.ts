@@ -21,7 +21,8 @@ import {DataStoreProvider} from '../providers/data-store/data-store';
 import {defaultConfiguration} from "../config/configuration";
 import {IonicStorageModule} from "@ionic/storage";
 import {GAPIS} from "../common/gapis-auth";
-import {SheetSelectionPage} from "../pages/sheet-selection/sheet-selection";
+import {SheetSelectionPageModule} from "../pages/sheet-selection/sheet-selection.module";
+import {TabSelectionPageModule} from "../pages/tab-selection/tab-selection.module";
 
 export function defaultDSPSetup(store, apollo, link) {
     return new DataStoreProvider(apollo, link, store, defaultConfiguration);
@@ -33,7 +34,6 @@ export function defaultDSPSetup(store, apollo, link) {
         AboutPage,
         PeoplePage,
         HomePage,
-        SheetSelectionPage,
         TabsPage
     ],
     imports: [
@@ -46,6 +46,8 @@ export function defaultDSPSetup(store, apollo, link) {
         MobxAngularModule,
         ApolloModule,
         HttpLinkModule,
+        SheetSelectionPageModule,
+        TabSelectionPageModule
     ],
     bootstrap: [IonicApp],
     entryComponents: [
@@ -54,7 +56,6 @@ export function defaultDSPSetup(store, apollo, link) {
         PeoplePage,
         HomePage,
         TabsPage,
-        SheetSelectionPage,
     ],
     providers: [
         StatusBar,

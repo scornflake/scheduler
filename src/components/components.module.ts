@@ -9,7 +9,7 @@ import {ReasonsComponent} from './reasons/reasons';
     declarations: [
         ScheduleViewerComponent,
         PersonEditorComponent,
-        ReasonsComponent
+        ReasonsComponent,
     ],
     imports: [
         IonicModule,
@@ -18,7 +18,7 @@ import {ReasonsComponent} from './reasons/reasons';
     exports: [
         ScheduleViewerComponent,
         PersonEditorComponent,
-        ReasonsComponent
+        ReasonsComponent,
     ]
 })
 export class ComponentsModule {

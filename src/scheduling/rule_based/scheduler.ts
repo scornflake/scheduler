@@ -196,7 +196,7 @@ class ScheduleWithRules {
             return r.name;
         });
         return [
-            "date",
+            "Date",
             ...field_names
         ]
     }

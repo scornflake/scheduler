@@ -12,7 +12,10 @@
                     (click)="export_as_csv()">CSV
             </button>
             <button ion-button *ngIf="rootStore.ui_store.signed_in"
-                    (click)="export_as_sheets()">Sheets
+                    (click)="export_as_sheets()">Export
+            </button>
+            <button ion-button *ngIf="rootStore.ui_store.signed_in"
+                    (click)="clear_sheet_state()">Clear
             </button>
             <button ion-button *ngIf="!rootStore.ui_store.signed_in"
                     (click)="login()">Login

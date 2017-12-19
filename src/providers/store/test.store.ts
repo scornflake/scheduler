@@ -51,6 +51,9 @@ jeremy_selfe.add_unavailable_range(csd(2018, 1, 7), csd(2018, 2, 4));
 jeremy_selfe.add_unavailable(csd(2018, 3, 18));
 jeremy_selfe.add_unavailable(csd(2018, 4, 1), "Easter Camp");
 
+jeremy_w.add_unavailable(csd(2018, 1, 28));
+jeremy_w.add_unavailable(csd(2018, 2, 11));
+
 courtney.add_unavailable_range(csd(2018, 1, 8), csd(2018, 1, 12));
 
 daniel.add_unavailable_range(csd(2018, 1, 25), csd(2018, 1, 29));
@@ -59,6 +62,10 @@ daniel.add_unavailable(csd(2018, 4, 1), "Easter Camp");
 dave.add_unavailable_range(csd(2018, 1, 1), csd(2018, 1, 9), "After Jan 9th");
 
 robp.add_unavailable_range(csd(2017, 4, 20), csd(2017, 4, 22));
+
+chris.add_unavailable(csd(2018, 2, 4));
+chris.add_unavailable(csd(2018, 2, 18));
+chris.add_unavailable(csd(2018, 2, 25));
 
 neil.add_unavailable_range(csd(2018, 1, 4), csd(2018, 1, 28), "Brother over");
 
@@ -121,8 +128,8 @@ export class TestStoreConstruction {
             .avail_every(5, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(ben)
-        // .add_role(defaultDrumsRole, 1)
-            .add_role(defaultBass, 3)
+        .add_role(defaultDrumsRole, 1)
+            // .add_role(defaultBass, 3)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(courtney)
@@ -162,7 +169,7 @@ export class TestStoreConstruction {
 
         person_store.add_person(chris)
             .add_role(defaultSoundRole)
-            // .addRole(defaultElectricGuitar)
+            // .add_role(defaultElectricGuitar)
             .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(jeremy_l)

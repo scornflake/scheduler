@@ -24,9 +24,9 @@ export class HomePage {
     ionViewDidEnter() {
         autorun(() => {
             if (this.rootStore.ui_store.signed_in) {
-                if (this.rootStore.ui_store.google_sheet_id_retrieved) {
+                if (this.rootStore.state.google_sheet_id_retrieved) {
                     console.log("GOOOOO");
-                    this.export_as_sheets();
+                    // this.export_as_sheets();
                 }
             }
         });
@@ -39,10 +39,16 @@ export class HomePage {
 
     export_as_sheets() {
         // Get the sheet and make sure we can read it.
-        let sheet_id = this.sheetAPI.get_verified_sheet();
-        sheet_id.subscribe((v) => {
-            console.log("Top level caller got: " + JSON.stringify(v));
-        }, (error) => {
+        let sheet_id = this.sheetAPI.state.google_sheet_id;
+        if (sheet_id) {
+            this.sheetAPI.load_sheet_with_id(sheet_id).subscribe((spreadsheet) => {
+                console.log("Loaded the sheet!");
+                let sheet = spreadsheet.sheets.find(s => s.properties.sheetId == this.rootStore.state.google_sheet_tab_id);
+                this.sheetAPI.clear_and_write_schedule(spreadsheet, sheet, this.rootStore.schedule);
+            }, (error) => {
+                console.log("Error loading sheet: " + error);
+            });
+        } else {
             console.log("No sheet selected");
             // let popover = this.modalController.create(SheetSelectionPage);
             // popover.present().then(() => {
@@ -50,13 +56,15 @@ export class HomePage {
             // console.log("Done. Sheet: " + this.rootStore.ui_store.google_sheet_id);
             // });
             this.navCtrl.push(SheetSelectionPage, {
-                done: () => {
-                    console.log("Done. Sheet: " + this.rootStore.ui_store.google_sheet_id);
+                done: (spreadsheet, sheet, error) => {
+                    console.log("Done. Selected sheet: " + spreadsheet.spreadsheetId + ", and tab: " + sheet.properties.title);
                 }
             });
-        });
-        // let exporter = new GoogleSheetExporter(this.rootStore.schedule, this.sheetAPI);
-        // exporter.write_to_sheet();
+        }
+    }
+
+    clear_sheet_state() {
+        this.rootStore.ui_store.clear_sheet_state();
     }
 
     export_as_csv() {
