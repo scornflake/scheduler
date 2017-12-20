@@ -6,10 +6,10 @@ import {SavedState, UIStore} from "../state/UIState";
 import {Observable} from "rxjs/Observable";
 import {IReactionDisposer} from "mobx";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
-import Spreadsheet = gapi.client.sheets.Spreadsheet;
-import Sheet = gapi.client.sheets.Sheet;
 import ValueRange = gapi.client.sheets.ValueRange;
 import * as _ from 'lodash';
+import Spreadsheet = gapi.client.sheets.Spreadsheet;
+import Sheet = gapi.client.sheets.Sheet;
 
 const API_KEY = "AIzaSyCVhzG0pEB1NfZsxpdPPon3XhEK4pctEYE";
 
@@ -150,13 +150,14 @@ class GAPIS {
 
     clear_and_write_schedule(spreadsheet: Spreadsheet, sheet: Sheet, schedule: ScheduleWithRules) {
         // Righteo. Lets do a batch update!
-        console.log("Clearing sheet...");
+        let num_format_rules = sheet.conditionalFormats ? sheet.conditionalFormats.length : 0;
+        console.log("Clearing sheet (with " + num_format_rules + " format rules)...");
+
         gapi.client.sheets.spreadsheets.values.clear({
             spreadsheetId: spreadsheet.spreadsheetId,
             range: this.range_for_sheet(sheet)
         }).then((clear_response) => {
             console.log("Sending new data...");
-
             let fields = schedule.jsonFields();
             let rows = schedule.jsonResult().map(row => {
                 // Want to remap this structure
@@ -206,81 +207,136 @@ class GAPIS {
                 }
             }).then((r) => {
                 console.log("Updated all data. Formatting...");
-
-                gapi.client.sheets.spreadsheets.batchUpdate({
-                    spreadsheetId: spreadsheet.spreadsheetId,
-                    requests: [
-                        {
-                            addConditionalFormatRule: {
-                                rule: {
-                                    ranges: [
-                                        {
-                                            sheetId: sheet.properties.sheetId,
-                                            startRowIndex: 1,
-                                            endRowIndex: rows.length,
-                                            startColumnIndex: 1,
-                                            endColumnIndex: fields.length
-                                        }
-                                    ],
-                                    booleanRule: {
-                                        condition: {
-                                            type: "CUSTOM_FORMULA",
-                                            values: [
-                                                {
-                                                    userEnteredValue: searchCondition
-                                                }
-                                            ]
-                                        },
-                                        format: {
-                                            textFormat: {
-                                                foregroundColor: {
-                                                    red: 1, green: 1, blue: 1
-                                                },
-                                            },
-                                            backgroundColor: {
-                                                red: 0.5, green: 0.6, blue: 0.2
-                                            }
-                                        }
-                                    }
-                                },
+                let requests = [];
+                for (let index = num_format_rules - 1; index >= 0; index--) {
+                    requests.push({
+                            deleteConditionalFormatRule: {
+                                sheetId: sheet.properties.sheetId,
                                 index: 0
-                            }
-                        },
-                        {
-                            repeatCell: {
-                                range: {
-                                    sheetId: sheet.properties.sheetId,
-                                    startRowIndex: 0,
-                                    endRowIndex: 1
-                                },
-                                cell: {
-                                    userEnteredFormat: {
-                                        textFormat: {
-                                            bold: true
-                                        }
-                                    }
-                                },
-                                fields: "userEnteredFormat.textFormat.bold"
                             },
-                        },
-                        {
-                            autoResizeDimensions: {
-                                dimensions: {
-                                    sheetId: sheet.properties.sheetId,
-                                    dimension: "COLUMNS",
-                                    startIndex: 0,
-                                    endIndex: 20
-                                }
-                            }
                         }
-                    ]
-                }).then((r) => {
-                    console.log("I did some nice formatting!");
-                })
+                    )
+                }
+                if (requests.length > 0) {
+                    gapi.client.sheets.spreadsheets.batchUpdate({
+                        spreadsheetId: spreadsheet.spreadsheetId,
+                        requests: requests
+                    }).then(this.setConditionalFormats(spreadsheet, sheet, rows, fields, searchCondition));
+                } else {
+                    this.setConditionalFormats(spreadsheet, sheet, rows, fields, searchCondition);
+                }
             })
         });
+    }
 
-
+    private setConditionalFormats(spreadsheet: Spreadsheet, sheet: Sheet, rows: string[][], fields: any[], searchCondition: string) {
+        gapi.client.sheets.spreadsheets.batchUpdate({
+            spreadsheetId: spreadsheet.spreadsheetId,
+            requests: [
+                {
+                    addConditionalFormatRule: {
+                        rule: {
+                            ranges: [
+                                {
+                                    sheetId: sheet.properties.sheetId,
+                                    startRowIndex: 1,
+                                    endRowIndex: rows.length + 1
+                                }
+                            ],
+                            booleanRule: {
+                                condition: {
+                                    type: "CUSTOM_FORMULA",
+                                    values: [
+                                        {
+                                            userEnteredValue: "=$A2<today()"
+                                        }
+                                    ]
+                                },
+                                format: {
+                                    textFormat: {
+                                        foregroundColor: {
+                                            red: 0.2, green: 0.2, blue: 0.2
+                                        },
+                                    },
+                                }
+                            }
+                        },
+                        index: 0
+                    }
+                }
+            ]
+        }).then((v) => {
+            gapi.client.sheets.spreadsheets.batchUpdate({
+                spreadsheetId: spreadsheet.spreadsheetId,
+                requests: [
+                    {
+                        addConditionalFormatRule: {
+                            rule: {
+                                ranges: [
+                                    {
+                                        sheetId: sheet.properties.sheetId,
+                                        startRowIndex: 1,
+                                        endRowIndex: rows.length + 1,
+                                        startColumnIndex: 1,
+                                        endColumnIndex: fields.length
+                                    }
+                                ],
+                                booleanRule: {
+                                    condition: {
+                                        type: "CUSTOM_FORMULA",
+                                        values: [
+                                            {
+                                                userEnteredValue: searchCondition
+                                            }
+                                        ]
+                                    },
+                                    format: {
+                                        textFormat: {
+                                            foregroundColor: {
+                                                red: 1, green: 1, blue: 1
+                                            },
+                                        },
+                                        backgroundColor: {
+                                            red: 0.5, green: 0.6, blue: 0.2
+                                        }
+                                    }
+                                }
+                            },
+                            index: 0
+                        },
+                    },
+                    {
+                        repeatCell: {
+                            range: {
+                                sheetId: sheet.properties.sheetId,
+                                startRowIndex: 0,
+                                endRowIndex: 1
+                            },
+                            cell: {
+                                userEnteredFormat: {
+                                    textFormat: {
+                                        bold: true
+                                    }
+                                }
+                            },
+                            fields: "userEnteredFormat.textFormat.bold"
+                        },
+                    },
+                    {
+                        autoResizeDimensions: {
+                            dimensions: {
+                                sheetId: sheet.properties.sheetId,
+                                dimension: "COLUMNS",
+                                startIndex: 0,
+                                endIndex: 20
+                            }
+                        }
+                    }
+                ]
+            }).then((r) => {
+                console.log("Finished updating Google Sheet");
+            })
+        });
     }
 }
 

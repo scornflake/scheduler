@@ -33,7 +33,7 @@ let dave: Person = new Person("Dave Humphries");
 let ralph: Person = new Person("Ralph Lambert");
 let anita: Person = new Person("Anita Lambert");
 let annie: Person = new Person("Annie McMullen");
-let jo: Person = new Person("Jo");
+let jo: Person = new Person("Jo Marquet");
 let allie: Person = new Person("Allie Pope");
 let craig: Person = new Person("Craig Campbell");
 
