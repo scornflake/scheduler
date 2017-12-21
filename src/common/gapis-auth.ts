@@ -1,15 +1,12 @@
 import {ApplicationRef, Injectable} from "@angular/core";
 import {credentials, DISCOVERY_DOCS, SCOPES} from "./auth-common";
 import {RootStore} from "../state/root";
-import {Storage} from "@ionic/storage";
 import {SavedState, UIStore} from "../state/UIState";
 import {Observable} from "rxjs/Observable";
-import {IReactionDisposer} from "mobx";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
-import ValueRange = gapi.client.sheets.ValueRange;
 import * as _ from 'lodash';
-import Spreadsheet = gapi.client.sheets.Spreadsheet;
-import Sheet = gapi.client.sheets.Sheet;
+import ValueRange = gapi.client.sheets.ValueRange;
+import {Subject} from "rxjs/Subject";
 
 const API_KEY = "AIzaSyCVhzG0pEB1NfZsxpdPPon3XhEK4pctEYE";
 
@@ -17,10 +14,8 @@ const API_KEY = "AIzaSyCVhzG0pEB1NfZsxpdPPon3XhEK4pctEYE";
 class GAPIS {
     private init_done: boolean;
     private callback: any;
-    private saving: IReactionDisposer;
 
     constructor(private rootStore: RootStore,
-                private storage: Storage,
                 private appRef: ApplicationRef) {
     }
 
@@ -148,8 +143,10 @@ class GAPIS {
         return "'" + s.properties.title + "'!" + range;
     }
 
-    clear_and_write_schedule(spreadsheet: Spreadsheet, sheet: Sheet, schedule: ScheduleWithRules) {
+    clear_and_write_schedule(spreadsheet: Spreadsheet, sheet: Sheet, schedule: ScheduleWithRules): Observable<number> {
         // Righteo. Lets do a batch update!
+        let progressObservable = new Subject<number>();
+        progressObservable.next(0);
         let num_format_rules = sheet.conditionalFormats ? sheet.conditionalFormats.length : 0;
         console.log("Clearing sheet (with " + num_format_rules + " format rules)...");
 
@@ -157,6 +154,7 @@ class GAPIS {
             spreadsheetId: spreadsheet.spreadsheetId,
             range: this.range_for_sheet(sheet)
         }).then((clear_response) => {
+            progressObservable.next(0.25);
             console.log("Sending new data...");
             let fields = schedule.jsonFields();
             let rows = schedule.jsonResult().map(row => {
@@ -199,6 +197,7 @@ class GAPIS {
                 values: [['Enter name here:']]
             });
 
+            progressObservable.next(0.5);
             gapi.client.sheets.spreadsheets.values.batchUpdate({
                 spreadsheetId: spreadsheet.spreadsheetId,
                 resource: {
@@ -206,6 +205,7 @@ class GAPIS {
                     data: data
                 }
             }).then((r) => {
+                progressObservable.next(0.66);
                 console.log("Updated all data. Formatting...");
                 let requests = [];
                 for (let index = num_format_rules - 1; index >= 0; index--) {
@@ -218,18 +218,21 @@ class GAPIS {
                     )
                 }
                 if (requests.length > 0) {
+                    progressObservable.next(0.75);
                     gapi.client.sheets.spreadsheets.batchUpdate({
                         spreadsheetId: spreadsheet.spreadsheetId,
                         requests: requests
-                    }).then(this.setConditionalFormats(spreadsheet, sheet, rows, fields, searchCondition));
+                    }).then(this.setConditionalFormats(spreadsheet, sheet, rows, fields, searchCondition, progressObservable));
                 } else {
-                    this.setConditionalFormats(spreadsheet, sheet, rows, fields, searchCondition);
+                    this.setConditionalFormats(spreadsheet, sheet, rows, fields, searchCondition, progressObservable);
                 }
             })
         });
+        return progressObservable;
     }
 
-    private setConditionalFormats(spreadsheet: Spreadsheet, sheet: Sheet, rows: string[][], fields: any[], searchCondition: string) {
+    private setConditionalFormats(spreadsheet: gapi.client.sheets.Spreadsheet, sheet: gapi.client.sheets.Sheet, rows: string[][], fields: any[], searchCondition: string, progressObservable: Subject<number>) {
+        progressObservable.next(0.85);
         gapi.client.sheets.spreadsheets.batchUpdate({
             spreadsheetId: spreadsheet.spreadsheetId,
             requests: [
@@ -266,6 +269,7 @@ class GAPIS {
                 }
             ]
         }).then((v) => {
+            progressObservable.next(0.95);
             gapi.client.sheets.spreadsheets.batchUpdate({
                 spreadsheetId: spreadsheet.spreadsheetId,
                 requests: [
@@ -334,7 +338,9 @@ class GAPIS {
                     }
                 ]
             }).then((r) => {
+                progressObservable.next(1.0);
                 console.log("Finished updating Google Sheet");
+                progressObservable.complete();
             })
         });
     }

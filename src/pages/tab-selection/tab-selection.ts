@@ -1,6 +1,5 @@
 import {ApplicationRef, Component} from '@angular/core';
 import {IonicPage, NavController, NavParams} from 'ionic-angular';
-import {RootStore} from "../../state/root";
 import {GAPIS} from "../../common/gapis-auth";
 import Spreadsheet = gapi.client.sheets.Spreadsheet;
 import Sheet = gapi.client.sheets.Sheet;
@@ -22,7 +21,6 @@ export class TabSelectionPage {
     constructor(public navCtrl: NavController,
                 public navParams: NavParams,
                 private ar: ApplicationRef,
-                private rootStore: RootStore,
                 private api: GAPIS) {
 
         this.sheet_id = navParams.get('sheet_id');

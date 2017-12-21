@@ -9,10 +9,23 @@ Rules have:
 I think the actions were normally supposed to affect engine state.
 Hmm.  Wonder if I need to change anything?
 
+Themes, Speaker/Preacher
+========================
+A way to have user created columns, for the schedule.
+ - These are filled later manually.
+ - These columns can be moved in order, to appear whereever the user wants
+
+
 No way to set special events
 ============================
-Need a way to say "we're gonna do accoustic here", and setup a manual team.
-Then I want the scheduler to flow around that date. Basically, just skip it and work around it.
+Need a way to say "we're gonna do an accoustic set here", and setup a manual team.
+ - I want the scheduler to flow around that date. Basically, just skip it and work around it.
+ - This should be doable when the schedule is in draft mode, or when it's published.
+
+
+Wiki Manual
+===========
+I like what spirit did, with the Wiki, that'd be a good idea for this.
 
 
 Honouring a persons perferences can lead to gaps you don't want

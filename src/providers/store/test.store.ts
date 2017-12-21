@@ -67,6 +67,8 @@ chris.add_unavailable(csd(2018, 2, 4));
 chris.add_unavailable(csd(2018, 2, 18));
 chris.add_unavailable(csd(2018, 2, 25));
 
+jeremy_l.add_unavailable(csd(2018, 2, 18));
+
 neil.add_unavailable_range(csd(2018, 1, 4), csd(2018, 1, 28), "Brother over");
 
 anita.add_unavailable_range(csd(2018, 3, 25), csd(2018, 3, 26));
@@ -74,9 +76,117 @@ ralph.add_unavailable_range(csd(2018, 3, 25), csd(2018, 3, 26));
 
 john.add_unavailable(csd(2018, 4, 22));
 
+export class ThamesTest {
+    constructor() {
+    }
+
+    static SetupStore(root_store: RootStore) {
+        let lynette = new Person("Lynette Mill");
+        let eddie = new Person("Eddie");
+        let donald = new Person("Donald");
+        let levi = new Person("Levi");
+        let brian = new Person("Brian");
+        let zoe = new Person("Zoe");
+        let paul = new Person("Paul");
+        let shaz = new Person("Shaz");
+        let aria = new Person("Aria");
+        let bronwyn = new Person("Bronwyn");
+        let foster = new Person("Foster");
+        let elizabeth = new Person("Elizabeth");
+        let gael = new Person("Gael");
+        let bernard = new Person("Bernard");
+        let felicia = new Person("Felicia");
+        let henryk = new Person("Henryk");
+        let rose = new Person("Rose");
+
+        let person_store: PeopleStore = root_store.people_store;
+        let org_store = root_store.organization_store;
+
+        org_store.addOrganizaton(new Organization("Thames Baptist Church"));
+
+        person_store.add_person(foster)
+            .add_role(defaultComputerRole)
+            .avail_every(12, AvailabilityUnit.EVERY_N_WEEKS);
+
+        person_store.add_person(lynette)
+            .add_role(defaultLeaderRole)
+            .avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
+        lynette.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(lynette, defaultKeysRole));
+        lynette.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(eddie, defaultVocalsRole));
+        lynette.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(donald, defaultVocalsRole));
+        lynette.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(henryk, defaultSoundRole));
+        lynette.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(donald, defaultSaxRole));
+        lynette.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(donald, defaultAccousticGuitar));
+        lynette.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(levi, defaultBass));
+
+        person_store.add_person(eddie)
+            .add_role(defaultVocalsRole)
+            .add_role(defaultSoundRole)
+            .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+
+        person_store.add_person(donald)
+            .add_role(defaultSoundRole)
+            .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+
+        person_store.add_person(levi)
+            .add_role(defaultBass)
+            .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+
+        person_store.add_person(elizabeth)
+            .add_role(defaultComputerRole)
+            .avail_every(6, AvailabilityUnit.EVERY_N_WEEKS);
+
+        person_store.add_person(gael)
+            .add_role(defaultComputerRole)
+            .avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
+
+        person_store.add_person(felicia)
+            .add_role(defaultComputerRole)
+            .avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
+
+        person_store.add_person(rose)
+            .add_role(defaultComputerRole)
+            .avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
+
+        person_store.add_person(bernard);
+
+        person_store.add_person(henryk)
+            .add_role(defaultSoundRole)
+            .avail_every(10, AvailabilityUnit.EVERY_N_WEEKS);
+        henryk.if_assigned_to(defaultSoundRole).then(new ScheduleOn(felicia, defaultComputerRole));
+
+        person_store.add_person(shaz)
+            .add_role(defaultLeaderRole)
+            .avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
+
+        shaz.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(shaz, defaultAccousticGuitar));
+        shaz.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(bronwyn, defaultVocalsRole));
+        shaz.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(aria, defaultDrumsRole));
+        shaz.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(bernard, defaultSoundRole));
+
+        person_store.add_person(brian)
+            .add_role(defaultLeaderRole)
+            .avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
+        brian.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(zoe, defaultLeaderRole));
+        brian.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(bronwyn, defaultVocalsRole));
+        brian.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(donald, defaultSoundRole));
+        brian.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(paul, defaultSaxRole));
+
+        /*
+        2 levels of availability.
+        1) Always on when leader X is on (which is what we do now)
+        2) Alternating people in a dependent role (weighting), when leader X is on
+         */
+
+        gael.add_unavailable(csd(2018, 3, 4), "trip");
+        brian.add_unavailable_range(csd(2018, 2, 10), csd(2018, 3, 4));
+        lynette.add_unavailable_range(csd(2017, 12, 24), csd(2018, 1, 28));
+        // lynette.add_unavailable(csd(2018, 2, 11))
+    }
+}
+
 export class TestStoreConstruction {
     constructor() {
-
     }
 
     static SetupStore(root_store: RootStore) {
@@ -128,7 +238,7 @@ export class TestStoreConstruction {
             .avail_every(5, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(ben)
-        .add_role(defaultDrumsRole, 1)
+            .add_role(defaultDrumsRole, 1)
             // .add_role(defaultBass, 3)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 

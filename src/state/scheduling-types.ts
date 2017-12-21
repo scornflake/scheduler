@@ -6,6 +6,8 @@ export enum AvailabilityUnit {
     AVAIL_ANYTIME,
     EVERY_N_DAYS,
     EVERY_N_WEEKS,
+
+    // How do I Model 2 out of 3?
 }
 
 export class Availability {

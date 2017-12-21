@@ -2,9 +2,7 @@ import {Component} from '@angular/core';
 import {ModalController, NavController} from 'ionic-angular';
 import {RootStore} from "../../state/root";
 import {CSVExporter} from "../../exporters/csv.exporter";
-import {Storage} from "@ionic/storage";
 import {GAPIS} from "../../common/gapis-auth";
-import {autorun} from "mobx";
 import {SheetSelectionPage} from "../sheet-selection/sheet-selection";
 
 
@@ -15,21 +13,12 @@ import {SheetSelectionPage} from "../sheet-selection/sheet-selection";
 export class HomePage {
 
     constructor(public navCtrl: NavController,
-                private storage: Storage,
                 private sheetAPI: GAPIS,
                 private modalController: ModalController,
                 private rootStore: RootStore) {
     }
 
     ionViewDidEnter() {
-        autorun(() => {
-            if (this.rootStore.ui_store.signed_in) {
-                if (this.rootStore.state.google_sheet_id_retrieved) {
-                    console.log("GOOOOO");
-                    // this.export_as_sheets();
-                }
-            }
-        });
         this.sheetAPI.init();
     }
 
