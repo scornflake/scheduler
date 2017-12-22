@@ -6,11 +6,14 @@ import {throwOnInvalidDate} from "../common/date-utils";
 import {RuleFacts} from "../scheduling/rule_based/rules";
 
 export enum AvailabilityUnit {
+    // Models availability such as "every 4 weeks".
+    // Use Availability
     AVAIL_ANYTIME,
     EVERY_N_DAYS,
     EVERY_N_WEEKS,
 
-    // How do I Model 2 out of 3?
+    // Models availability such as "every 2 out of 3"
+    // Use AvailabilityEveryNOfM
     EVERY_N_OF_M_WEEKS,
 }
 
@@ -18,12 +21,9 @@ export class Availability {
     period: number;
     unit: AvailabilityUnit;
 
-    // only_to_role: Role;
-
-    constructor(period: number = 1, unit: AvailabilityUnit = AvailabilityUnit.AVAIL_ANYTIME, only_to_role: Role = null) {
+    constructor(period: number = 1, unit: AvailabilityUnit = AvailabilityUnit.AVAIL_ANYTIME) {
         this.period = period;
         this.unit = unit;
-        // this.only_to_role = only_to_role;
     }
 
     get_end_date_from(date: Date) {

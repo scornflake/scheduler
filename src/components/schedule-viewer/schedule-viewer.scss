@@ -1,6 +1,12 @@
 schedule-viewer {
+  .heading {
+    font-weight: bold;
+  }
   .range {
     background-color: rgba(darkred, 0.2);
+  }
+  .even {
+    background-color: rgba(black, 0.05);
   }
   .selected {
     background-color: darkred;

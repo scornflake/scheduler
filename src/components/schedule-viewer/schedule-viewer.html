@@ -1,13 +1,13 @@
 <div>
     <ion-grid>
         <ion-row>
-            <ion-col *ngFor="let header of headers">{{header|uppercase}}</ion-col>
+            <ion-col class="heading" *ngFor="let header of headers">{{header|uppercase}}</ion-col>
         </ion-row>
-        <ion-row *ngFor="let row of rows">
+        <ion-row *ngFor="let row of rows; let i = index" [ngClass]="{'even':i % 2 == 0}">
             <ion-col>
                 {{row['date']?.toDateString()}}
             </ion-col>
-            <ion-col *ngFor="let key of keys_for_row(row)"
+            <ion-col *ngFor="let key of keys_for_row(row); let i = index"
                      [ngClass]="{'range':in_exclusion_zone(row, key)}"
             >
                 <div *ngFor="let person of value_as_array(row[key])"

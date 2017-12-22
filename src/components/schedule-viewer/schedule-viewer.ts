@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {ApplicationRef, Component} from '@angular/core';
 import {isArray} from "util";
 import {Person} from "../../state/people";
 import {RootStore} from "../../state/root";
@@ -14,6 +14,7 @@ import {action, computed} from "mobx-angular";
 })
 export class ScheduleViewerComponent {
     constructor(private store: RootStore,
+                private appRef:ApplicationRef,
                 public popoverCtrl: PopoverController) {
     }
 
@@ -108,6 +109,7 @@ export class ScheduleViewerComponent {
         console.log("Selecting: " + person + " on " + date.toDateString() + " for " + role.name);
 
         this.store.ui_store.select(person, date, role);
+        this.appRef.tick();
     }
 
     @computed
