@@ -8,6 +8,7 @@ import {Role} from "../../state/roles";
 import {Organization, OrganizationStore} from "../../state/organization";
 import {MobxAngularModule} from "mobx-angular";
 import {RootStore} from "../../state/root";
+import {IonicStorageModule} from "@ionic/storage";
 
 describe('datastore', () => {
     let injector: TestBed;
@@ -18,6 +19,7 @@ describe('datastore', () => {
             imports: [
                 MobxAngularModule,
                 HttpClientModule,
+                IonicStorageModule.forRoot(),
                 ApolloModule,
                 MobxAngularModule,
                 HttpLinkModule

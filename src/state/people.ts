@@ -1,10 +1,12 @@
 import {action, computed, observable} from "mobx-angular";
 import {Role} from "./roles";
-import {AvailabilityUnit, SchedulePrefs} from "./scheduling-types";
+import {Availability, AvailabilityUnit, SchedulePrefs} from "./scheduling-types";
 import {isUndefined} from "util";
-import {AssignedToRoleCondition, ConditionalRule, Rule, WeightedRoles} from "../scheduling/rule_based/rules";
+import {AssignedToRoleCondition, ConditionalRule, Rule, RuleFacts, WeightedRoles} from "../scheduling/rule_based/rules";
 import * as _ from "lodash";
 import {BaseStore, ObjectWithUUID} from "./common";
+import {throwOnInvalidDate} from "../common/date-utils";
+import * as moment from "moment";
 
 class Unavailablity extends ObjectWithUUID {
     from_date: Date = null;
@@ -42,16 +44,18 @@ class Unavailablity extends ObjectWithUUID {
     }
 
     contains_date(date: Date) {
-        let start = this.from_date;
+        let start = moment(this.from_date).startOf('day');
 
         // By default, be one day in length
-        let the_end_date = new Date(start);
-        the_end_date.setDate(start.getDate() + 1);
+        let the_end_date = moment(this.from_date).endOf('day');
 
         if (this.is_date_range) {
-            the_end_date = this.to_date;
+            the_end_date = moment(this.to_date).endOf('day');
         }
-        return date >= start && date <= the_end_date;
+
+        let date_as_moment = moment(date);
+        // console.log("Test for " + date_as_moment + " being between " + start + " and " + the_end_date);
+        return date_as_moment.isBetween(start, the_end_date, null, "[]");
     }
 }
 
@@ -76,6 +80,10 @@ class Person extends ObjectWithUUID {
         this.condition_rules = [];
         this.unavailable = [];
         this.prefs = new SchedulePrefs();
+    }
+
+    get availability(): Availability {
+        return this.prefs.availability;
     }
 
     role_rules(): Array<Rule> {
@@ -106,7 +114,12 @@ class Person extends ObjectWithUUID {
 
     @action
     avail_every(a_number: number, unit: AvailabilityUnit): Person {
-        this.prefs.availability.every(a_number, unit);
+        return this.set_availability(new Availability(a_number, unit));
+    }
+
+    @action
+    set_availability(availability: Availability): Person {
+        this.prefs.availability = availability;
         return this;
     }
 
@@ -163,6 +176,12 @@ class Person extends ObjectWithUUID {
         this.unavailable = this.unavailable.filter(ud => {
             return !ud.matches_single_date(d);
         });
+    }
+
+    is_available(date: Date, facts: RuleFacts, record_unavailability: boolean = false) {
+        // console.log("Testing availability with: " + this.availability.constructor.name);
+        throwOnInvalidDate(date);
+        return this.availability.is_available(this, date, facts, record_unavailability);
     }
 
     is_unavailable_on(date: Date) {

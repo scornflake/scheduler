@@ -12,7 +12,7 @@ import {
 } from "../../state/roles";
 
 import {PeopleStore, Person} from "../../state/people";
-import {AvailabilityUnit} from "../../state/scheduling-types";
+import {AvailabilityEveryNOfM, AvailabilityUnit} from "../../state/scheduling-types";
 import {RootStore} from "../../state/root";
 import {ScheduleOn} from "../../scheduling/rule_based/rules";
 import {Organization} from "../../state/organization";
@@ -110,7 +110,8 @@ export class ThamesTest {
 
         person_store.add_person(lynette)
             .add_role(defaultLeaderRole)
-            .avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
+            .set_availability(new AvailabilityEveryNOfM(2, 3));
+
         lynette.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(lynette, defaultKeysRole));
         lynette.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(eddie, defaultVocalsRole));
         lynette.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(donald, defaultVocalsRole));

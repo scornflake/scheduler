@@ -29,6 +29,56 @@ describe('rules', () => {
         state.current_date = date;
     });
 
+    describe('facts', () => {
+        it('can filter by date range', function () {
+            state.begin_new_role(date);
+            state.place_person_in_role(neil, defaultSoundRole, date);
+
+            /*
+            Intentionally unorederd, to test that the filter returns a sorted list
+             */
+
+            let next_date = new Date(date);
+            next_date.setDate(date.getDate() + 14);
+            state.begin_new_role(next_date);
+            state.place_person_in_role(neil, defaultSoundRole, next_date);
+
+            next_date = new Date(date);
+            next_date.setDate(date.getDate() + 7);
+            state.begin_new_role(next_date);
+            state.place_person_in_role(neil, defaultSoundRole, next_date);
+
+            let dates = state.schedule_dates;
+            console.log("Have: " + JSON.stringify(dates));
+            for(let schedule of dates) {
+                console.log(schedule.date.toDateString() + " - " + schedule.valueOf());
+            }
+
+            console.log("October...");
+            let october = state.filter(new Date(2010, 9, 1), new Date(2010, 9, 31));
+            expect(october.length).toBe(1);
+            expect(october[0].date.getDate()).toEqual(31);
+
+
+            console.log("November (just one)...");
+            let in_nov = state.filter(new Date(2010, 10, 7), new Date(2010, 10, 7));
+            expect(in_nov.length).toBe(1);
+            expect(in_nov[0].date.getDate()).toEqual(7);
+            for(let schedule of in_nov) {
+                console.log(schedule.date.toDateString() + " - " + schedule.valueOf());
+            }
+
+            console.log("November (all)...");
+            in_nov = state.filter(new Date(2010, 10, 1), new Date(2010, 10, 30));
+            expect(in_nov.length).toBe(2);
+            expect(in_nov[0].date.getDate()).toEqual(7);
+            expect(in_nov[1].date.getDate()).toEqual(14);
+            for(let schedule of in_nov) {
+                console.log(schedule.date.toDateString() + " - " + schedule.valueOf());
+            }
+        });
+    });
+
     describe('role rules', () => {
         let role1 = new Role("Foo");
         let role2 = new Role("Bar");
@@ -89,7 +139,6 @@ describe('rules', () => {
             expect(state.number_of_times_role_used_by_person(role1, neil)).toEqual(900);
             expect(state.number_of_times_role_used_by_person(role2, neil)).toEqual(100);
         });
-
 
         it('can sort roles by weight', () => {
             weightings.set(role1, 0.5);

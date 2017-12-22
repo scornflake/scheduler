@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 import {Role, RolesStore} from "../../state/roles";
 import {PeopleStore, Person, Unavailablity} from "../../state/people";
 import {Exclusion, ScheduleAtDate} from "../common";
+import {throwOnInvalidDate} from "../../common/date-utils";
 
 class RuleExecution {
     object: any;
@@ -162,6 +163,12 @@ class RuleFacts {
                             continue;
                         }
 
+                        // Must be available
+                        if (!this.is_person_available(possible_person, this.current_date, true)) {
+                            // No need to add decision. This will be done automatically.
+                            continue;
+                        }
+
                         return possible_person;
                     }
 
@@ -231,6 +238,22 @@ class RuleFacts {
         return total;
     }
 
+    is_person_available(person: Person, date: Date, record_unavailability: boolean = false) {
+        throwOnInvalidDate(date);
+        if (person.is_unavailable_on(date)) {
+            return false;
+        }
+
+        // Check for specific availability based on past placements
+        return person.is_available(date, this, record_unavailability);
+    }
+
+    placements_for_person(person: Person, start_date: Date, end_date: Date) {
+        let facts = this.filter(start_date, end_date);
+        // console.log(" - facts: " + JSON.stringify(facts));
+        return facts.filter(fact => fact.includes_person(person));
+    }
+
     index_of_person_in_role_group(person: Person, role: Role) {
         return 0;
     }
@@ -297,6 +320,14 @@ class RuleFacts {
         let specific_day = this.get_schedule_for_date(date);
         specific_day.set_facts(person, role, this.decisions_for_date);
         this.decisions_for_date = [];
+    }
+
+    filter(start_date: Date, end_date: Date) {
+        return Array.from(this.dates.values()).filter((schedule) => {
+            return schedule.date >= start_date && schedule.date <= end_date;
+        }).sort((s1, s2) => {
+            return s1.date > s2.date ? 1 : (s1.date < s2.date ? -1 : 0);
+        });
     }
 }
 

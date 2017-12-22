@@ -171,6 +171,10 @@ class ScheduleAtDate {
         let person_score = this.people_score.get(person);
         person_score.decisions = decisions;
     }
+
+    includes_person(person: Person) {
+        return this.people_score.has(person);
+    }
 }
 
 

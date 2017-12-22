@@ -18,6 +18,7 @@ describe('unavailability', () => {
     it('can check for date being "in" a day', () => {
         let unavil = new Unavailablity(new Date(2010, 10, 1));
         expect(unavil.contains_date(new Date(2010, 10, 1, 10))).toBeTrue();
+
         expect(unavil.contains_date(new Date(2010, 10, 1))).toBeTrue();
         expect(unavil.contains_date(new Date(2010, 10, 0))).toBeFalse();
         expect(unavil.contains_date(new Date(2010, 10, 2))).toBeFalse();
@@ -30,7 +31,7 @@ describe('unavailability', () => {
         expect(unavil.contains_date(new Date(2010, 11, 1))).toBeTrue();
 
         expect(unavil.contains_date(new Date(2010, 10, 0))).toBeFalse();
-        expect(unavil.contains_date(new Date(2010, 11, 2))).toBeFalse();
+        expect(unavil.contains_date(new Date(2010, 11, 3))).toBeFalse();
     });
 
     it('truncates dates to the hour', () => {

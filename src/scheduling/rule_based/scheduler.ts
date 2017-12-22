@@ -3,6 +3,7 @@ import {Role} from "../../state/roles";
 import {RuleFacts} from "./rules";
 import {Person} from "../../state/people";
 import * as _ from 'lodash';
+import {throwOnInvalidDate} from "../../common/date-utils";
 
 class ScheduleWithRules {
     params: ScheduleInput;
@@ -96,7 +97,7 @@ class ScheduleWithRules {
 
             let next_suitable_person = this.facts.get_next_suitable_person_for(role);
             if (next_suitable_person == null) {
-                this.facts.add_decision("No people suitable for role " + role.name);
+                this.facts.add_decision("No people available for role " + role.name);
                 break;
             }
 

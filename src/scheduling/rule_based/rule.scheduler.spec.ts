@@ -2,8 +2,10 @@ import {PeopleStore, Person} from "../../state/people";
 import {ScheduleInput} from "../common";
 import {defaultAccousticGuitar, defaultSoundRole, Role} from "../../state/roles";
 import {ScheduleWithRules} from "./scheduler";
-import {Availability, AvailabilityUnit} from "../../state/scheduling-types";
+import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../../state/scheduling-types";
 import includes from 'lodash/includes';
+import {CSVExporter} from "../../exporters/csv.exporter";
+import {addDaysToDate} from "../../common/date-utils";
 
 describe('role scheduler', () => {
     let person_store: PeopleStore;
@@ -15,13 +17,11 @@ describe('role scheduler', () => {
     let sound: Role;
     let schedule: ScheduleWithRules;
 
-    beforeAll(() => {
+    beforeEach(() => {
         start_date = new Date();
         end_date = new Date();
         end_date.setDate(start_date.getDate() + 30);
-    });
 
-    beforeEach(() => {
         person_store = new PeopleStore();
 
         params = new ScheduleInput(person_store);
@@ -32,7 +32,7 @@ describe('role scheduler', () => {
         sound = params.roles.find_role("Sound");
         expect(sound).not.toBeNull();
 
-        neil = new Person("Neil", "1234");
+        neil = new Person("Neil");
         neil.add_role(sound);
         person_store.add_person(neil);
     });
@@ -97,6 +97,51 @@ describe('role scheduler', () => {
             return includes(sad.people, neil);
         });
         expect(dates_with_neil.length).toEqual(2);
+    });
+
+    it('should be able to schedule 2 out of 3 weeks', function () {
+        /*
+        This builds a schedule where neil is on every 2 of 3 weeks.
+         */
+        neil.set_availability(new AvailabilityEveryNOfM(2, 3));
+
+        schedule = new ScheduleWithRules(params);
+        expect(schedule).not.toBeNull();
+        schedule.create_schedule();
+
+        console.log("Schedule: " + new CSVExporter(schedule));
+
+    });
+
+    it('should be test for 2 out of 3 weeks availability', function () {
+        /*
+        This builds a schedule where neil is on every week.
+        We can then test the schedule.is_person_available method
+         */
+        schedule = new ScheduleWithRules(params);
+        expect(schedule).not.toBeNull();
+        schedule.create_schedule();
+        let facts = schedule.facts;
+
+        /*
+        Only change neil AFTER the schedule is built. Since we don't want
+        the availability to affect the building of the schedule in this test
+         */
+        neil.set_availability(new AvailabilityEveryNOfM(2, 3));
+
+        console.log("Schedule: " + new CSVExporter(schedule));
+
+        console.log("Test: " + start_date.toDateString());
+        expect(facts.is_person_available(neil, start_date)).toBeTrue();
+
+        let next_date = addDaysToDate(start_date, 7);
+        console.log("Test: " + next_date.toDateString());
+        expect(facts.is_person_available(neil, next_date)).toBeTrue();
+
+        next_date = addDaysToDate(start_date, 14);
+        console.log("Test: " + next_date.toDateString());
+        expect(facts.is_person_available(neil, next_date)).toBeFalse();
+
     });
 
     it('unavailable dates act like exclusion zones', () => {
