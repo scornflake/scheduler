@@ -4,9 +4,13 @@ import {RootStore} from "../state/root";
 import {SavedState, UIStore} from "../state/UIState";
 import {Observable} from "rxjs/Observable";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
-import * as _ from 'lodash';
 import ValueRange = gapi.client.sheets.ValueRange;
 import {Subject} from "rxjs/Subject";
+
+import * as _ from 'lodash';
+
+import Spreadsheet = gapi.client.sheets.Spreadsheet;
+import Sheet = gapi.client.sheets.Sheet;
 
 const API_KEY = "AIzaSyCVhzG0pEB1NfZsxpdPPon3XhEK4pctEYE";
 
@@ -52,8 +56,7 @@ class GAPIS {
             q: "mimeType='application/vnd.google-apps.spreadsheet'"
         };
         return Observable.create((observable) => {
-            let f = gapi.client;
-            f.drive.files.list(sheets_only).then((response) => {
+            gapi.client.drive.files.list(sheets_only).then((response) => {
                 let files = response.result.files;
                 // for(let file of files) {
                 // console.log("got: " + JSON.stringify(file));

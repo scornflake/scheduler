@@ -180,13 +180,13 @@
   dependencies:
     "@types/gapi" "*"
 
-"@types/gapi.client.drive@^3.0.0":
+"@types/gapi.client.drive@v3":
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/@types/gapi.client.drive/-/gapi.client.drive-3.0.0.tgz#70a3ee684250a5ddcc819806d7b898d236b12d9d"
   dependencies:
     "@types/gapi.client" "*"
 
-"@types/gapi.client.sheets@^4.0.0":
+"@types/gapi.client.sheets@v4":
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/@types/gapi.client.sheets/-/gapi.client.sheets-4.0.0.tgz#bfc4f4f24a0292da3b4d7b561d6d67ded7b11ebb"
   dependencies:
@@ -196,7 +196,7 @@
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@types/gapi.client/-/gapi.client-1.0.0.tgz#aa42501465fcf6440421050da70ec724d4c4c4df"
 
-"@types/gapi@*", "@types/gapi@0.0.35":
+"@types/gapi@*":
   version "0.0.35"
   resolved "https://registry.yarnpkg.com/@types/gapi/-/gapi-0.0.35.tgz#8e0d672d66d8c6ce8493f5e8e550344f7ff500dc"
 
@@ -1167,6 +1167,22 @@ cordova-common@^2.1.1:
     shelljs "^0.5.3"
     underscore "^1.8.3"
     unorm "^1.3.3"
+
+cordova-plugin-device@^1.1.4:
+  version "1.1.7"
+  resolved "https://registry.yarnpkg.com/cordova-plugin-device/-/cordova-plugin-device-1.1.7.tgz#fc94111be6932628c66868938ddf3dc82c9fbfe6"
+
+cordova-plugin-ionic-webview@^1.1.16:
+  version "1.1.16"
+  resolved "https://registry.yarnpkg.com/cordova-plugin-ionic-webview/-/cordova-plugin-ionic-webview-1.1.16.tgz#92d5f2e4a5a829f91b487b1761848765a31c9f1e"
+
+cordova-plugin-splashscreen@^4.0.3:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/cordova-plugin-splashscreen/-/cordova-plugin-splashscreen-4.1.0.tgz#81028ab7643e615593d27f2ad02445611f1946b6"
+
+cordova-plugin-whitelist@^1.3.1:
+  version "1.3.3"
+  resolved "https://registry.yarnpkg.com/cordova-plugin-whitelist/-/cordova-plugin-whitelist-1.3.3.tgz#b5e85ecdbbfe5aeded40a1bf4ee2372e67d96fb4"
 
 cordova-registry-mapper@^1.1.8:
   version "1.1.15"
@@ -2400,6 +2416,10 @@ invert-kv@^1.0.0:
 ionic-angular@3.9.2:
   version "3.9.2"
   resolved "https://registry.yarnpkg.com/ionic-angular/-/ionic-angular-3.9.2.tgz#75053e4a422aaae7d7cd668cc92cfd5cb29d38cc"
+
+ionic-plugin-keyboard@^2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/ionic-plugin-keyboard/-/ionic-plugin-keyboard-2.2.1.tgz#f2a9e169bbe9b5522400347c9fd6d3467ee3fa12"
 
 ionic@3.19.0:
   version "3.19.0"
