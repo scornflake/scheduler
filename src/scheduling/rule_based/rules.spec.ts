@@ -6,7 +6,9 @@ import {
     WeightedRoles
 } from "./rules";
 import {PeopleStore, Person} from "../../state/people";
-import {defaultSoundRole, Role, RolesStore} from "../../state/roles";
+import {defaultLeaderRole, defaultSoundRole, defaultThemeRole, Role, RolesStore} from "../../state/roles";
+import {constructSensibleDate} from "../../common/date-utils";
+import {ScheduleAtDate} from "../common";
 
 describe('rules', () => {
     let people_store: PeopleStore;
@@ -50,7 +52,7 @@ describe('rules', () => {
 
             let dates = state.schedule_dates;
             console.log("Have: " + JSON.stringify(dates));
-            for(let schedule of dates) {
+            for (let schedule of dates) {
                 console.log(schedule.date.toDateString() + " - " + schedule.valueOf());
             }
 
@@ -64,7 +66,7 @@ describe('rules', () => {
             let in_nov = state.filter(new Date(2010, 10, 7), new Date(2010, 10, 7));
             expect(in_nov.length).toBe(1);
             expect(in_nov[0].date.getDate()).toEqual(7);
-            for(let schedule of in_nov) {
+            for (let schedule of in_nov) {
                 console.log(schedule.date.toDateString() + " - " + schedule.valueOf());
             }
 
@@ -73,7 +75,7 @@ describe('rules', () => {
             expect(in_nov.length).toBe(2);
             expect(in_nov[0].date.getDate()).toEqual(7);
             expect(in_nov[1].date.getDate()).toEqual(14);
-            for(let schedule of in_nov) {
+            for (let schedule of in_nov) {
                 console.log(schedule.date.toDateString() + " - " + schedule.valueOf());
             }
         });

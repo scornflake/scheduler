@@ -14,7 +14,7 @@ import {action, computed} from "mobx-angular";
 })
 export class ScheduleViewerComponent {
     constructor(private store: RootStore,
-                private appRef:ApplicationRef,
+                private appRef: ApplicationRef,
                 public popoverCtrl: PopoverController) {
     }
 
@@ -88,28 +88,38 @@ export class ScheduleViewerComponent {
     Want to mark if:
     a) The person within this cell == the selected person
      */
-    selected_and_in_role(a_person: Person, role_name) {
-        if (a_person == null) {
-            console.error("a_person is null. This seems bad");
-            return false;
+    selected_and_in_role(obj: Object, role_name) {
+        if (obj instanceof Person) {
+            if (obj == null) {
+                console.error("a_person is null. This seems bad");
+                return false;
+            }
+            let person = this.selected_person;
+            if (!person) {
+                return false;
+            }
+            if (obj.uuid != person.uuid) {
+                return false;
+            }
+            return this.store.roles_store.find_role(role_name);
         }
-        let person = this.selected_person;
-        if (!person) {
-            return false;
-        }
-        if (a_person.uuid != person.uuid) {
-            return false;
-        }
-        return this.store.roles_store.find_role(role_name);
-
     }
 
-    select(person: Person, date: Date, role_name: string) {
-        let role = this.store.roles_store.find_role(role_name);
-        console.log("Selecting: " + person + " on " + date.toDateString() + " for " + role.name);
+    select(obj: Object, date: Date, role_name: string) {
+        if (obj instanceof Person) {
+            let role = this.store.roles_store.find_role(role_name);
+            console.log("Selecting: " + obj + " on " + date.toDateString() + " for " + role.name);
 
-        this.store.ui_store.select(person, date, role);
-        this.appRef.tick();
+            this.store.ui_store.select(obj, date, role);
+            this.appRef.tick();
+        }
+    }
+
+    textFor(obj: Object): string {
+        if (obj instanceof Person) {
+            return obj.name;
+        }
+        return obj.toString();
     }
 
     @computed

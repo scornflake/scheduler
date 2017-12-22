@@ -3,6 +3,7 @@ import {PeopleStore, Person, Unavailablity} from "../state/people";
 import * as _ from 'lodash';
 
 class ScheduleScore {
+    person?: Person;
     roles: Array<Role>;
     decisions: Array<string>;
     score: number;
@@ -106,7 +107,14 @@ class Exclusion {
     }
 }
 
-// Score for this person, for some date
+class ScheduleEntry {
+    person?: Person;
+}
+
+/*
+ A line in the schedule, for a given date.
+ People are in various roles on a date.
+ */
 class ScheduleAtDate {
     date: Date;
     people_score: Map<Person, ScheduleScore>;
@@ -118,10 +126,6 @@ class ScheduleAtDate {
 
     get date_key(): string {
         return Unavailablity.dayAndHourForDate(this.date);
-    }
-
-    score_for(p: Person): ScheduleScore {
-        return this.people_score.get(p);
     }
 
     get people(): Array<Person> {
@@ -138,6 +142,10 @@ class ScheduleAtDate {
             }
             return 0;
         });
+    }
+
+    score_for(p: Person): ScheduleScore {
+        return this.people_score.get(p);
     }
 
     add_person(person: Person, role: Role) {
@@ -165,7 +173,7 @@ class ScheduleAtDate {
     }
 
     set_facts(person: Person, role: Role, decisions: Array<string>) {
-        if(!this.people_score.has(person)) {
+        if (!this.people_score.has(person)) {
             throw Error("Cant set facts, no person");
         }
         let person_score = this.people_score.get(person);

@@ -10,10 +10,10 @@
             <ion-col *ngFor="let key of keys_for_row(row); let i = index"
                      [ngClass]="{'range':in_exclusion_zone(row, key)}"
             >
-                <div *ngFor="let person of value_as_array(row[key])"
-                     [ngClass]="{'selected':selected_and_in_role(person, key)}"
-                     (click)="select(person, row['date'], key)">
-                    {{person.name}}
+                <div *ngFor="let obj of value_as_array(row[key])"
+                     [ngClass]="{'selected':selected_and_in_role(obj, key)}"
+                     (click)="select(obj, row['date'], key)">
+                    {{textFor(obj)}}
                 </div>
             </ion-col>
         </ion-row>

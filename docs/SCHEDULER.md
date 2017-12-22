@@ -15,17 +15,51 @@ A way to have user created columns, for the schedule.
  - These are filled later manually.
  - These columns can be moved in order, to appear whereever the user wants
 
+##### Hmm
+ - In doing this, I discovered that I want notes on roles to be persistent across schedule reconstructions.
+   - This kinda implies that construction is overlaid onto a parent object.
+   - i.e: the schedule exists, has notes on it, manually entered stuff (like special events) and then the scheduler works around those.
+   - or; the notes are persistent, and applied to the schedule before the generation is performed? So they become fixed in place FIRST?
+
+
+##### Want a way to have a blank sheet
+As part of themes, speakers, user cells...
+- Probably want to be able to have a sheet with the dates, but empty.
+- This would let us setup the schedule, enter manual stuff, and THEN generate over the top of it.
+  - Do dates first. Can do this and generate empty ScheduleForDate objects.
+  - Store notes separate from the schedule
+  - Choice:
+    - Either populate the notes into the schedule; or
+    - When generating it for render, pull notes first, leaving schedule alone...
+
+
+##### Might be in for a restructure
+- The root schedule object doesn't store state
+  - Means we cannot store notes at the moment
+- When rendering, we're doing 'json stuff', not really rendering the rows via object calls.
+  - This makes it harder to detect changes in the object model.
+  - It would be (maybe) nicer to ask the schedule: get_value_for(date, role), rather than doing this in the view. That way the scheduler can return text/schedule info as it sees fit.
+
+
 
 No way to set special events
 ============================
 Need a way to say "we're gonna do an accoustic set here", and setup a manual team.
  - I want the scheduler to flow around that date. Basically, just skip it and work around it.
  - This should be doable when the schedule is in draft mode, or when it's published.
+ - It should count people's usage as well (so that weights, and N out of M rules work).
+
+
 
 
 Wiki Manual
 ===========
 I like what spirit did, with the Wiki, that'd be a good idea for this.
+
+Fairness should be optional?
+============================
+Could make that usage weighted fairness optional?
+That way you can have the round robin without the usage weighting.
 
 
 Honouring a persons perferences can lead to gaps you don't want

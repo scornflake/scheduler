@@ -1,14 +1,15 @@
 import {PeopleStore} from "./people";
-import {RolesStore} from "./roles";
+import {defaultSpeakerRole, defaultThemeRole, RolesStore} from "./roles";
 import {SavedState, UIStore} from "./UIState";
 import {Injectable} from "@angular/core";
 import {Storage} from "@ionic/storage";
-import {TestStoreConstruction, ThamesTest} from "../providers/store/test.store";
+import {NPBCStoreConstruction, ThamesTest} from "../providers/store/test.store";
 import {autorunAsync, IReactionDisposer, toJS} from "mobx";
 import {ScheduleInput} from "../scheduling/common";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import {OrganizationStore} from "./organization";
 import {action, observable} from "mobx-angular";
+import {defaultThrottleConfig} from "rxjs/operators/throttle";
 
 const SAVED_STATE_KEY = 'saved_state';
 
@@ -29,8 +30,8 @@ class RootStore {
         this.organization_store = new OrganizationStore();
         this.ui_store = new UIStore();
 
-        TestStoreConstruction.SetupStore(this);
-        // ThamesTest.SetupStore(this);
+        // NPBCStoreConstruction.SetupStore(this);
+        ThamesTest.SetupStore(this);
 
         this.storage.get(SAVED_STATE_KEY).then((state) => {
             if (state) {
@@ -58,6 +59,8 @@ class RootStore {
 
         if (!this.schedule) {
             this.schedule = new ScheduleWithRules(params);
+            this.schedule.add_note(new Date(2018, 0, 7), defaultSpeakerRole, "Mr Smith");
+            this.schedule.add_note(new Date(2018, 0, 7), defaultThemeRole, "Starting");
         }
         this.schedule.create_schedule();
         return this.schedule;

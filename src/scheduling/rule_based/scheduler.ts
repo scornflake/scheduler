@@ -1,17 +1,19 @@
 import {ScheduleAtDate, ScheduleInput} from "../common";
-import {Role} from "../../state/roles";
+import {Role, RolesStore} from "../../state/roles";
 import {RuleFacts} from "./rules";
-import {Person} from "../../state/people";
+import {PeopleStore, Person, Unavailablity} from "../../state/people";
 import * as _ from 'lodash';
-import {throwOnInvalidDate} from "../../common/date-utils";
 
 class ScheduleWithRules {
     params: ScheduleInput;
     facts: RuleFacts;
+    free_text: {};
 
     constructor(input: ScheduleInput) {
         this.params = input;
         this.params.validate();
+        this.facts = new RuleFacts(new PeopleStore(), new RolesStore());
+        this.free_text = {};
     }
 
     get dates(): Array<ScheduleAtDate> {
@@ -182,7 +184,9 @@ class ScheduleWithRules {
             // Look at each known role. Fill in the people fulfilling that role
             for (let role of ordered_roles) {
                 // Do we have a value, for this?
-                rowDict[role.name] = schedule_for_day.people_in_role(role);
+                let free_text = this.notes_for_date(schedule_for_day.date, role);
+                let value_for_cell = schedule_for_day.people_in_role(role);
+                rowDict[role.name] = [...free_text, ...value_for_cell];
             }
 
             // Add the row
@@ -213,6 +217,31 @@ class ScheduleWithRules {
 
     is_person_in_exclusion_zone(person: Person, role: Role, date_for_row: Date) {
         return this.facts.is_person_in_exclusion_zone(person, role, date_for_row);
+    }
+
+    add_note(date: Date, role: Role, note: string) {
+        let role_map = this.get_role_map_for(date, role);
+        role_map.push(note);
+    }
+
+    notes_for_date(date: Date, role: Role): string[] {
+        return this.get_role_map_for(date, role);
+    }
+
+    private get_role_map_for(date: Date, role: Role): string[] {
+        if (!this.free_text) {
+            this.free_text = {};
+        }
+        let date_key = Unavailablity.dayAndHourForDate(date);
+        if (!this.free_text[date_key]) {
+            this.free_text[date_key] = {};
+        }
+
+        let role_map = this.free_text[date_key];
+        if (!role_map[role.uuid]) {
+            role_map[role.uuid] = [];
+        }
+        return role_map[role.uuid];
     }
 }
 

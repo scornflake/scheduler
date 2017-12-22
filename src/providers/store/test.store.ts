@@ -186,7 +186,7 @@ export class ThamesTest {
     }
 }
 
-export class TestStoreConstruction {
+export class NPBCStoreConstruction {
     constructor() {
     }
 

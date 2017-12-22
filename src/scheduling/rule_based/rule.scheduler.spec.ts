@@ -1,11 +1,14 @@
 import {PeopleStore, Person} from "../../state/people";
-import {ScheduleInput} from "../common";
-import {defaultAccousticGuitar, defaultSoundRole, Role} from "../../state/roles";
+import {ScheduleAtDate, ScheduleInput} from "../common";
+import {
+    defaultAccousticGuitar, defaultLeaderRole, defaultSaxRole, defaultSoundRole, defaultSpeakerRole, defaultThemeRole,
+    Role
+} from "../../state/roles";
 import {ScheduleWithRules} from "./scheduler";
 import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../../state/scheduling-types";
 import includes from 'lodash/includes';
 import {CSVExporter} from "../../exporters/csv.exporter";
-import {addDaysToDate} from "../../common/date-utils";
+import {addDaysToDate, constructSensibleDate} from "../../common/date-utils";
 
 describe('role scheduler', () => {
     let person_store: PeopleStore;
@@ -229,4 +232,21 @@ describe('role scheduler', () => {
         expect(schedules[3].people_in_role(defaultSoundRole)[0].name).toEqual("Neil");
         expect(schedules[4].people_in_role(defaultSoundRole)[0].name).toEqual("Daniel");
     });
+
+    describe('notes', () => {
+        it('can record free text for a role position', function () {
+            schedule = new ScheduleWithRules(params);
+            let date = constructSensibleDate(2018, 1, 5);
+
+            schedule.add_note(date, defaultSpeakerRole, "Hello");
+            schedule.add_note(date, defaultThemeRole, "Coding");
+
+            expect(schedule.notes_for_date(date, defaultSpeakerRole)).toEqual(["Hello"]);
+            expect(schedule.notes_for_date(date, defaultThemeRole)).toEqual(["Coding"]);
+            expect(schedule.notes_for_date(date, defaultSaxRole)).toEqual([]);
+        });
+
+    });
+
+
 });

@@ -1,6 +1,6 @@
 import {ScheduleAtDate} from "../common";
 import {Person} from "../../state/people";
-import {defaultBass, defaultSoundRole} from "../../state/roles";
+import {defaultBass, defaultLeaderRole, defaultSoundRole, defaultThemeRole} from "../../state/roles";
 import {constructSensibleDate} from "../../common/date-utils";
 
 describe('schedule', () => {

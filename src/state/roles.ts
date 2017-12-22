@@ -8,10 +8,10 @@ export class Role extends ObjectWithUUID {
     @observable maximum_count: number;
     @observable layout_priority: number;
 
-    constructor(name: string, priority = 0) {
+    constructor(name: string, priority: number = 0, max_in_role: number = 1) {
         super();
         this.name = name;
-        this.maximum_count = 1;
+        this.maximum_count = max_in_role;
         this.layout_priority = priority;
     }
 
@@ -20,10 +20,13 @@ export class Role extends ObjectWithUUID {
     }
 }
 
+let speakerPriority = 12;
 let leaderPriority = 11;
 let soundPriority = 10; // 10
 let instrumentPriority = 10;
 
+let defaultSpeakerRole = new Role("Speaker", speakerPriority);
+let defaultThemeRole = new Role("Theme", speakerPriority);
 let defaultLeaderRole = new Role("Worship Leader", leaderPriority);
 
 let defaultSoundRole = new Role("Sound", soundPriority);
@@ -38,19 +41,8 @@ let defaultElectricGuitar = new Role("Guitar (Electric)", instrumentPriority);
 let defaultVocalsRole = new Role("Vocals", instrumentPriority);
 let defaultSaxRole = new Role("Sax", instrumentPriority);
 
-
-defaultLeaderRole.maximum_count = 1;
-defaultSoundRole.maximum_count = 1;
-defaultComputerRole.maximum_count = 1;
-defaultKeysRole.maximum_count = 1;
-
 defaultAccousticGuitar.maximum_count = 2;
-
 defaultVocalsRole.maximum_count = 3;
-
-defaultElectricGuitar.maximum_count = 1;
-defaultBass.maximum_count = 1;
-defaultDrumsRole.maximum_count = 1;
 
 export class RolesStore extends BaseStore<Role> {
     @observable rules: Array<Rule>;
@@ -59,6 +51,8 @@ export class RolesStore extends BaseStore<Role> {
         super();
         this.rules = [];
         this.add_objects_to_array([
+            defaultSpeakerRole,
+            defaultThemeRole,
             defaultLeaderRole,
             defaultSoundRole,
             defaultComputerRole,
@@ -181,6 +175,8 @@ export class RolesStore extends BaseStore<Role> {
 }
 
 export {
+    defaultSpeakerRole,
+    defaultThemeRole,
     defaultLeaderRole,
     defaultSoundRole,
     defaultDrumsRole,
