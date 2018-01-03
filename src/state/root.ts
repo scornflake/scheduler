@@ -30,8 +30,8 @@ class RootStore {
         this.organization_store = new OrganizationStore();
         this.ui_store = new UIStore();
 
-        // NPBCStoreConstruction.SetupStore(this);
-        ThamesTest.SetupStore(this);
+        NPBCStoreConstruction.SetupStore(this);
+        // ThamesTest.SetupStore(this);
 
         this.storage.get(SAVED_STATE_KEY).then((state) => {
             if (state) {
@@ -59,8 +59,8 @@ class RootStore {
 
         if (!this.schedule) {
             this.schedule = new ScheduleWithRules(params);
-            this.schedule.add_note(new Date(2018, 0, 7), defaultSpeakerRole, "Mr Smith");
-            this.schedule.add_note(new Date(2018, 0, 7), defaultThemeRole, "Starting");
+            // this.schedule.add_note(new Date(2018, 0, 7), defaultSpeakerRole, "Mr Smith");
+            // this.schedule.add_note(new Date(2018, 0, 7), defaultThemeRole, "Starting");
         }
         this.schedule.create_schedule();
         return this.schedule;

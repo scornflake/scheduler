@@ -51,8 +51,8 @@ export class RolesStore extends BaseStore<Role> {
         super();
         this.rules = [];
         this.add_objects_to_array([
-            defaultSpeakerRole,
-            defaultThemeRole,
+            // defaultSpeakerRole,
+            // defaultThemeRole,
             defaultLeaderRole,
             defaultSoundRole,
             defaultComputerRole,
