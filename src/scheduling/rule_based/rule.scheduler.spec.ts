@@ -1,7 +1,7 @@
 import {PeopleStore, Person} from "../../state/people";
 import {ScheduleAtDate, ScheduleInput} from "../common";
 import {
-    defaultAccousticGuitar, defaultLeaderRole, defaultSaxRole, defaultSoundRole, defaultSpeakerRole, defaultThemeRole,
+    defaultAcousticGuitar, defaultLeaderRole, defaultSaxRole, defaultSoundRole, defaultSpeakerRole, defaultThemeRole,
     Role
 } from "../../state/roles";
 import {ScheduleWithRules} from "./scheduler";
@@ -182,13 +182,13 @@ describe('role scheduler', () => {
         // And daniel on guitar as well
         neil.remove_role(sound);
         neil.prefs.availability = new Availability(1, AvailabilityUnit.AVAIL_ANYTIME);
-        neil.add_role(defaultAccousticGuitar);
+        neil.add_role(defaultAcousticGuitar);
 
         let daniel = new Person("Daniel");
         person_store.add_person(daniel);
-        daniel.add_role(defaultAccousticGuitar);
+        daniel.add_role(defaultAcousticGuitar);
 
-        defaultAccousticGuitar.maximum_count = 1;
+        defaultAcousticGuitar.maximum_count = 1;
 
         // Do a schedule. For one week.
         // We should see just ONE person on guitar.
@@ -197,7 +197,7 @@ describe('role scheduler', () => {
 
         let firstSchedule = Array.from(schedule.dates.values())[0];
         expect(firstSchedule).not.toBeNull();
-        expect(firstSchedule.people_in_role(defaultAccousticGuitar).length).toBe(1);
+        expect(firstSchedule.people_in_role(defaultAcousticGuitar).length).toBe(1);
         // console.log(schedule.jsonResult());
     });
 

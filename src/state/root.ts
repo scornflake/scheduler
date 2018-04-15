@@ -1,15 +1,15 @@
 import {PeopleStore} from "./people";
-import {defaultSpeakerRole, defaultThemeRole, RolesStore} from "./roles";
+import {RolesStore} from "./roles";
 import {SavedState, UIStore} from "./UIState";
 import {Injectable} from "@angular/core";
 import {Storage} from "@ionic/storage";
-import {NPBCStoreConstruction, ThamesTest} from "../providers/store/test.store";
-import {autorunAsync, IReactionDisposer, toJS} from "mobx";
+import {NPBCStoreConstruction} from "../providers/store/test.store";
+import {autorun, IReactionDisposer, toJS} from "mobx";
 import {ScheduleInput} from "../scheduling/common";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import {OrganizationStore} from "./organization";
 import {action, observable} from "mobx-angular";
-import {defaultThrottleConfig} from "rxjs/operators/throttle";
+import {csd} from "../common/date-utils";
 
 const SAVED_STATE_KEY = 'saved_state';
 
@@ -54,8 +54,8 @@ class RootStore {
     generate_schedule(): ScheduleWithRules {
         // for testing, create some fake
         let params = new ScheduleInput(this.people_store, this.roles_store);
-        params.start_date = new Date(2018, 0, 7);
-        params.end_date = new Date(2018, 5, 1);
+        params.start_date = csd(2018, 5, 3);
+        params.end_date = csd(2018, 8, 5);
 
         if (!this.schedule) {
             this.schedule = new ScheduleWithRules(params);
@@ -71,12 +71,12 @@ class RootStore {
     }
 
     private setupSaving() {
-        this.saving = autorunAsync(() => {
+        this.saving = autorun(() => {
             this.storage.set(SAVED_STATE_KEY, toJS(this.ui_store.saved_state)).then(() => {
                 console.log("Saved state: " + JSON.stringify(this.state));
             });
         });
-        this.regenerator = autorunAsync(() => {
+        this.regenerator = autorun(() => {
             console.log("Generate schedule...");
             this.generate_schedule();
         });

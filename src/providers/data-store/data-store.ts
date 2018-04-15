@@ -47,7 +47,7 @@ export class DataStoreProvider {
 
     }
 
-    createRole(role: Role): Observable<Role> {
+    createRole(role: Role): any {
         return this.apollo.mutate({
             mutation: __createRole,
             variables: {
@@ -63,7 +63,8 @@ export class DataStoreProvider {
                 name: org.name
             }
         }).map(r => {
-            let org = new Organization(r.name);
+            console.log(`Received: ${JSON.stringify(r)} when creating an organization`);
+            let org = new Organization("TEST, has r.name");
             org.update_from_server(r);
             return org
         })

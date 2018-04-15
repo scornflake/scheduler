@@ -1,5 +1,5 @@
 import {
-    defaultAcousticGuitar,
+    defaultAccousticGuitar,
     defaultBass,
     defaultComputerRole,
     defaultDrumsRole,
@@ -20,9 +20,8 @@ import {csd} from "../../common/date-utils";
 
 let neil: Person = new Person("Neil Clayton");
 let cherilyn: Person = new Person("Cherilyn Clayton");
-let kylie: Person = new Person("Kylie Welch-Herekiuha");
 let christine: Person = new Person("Christine Edlin");
-let stuart: Person = new Person("Stuart Campbell");
+let stuart: Person = new Person("Stuart Cambell");
 let jeremy_selfe: Person = new Person("Jeremy Selfe");
 
 let daniel: Person = new Person("Daniel Gibbs");
@@ -42,12 +41,40 @@ let chris: Person = new Person("Chris Evans");
 let jeremy_l: Person = new Person("Jeremy Legg");
 let andre_l: Person = new Person("Andre Legg");
 let jeremy_w: Person = new Person("Jeremy Watson");
-let john: Person = new Person("John Sutherland");/*
+let john: Person = new Person("John Sutherland");
 
-/*
-Add unavailability here
- */
+allie.add_unavailable_range(new Date(2017, 11, 24), new Date(2018, 0, 7));
+christine.add_unavailable_range(new Date(2018, 2, 0), new Date(2050, 1, 1));
+craig.add_unavailable(new Date(2018, 0, 0));
 
+jeremy_selfe.add_unavailable_range(csd(2018, 1, 7), csd(2018, 2, 4));
+jeremy_selfe.add_unavailable(csd(2018, 3, 18));
+jeremy_selfe.add_unavailable(csd(2018, 4, 1), "Easter Camp");
+
+jeremy_w.add_unavailable(csd(2018, 1, 28));
+jeremy_w.add_unavailable(csd(2018, 2, 11));
+
+courtney.add_unavailable_range(csd(2018, 1, 8), csd(2018, 1, 12));
+
+daniel.add_unavailable_range(csd(2018, 1, 25), csd(2018, 1, 29));
+daniel.add_unavailable(csd(2018, 4, 1), "Easter Camp");
+
+dave.add_unavailable_range(csd(2018, 1, 1), csd(2018, 1, 9), "After Jan 9th");
+
+robp.add_unavailable_range(csd(2017, 4, 20), csd(2017, 4, 22));
+
+chris.add_unavailable(csd(2018, 2, 4));
+chris.add_unavailable(csd(2018, 2, 18));
+chris.add_unavailable(csd(2018, 2, 25));
+
+jeremy_l.add_unavailable(csd(2018, 2, 18));
+
+neil.add_unavailable_range(csd(2018, 1, 4), csd(2018, 1, 28), "Brother over");
+
+anita.add_unavailable_range(csd(2018, 3, 25), csd(2018, 3, 26));
+ralph.add_unavailable_range(csd(2018, 3, 25), csd(2018, 3, 26));
+
+john.add_unavailable(csd(2018, 4, 22));
 
 export class ThamesTest {
     constructor() {
@@ -90,7 +117,7 @@ export class ThamesTest {
         lynette.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(donald, defaultVocalsRole));
         lynette.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(henryk, defaultSoundRole));
         lynette.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(donald, defaultSaxRole));
-        lynette.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(donald, defaultAcousticGuitar));
+        lynette.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(donald, defaultAccousticGuitar));
         lynette.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(levi, defaultBass));
 
         person_store.add_person(eddie)
@@ -133,7 +160,7 @@ export class ThamesTest {
             .add_role(defaultLeaderRole)
             .avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
 
-        shaz.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(shaz, defaultAcousticGuitar));
+        shaz.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(shaz, defaultAccousticGuitar));
         shaz.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(bronwyn, defaultVocalsRole));
         shaz.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(aria, defaultDrumsRole));
         shaz.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(bernard, defaultSoundRole));
@@ -180,19 +207,15 @@ export class NPBCStoreConstruction {
         cherilyn.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(cherilyn, defaultKeysRole));
 
         person_store.add_person(christine)
-            .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
-        // christine.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(christine, defaultVocalsRole));
+            .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
+        christine.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(christine, defaultVocalsRole));
 
         person_store.add_person(stuart)
-            .add_role(defaultAcousticGuitar)
+            .add_role(defaultAccousticGuitar)
             .add_role(defaultVocalsRole)
-            .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
-        stuart.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(stuart, defaultAcousticGuitar));
+            .avail_every(6, AvailabilityUnit.EVERY_N_WEEKS);
+        stuart.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(stuart, defaultAccousticGuitar));
         stuart.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(stuart, defaultVocalsRole));
-
-        person_store.add_person(kylie)
-            .add_role(defaultAcousticGuitar);
-        kylie.if_assigned_to(defaultAcousticGuitar).then(new ScheduleOn(kylie, defaultVocalsRole));
 
         person_store.add_person(jeremy_selfe)
             .add_role(defaultLeaderRole, 2)
@@ -202,9 +225,9 @@ export class NPBCStoreConstruction {
 
         person_store.add_person(ralph)
             .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
-        // ralph.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(ralph, defaultAccousticGuitar));
-        // ralph.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(ralph, defaultVocalsRole));
-        // ralph.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(anita, defaultVocalsRole));
+        ralph.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(ralph, defaultAccousticGuitar));
+        ralph.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(ralph, defaultVocalsRole));
+        ralph.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(anita, defaultVocalsRole));
 
 
         person_store.add_person(daniel)
@@ -234,14 +257,14 @@ export class NPBCStoreConstruction {
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(dave)
-            .add_role(defaultAcousticGuitar)
+            .add_role(defaultAccousticGuitar)
             .add_role(defaultVocalsRole)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
-        dave.if_assigned_to(defaultAcousticGuitar).then(new ScheduleOn(dave, defaultVocalsRole));
+        dave.if_assigned_to(defaultAccousticGuitar).then(new ScheduleOn(dave, defaultVocalsRole));
 
         person_store.add_person(anita)
             .add_role(defaultVocalsRole)
-            .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+            .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(annie)
             .add_role(defaultVocalsRole)
@@ -257,8 +280,8 @@ export class NPBCStoreConstruction {
 
         person_store.add_person(chris)
             .add_role(defaultSoundRole)
-            .add_role(defaultElectricGuitar)
-            .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
+            // .add_role(defaultElectricGuitar)
+            .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(jeremy_l)
             .add_role(defaultSoundRole, 2)

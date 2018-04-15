@@ -1,8 +1,8 @@
-import {DataStoreProvider} from "./data-store";
 import {Apollo, ApolloModule} from "apollo-angular";
 import {HttpLink, HttpLinkModule} from "apollo-angular-link-http";
-import {HttpClientModule} from "@angular/common/http";
 import {getTestBed, TestBed} from "@angular/core/testing";
+import {DataStoreProvider} from "./data-store";
+import {HttpClientModule} from "@angular/common/http";
 import {IConfiguration} from "../../config/configuration";
 import {Role} from "../../state/roles";
 import {Organization, OrganizationStore} from "../../state/organization";

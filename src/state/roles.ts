@@ -35,13 +35,13 @@ let defaultComputerRole = new Role("Computer", soundPriority);
 let defaultBass = new Role("Bass", instrumentPriority);
 let defaultDrumsRole = new Role("Drums", instrumentPriority);
 let defaultKeysRole = new Role("Keys", instrumentPriority);
-let defaultAccousticGuitar = new Role("Guitar (Accoustic)", instrumentPriority);
+let defaultAcousticGuitar = new Role("Guitar (Acoustic)", instrumentPriority);
 let defaultElectricGuitar = new Role("Guitar (Electric)", instrumentPriority);
 
 let defaultVocalsRole = new Role("Vocals", instrumentPriority);
 let defaultSaxRole = new Role("Sax", instrumentPriority);
 
-defaultAccousticGuitar.maximum_count = 2;
+defaultAcousticGuitar.maximum_count = 2;
 defaultVocalsRole.maximum_count = 3;
 
 export class RolesStore extends BaseStore<Role> {
@@ -60,7 +60,7 @@ export class RolesStore extends BaseStore<Role> {
             defaultVocalsRole,
             defaultDrumsRole,
             defaultBass,
-            defaultAccousticGuitar,
+            defaultAcousticGuitar,
             defaultElectricGuitar,
             defaultSaxRole
         ]);
@@ -183,7 +183,7 @@ export {
     defaultVocalsRole,
     defaultComputerRole,
     defaultKeysRole,
-    defaultAccousticGuitar,
+    defaultAcousticGuitar,
     defaultElectricGuitar,
     defaultBass,
     defaultSaxRole
