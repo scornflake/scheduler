@@ -1,13 +1,14 @@
-import {action, computed, observable} from "mobx-angular";
+import {action, computed, observable} from "mobx";
 import {Role} from "./roles";
 import {Availability, AvailabilityUnit, SchedulePrefs} from "./scheduling-types";
 import {isUndefined} from "util";
 import {AssignedToRoleCondition, ConditionalRule, Rule, WeightedRoles} from "../scheduling/rule_based/rules";
-import * as _ from "lodash";
 import {BaseStore, ObjectWithUUID} from "./common";
 import {dayAndHourForDate, throwOnInvalidDate} from "../common/date-utils";
-import * as moment from "moment";
 import {RuleFacts} from "../scheduling/rule_based/rule-facts";
+
+import * as _ from "lodash";
+import * as moment from "moment";
 
 class Unavailablity extends ObjectWithUUID {
     from_date: Date = null;
@@ -197,7 +198,7 @@ class Person extends ObjectWithUUID {
     }
 }
 
-class PeopleStore extends BaseStore<Person> {
+export class PeopleStore extends BaseStore<Person> {
     constructor() {
         super();
     }
@@ -275,6 +276,5 @@ class PeopleStore extends BaseStore<Person> {
 
 export {
     Unavailablity,
-    PeopleStore,
     Person
 }

@@ -1,6 +1,7 @@
 import {defaultBass, defaultSaxRole, defaultSoundRole, Role, RolesStore} from "./roles";
 import {PeopleStore, Person} from "./people";
-import {OnThisDate, RuleFacts} from "../scheduling/rule_based/rules";
+import {OnThisDate} from "../scheduling/rule_based/rules";
+import {RuleFacts} from "../scheduling/rule_based/rule-facts";
 
 describe('roles', () => {
     let role_store: RolesStore;

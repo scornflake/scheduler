@@ -15,17 +15,17 @@ describe('people, ', () => {
     });
 
     it('can add unavailable date', () => {
-        expect(firstPerson.is_unavailable_on(someDate)).toBeFalse();
+        expect(firstPerson.is_unavailable_on(someDate)).toBeFalsy();
         firstPerson.add_unavailable(someDate);
-        expect(firstPerson.is_unavailable_on(someDate)).toBeTrue();
+        expect(firstPerson.is_unavailable_on(someDate)).toBeTruthy();
     });
 
     it('can add unavailability range', () => {
-        expect(firstPerson.is_unavailable_on(someDate)).toBeFalse();
+        expect(firstPerson.is_unavailable_on(someDate)).toBeFalsy();
         firstPerson.add_unavailable_range(new Date(2010, 5, 1), new Date(2010, 11, 1));
-        expect(firstPerson.is_unavailable_on(new Date(2010, 5, 1))).toBeTrue();
-        expect(firstPerson.is_unavailable_on(new Date(2010, 9, 1))).toBeTrue();
-        expect(firstPerson.is_unavailable_on(new Date(2011, 9, 1))).toBeFalse();
+        expect(firstPerson.is_unavailable_on(new Date(2010, 5, 1))).toBeTruthy();
+        expect(firstPerson.is_unavailable_on(new Date(2010, 9, 1))).toBeTruthy();
+        expect(firstPerson.is_unavailable_on(new Date(2011, 9, 1))).toBeFalsy();
     });
 
     it('unavailability range is inclusive of specified dates', function () {
@@ -34,21 +34,21 @@ describe('people, ', () => {
         let to = csd(2018, 2, 4);
         firstPerson.add_unavailable_range(from, to);
 
-        expect(firstPerson.is_unavailable_on(from)).toBeTrue();
-        expect(firstPerson.is_unavailable_on(to)).toBeTrue();
+        expect(firstPerson.is_unavailable_on(from)).toBeTruthy();
+        expect(firstPerson.is_unavailable_on(to)).toBeTruthy();
 
         // Should expect the next day to be OK
-        expect(firstPerson.is_unavailable_on(csd(2018, 2, 5))).toBeFalse();
+        expect(firstPerson.is_unavailable_on(csd(2018, 2, 5))).toBeFalsy();
     });
 
     it('can remove unavailable date', () => {
         firstPerson.add_unavailable(someDate);
-        expect(firstPerson.is_unavailable_on(someDate)).toBeTrue();
+        expect(firstPerson.is_unavailable_on(someDate)).toBeTruthy();
 
         // a new date instance
         let recreatedDate = new Date(2010, 10, 3);
         firstPerson.remove_unavailable(recreatedDate);
-        expect(firstPerson.is_unavailable_on(someDate)).toBeFalse();
+        expect(firstPerson.is_unavailable_on(someDate)).toBeFalsy();
     });
 
     it('can add to people', () => {
@@ -69,7 +69,7 @@ describe('people, ', () => {
         expect(rules.length).toEqual(1);
 
         let first_rule = rules[0];
-        expect(first_rule instanceof AssignedToRoleCondition).toBeTrue();
+        expect(first_rule instanceof AssignedToRoleCondition).toBeTruthy();
 
         // TODO: could do more here
         // We don't test that the condition has actions, or that they fire

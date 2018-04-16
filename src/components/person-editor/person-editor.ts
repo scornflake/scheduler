@@ -3,7 +3,7 @@ import includes from 'lodash/includes';
 import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
 import {UIStore} from "../../state/UIState";
 import {RootStore} from "../../state/root";
-import {computed} from "mobx-angular";
+import {computed} from "mobx";
 import {Person} from "../../state/people";
 
 @Component({

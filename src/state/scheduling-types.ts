@@ -1,4 +1,4 @@
-import {observable} from "mobx-angular";
+import {observable} from "mobx";
 import {Person} from "./people";
 import {throwOnInvalidDate} from "../common/date-utils";
 import {RuleFacts} from "../scheduling/rule_based/rule-facts";

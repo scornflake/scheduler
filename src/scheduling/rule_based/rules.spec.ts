@@ -1,14 +1,7 @@
-import {
-    FixedRoleOnDate,
-    OnThisDate,
-    RuleFacts,
-    UsageWeightedSequential,
-    WeightedRoles
-} from "./rules";
+import {FixedRoleOnDate, OnThisDate, UsageWeightedSequential, WeightedRoles} from "./rules";
 import {PeopleStore, Person} from "../../state/people";
-import {defaultLeaderRole, defaultSoundRole, defaultThemeRole, Role, RolesStore} from "../../state/roles";
-import {constructSensibleDate} from "../../common/date-utils";
-import {ScheduleAtDate} from "../common";
+import {defaultSoundRole, Role, RolesStore} from "../../state/roles";
+import {RuleFacts} from "./rule-facts";
 
 describe('rules', () => {
     let people_store: PeopleStore;
@@ -98,8 +91,8 @@ describe('rules', () => {
             let wr = new WeightedRoles(weightings);
 
             let new_weights = wr.weightedRoles.values();
-            expect(new_weights.next().value).toBeNear(0.333, 0.01);
-            expect(new_weights.next().value).toBeNear(0.666, 0.01);
+            expect(new_weights.next().value).toBeCloseTo(0.333, 0.01);
+            expect(new_weights.next().value).toBeCloseTo(0.666, 0.01);
             expect(new_weights.next().value).toBeUndefined();
         });
 

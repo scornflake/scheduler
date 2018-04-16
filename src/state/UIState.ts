@@ -1,4 +1,4 @@
-import {action, computed, observable} from "mobx-angular";
+import {action, computed, observable} from "mobx";
 import {Person} from "./people";
 import {Role} from "./roles";
 

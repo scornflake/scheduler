@@ -1,7 +1,11 @@
 import {PeopleStore, Person} from "../../state/people";
-import {ScheduleAtDate, ScheduleInput} from "../common";
+import {ScheduleInput} from "../common";
 import {
-    defaultAcousticGuitar, defaultLeaderRole, defaultSaxRole, defaultSoundRole, defaultSpeakerRole, defaultThemeRole,
+    defaultAcousticGuitar,
+    defaultSaxRole,
+    defaultSoundRole,
+    defaultSpeakerRole,
+    defaultThemeRole,
     Role
 } from "../../state/roles";
 import {ScheduleWithRules} from "./scheduler";
@@ -135,15 +139,15 @@ describe('role scheduler', () => {
         console.log("Schedule: " + new CSVExporter(schedule));
 
         console.log("Test: " + start_date.toDateString());
-        expect(facts.is_person_available(neil, start_date)).toBeTrue();
+        expect(facts.is_person_available(neil, start_date)).toBeTruthy();
 
         let next_date = addDaysToDate(start_date, 7);
         console.log("Test: " + next_date.toDateString());
-        expect(facts.is_person_available(neil, next_date)).toBeTrue();
+        expect(facts.is_person_available(neil, next_date)).toBeTruthy();
 
         next_date = addDaysToDate(start_date, 14);
         console.log("Test: " + next_date.toDateString());
-        expect(facts.is_person_available(neil, next_date)).toBeFalse();
+        expect(facts.is_person_available(neil, next_date)).toBeFalsy();
 
     });
 

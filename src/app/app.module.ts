@@ -10,7 +10,6 @@ import {PeoplePage} from "../pages/people/people";
 
 import {StatusBar} from '@ionic-native/status-bar';
 import {SplashScreen} from '@ionic-native/splash-screen';
-import {MobxAngularModule} from 'mobx-angular';
 import {ComponentsModule} from "../components/components.module";
 import {NgPipesModule} from "angular-pipes";
 import {RootStore} from "../state/root";
@@ -49,7 +48,6 @@ export function loadConfiguration(configurationService: ConfigurationService): (
         IonicModule.forRoot(MyApp),
         IonicStorageModule.forRoot(),
         ComponentsModule,
-        MobxAngularModule,
         ApolloModule,
         HttpLinkModule,
         SheetSelectionPageModule,

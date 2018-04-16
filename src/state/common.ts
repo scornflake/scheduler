@@ -1,4 +1,4 @@
-import {action, observable} from "mobx-angular";
+import {action, observable} from "mobx";
 import ShortUniqueId from 'short-unique-id';
 import * as _ from 'lodash';
 

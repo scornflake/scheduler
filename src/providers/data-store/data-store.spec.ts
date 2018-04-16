@@ -5,9 +5,9 @@ import {HttpClientModule} from "@angular/common/http";
 import {IConfiguration} from "../../config/configuration";
 import {Role} from "../../state/roles";
 import {Organization, OrganizationStore} from "../../state/organization";
-import {MobxAngularModule} from "mobx-angular";
 import {RootStore} from "../../state/root";
 import {IonicStorageModule} from "@ionic/storage";
+import {getTestBed, TestBed} from "@angular/core/testing";
 
 describe('datastore', () => {
     let injector: TestBed;
@@ -16,11 +16,9 @@ describe('datastore', () => {
     beforeEach((done) => {
         TestBed.configureTestingModule({
             imports: [
-                MobxAngularModule,
                 HttpClientModule,
                 IonicStorageModule.forRoot(),
                 ApolloModule,
-                MobxAngularModule,
                 HttpLinkModule
             ],
             providers: [
@@ -56,7 +54,7 @@ describe('datastore', () => {
         data_store.createOrganization(organization).subscribe(o => {
             console.log("Received : " + JSON.stringify(o));
             expect(previous_uuid).not.toEqual(o.uuid);
-            expect(o.is_new).toBeFalse();
+            expect(o.is_new).toBeFalsy();
             done();
         });
     });

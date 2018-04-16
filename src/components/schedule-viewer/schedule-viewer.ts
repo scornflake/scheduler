@@ -1,11 +1,12 @@
-import {ApplicationRef, Component} from '@angular/core';
+import {ApplicationRef, Component, Input} from '@angular/core';
 import {isArray} from "util";
 import {Person} from "../../state/people";
 import {RootStore} from "../../state/root";
 import {PopoverController} from "ionic-angular";
 import {ReasonsComponent} from "../reasons/reasons";
 import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
-import {action, computed} from "mobx-angular";
+import {computed} from "mobx";
+import {trace} from "mobx"
 
 @Component({
     // changeDetection: ChangeDetectionStrategy.OnPush,
@@ -13,14 +14,12 @@ import {action, computed} from "mobx-angular";
     templateUrl: 'schedule-viewer.html'
 })
 export class ScheduleViewerComponent {
+    @Input()
+    schedule:ScheduleWithRules;
+
     constructor(private store: RootStore,
                 private appRef: ApplicationRef,
                 public popoverCtrl: PopoverController) {
-    }
-
-    @computed
-    get schedule(): ScheduleWithRules {
-        return this.store.schedule;
     }
 
     @computed
@@ -42,7 +41,6 @@ export class ScheduleViewerComponent {
 
     presentPopover(myEvent) {
         let popover = this.popoverCtrl.create(ReasonsComponent, {
-            // reasons:this.store.ui_store.s
         });
         popover.present({
             ev: myEvent

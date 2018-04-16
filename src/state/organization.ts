@@ -1,5 +1,5 @@
 import {BaseStore, ObjectWithUUID} from "./common";
-import {action, observable} from "mobx-angular";
+import {action, observable} from "mobx";
 
 class Organization extends ObjectWithUUID {
     @observable name: string;

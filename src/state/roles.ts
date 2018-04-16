@@ -1,4 +1,4 @@
-import {action, observable} from "mobx-angular";
+import {action, observable} from "mobx";
 import {PeopleStore, Person} from "./people";
 import {OnThisDate, Rule, UsageWeightedSequential} from "../scheduling/rule_based/rules";
 import {BaseStore, ObjectWithUUID} from "./common";

@@ -1,14 +1,14 @@
 import {PeopleStore} from "./people";
 import {RolesStore} from "./roles";
 import {SavedState, UIStore} from "./UIState";
-import {Injectable} from "@angular/core";
+import {ApplicationRef, Injectable} from "@angular/core";
 import {Storage} from "@ionic/storage";
 import {NPBCStoreConstruction} from "../providers/store/test.store";
-import {autorun, IReactionDisposer, Lambda, observe, toJS} from "mobx";
+import {autorun, IReactionDisposer, toJS} from "mobx";
 import {ScheduleInput} from "../scheduling/common";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import {OrganizationStore} from "./organization";
-import {action, computed, observable} from "mobx-angular";
+import {action, computed, observable} from "mobx";
 import {csd} from "../common/date-utils";
 import {Logger, LoggingService} from "ionic-logging-service";
 
@@ -27,9 +27,8 @@ class RootStore {
     private regenerator: IReactionDisposer;
     private saving: IReactionDisposer;
     private logger: Logger;
-    private hold_me: Lambda;
 
-    constructor(private storage: Storage, private loggingService: LoggingService) {
+    constructor(private storage: Storage, private loggingService: LoggingService, private appRef:ApplicationRef) {
         this.people_store = new PeopleStore();
         this.roles_store = new RolesStore();
         this.organization_store = new OrganizationStore();
@@ -61,6 +60,8 @@ class RootStore {
 
         this.schedule = new ScheduleWithRules(params, this.previous_schedule);
         this.schedule.create_schedule();
+
+        this.appRef.tick();
         return this.schedule;
     }
 

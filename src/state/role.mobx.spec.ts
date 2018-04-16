@@ -13,6 +13,6 @@ describe('role mobx tests', () => {
         });
 
         role.name = "A different role";
-        expect(changed).toBeTrue();
+        expect(changed).toBeTruthy();
     });
 });
