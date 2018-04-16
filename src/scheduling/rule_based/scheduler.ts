@@ -3,17 +3,24 @@ import {Role, RolesStore} from "../../state/roles";
 import {RuleFacts} from "./rules";
 import {PeopleStore, Person, Unavailablity} from "../../state/people";
 import * as _ from 'lodash';
+import {Logger, LoggingService} from "ionic-logging-service";
+import {Injector} from "@angular/core";
+import {StaticInjector} from "@angular/core/src/di/injector";
+import {AppModule} from "../../app/app.module";
 
 class ScheduleWithRules {
     params: ScheduleInput;
     facts: RuleFacts;
     free_text: {};
 
+    private logger: Logger;
+
     constructor(input: ScheduleInput) {
         this.params = input;
         this.params.validate();
         this.facts = new RuleFacts(new PeopleStore(), new RolesStore());
         this.free_text = {};
+        this.logger = AppModule.injector.get(LoggingService).getLogger("scheduler");
     }
 
     get dates(): Array<ScheduleAtDate> {
@@ -23,14 +30,14 @@ class ScheduleWithRules {
     create_schedule() {
         this.clear_working_state();
 
-        console.log("Working from " + this.params.start_date + " to: " + this.params.end_date);
+        this.logger.info("Working from " + this.params.start_date + " to: " + this.params.end_date);
         let schedule_duration = this.params.schedule_duration_in_days;
-        console.log("Schedule is " + schedule_duration + " days long");
+        this.logger.info("Schedule is " + schedule_duration + " days long");
 
         let role_store = this.params.roles;
         let role_groups = role_store.roles_in_layout_order_grouped;
         let role_names = role_groups.map(g => JSON.stringify(g.map(r => r.name)));
-        console.log("Roles (in order of importance): " + JSON.stringify(role_names));
+        this.logger.info("Roles (in order of importance): " + JSON.stringify(role_names));
 
         this.facts.begin();
         role_groups.forEach(rg => this.process_role_group(rg));
@@ -40,13 +47,13 @@ class ScheduleWithRules {
         this.facts.begin_new_role_group(role_group);
 
         let current_date = this.params.start_date;
-        console.log("\r\nNext group: " + JSON.stringify(role_group.map(r => r.name)));
+        this.logger.info("\r\nNext group: " + JSON.stringify(role_group.map(r => r.name)));
 
         // Iterate through all dates
         let iterations = 0;
 
         while (current_date.valueOf() < this.params.end_date.valueOf()) {
-            console.log("Next date: " + current_date);
+            this.logger.info("Next date: " + current_date);
 
             for (let role of role_group) {
                 this.facts.begin_new_role(current_date);
@@ -59,7 +66,7 @@ class ScheduleWithRules {
             // This is taking 10,000 reasons too far!
             iterations++;
             if (iterations > 10000) {
-                console.error("Max iterations - bug!?");
+                this.logger.error("Max iterations - bug!?");
                 break
             }
 
@@ -78,7 +85,7 @@ class ScheduleWithRules {
 
         // If already at max for this role, ignore it.
         if (this.is_role_filled_for_date(role, current_date)) {
-            console.log("Not processing " + role.name + ", already have " + role.maximum_count + " slotted in");
+            this.logger.info("Not processing " + role.name + ", already have " + role.maximum_count + " slotted in");
             return;
         }
 
@@ -87,7 +94,7 @@ class ScheduleWithRules {
 
         // Setup our available people (which at the beginning, is 'everyone')
         if (people_for_this_role.length == 0) {
-            // console.log("Laying out role: " + role.name + " ... skipping (no one to do it)");
+            // this.logger.info("Laying out role: " + role.name + " ... skipping (no one to do it)");
             return;
         }
 
@@ -153,9 +160,9 @@ class ScheduleWithRules {
 
     private choose_next_schedule_date(date: Date): Date {
         let next_date = new Date(date);
-        // console.log("Moving from date ... : " + next_date);
+        // this.logger.info("Moving from date ... : " + next_date);
         next_date.setDate(date.getDate() + this.params.days_per_period);
-        // console.log(".... to date ... : " + next_date);
+        // this.logger.info(".... to date ... : " + next_date);
         return next_date;
     }
 

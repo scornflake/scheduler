@@ -1,4 +1,4 @@
-import {ErrorHandler, NgModule} from '@angular/core';
+import {APP_INITIALIZER, ErrorHandler, Injector, NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
 import {IonicApp, IonicErrorHandler, IonicModule} from 'ionic-angular';
 import {MyApp} from './app.component';
@@ -23,9 +23,15 @@ import {IonicStorageModule} from "@ionic/storage";
 import {GAPIS} from "../common/gapis-auth";
 import {SheetSelectionPageModule} from "../pages/sheet-selection/sheet-selection.module";
 import {TabSelectionPageModule} from "../pages/tab-selection/tab-selection.module";
+import {ConfigurationService} from "ionic-configuration-service";
+import {LoggingService} from "ionic-logging-service";
 
 export function defaultDSPSetup(store, apollo, link) {
     return new DataStoreProvider(apollo, link, store, defaultConfiguration);
+}
+
+export function loadConfiguration(configurationService: ConfigurationService): () => Promise<void> {
+    return () => configurationService.load("assets/settings.json");
 }
 
 @NgModule({
@@ -61,15 +67,28 @@ export function defaultDSPSetup(store, apollo, link) {
         StatusBar,
         SplashScreen,
         RootStore,
+        ConfigurationService,
+        {
+            provide: APP_INITIALIZER,
+            useFactory: loadConfiguration,
+            deps: [ConfigurationService],
+            multi: true
+        },
         {provide: ErrorHandler, useClass: IonicErrorHandler},
         {
             provide: DataStoreProvider,
             useFactory: defaultDSPSetup,
             deps: [RootStore, Apollo, HttpLink]
         },
+        LoggingService,
         GAPIS
     ]
 })
 
 export class AppModule {
+    static injector: Injector;
+
+    constructor(injector: Injector) {
+        AppModule.injector = injector;
+    }
 }

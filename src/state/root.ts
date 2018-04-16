@@ -4,12 +4,13 @@ import {SavedState, UIStore} from "./UIState";
 import {Injectable} from "@angular/core";
 import {Storage} from "@ionic/storage";
 import {NPBCStoreConstruction} from "../providers/store/test.store";
-import {autorun, IReactionDisposer, toJS} from "mobx";
+import {autorun, IReactionDisposer, Lambda, observe, toJS} from "mobx";
 import {ScheduleInput} from "../scheduling/common";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import {OrganizationStore} from "./organization";
-import {action, observable} from "mobx-angular";
+import {action, computed, observable} from "mobx-angular";
 import {csd} from "../common/date-utils";
+import {Logger, LoggingService} from "ionic-logging-service";
 
 const SAVED_STATE_KEY = 'saved_state';
 
@@ -23,27 +24,26 @@ class RootStore {
     @observable schedule: ScheduleWithRules;
     private regenerator: IReactionDisposer;
     private saving: IReactionDisposer;
+    private logger: Logger;
+    private hold_me: Lambda;
 
-    constructor(private storage: Storage) {
+    constructor(private storage: Storage, private loggingService: LoggingService) {
         this.people_store = new PeopleStore();
         this.roles_store = new RolesStore();
         this.organization_store = new OrganizationStore();
         this.ui_store = new UIStore();
+        this.logger = this.loggingService.getLogger("store");
 
         NPBCStoreConstruction.SetupStore(this);
         // ThamesTest.SetupStore(this);
 
         this.storage.get(SAVED_STATE_KEY).then((state) => {
             if (state) {
-                console.log("Restored saved state: " + JSON.stringify(state));
-                this.ui_store.saved_state = state;
+                this.logger.info("Restored saved state: " + JSON.stringify(state));
+                this.ui_store.saved_state = Object.assign(new SavedState(), state)
             } else {
-                console.log("Setup state first time");
-                this.ui_store.saved_state = {
-                    google_sheet_id: "",
-                    google_sheet_tab_id: 0,
-                    google_sheet_id_retrieved: false
-                };
+                this.logger.info("Setup state first time");
+                this.ui_store.saved_state = new SavedState();
             }
             this.setupSaving();
         });
@@ -54,8 +54,8 @@ class RootStore {
     generate_schedule(): ScheduleWithRules {
         // for testing, create some fake
         let params = new ScheduleInput(this.people_store, this.roles_store);
-        params.start_date = csd(2018, 5, 3);
-        params.end_date = csd(2018, 8, 5);
+        params.start_date = csd(2018, 6, 3);
+        params.end_date = csd(2018, 9, 31);
 
         if (!this.schedule) {
             this.schedule = new ScheduleWithRules(params);
@@ -66,18 +66,22 @@ class RootStore {
         return this.schedule;
     }
 
+    @computed
     get state(): SavedState {
         return this.ui_store.saved_state;
     }
 
     private setupSaving() {
+        this.logger.info("Setting up state auto-saving...");
         this.saving = autorun(() => {
-            this.storage.set(SAVED_STATE_KEY, toJS(this.ui_store.saved_state)).then(() => {
-                console.log("Saved state: " + JSON.stringify(this.state));
+            // toJS creates a deep clone, thus accesses all of the properties of this.state
+            // so: we SHOULD respond to state changes.
+            this.storage.set(SAVED_STATE_KEY, toJS(this.state)).then(() => {
+                this.logger.info("Saved state: " + JSON.stringify(this.state));
             });
         });
         this.regenerator = autorun(() => {
-            console.log("Generate schedule...");
+            this.logger.info("Generate schedule...");
             this.generate_schedule();
         });
     }

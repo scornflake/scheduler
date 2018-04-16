@@ -245,8 +245,5 @@ describe('role scheduler', () => {
             expect(schedule.notes_for_date(date, defaultThemeRole)).toEqual(["Coding"]);
             expect(schedule.notes_for_date(date, defaultSaxRole)).toEqual([]);
         });
-
     });
-
-
 });

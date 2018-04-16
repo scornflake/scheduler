@@ -17,6 +17,7 @@ export class TabSelectionPage {
 
     private done: (ss: Spreadsheet, sheet: Sheet, error?) => void = null;
     private spreadsheet: gapi.client.sheets.Spreadsheet;
+    private title: string;
 
     constructor(public navCtrl: NavController,
                 public navParams: NavParams,
@@ -24,7 +25,8 @@ export class TabSelectionPage {
                 private api: GAPIS) {
 
         this.sheet_id = navParams.get('sheet_id');
-        this.done = navParams.get('done')
+        this.done = navParams.get('done');
+        this.title = navParams.get('title') || "Select a sheet to use";
     }
 
     ionViewDidLoad() {

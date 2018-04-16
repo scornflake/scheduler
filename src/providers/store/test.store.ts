@@ -213,7 +213,7 @@ export class NPBCStoreConstruction {
 
         person_store.add_person(craig)
             .add_role(defaultDrumsRole)
-            .avail_every(5, AvailabilityUnit.EVERY_N_WEEKS);
+            .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(ben)
             .add_role(defaultBass, 1)

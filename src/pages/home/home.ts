@@ -4,6 +4,7 @@ import {RootStore} from "../../state/root";
 import {CSVExporter} from "../../exporters/csv.exporter";
 import {GAPIS} from "../../common/gapis-auth";
 import {SheetSelectionPage} from "../sheet-selection/sheet-selection";
+import {Logger, LoggingService} from "ionic-logging-service";
 
 
 @Component({
@@ -11,8 +12,10 @@ import {SheetSelectionPage} from "../sheet-selection/sheet-selection";
     templateUrl: 'home.html'
 })
 export class HomePage {
+    private logger: Logger;
 
     constructor(public navCtrl: NavController,
+                private loggingService: LoggingService,
                 private sheetAPI: GAPIS,
                 private modalController: ModalController,
                 private rootStore: RootStore) {
@@ -24,6 +27,32 @@ export class HomePage {
 
     clear_selection() {
         this.rootStore.ui_store.clear_selection();
+    }
+
+    select_previous_schedule() {
+        this.navCtrl.push(SheetSelectionPage, {
+            title: "Select sheet to use as previous schedule",
+            tab_title: "Select tab to use as previous schedule",
+            done: (spreadsheet, sheet, error) => {
+                console.log("Done. Selected sheet: " + spreadsheet.spreadsheetId + ", and tab: " + sheet.properties.title + ", " + sheet.properties.sheetId);
+                this.rootStore.state.previous_sheet_id = spreadsheet.spreadsheetId;
+                this.rootStore.state.previous_sheet_tab_id = sheet.properties.sheetId;
+            }
+        });
+    }
+
+    read_as_previous_schedule() {
+        if (this.rootStore.ui_store.saved_state.have_previous_selection) {
+            let sheet_id = this.rootStore.ui_store.saved_state.previous_sheet_id;
+            this.sheetAPI.load_sheet_with_id(sheet_id).subscribe((spreadsheet) => {
+                let sheet = spreadsheet.sheets.find(s => s.properties.sheetId == this.rootStore.state.previous_sheet_tab_id);
+                // this.sheetAPI.read_spreadsheet_data(spreadsheet, sheet).subscribe(rows => {
+                // let schedule = this.sheetAPI.parse_schedule_from_spreadsheet(rows);
+                // console.log("Generated schedule:");
+                // console.log(`${JSON.stringify(schedule)}`);
+                // });
+            });
+        }
     }
 
     export_as_sheets() {
@@ -45,7 +74,11 @@ export class HomePage {
             // console.log("Done. Sheet: " + this.rootStore.ui_store.google_sheet_id);
             // });
             this.navCtrl.push(SheetSelectionPage, {
+                title: "Select sheet to export into",
+                tab_title: "Select tab to export into",
                 done: (spreadsheet, sheet, error) => {
+                    this.rootStore.state.google_sheet_id = spreadsheet.spreadsheetId;
+                    this.rootStore.state.google_sheet_tab_id = sheet.properties.sheetId;
                     console.log("Done. Selected sheet: " + spreadsheet.spreadsheetId + ", and tab: " + sheet.properties.title);
                 }
             });

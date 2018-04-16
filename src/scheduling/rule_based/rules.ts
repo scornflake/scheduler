@@ -3,14 +3,19 @@ import {Role, RolesStore} from "../../state/roles";
 import {PeopleStore, Person, Unavailablity} from "../../state/people";
 import {Exclusion, ScheduleAtDate} from "../common";
 import {throwOnInvalidDate} from "../../common/date-utils";
+import {Logger, LoggingService} from "ionic-logging-service";
+import {AppModule} from "../../app/app.module";
 
 class RuleExecution {
     object: any;
     trigger: Rule;
 
+    private logger:Logger;
+
     constructor(obj, trigger: Rule) {
         this.object = obj;
         this.trigger = trigger;
+        this.logger = AppModule.injector.get(LoggingService).getLogger("scheduler.rules");
     }
 
     get empty(): boolean {
@@ -38,11 +43,13 @@ class RuleFacts {
     // This is the schedule, as it's being built
     private dates: Map<string, ScheduleAtDate>;
     private decision_depth: number;
-
+    
+    private logger:Logger;
     constructor(people: PeopleStore, roles: RolesStore) {
         this.people = people;
         this.roles = roles;
         this.begin();
+        this.logger = AppModule.injector.get(LoggingService).getLogger("scheduler.rules.facts");
     }
 
     get schedule_dates(): Array<ScheduleAtDate> {
@@ -62,12 +69,12 @@ class RuleFacts {
         let dateAtHour = Unavailablity.dayAndHourForDate(date);
         let schedule = this.dates.get(dateAtHour);
         if (schedule == null) {
-            console.log("Create new schedule for " + dateAtHour);
+            this.logger.info("Create new schedule for " + dateAtHour);
             schedule = new ScheduleAtDate(date);
             this.dates.set(dateAtHour, schedule);
             return schedule;
         } else {
-            // console.log("Reuse schedule for " + dateAtHour + " = " + date);
+            // this.logger.info("Reuse schedule for " + dateAtHour + " = " + date);
             return schedule;
         }
     }
@@ -86,11 +93,11 @@ class RuleFacts {
     }
 
     // private logPickRules() {
-    //     console.log("Pick rules:");
+    //     this.logger.info("Pick rules:");
     //     this.all_pick_rules.forEach((list, role) => {
-    //         console.log(" - " + role.name);
+    //         this.logger.info(" - " + role.name);
     //         list.forEach(r => {
-    //             console.log(" --- " + r.constructor.name + " = " + JSON.stringify(r));
+    //             this.logger.info(" --- " + r.constructor.name + " = " + JSON.stringify(r));
     //         })
     //     });
     // }
@@ -109,7 +116,7 @@ class RuleFacts {
         }
         text = "--- ".repeat(this.decision_depth) + text;
         if (log) {
-            console.log(text);
+            this.logger.info(text);
         }
         this.decisions_for_date.push(text);
     }
@@ -146,7 +153,7 @@ class RuleFacts {
             return null;
         }
         for (let rule of pick_rules) {
-            // console.log("Using rule " + rule.constructor.name + ", " + JSON.stringify(rule) + " next...");
+            // this.logger.info("Using rule " + rule.constructor.name + ", " + JSON.stringify(rule) + " next...");
             if (rule instanceof OnThisDate) {
                 let result = rule.execute(this);
                 if (result) return result;
@@ -206,14 +213,14 @@ class RuleFacts {
             throw new Error("Person cannot be null here");
         }
         if (!this.usage_counts.has(role)) {
-            console.log("Creating new role counter for " + role.name);
+            this.logger.info("Creating new role counter for " + role.name);
             let new_count = new Map<Person, number>();
             this.usage_counts.set(role, new_count);
         }
 
         let by_person = this.usage_counts.get(role);
         if (!by_person.has(person)) {
-            console.log("Starting count at 0 for " + person.name);
+            this.logger.info("Starting count at 0 for " + person.name);
             by_person.set(person, 0);
         }
         return by_person;
@@ -250,7 +257,7 @@ class RuleFacts {
 
     placements_for_person(person: Person, start_date: Date, end_date: Date) {
         let facts = this.filter(start_date, end_date);
-        // console.log(" - facts: " + JSON.stringify(facts));
+        // this.logger.info(" - facts: " + JSON.stringify(facts));
         return facts.filter(fact => fact.includes_person(person));
     }
 
@@ -262,7 +269,7 @@ class RuleFacts {
         let person_counter = this.get_person_count_for_role(role, person);
         let current_count = person_counter.get(person);
         person_counter.set(person, (current_count + 1));
-        // console.log("Up to " + person_counter.get(person));
+        // this.logger.info("Up to " + person_counter.get(person));
     }
 
     add_exclusion_for(person: Person, role: Role, date: Date) {
@@ -388,7 +395,7 @@ class WeightedRoles extends Rule {
 
             let current_score = state.number_of_times_role_used_by_person(role, person);
             let runtime_weighting = current_score / total_usages;
-            // console.log(role.name + ", weight: " + role_weighting + ". Has score: " + current_score + ". Runtime weight: " + runtime_weighting);
+            // this.logger.info(role.name + ", weight: " + role_weighting + ". Has score: " + current_score + ". Runtime weight: " + runtime_weighting);
 
             if (runtime_weighting < role_weighting) {
                 return -1;
@@ -401,7 +408,7 @@ class WeightedRoles extends Rule {
 
     private normalize_weights() {
         let total_weight: number = _.sum(Array.from(this.weightedRoles.values()));
-        // console.log("Total weights: " + total_weight);
+        // this.logger.info("Total weights: " + total_weight);
         this.weightedRoles.forEach((num, key) => {
             this.weightedRoles.set(key, num / total_weight);
         });

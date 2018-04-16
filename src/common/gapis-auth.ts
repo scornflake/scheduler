@@ -4,13 +4,16 @@ import {RootStore} from "../state/root";
 import {SavedState, UIStore} from "../state/UIState";
 import {Observable} from "rxjs/Observable";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
-import ValueRange = gapi.client.sheets.ValueRange;
 import {Subject} from "rxjs/Subject";
+import {fromPromise} from "rxjs/observable/fromPromise"
 
 import * as _ from 'lodash';
+import ValueRange = gapi.client.sheets.ValueRange;
 
 import Spreadsheet = gapi.client.sheets.Spreadsheet;
 import Sheet = gapi.client.sheets.Sheet;
+import {Logger, LoggingService} from "ionic-logging-service";
+import {AppModule} from "../app/app.module";
 
 const API_KEY = "AIzaSyCVhzG0pEB1NfZsxpdPPon3XhEK4pctEYE";
 
@@ -19,12 +22,16 @@ class GAPIS {
     private init_done: boolean;
     private callback: any;
 
+    private logger: Logger;
+
     constructor(private rootStore: RootStore,
+                private loggingService: LoggingService,
                 private appRef: ApplicationRef) {
+        this.logger = AppModule.injector.get(LoggingService).getLogger("google");
     }
 
     init(callback = null) {
-        console.log("Loading GAPI...");
+        this.logger.info("Loading GAPI...");
         this.callback = callback;
 
         this.initClient = this.initClient.bind(this);
@@ -51,7 +58,7 @@ class GAPIS {
     }
 
     list_all_sheets(): Observable<any> {
-        console.log("Listing all sheets");
+        this.logger.info("Listing all sheets");
         let sheets_only = {
             q: "mimeType='application/vnd.google-apps.spreadsheet'"
         };
@@ -59,7 +66,7 @@ class GAPIS {
             gapi.client.drive.files.list(sheets_only).then((response) => {
                 let files = response.result.files;
                 // for(let file of files) {
-                // console.log("got: " + JSON.stringify(file));
+                // this.logger.info("got: " + JSON.stringify(file));
                 observable.next(files);
                 // }
                 observable.complete();
@@ -68,7 +75,7 @@ class GAPIS {
     }
 
     private initClient() {
-        console.log("Initializing GAPI...");
+        this.logger.info("Initializing GAPI...");
         gapi.client.init({
             apiKey: API_KEY,
             clientId: credentials.installed.client_id,
@@ -90,25 +97,25 @@ class GAPIS {
     }
 
     private updateSigninStatus(isSignedIn: boolean) {
-        console.log("Updating signed in state to: " + isSignedIn);
+        this.logger.info("Updating signed in state to: " + isSignedIn);
         this.ui_store.signed_in = isSignedIn;
         this.appRef.tick();
     }
 
     private loadAuthentication() {
-        console.log("Loading Auth API...");
+        this.logger.info("Loading Auth API...");
         gapi.load('client:auth2', this.loadDrive);
     }
 
     private loadDrive() {
-        console.log("Loading drive API...");
+        this.logger.info("Loading drive API...");
         gapi.client.load('drive', 'v3').then((v) => {
             this.loadSheets();
         });
     }
 
     private loadSheets() {
-        console.log("Loading sheets API...");
+        this.logger.info("Loading sheets API...");
         gapi.client.load('sheets', 'v4').then((v) => {
             this.initClient();
         });
@@ -124,7 +131,7 @@ class GAPIS {
 
     public load_sheet_with_id(sheet_id): Observable<Spreadsheet> {
         return Observable.create((observer) => {
-            console.log("Loading spreadsheet with ID: " + sheet_id);
+            this.logger.info("Loading spreadsheet with ID: " + sheet_id);
             if (sheet_id == null || sheet_id == "") {
                 // throw new Error("No sheet");
                 throw new Error("No sheet ID specified");
@@ -132,7 +139,7 @@ class GAPIS {
             // Try to read this sheet to see if we can
             let request = {spreadsheetId: sheet_id, includeGridData: true};
             gapi.client.sheets.spreadsheets.get(request).then((result) => {
-                // console.log("Hey! We got the sheet! Awesome!");
+                // this.logger.info("Hey! We got the sheet! Awesome!");
                 observer.next(result.result);
                 observer.complete();
             });
@@ -146,19 +153,38 @@ class GAPIS {
         return "'" + s.properties.title + "'!" + range;
     }
 
+    read_spreadsheet_data(spreadsheet: Spreadsheet, sheet: Sheet): Observable<Array<any>> {
+        let promise = gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId: spreadsheet.spreadsheetId,
+            range: this.range_for_sheet(sheet),
+            includeGridData: true
+        });
+
+        return fromPromise(promise).map(v => {
+            let result = v['result'];
+            return result['values'];
+        });
+    }
+
+    parse_schedule_from_spreadsheet(rowData: Array<any>, schedule: ScheduleWithRules) {
+        // OK, we will preload a schedule using a previous schedule
+
+        return null;
+    }
+
     clear_and_write_schedule(spreadsheet: Spreadsheet, sheet: Sheet, schedule: ScheduleWithRules): Observable<number> {
         // Righteo. Lets do a batch update!
         let progressObservable = new Subject<number>();
         progressObservable.next(0);
         let num_format_rules = sheet.conditionalFormats ? sheet.conditionalFormats.length : 0;
-        console.log("Clearing sheet (with " + num_format_rules + " format rules)...");
+        this.logger.info("Clearing sheet (with " + num_format_rules + " format rules)...");
 
         gapi.client.sheets.spreadsheets.values.clear({
             spreadsheetId: spreadsheet.spreadsheetId,
             range: this.range_for_sheet(sheet)
         }).then((clear_response) => {
             progressObservable.next(0.25);
-            console.log("Sending new data...");
+            this.logger.info("Sending new data...");
             let fields = schedule.jsonFields();
             let rows = schedule.jsonResult().map(row => {
                 // Want to remap this structure
@@ -209,7 +235,7 @@ class GAPIS {
                 }
             }).then((r) => {
                 progressObservable.next(0.66);
-                console.log("Updated all data. Formatting...");
+                this.logger.info("Updated all data. Formatting...");
                 let requests = [];
                 for (let index = num_format_rules - 1; index >= 0; index--) {
                     requests.push({
@@ -342,7 +368,7 @@ class GAPIS {
                 ]
             }).then((r) => {
                 progressObservable.next(1.0);
-                console.log("Finished updating Google Sheet");
+                this.logger.info("Finished updating Google Sheet");
                 progressObservable.complete();
             })
         });

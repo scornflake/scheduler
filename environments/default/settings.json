@@ -1,0 +1,24 @@
+{
+  "logging": {
+    "logLevels": [
+      {
+        "loggerName": "root",
+        "logLevel": "WARN"
+      },
+      {
+        "loggerName": "scheduler",
+        "logLevel": "WARN"
+      },
+      {
+        "loggerName": "google",
+        "logLevel": "WARN"
+      },
+      {
+        "loggerName": "store",
+        "logLevel": "INFO"
+      }
+    ],
+    "browserConsoleAppender": {
+    }
+  }
+}
