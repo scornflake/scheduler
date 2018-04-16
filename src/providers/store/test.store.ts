@@ -203,11 +203,9 @@ export class NPBCStoreConstruction {
         jeremy_selfe.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(jeremy_selfe, defaultElectricGuitar));
 
         person_store.add_person(ralph)
+            .add_role(defaultAcousticGuitar)
             .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
-        // ralph.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(ralph, defaultAccousticGuitar));
-        // ralph.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(ralph, defaultVocalsRole));
-        // ralph.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(anita, defaultVocalsRole));
-
+        ralph.if_assigned_to(defaultAcousticGuitar).then(new ScheduleOn(anita, defaultVocalsRole));
 
         person_store.add_person(daniel)
             .add_role(defaultDrumsRole, 3)
