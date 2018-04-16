@@ -1,12 +1,11 @@
 import {ScheduleAtDate, ScheduleInput} from "../common";
-import {Role, RolesStore} from "../../state/roles";
-import {RuleFacts} from "./rules";
-import {PeopleStore, Person, Unavailablity} from "../../state/people";
+import {Role} from "../../state/roles";
+import {Person} from "../../state/people";
 import * as _ from 'lodash';
 import {Logger, LoggingService} from "ionic-logging-service";
-import {Injector} from "@angular/core";
-import {StaticInjector} from "@angular/core/src/di/injector";
 import {AppModule} from "../../app/app.module";
+import {dayAndHourForDate} from "../../common/date-utils";
+import {RuleFacts} from "./rule-facts";
 
 class ScheduleWithRules {
     params: ScheduleInput;
@@ -14,13 +13,18 @@ class ScheduleWithRules {
     free_text: {};
 
     private logger: Logger;
+    private previous_scheduler: ScheduleWithRules;
 
-    constructor(input: ScheduleInput) {
+    constructor(input: ScheduleInput, previous: ScheduleWithRules = null) {
+        this.logger = AppModule.injector.get(LoggingService).getLogger("scheduler");
+
         this.params = input;
         this.params.validate();
-        this.facts = new RuleFacts(new PeopleStore(), new RolesStore());
         this.free_text = {};
-        this.logger = AppModule.injector.get(LoggingService).getLogger("scheduler");
+        if(previous) {
+            this.warmup_using(previous);
+        }
+        this.clear_working_state();
     }
 
     get dates(): Array<ScheduleAtDate> {
@@ -28,16 +32,14 @@ class ScheduleWithRules {
     }
 
     create_schedule() {
-        this.clear_working_state();
-
-        this.logger.info("Working from " + this.params.start_date + " to: " + this.params.end_date);
         let schedule_duration = this.params.schedule_duration_in_days;
-        this.logger.info("Schedule is " + schedule_duration + " days long");
+        this.logger.info("Working from " + this.params.start_date + " to: " + this.params.end_date);
+        this.logger.debug("Schedule is " + schedule_duration + " days long");
 
         let role_store = this.params.roles;
         let role_groups = role_store.roles_in_layout_order_grouped;
         let role_names = role_groups.map(g => JSON.stringify(g.map(r => r.name)));
-        this.logger.info("Roles (in order of importance): " + JSON.stringify(role_names));
+        this.logger.debug("Roles (in order of importance): " + JSON.stringify(role_names));
 
         this.facts.begin();
         role_groups.forEach(rg => this.process_role_group(rg));
@@ -47,13 +49,13 @@ class ScheduleWithRules {
         this.facts.begin_new_role_group(role_group);
 
         let current_date = this.params.start_date;
-        this.logger.info("\r\nNext group: " + JSON.stringify(role_group.map(r => r.name)));
+        this.logger.debug("\r\nNext group: " + JSON.stringify(role_group.map(r => r.name)));
 
         // Iterate through all dates
         let iterations = 0;
 
-        while (current_date.valueOf() < this.params.end_date.valueOf()) {
-            this.logger.info("Next date: " + current_date);
+        while (current_date.valueOf() <= this.params.end_date.valueOf()) {
+            this.logger.debug("Next date: " + current_date);
 
             for (let role of role_group) {
                 this.facts.begin_new_role(current_date);
@@ -85,7 +87,7 @@ class ScheduleWithRules {
 
         // If already at max for this role, ignore it.
         if (this.is_role_filled_for_date(role, current_date)) {
-            this.logger.info("Not processing " + role.name + ", already have " + role.maximum_count + " slotted in");
+            this.logger.debug("Not processing " + role.name + ", already have " + role.maximum_count + " slotted in");
             return;
         }
 
@@ -94,7 +96,7 @@ class ScheduleWithRules {
 
         // Setup our available people (which at the beginning, is 'everyone')
         if (people_for_this_role.length == 0) {
-            // this.logger.info("Laying out role: " + role.name + " ... skipping (no one to do it)");
+            // this.logger.debug("Laying out role: " + role.name + " ... skipping (no one to do it)");
             return;
         }
 
@@ -123,7 +125,7 @@ class ScheduleWithRules {
 
             let next_wanted_role_for_person = this.facts.get_next_suitable_role_for_person(next_suitable_person);
 
-            // Only let this happen if the role is withing the current group being processed
+            // Only let this happen if the role is within the current group being processed
             // TODO: This could be optional (might not want role_groups being mutually exclusive like this)
             if (_.includes(role_group, next_wanted_role_for_person) && !this.is_role_filled_for_date(next_wanted_role_for_person, current_date)) {
                 if (next_wanted_role_for_person.uuid != role.uuid) {
@@ -160,14 +162,18 @@ class ScheduleWithRules {
 
     private choose_next_schedule_date(date: Date): Date {
         let next_date = new Date(date);
-        // this.logger.info("Moving from date ... : " + next_date);
+        // this.logger.debug("Moving from date ... : " + next_date);
         next_date.setDate(date.getDate() + this.params.days_per_period);
-        // this.logger.info(".... to date ... : " + next_date);
+        // this.logger.debug(".... to date ... : " + next_date);
         return next_date;
     }
 
     private clear_working_state() {
         this.facts = new RuleFacts(this.params.people, this.params.roles);
+        if (this.previous_scheduler) {
+            this.facts.copyUsageDataFrom(this.previous_scheduler.facts);
+            this.logger.info("Taking usage data from previous schedule...");
+        }
     }
 
     jsonResult(minimized: boolean = false) {
@@ -239,7 +245,8 @@ class ScheduleWithRules {
         if (!this.free_text) {
             this.free_text = {};
         }
-        let date_key = Unavailablity.dayAndHourForDate(date);
+
+        let date_key = dayAndHourForDate(date);
         if (!this.free_text[date_key]) {
             this.free_text[date_key] = {};
         }
@@ -249,6 +256,11 @@ class ScheduleWithRules {
             role_map[role.uuid] = [];
         }
         return role_map[role.uuid];
+    }
+
+    warmup_using(previous_schedule: ScheduleWithRules) {
+        this.previous_scheduler = previous_schedule;
+        this.logger.info("Warming up using a previous schedule...");
     }
 }
 

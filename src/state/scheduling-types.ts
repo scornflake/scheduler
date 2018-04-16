@@ -1,9 +1,7 @@
 import {observable} from "mobx-angular";
 import {Person} from "./people";
-import {Role} from "./roles";
-import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import {throwOnInvalidDate} from "../common/date-utils";
-import {RuleFacts} from "../scheduling/rule_based/rules";
+import {RuleFacts} from "../scheduling/rule_based/rule-facts";
 
 export enum AvailabilityUnit {
     // Models availability such as "every 4 weeks".

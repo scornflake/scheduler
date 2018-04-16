@@ -2,6 +2,7 @@ import {action, observable} from "mobx-angular";
 import {PeopleStore, Person} from "./people";
 import {OnThisDate, Rule, UsageWeightedSequential} from "../scheduling/rule_based/rules";
 import {BaseStore, ObjectWithUUID} from "./common";
+import {isUndefined} from "ionic-angular/util/util";
 
 export class Role extends ObjectWithUUID {
     @observable name: string;
@@ -121,6 +122,9 @@ export class RolesStore extends BaseStore<Role> {
     }
 
     find_role(role_name: string) {
+        if(isUndefined(role_name)) {
+            return null;
+        }
         for (let role of this.roles) {
             if (role.name.toLowerCase() == role_name.toLowerCase()) {
                 return role;

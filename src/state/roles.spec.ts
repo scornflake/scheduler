@@ -16,13 +16,18 @@ describe('roles', () => {
         expect(r.uuid).not.toBe("0");
     });
 
+    it('can call role.find with undefined', () => {
+        let r = role_store.find_role(null);
+        expect(r).toBeNull();
+    });
+
     it('can add to roles', () => {
         let r = role_store.addRole(new Role("Foo", 44));
         expect(role_store.roles).toContain(r);
     });
 
     it('can update role, uuid is never changed', () => {
-        let r:Role = role_store.addRole(new Role("Foo"));
+        let r: Role = role_store.addRole(new Role("Foo"));
 
         // While its possible to update the UUID, that's what is used to find the role, so it'll actually fail.
 

@@ -1,6 +1,5 @@
 import {Apollo, ApolloModule} from "apollo-angular";
 import {HttpLink, HttpLinkModule} from "apollo-angular-link-http";
-import {getTestBed, TestBed} from "@angular/core/testing";
 import {DataStoreProvider} from "./data-store";
 import {HttpClientModule} from "@angular/common/http";
 import {IConfiguration} from "../../config/configuration";

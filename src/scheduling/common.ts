@@ -1,6 +1,7 @@
 import {Role, RolesStore} from "../state/roles";
 import {PeopleStore, Person, Unavailablity} from "../state/people";
 import * as _ from 'lodash';
+import {dayAndHourForDate} from "../common/date-utils";
 
 class ScheduleScore {
     person?: Person;
@@ -125,7 +126,7 @@ class ScheduleAtDate {
     }
 
     get date_key(): string {
-        return Unavailablity.dayAndHourForDate(this.date);
+        return dayAndHourForDate(this.date);
     }
 
     get people(): Array<Person> {

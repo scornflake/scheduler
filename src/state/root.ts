@@ -22,6 +22,8 @@ class RootStore {
     @observable ui_store: UIStore;
 
     @observable schedule: ScheduleWithRules;
+    @observable previous_schedule: ScheduleWithRules;
+
     private regenerator: IReactionDisposer;
     private saving: IReactionDisposer;
     private logger: Logger;
@@ -34,7 +36,7 @@ class RootStore {
         this.ui_store = new UIStore();
         this.logger = this.loggingService.getLogger("store");
 
-        NPBCStoreConstruction.SetupStore(this);
+        NPBCStoreConstruction.SetupStore(this.people_store, this.organization_store);
         // ThamesTest.SetupStore(this);
 
         this.storage.get(SAVED_STATE_KEY).then((state) => {
@@ -55,15 +57,18 @@ class RootStore {
         // for testing, create some fake
         let params = new ScheduleInput(this.people_store, this.roles_store);
         params.start_date = csd(2018, 6, 3);
-        params.end_date = csd(2018, 9, 31);
+        params.end_date = csd(2018, 9, 30);
 
-        if (!this.schedule) {
-            this.schedule = new ScheduleWithRules(params);
-            // this.schedule.add_note(new Date(2018, 0, 7), defaultSpeakerRole, "Mr Smith");
-            // this.schedule.add_note(new Date(2018, 0, 7), defaultThemeRole, "Starting");
-        }
+        this.schedule = new ScheduleWithRules(params, this.previous_schedule);
         this.schedule.create_schedule();
         return this.schedule;
+    }
+
+    set_previous_schedule(schedule: ScheduleWithRules) {
+        this.previous_schedule = schedule;
+        this.schedule = null;
+
+        this.generate_schedule();
     }
 
     @computed

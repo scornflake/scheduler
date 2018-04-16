@@ -2,11 +2,12 @@ import {action, computed, observable} from "mobx-angular";
 import {Role} from "./roles";
 import {Availability, AvailabilityUnit, SchedulePrefs} from "./scheduling-types";
 import {isUndefined} from "util";
-import {AssignedToRoleCondition, ConditionalRule, Rule, RuleFacts, WeightedRoles} from "../scheduling/rule_based/rules";
+import {AssignedToRoleCondition, ConditionalRule, Rule, WeightedRoles} from "../scheduling/rule_based/rules";
 import * as _ from "lodash";
 import {BaseStore, ObjectWithUUID} from "./common";
-import {throwOnInvalidDate} from "../common/date-utils";
+import {dayAndHourForDate, throwOnInvalidDate} from "../common/date-utils";
 import * as moment from "moment";
+import {RuleFacts} from "../scheduling/rule_based/rule-facts";
 
 class Unavailablity extends ObjectWithUUID {
     from_date: Date = null;
@@ -23,13 +24,6 @@ class Unavailablity extends ObjectWithUUID {
         this.reason = reason;
     }
 
-    public static dayAndHourForDate(date: Date): string {
-        if (date == null) {
-            return "";
-        }
-        return date.getFullYear() + "/" + date.getMonth() + "/" + date.getDate() + "@" + date.getHours();
-    }
-
     get is_date_range(): boolean {
         return this.from_date != null && this.to_date != null;
     }
@@ -38,8 +32,8 @@ class Unavailablity extends ObjectWithUUID {
         if (this.to_date != null) {
             return false;
         }
-        let thisDate = Unavailablity.dayAndHourForDate(this.from_date);
-        let otherDate = Unavailablity.dayAndHourForDate(d);
+        let thisDate = dayAndHourForDate(this.from_date);
+        let otherDate = dayAndHourForDate(d);
         return thisDate == otherDate;
     }
 
@@ -220,6 +214,37 @@ class PeopleStore extends BaseStore<Person> {
 
     get people(): Array<Person> {
         return this.items;
+    }
+
+    try_find_single_person_with(callback) {
+        let all_people = this.people.filter(callback);
+        if (all_people.length) {
+            if (all_people.length > 1) {
+                throw new Error(`Searching for ${name} returns more than one person. Returns: ${JSON.stringify(all_people)}`);
+            }
+            return all_people[0];
+        }
+        return null;
+    }
+
+    find_person_with_name(name: string, fuzzy_match: boolean = false) {
+        if (isUndefined(name)) {
+            return null;
+        }
+        let person = this.try_find_single_person_with(p => p.name.toLocaleLowerCase() == name.toLocaleLowerCase());
+        if (!person && fuzzy_match) {
+            person = this.try_find_single_person_with(p => p.name.toLocaleLowerCase().startsWith(name.toLocaleLowerCase()));
+            if (!person) {
+                // Try first word and first char of 2nd word
+                let terms = name.split(' ');
+                if (terms.length > 1) {
+                    let search = `${terms[0]} ${terms[1][0]}`.toLocaleLowerCase();
+                    // console.log(`Try ${search} for ${name}`);
+                    person = this.try_find_single_person_with(p => p.name.toLocaleLowerCase().startsWith(search));
+                }
+            }
+        }
+        return person;
     }
 
     people_with_role(role: Role) {

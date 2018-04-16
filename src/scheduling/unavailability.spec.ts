@@ -1,6 +1,20 @@
 import {Unavailablity} from "../state/people";
+import {dayAndHourForDate, parseDateFromSpreadsheetDate} from "../common/date-utils";
 
 describe('unavailability', () => {
+    it('can parse dates', () => {
+        let dateString = "Sun May 27 2018";
+        let js_date = parseDateFromSpreadsheetDate(dateString);
+        console.log(`Got: ${JSON.stringify(js_date)}`);
+        expect(js_date.getMonth()).toEqual(4);
+        expect(js_date.getFullYear()).toEqual(2018);
+        expect(js_date.getDate()).toEqual(27);
+    });
+
+    it('can parse null date and get null', function () {
+        expect(parseDateFromSpreadsheetDate(null)).toBeNull();
+    });
+
     it('can model single date', () => {
         let unavil = new Unavailablity(new Date(2010, 10, 1));
         expect(unavil.matches_single_date(new Date(2010, 10, 1))).toBeTrue();
@@ -36,7 +50,7 @@ describe('unavailability', () => {
 
     it('truncates dates to the hour', () => {
         let morning = new Date(2017, 11, 1, 10, 30, 44);
-        let byHour = Unavailablity.dayAndHourForDate(morning);
+        let byHour = dayAndHourForDate(morning);
         expect(byHour).toEqual("2017/11/1@10");
     });
 

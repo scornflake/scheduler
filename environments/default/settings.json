@@ -7,11 +7,15 @@
       },
       {
         "loggerName": "scheduler",
-        "logLevel": "WARN"
+        "logLevel": "INFO"
+      },
+      {
+        "loggerName": "home",
+        "logLevel": "INFO"
       },
       {
         "loggerName": "google",
-        "logLevel": "WARN"
+        "logLevel": "INFO"
       },
       {
         "loggerName": "store",

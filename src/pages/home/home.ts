@@ -5,6 +5,8 @@ import {CSVExporter} from "../../exporters/csv.exporter";
 import {GAPIS} from "../../common/gapis-auth";
 import {SheetSelectionPage} from "../sheet-selection/sheet-selection";
 import {Logger, LoggingService} from "ionic-logging-service";
+import {toJS} from "mobx";
+import {SpreadsheetReader} from "../../common/spreadsheet_reader";
 
 
 @Component({
@@ -19,6 +21,7 @@ export class HomePage {
                 private sheetAPI: GAPIS,
                 private modalController: ModalController,
                 private rootStore: RootStore) {
+        this.logger = loggingService.getLogger("home");
     }
 
     ionViewDidEnter() {
@@ -46,11 +49,23 @@ export class HomePage {
             let sheet_id = this.rootStore.ui_store.saved_state.previous_sheet_id;
             this.sheetAPI.load_sheet_with_id(sheet_id).subscribe((spreadsheet) => {
                 let sheet = spreadsheet.sheets.find(s => s.properties.sheetId == this.rootStore.state.previous_sheet_tab_id);
-                // this.sheetAPI.read_spreadsheet_data(spreadsheet, sheet).subscribe(rows => {
-                // let schedule = this.sheetAPI.parse_schedule_from_spreadsheet(rows);
-                // console.log("Generated schedule:");
-                // console.log(`${JSON.stringify(schedule)}`);
-                // });
+                this.sheetAPI.read_spreadsheet_data(spreadsheet, sheet).subscribe(rows => {
+
+                    let reader = new SpreadsheetReader();
+                    reader.parse_schedule_from_spreadsheet(rows);
+
+                    if (reader.has_problems) {
+                        let dump_map = {};
+                        for (let key of Array.from(reader.problems.keys())) {
+                            dump_map[key] = Array.from(reader.problems.get(key));
+                        }
+                        let problems = toJS(dump_map);
+                        let s = JSON.stringify(problems);
+                        this.logger.info(`Had problems: ${s}`);
+                    }
+                    this.logger.info("Made schedule!");
+                    this.rootStore.set_previous_schedule(reader.schedule);
+                });
             });
         }
     }

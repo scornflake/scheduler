@@ -15,7 +15,7 @@ import {PeopleStore, Person} from "../../state/people";
 import {AvailabilityEveryNOfM, AvailabilityUnit} from "../../state/scheduling-types";
 import {RootStore} from "../../state/root";
 import {ScheduleOn} from "../../scheduling/rule_based/rules";
-import {Organization} from "../../state/organization";
+import {Organization, OrganizationStore} from "../../state/organization";
 import {csd} from "../../common/date-utils";
 
 let neil: Person = new Person("Neil Clayton");
@@ -42,7 +42,9 @@ let chris: Person = new Person("Chris Evans");
 let jeremy_l: Person = new Person("Jeremy Legg");
 let andre_l: Person = new Person("Andre Legg");
 let jeremy_w: Person = new Person("Jeremy Watson");
-let john: Person = new Person("John Sutherland");/*
+let john: Person = new Person("John Sutherland");
+
+/*
 
 /*
 Add unavailability here
@@ -163,9 +165,7 @@ export class NPBCStoreConstruction {
     constructor() {
     }
 
-    static SetupStore(root_store: RootStore) {
-        let person_store: PeopleStore = root_store.people_store;
-        let org_store = root_store.organization_store;
+    static SetupStore(person_store: PeopleStore, org_store: OrganizationStore) {
 
         org_store.addOrganizaton(new Organization("North Porirua Baptist Church"));
 
@@ -191,7 +191,9 @@ export class NPBCStoreConstruction {
         stuart.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(stuart, defaultVocalsRole));
 
         person_store.add_person(kylie)
-            .add_role(defaultAcousticGuitar);
+            .add_role(defaultAcousticGuitar)
+            .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+
         kylie.if_assigned_to(defaultAcousticGuitar).then(new ScheduleOn(kylie, defaultVocalsRole));
 
         person_store.add_person(jeremy_selfe)
@@ -236,7 +238,7 @@ export class NPBCStoreConstruction {
         person_store.add_person(dave)
             .add_role(defaultAcousticGuitar)
             .add_role(defaultVocalsRole)
-            .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+            .avail_every(2.2, AvailabilityUnit.EVERY_N_WEEKS);
         dave.if_assigned_to(defaultAcousticGuitar).then(new ScheduleOn(dave, defaultVocalsRole));
 
         person_store.add_person(anita)

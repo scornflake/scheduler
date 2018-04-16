@@ -8,12 +8,12 @@ import {Subject} from "rxjs/Subject";
 import {fromPromise} from "rxjs/observable/fromPromise"
 
 import * as _ from 'lodash';
-import ValueRange = gapi.client.sheets.ValueRange;
-
-import Spreadsheet = gapi.client.sheets.Spreadsheet;
-import Sheet = gapi.client.sheets.Sheet;
 import {Logger, LoggingService} from "ionic-logging-service";
 import {AppModule} from "../app/app.module";
+import {SpreadsheetReader} from "./spreadsheet_reader";
+import Spreadsheet = gapi.client.sheets.Spreadsheet;
+import Sheet = gapi.client.sheets.Sheet;
+import ValueRange = gapi.client.sheets.ValueRange;
 
 const API_KEY = "AIzaSyCVhzG0pEB1NfZsxpdPPon3XhEK4pctEYE";
 
@@ -164,12 +164,6 @@ class GAPIS {
             let result = v['result'];
             return result['values'];
         });
-    }
-
-    parse_schedule_from_spreadsheet(rowData: Array<any>, schedule: ScheduleWithRules) {
-        // OK, we will preload a schedule using a previous schedule
-
-        return null;
     }
 
     clear_and_write_schedule(spreadsheet: Spreadsheet, sheet: Sheet, schedule: ScheduleWithRules): Observable<number> {
