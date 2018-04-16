@@ -3,7 +3,7 @@ var path = require('path');
 
 module.exports = {
     devtool: 'inline-source-map',
-    // target: 'node',
+
     resolve: {
         extensions: ['.ts', '.js']
     },
@@ -15,6 +15,15 @@ module.exports = {
                 loader: 'ts-loader'
             }, 'angular2-template-loader']
         },
+            {
+                test: /.+\.ts$/,
+                exclude: /(index.ts|mocks.ts|\.spec\.ts$)/,
+                loader: 'istanbul-instrumenter-loader',
+                enforce: 'post',
+                query: {
+                    esModules: true
+                }
+            },
             {
                 test: /\.html$/,
                 loader: 'html-loader?attrs=false'

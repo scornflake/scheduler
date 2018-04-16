@@ -24,13 +24,10 @@ import {SheetSelectionPageModule} from "../pages/sheet-selection/sheet-selection
 import {TabSelectionPageModule} from "../pages/tab-selection/tab-selection.module";
 import {ConfigurationService} from "ionic-configuration-service";
 import {LoggingService} from "ionic-logging-service";
+import {loadConfiguration} from "./logging-configuration";
 
-export function defaultDSPSetup(store, apollo, link) {
-    return new DataStoreProvider(apollo, link, store, defaultConfiguration);
-}
-
-export function loadConfiguration(configurationService: ConfigurationService): () => Promise<void> {
-    return () => configurationService.load("assets/settings.json");
+export function defaultDSPSetup(apollo, link) {
+    return new DataStoreProvider(apollo, link, defaultConfiguration);
 }
 
 @NgModule({
@@ -76,7 +73,7 @@ export function loadConfiguration(configurationService: ConfigurationService): (
         {
             provide: DataStoreProvider,
             useFactory: defaultDSPSetup,
-            deps: [RootStore, Apollo, HttpLink]
+            deps: [Apollo, HttpLink]
         },
         LoggingService,
         GAPIS

@@ -1,11 +1,11 @@
 import {FixedRoleOnDate, OnThisDate, Rule, UsageWeightedSequential, WeightedRoles} from "./rules";
 import {Role, RolesStore} from "../../state/roles";
-import {Logger, LoggingService} from "ionic-logging-service";
+import {Logger} from "ionic-logging-service";
 import {dayAndHourForDate, throwOnInvalidDate} from "../../common/date-utils";
 import {PeopleStore, Person} from "../../state/people";
 import {Exclusion, ScheduleAtDate} from "../common";
-import {AppModule} from "../../app/app.module";
 import {isUndefined} from "ionic-angular/util/util";
+import {LoggingWrapper} from "../../common/logging-wrapper";
 
 export class RuleFacts {
     current_date: Date;
@@ -34,7 +34,7 @@ export class RuleFacts {
         this.exclusion_zones = new Map<Person, Array<Exclusion>>();
         this.usage_counts = new Map<Role, Map<Person, number>>();
 
-        this.logger = AppModule.injector.get(LoggingService).getLogger("scheduler.rules.facts");
+        this.logger = LoggingWrapper.getLogger("scheduler.rules.facts");
     }
 
     copyUsageDataFrom(previous_facts: RuleFacts) {

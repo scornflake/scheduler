@@ -9,12 +9,11 @@ import {fromPromise} from "rxjs/observable/fromPromise"
 
 import * as _ from 'lodash';
 import {Logger, LoggingService} from "ionic-logging-service";
-import {AppModule} from "../app/app.module";
-import {SpreadsheetReader} from "./spreadsheet_reader";
+import {formatDateForGoogleSpreadsheet} from "./date-utils";
+import {LoggingWrapper} from "./logging-wrapper";
 import Spreadsheet = gapi.client.sheets.Spreadsheet;
 import Sheet = gapi.client.sheets.Sheet;
 import ValueRange = gapi.client.sheets.ValueRange;
-import {formatDateForGoogleSpreadsheet} from "./date-utils";
 
 const API_KEY = "AIzaSyCVhzG0pEB1NfZsxpdPPon3XhEK4pctEYE";
 
@@ -28,7 +27,7 @@ class GAPIS {
     constructor(private rootStore: RootStore,
                 private loggingService: LoggingService,
                 private appRef: ApplicationRef) {
-        this.logger = AppModule.injector.get(LoggingService).getLogger("google");
+        this.logger = LoggingWrapper.getLogger("google");
     }
 
     init(callback = null) {

@@ -1,9 +1,9 @@
 import * as _ from 'lodash';
 import {Role} from "../../state/roles";
 import {Person} from "../../state/people";
-import {Logger, LoggingService} from "ionic-logging-service";
-import {AppModule} from "../../app/app.module";
+import {Logger} from "ionic-logging-service";
 import {RuleFacts} from "./rule-facts";
+import {LoggingWrapper} from "../../common/logging-wrapper";
 
 class RuleExecution {
     object: any;
@@ -14,7 +14,7 @@ class RuleExecution {
     constructor(obj, trigger: Rule) {
         this.object = obj;
         this.trigger = trigger;
-        this.logger = AppModule.injector.get(LoggingService).getLogger("scheduler.rules");
+        this.logger = LoggingWrapper.getLogger("scheduler.rules");
     }
 
     get empty(): boolean {

@@ -2,10 +2,10 @@ import {ScheduleAtDate, ScheduleInput} from "../common";
 import {Role} from "../../state/roles";
 import {Person} from "../../state/people";
 import * as _ from 'lodash';
-import {Logger, LoggingService} from "ionic-logging-service";
-import {AppModule} from "../../app/app.module";
+import {Logger} from "ionic-logging-service";
 import {dayAndHourForDate} from "../../common/date-utils";
 import {RuleFacts} from "./rule-facts";
+import {LoggingWrapper} from "../../common/logging-wrapper";
 
 class ScheduleWithRules {
     params: ScheduleInput;
@@ -16,7 +16,7 @@ class ScheduleWithRules {
     private previous_scheduler: ScheduleWithRules;
 
     constructor(input: ScheduleInput, previous: ScheduleWithRules = null) {
-        this.logger = AppModule.injector.get(LoggingService).getLogger("scheduler");
+        this.logger = LoggingWrapper.getLogger("scheduler");
 
         this.params = input;
         this.params.validate();
@@ -76,13 +76,18 @@ class ScheduleWithRules {
     }
 
     is_role_filled_for_date(role: Role, date: Date) {
+        if(!this.facts) {
+            return false;
+        }
         let specific_day = this.facts.get_schedule_for_date(date);
         let peopleInRole = specific_day.people_in_role(role);
         return peopleInRole.length >= role.maximum_count;
-
     }
 
     process_role(current_date: Date, role: Role, role_group: Array<Role>) {
+        if(!this.facts) {
+            throw new Error("No facts defined. Cannot process role");
+        }
         let specific_day = this.facts.get_schedule_for_date(current_date);
 
         // If already at max for this role, ignore it.

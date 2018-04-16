@@ -8,6 +8,10 @@ import {Organization, OrganizationStore} from "../../state/organization";
 import {RootStore} from "../../state/root";
 import {IonicStorageModule} from "@ionic/storage";
 import {getTestBed, TestBed} from "@angular/core/testing";
+import {ConfigurationService} from "ionic-configuration-service";
+import {LoggingService} from "ionic-logging-service";
+import {APP_INITIALIZER} from "@angular/core";
+import {loadConfiguration, MockConfigurationService} from "../../app/logging-configuration";
 
 describe('datastore', () => {
     let injector: TestBed;
@@ -23,6 +27,8 @@ describe('datastore', () => {
             ],
             providers: [
                 RootStore,
+                [{provide:ConfigurationService, useClass: MockConfigurationService}],
+                LoggingService,
             ]
         });
 
@@ -37,15 +43,13 @@ describe('datastore', () => {
 
         done();
 
-        data_store = new DataStoreProvider(apollo, link, store, config);
+        data_store = new DataStoreProvider(apollo, link, config);
         expect(data_store).not.toBeNull();
     });
 
     it('should detect additions to org store', function () {
         let org_store = new OrganizationStore();
-
         org_store.addOrganizaton(new Organization("North Porirua Baptist Church"));
-
     });
 
     it('construct organization with roles', function (done) {

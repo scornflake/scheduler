@@ -8,7 +8,6 @@ import gql from "graphql-tag";
 import {Observable} from "rxjs/Observable";
 import {Organization} from "../../state/organization";
 import "rxjs/add/operator/map";
-import {RootStore} from "../../state/root";
 
 
 const __createRole = gql`
@@ -34,14 +33,14 @@ export class DataStoreProvider {
 
     constructor(private apollo: Apollo,
                 private httpLink: HttpLink,
-                private store: RootStore,
                 configuration = defaultConfiguration) {
 
         let link = this.httpLink.create({uri: configuration.graphcool_uri});
 
+        let cache = new InMemoryCache();
         apollo.create({
             link: link,
-            cache: new InMemoryCache(),
+            cache: cache,
             connectToDevTools: configuration.graphcool_connectToDevTools
         })
 
