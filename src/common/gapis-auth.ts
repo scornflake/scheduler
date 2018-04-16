@@ -14,6 +14,7 @@ import {SpreadsheetReader} from "./spreadsheet_reader";
 import Spreadsheet = gapi.client.sheets.Spreadsheet;
 import Sheet = gapi.client.sheets.Sheet;
 import ValueRange = gapi.client.sheets.ValueRange;
+import {formatDateForGoogleSpreadsheet} from "./date-utils";
 
 const API_KEY = "AIzaSyCVhzG0pEB1NfZsxpdPPon3XhEK4pctEYE";
 
@@ -182,7 +183,7 @@ class GAPIS {
             let fields = schedule.jsonFields();
             let rows = schedule.jsonResult().map(row => {
                 // Want to remap this structure
-                let new_row = [row.date.toDateString()];
+                let new_row = [formatDateForGoogleSpreadsheet(row.date)];
                 for (let field of fields) {
                     if (field == 'Date') continue;
                     let all_names = _.map(row[field], p => p.name);

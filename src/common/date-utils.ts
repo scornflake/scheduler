@@ -21,6 +21,10 @@ let throwOnInvalidDate = (date: Date, message: string = "Date is not valid") => 
     }
 };
 
+let formatDateForGoogleSpreadsheet = (date: Date): string => {
+    return date.toDateString();
+};
+
 let parseDateFromSpreadsheetDate = (date_as_string: string): Date => {
     let moment_date = parseMomentDateFromSpreadsheetDate(date_as_string);
     if (moment_date && moment_date.isValid()) {
@@ -51,6 +55,7 @@ export {
     addDaysToDate,
     isDateValid,
     throwOnInvalidDate,
+    formatDateForGoogleSpreadsheet,
     dayAndHourForDate,
     parseDateFromSpreadsheetDate,
     parseMomentDateFromSpreadsheetDate,
