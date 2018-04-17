@@ -58,6 +58,16 @@ christine.add_unavailable(csd(2018, 5, 6));
 christine.add_unavailable(csd(2018, 6, 17));
 christine.add_unavailable(csd(2018, 7, 22));
 
+jeremy_l.add_unavailable(csd(2018, 6, 17));
+
+stuart.add_unavailable_range(csd(2018, 8, 12), csd(2018, 9, 9));
+
+allie.add_unavailable(csd(2018, 6, 3));
+allie.add_unavailable(csd(2018, 7, 22));
+
+// To be confirmed
+craig.add_unavailable_range(csd(2018, 8, 12), csd(2018, 9, 9));
+
 export class NPBCStoreConstruction {
     constructor() {
     }
