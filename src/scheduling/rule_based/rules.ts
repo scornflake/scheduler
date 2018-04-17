@@ -275,7 +275,8 @@ class TryToScheduleWith extends SecondaryAction {
                     console.log(`We should try to move ${this.owner} because they are not on with ${this.other_person}`);
                     console.log(` - Try to move them to ${closest.date.toDateString()}`);
 
-                    schedule_at_date.move_person(this.owner, closest);
+                    let reason = `Moved from ${schedule_at_date.date.toDateString()} to be with ${this.other_person.name}`;
+                    schedule_at_date.move_person(this.owner, closest, reason);
 
                     this.success_executions++;
                 }

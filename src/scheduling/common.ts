@@ -169,7 +169,7 @@ class ScheduleAtDate {
 
     roles_of_person(person: Person): Array<Role> {
         let persons_score = this.people_score.get(person);
-        if(!persons_score) {
+        if (!persons_score) {
             return [];
         }
         return persons_score.roles;
@@ -194,19 +194,21 @@ class ScheduleAtDate {
         return this.people_score.has(person);
     }
 
-    move_person(owner: Person, to_date: ScheduleAtDate) {
+    move_person(owner: Person, to_date: ScheduleAtDate, reason: string = null) {
         // Find the roles this person was doing
         let roles = this.roles_of_person(owner);
-        if(roles.length) {
+        if (roles.length) {
             let score = this.people_score.get(owner);
-            if(score) {
+            if (score) {
                 this.people_score.delete(owner);
                 roles.forEach(r => {
                     to_date.add_person(owner, r);
                 });
                 let new_score = to_date.score_for(owner);
                 new_score.decisions = new_score.decisions.concat(score.decisions);
-                new_score.decisions.push(`Moved from ${this.date.toDateString()}`)
+                if(reason) {
+                    new_score.decisions.push(reason)
+                }
             }
         }
     }
