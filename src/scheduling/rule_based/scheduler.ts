@@ -21,7 +21,7 @@ class ScheduleWithRules {
         this.params = input;
         this.params.validate();
         this.free_text = {};
-        if(previous) {
+        if (previous) {
             this.warmup_using(previous);
         }
         this.clear_working_state();
@@ -43,6 +43,7 @@ class ScheduleWithRules {
 
         this.facts.begin();
         role_groups.forEach(rg => this.process_role_group(rg));
+        this.process_secondary_actions();
     }
 
     process_role_group(role_group: Array<Role>) {
@@ -76,7 +77,7 @@ class ScheduleWithRules {
     }
 
     is_role_filled_for_date(role: Role, date: Date) {
-        if(!this.facts) {
+        if (!this.facts) {
             return false;
         }
         let specific_day = this.facts.get_schedule_for_date(date);
@@ -85,7 +86,7 @@ class ScheduleWithRules {
     }
 
     process_role(current_date: Date, role: Role, role_group: Array<Role>) {
-        if(!this.facts) {
+        if (!this.facts) {
             throw new Error("No facts defined. Cannot process role");
         }
         let specific_day = this.facts.get_schedule_for_date(current_date);
@@ -266,6 +267,41 @@ class ScheduleWithRules {
     warmup_using(previous_schedule: ScheduleWithRules) {
         this.previous_scheduler = previous_schedule;
         this.logger.info("Warming up using a previous schedule...");
+    }
+
+    private process_secondary_actions() {
+        // Check everyone that has secondary actions
+        this.params.people.people.forEach(person => {
+            let secondary_actions = person.secondary_actions;
+            secondary_actions.forEach(secondary_action => {
+                /*
+                Iterate all dates in the schedule. Does the action want to do anything?
+                 */
+                for (let schedule_on_date of this.dates) {
+                    secondary_action.execute(schedule_on_date, this);
+                }
+            });
+        });
+    }
+
+    closest_schedule_date(date: Date, distance_predicate: (sd) => number | boolean): ScheduleAtDate {
+        let min_distance: number = 32767;
+        let chosen_sd = null;
+        this.dates.forEach(sd => {
+            let this_distance = distance_predicate(sd);
+            if (typeof this_distance === 'boolean') {
+                if (!this_distance) {
+                    return;
+                }
+            }
+            if (typeof this_distance === 'number') {
+                if (this_distance < min_distance) {
+                    min_distance = this_distance;
+                    chosen_sd = sd;
+                }
+            }
+        });
+        return chosen_sd;
     }
 }
 

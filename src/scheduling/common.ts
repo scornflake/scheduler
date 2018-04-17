@@ -1,7 +1,8 @@
 import {Role, RolesStore} from "../state/roles";
-import {PeopleStore, Person, Unavailablity} from "../state/people";
+import {PeopleStore, Person} from "../state/people";
 import * as _ from 'lodash';
 import {dayAndHourForDate} from "../common/date-utils";
+import {Unavailablity} from "../state/unavailability";
 
 class ScheduleScore {
     person?: Person;
@@ -166,6 +167,14 @@ class ScheduleAtDate {
         });
     }
 
+    roles_of_person(person: Person): Array<Role> {
+        let persons_score = this.people_score.get(person);
+        if(!persons_score) {
+            return [];
+        }
+        return persons_score.roles;
+    }
+
     valueOf() {
         let names_with_tasks = this.people_sorted_by_role_priority.map(p => {
             return p.name + "=" + this.people_score.get(p);
@@ -183,6 +192,23 @@ class ScheduleAtDate {
 
     includes_person(person: Person) {
         return this.people_score.has(person);
+    }
+
+    move_person(owner: Person, to_date: ScheduleAtDate) {
+        // Find the roles this person was doing
+        let roles = this.roles_of_person(owner);
+        if(roles.length) {
+            let score = this.people_score.get(owner);
+            if(score) {
+                this.people_score.delete(owner);
+                roles.forEach(r => {
+                    to_date.add_person(owner, r);
+                });
+                let new_score = to_date.score_for(owner);
+                new_score.decisions = new_score.decisions.concat(score.decisions);
+                new_score.decisions.push(`Moved from ${this.date.toDateString()}`)
+            }
+        }
     }
 }
 

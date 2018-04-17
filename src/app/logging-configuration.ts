@@ -4,6 +4,9 @@ export function loadConfiguration(configurationService: ConfigurationService): (
     return () => configurationService.load("assets/settings.json");
 }
 
+/*
+Note: had to completely override the class since it doesn't have a setter for the values, and it's private.
+ */
 class MockConfigurationService extends ConfigurationService {
     private mocked_configValues: { [key: string]: any };
 

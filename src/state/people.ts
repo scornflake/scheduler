@@ -2,57 +2,19 @@ import {action, computed, observable} from "mobx";
 import {Role} from "./roles";
 import {Availability, AvailabilityUnit, SchedulePrefs} from "./scheduling-types";
 import {isUndefined} from "util";
-import {AssignedToRoleCondition, ConditionalRule, Rule, WeightedRoles} from "../scheduling/rule_based/rules";
+import {
+    AssignedToRoleCondition,
+    ConditionalRule,
+    Rule,
+    SecondaryAction,
+    WeightedRoles
+} from "../scheduling/rule_based/rules";
 import {BaseStore, ObjectWithUUID} from "./common";
-import {dayAndHourForDate, throwOnInvalidDate} from "../common/date-utils";
+import {throwOnInvalidDate} from "../common/date-utils";
 import {RuleFacts} from "../scheduling/rule_based/rule-facts";
 
 import * as _ from "lodash";
-import * as moment from "moment";
-
-class Unavailablity extends ObjectWithUUID {
-    from_date: Date = null;
-    to_date: Date = null;
-    reason: string = null;
-
-    constructor(from: Date, to: Date = null, reason = null) {
-        super();
-        if (from == null) {
-            throw new Error("From date cannot be null");
-        }
-        this.from_date = from;
-        this.to_date = to;
-        this.reason = reason;
-    }
-
-    get is_date_range(): boolean {
-        return this.from_date != null && this.to_date != null;
-    }
-
-    matches_single_date(d: Date) {
-        if (this.to_date != null) {
-            return false;
-        }
-        let thisDate = dayAndHourForDate(this.from_date);
-        let otherDate = dayAndHourForDate(d);
-        return thisDate == otherDate;
-    }
-
-    contains_date(date: Date) {
-        let start = moment(this.from_date).startOf('day');
-
-        // By default, be one day in length
-        let the_end_date = moment(this.from_date).endOf('day');
-
-        if (this.is_date_range) {
-            the_end_date = moment(this.to_date).endOf('day');
-        }
-
-        let date_as_moment = moment(date);
-        // console.log("Test for " + date_as_moment + " being between " + start + " and " + the_end_date);
-        return date_as_moment.isBetween(start, the_end_date, null, "[]");
-    }
-}
+import {Unavailablity} from "./unavailability";
 
 class Person extends ObjectWithUUID {
     public name: string;
@@ -62,6 +24,7 @@ class Person extends ObjectWithUUID {
     @observable prefs: SchedulePrefs;
 
     private condition_rules: Array<ConditionalRule>;
+    private secondary_action_list: Array<SecondaryAction>;
 
     // Need to store a role, and also for this person, if they are in this role what
     // other roles they can also fullfill. However; mobx doesn't like using objects as keys
@@ -72,6 +35,7 @@ class Person extends ObjectWithUUID {
         super();
         this.name = name;
         this.primary_roles = new Map<Role, number>();
+        this.secondary_action_list = [];
         this.condition_rules = [];
         this.unavailable = [];
         this.prefs = new SchedulePrefs();
@@ -126,6 +90,18 @@ class Person extends ObjectWithUUID {
 
     get conditional_rules(): Array<ConditionalRule> {
         return this.condition_rules;
+    }
+
+    get secondary_actions(): Array<SecondaryAction> {
+        return this.secondary_action_list;
+    }
+
+    add_secondary_action(action: SecondaryAction) {
+        if(action) {
+            // Assign the owner
+            action.owner = this;
+            this.secondary_action_list.push(action);
+        }
     }
 
     if_assigned_to(role: Role): ConditionalRule {
@@ -275,6 +251,5 @@ export class PeopleStore extends BaseStore<Person> {
 
 
 export {
-    Unavailablity,
     Person
 }

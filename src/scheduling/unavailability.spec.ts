@@ -1,4 +1,4 @@
-import {Unavailablity} from "../state/people";
+import {Unavailablity} from "../state/unavailability";
 import {dayAndHourForDate, parseDateFromSpreadsheetDate} from "../common/date-utils";
 
 describe('unavailability', () => {

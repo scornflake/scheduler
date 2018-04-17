@@ -41,6 +41,19 @@ As part of themes, speakers, user cells...
   - It would be (maybe) nicer to ask the schedule: get_value_for(date, role), rather than doing this in the view. That way the scheduler can return text/schedule info as it sees fit.
 
 
+[done] Flexibile Availability
+======================
+I would like to be on every month or so, but prefer to be on with Cherilyn.
+The fairness scheduler might put me on according to preference, but cannot 'shift' my dates according to team preference.
+Options:
+- Allow a 2nd pass, to 'shift' schedules dates to closes preference match.
+  - Tempting but unsure what rabbit hole this opens up.  Works for me, but if I do if for others? What mess is created?
+  - Going with this option as it's the simplest to implement.
+- Model this preference as part of availability. That works, except 'exclusion zones' are currently separate state and taken into account *before availability*. So even if done, I have to modify exclusion zones somehow.
+
+I did this April 2018 by allowing people to be shifted by some amount.
+It's crude, but works for the case I had in mind. Will leave it this way until it breaks.
+
 
 No way to set special events
 ============================
@@ -64,7 +77,7 @@ That way you can have the round robin without the usage weighting.
 
 Honouring a persons perferences can lead to gaps you don't want
 ===============================================================
-e.g: daniel wants to be on bass sometimes. Yet this can lead to a gap where there's no one on drums..
+e.g: daniel wants to be on bass sometimes. Yet this can lead to a gap where there's no one on drums.
 Because: It has chosen daniel, seen that he wants to be on bass, figured "yep, it's about time" and put him on bass. BUT there' no one scheduled for drums.
 
 Solution to be to take a 2nd pass that does a 'non optimal' rearrangement, whereby  you move people to other roles if those roles need to be filled.

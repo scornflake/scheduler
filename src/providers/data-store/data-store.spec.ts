@@ -10,8 +10,7 @@ import {IonicStorageModule} from "@ionic/storage";
 import {getTestBed, TestBed} from "@angular/core/testing";
 import {ConfigurationService} from "ionic-configuration-service";
 import {LoggingService} from "ionic-logging-service";
-import {APP_INITIALIZER} from "@angular/core";
-import {loadConfiguration, MockConfigurationService} from "../../app/logging-configuration";
+import {MockConfigurationService} from "../../app/logging-configuration";
 
 describe('datastore', () => {
     let injector: TestBed;

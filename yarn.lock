@@ -157,7 +157,7 @@
   version "4.3.2"
   resolved "https://registry.yarnpkg.com/@ionic-native/status-bar/-/status-bar-4.3.2.tgz#b9b32993a010dcbebe4d170f96a294d9740a8992"
 
-"@ionic/app-scripts@^3.1.8":
+"@ionic/app-scripts@3.1.8":
   version "3.1.8"
   resolved "https://registry.yarnpkg.com/@ionic/app-scripts/-/app-scripts-3.1.8.tgz#503a431efe6840fa632b42e5bd2c00095fa3e6b0"
   dependencies:
@@ -445,7 +445,7 @@ apollo-angular@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/apollo-angular/-/apollo-angular-1.0.1.tgz#2a48bd4c550be417d2902adcd859493282cd939a"
 
-apollo-cache-inmemory@^1.1.2:
+apollo-cache-inmemory@^1.1.12:
   version "1.1.12"
   resolved "https://registry.yarnpkg.com/apollo-cache-inmemory/-/apollo-cache-inmemory-1.1.12.tgz#ab489bf046b3e026556ab28bdebb6e010cac9531"
   dependencies:

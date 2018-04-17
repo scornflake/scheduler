@@ -4,6 +4,9 @@ import {Person} from "../../state/people";
 import {Logger} from "ionic-logging-service";
 import {RuleFacts} from "./rule-facts";
 import {LoggingWrapper} from "../../common/logging-wrapper";
+import {Availability} from "../../state/scheduling-types";
+import {daysBetween, ScheduleAtDate} from "../common";
+import {ScheduleWithRules} from "./scheduler";
 
 class RuleExecution {
     object: any;
@@ -222,6 +225,65 @@ class ScheduleOn extends ConditionAction {
     }
 }
 
+class SecondaryAction extends Rule {
+    owner: Person;
+
+    execute(schedule_at_date: ScheduleAtDate, schedule: ScheduleWithRules) {
+
+    }
+}
+
+class TryToScheduleWith extends SecondaryAction {
+    private other_person: Person;
+    private reach: Availability;
+    private max_number_of_times: number;
+    private success_executions: number = 0;
+
+    constructor(other_person: Person, reach: Availability, max_number = 99999) {
+        super();
+        this.other_person = other_person;
+        this.reach = reach;
+        this.max_number_of_times = max_number;
+    }
+
+
+    execute(schedule_at_date: ScheduleAtDate, schedule: ScheduleWithRules) {
+        // If this line includes a use of self, does it also include a use of the other person?
+        if (schedule_at_date.includes_person(this.owner)) {
+            if (!schedule_at_date.includes_person(this.other_person)) {
+                //
+                // TODO: mark somehow that this is a movement, and it shouldn't be reprocessed?
+                // Only because we might get into a situation where we move someone, only to move them again with the next rule
+                // or a secondary action for someone else
+
+                // Is there some place in the schedule where we could move the person, within the allowed threshold?
+                let closest = schedule.closest_schedule_date(schedule_at_date.date, (s): number | boolean => {
+                    // Not interested in the same one
+                    if (s == schedule_at_date) {
+                        return false;
+                    }
+                    // This SD must include the other person
+                    if (!s.includes_person(this.other_person)) {
+                        return false;
+                    }
+
+                    // It's not us, and it does contain the other person! Yay!
+                    return Math.abs(daysBetween(schedule_at_date.date, s.date));
+                });
+
+                if (closest && this.success_executions < this.max_number_of_times) {
+                    console.log(`We should try to move ${this.owner} because they are not on with ${this.other_person}`);
+                    console.log(` - Try to move them to ${closest.date.toDateString()}`);
+
+                    schedule_at_date.move_person(this.owner, closest);
+
+                    this.success_executions++;
+                }
+            }
+        }
+    }
+}
+
 export {
     UsageWeightedSequential,
     WeightedRoles,
@@ -231,5 +293,7 @@ export {
     ConditionalRule,
     ConditionAction,
     ScheduleOn,
+    SecondaryAction,
+    TryToScheduleWith,
     Rule
 }
