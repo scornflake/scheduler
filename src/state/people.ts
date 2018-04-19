@@ -18,6 +18,7 @@ import {Unavailablity} from "./unavailability";
 
 class Person extends ObjectWithUUID {
     public name: string;
+    public email: string;
 
     primary_roles: Map<Role, number>;
     @observable unavailable: Array<Unavailablity>;

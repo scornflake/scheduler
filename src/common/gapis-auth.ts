@@ -7,6 +7,10 @@ import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import {Subject} from "rxjs/Subject";
 import {fromPromise} from "rxjs/observable/fromPromise"
 
+declare namespace gapi.client {
+    const sheets: any;
+}
+
 import * as _ from 'lodash';
 import {Logger, LoggingService} from "ionic-logging-service";
 import {formatDateForGoogleSpreadsheet} from "./date-utils";
@@ -16,6 +20,8 @@ import Sheet = gapi.client.sheets.Sheet;
 import ValueRange = gapi.client.sheets.ValueRange;
 
 const API_KEY = "AIzaSyCVhzG0pEB1NfZsxpdPPon3XhEK4pctEYE";
+
+
 
 @Injectable()
 class GAPIS {

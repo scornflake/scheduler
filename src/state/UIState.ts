@@ -31,11 +31,19 @@ class SavedState {
 }
 
 class UIStore {
+    /*
+    Transient state
+     */
     @observable selected_person: Person;
     @observable selected_date: Date;
     @observable selected_role: Role;
 
     @observable signed_in: boolean;
+    @observable login_token: string;
+
+    /*
+    Saved state
+     */
     @observable saved_state: SavedState;
 
     constructor() {

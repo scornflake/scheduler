@@ -1,0 +1,59 @@
+<ion-header>
+
+    <ion-navbar color="primary">
+        <ion-title>Login</ion-title>
+    </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+    <ion-row class="logo-row">
+        <ion-col></ion-col>
+        <ion-col col-6>
+            <img src="http://placehold.it/300x200"/>
+        </ion-col>
+        <ion-col></ion-col>
+    </ion-row>
+    <div class="login-box">
+        <form [formGroup]="loginForm">
+            <ion-row>
+                <ion-col>
+                    <ion-list inset>
+                        <ion-item>
+                            <ion-input name="email" type="text"
+                                       placeholder="Email" formControlName="email"
+                                       [ngModel]="registration_username"
+                                       (ngModelChange)="set_registration_username($event, true)"
+                                       required>
+                            </ion-input>
+                        </ion-item>
+                        <ion-item no-lines *ngIf="registration_error" class="bad">{{registration_error}}
+                        </ion-item>
+
+                        <ion-item>
+                            <ion-input type="password" placeholder="Password" name="password"
+                                       ([ngModel])="registration_password"
+                                       formControlName="password"
+                                       required>
+                            </ion-input>
+                        </ion-item>
+                    </ion-list>
+                </ion-col>
+            </ion-row>
+
+            <show-form-errors [control]="loginForm"></show-form-errors>
+
+            <ion-row>
+                <ion-col class="signup-col">
+                    <button ion-button class="submit-btn" full (click)="login()" [disabled]="!loginForm.valid">
+                        Login
+                    </button>
+                    <button ion-button class="register-btn" block clear (click)="createAccount()">Create New Account
+                    </button>
+                </ion-col>
+            </ion-row>
+
+        </form>
+    </div>
+</ion-content>

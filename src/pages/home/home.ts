@@ -1,5 +1,5 @@
 import {Component} from '@angular/core';
-import {ModalController, NavController} from 'ionic-angular';
+import {IonicPage, ModalController, NavController} from 'ionic-angular';
 import {RootStore} from "../../state/root";
 import {CSVExporter} from "../../exporters/csv.exporter";
 import {GAPIS} from "../../common/gapis-auth";
@@ -9,6 +9,10 @@ import {toJS} from "mobx";
 import {SpreadsheetReader} from "../../common/spreadsheet_reader";
 
 
+@IonicPage({
+    defaultHistory: ['home'],
+    name: 'home'
+})
 @Component({
     selector: 'page-home',
     templateUrl: 'home.html'
