@@ -8,10 +8,10 @@
                     (click)="clear_selection()"
                     [disabled]="!rootStore.ui_store.have_selection">Deselect
             </button>
-            <button ion-button *ngIf="!rootStore.ui_store.signed_in"
+            <button ion-button *ngIf="!rootStore.ui_store.signed_in_to_google"
                     (click)="login()">Login
             </button>
-            <button ion-button *ngIf="rootStore.ui_store.signed_in"
+            <button ion-button *ngIf="rootStore.ui_store.signed_in_to_google"
                     (click)="logout()">Logout
             </button>
         </ion-buttons>
@@ -46,10 +46,10 @@
         <button small ion-button *ngIf="!rootStore.ui_store.saved_state?.have_previous_selection"
                 (click)="select_previous_schedule()">Select Previous...
         </button>
-        <button small ion-button *ngIf="rootStore.ui_store.signed_in"
+        <button small ion-button *ngIf="rootStore.ui_store.signed_in_to_google"
                 (click)="export_as_sheets()">Export Sheet...
         </button>
-        <button small ion-button *ngIf="rootStore.ui_store.signed_in"
+        <button small ion-button *ngIf="rootStore.ui_store.signed_in_to_google"
                 (click)="clear_sheet_state()">Clear State
         </button>
     </ion-buttons>

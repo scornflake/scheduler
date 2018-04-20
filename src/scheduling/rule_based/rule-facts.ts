@@ -303,12 +303,21 @@ export class RuleFacts {
         return containining_this_date.length > 0;
     }
 
-    place_person_in_role(person: Person, role: Role, date: Date, record_usage_stats = true, execute_conditionals = true) {
-        this.add_exclusion_for(person, role, date);
-
+    place_person_in_role(person: Person,
+                         role: Role,
+                         date: Date,
+                         record_usage_stats = true,
+                         execute_conditionals = true,
+                         decision_override: string = null): boolean {
         let specific_day = this.get_schedule_for_date(date);
+
+        if (!specific_day.can_place_person_in_role(person, role)) {
+            return false;
+        }
+
+        this.add_exclusion_for(person, role, date);
         specific_day.add_person(person, role);
-        this.add_decision("Placing " + person.name + " into " + role);
+        this.add_decision(decision_override == null ? "Placing " + person.name + " into " + role : decision_override);
 
         if (record_usage_stats) {
             this.use_this_person_in_role(person, role);
@@ -322,11 +331,18 @@ export class RuleFacts {
                 });
             });
         }
+        return true;
     }
 
-    end_role(person: Person, role: Role, date: Date) {
+    set_decisions_for(person: Person, role: Role, date: Date, clear_decisions: boolean = true) {
         let specific_day = this.get_schedule_for_date(date);
-        specific_day.set_facts(person, role, this.decisions_for_date);
+        specific_day.set_decisions(person, role, this.decisions_for_date);
+        if (clear_decisions) {
+            this.clear_decisions();
+        }
+    }
+
+    clear_decisions() {
         this.decisions_for_date = [];
     }
 
@@ -337,5 +353,6 @@ export class RuleFacts {
             return s1.date > s2.date ? 1 : (s1.date < s2.date ? -1 : 0);
         });
     }
+
 }
 

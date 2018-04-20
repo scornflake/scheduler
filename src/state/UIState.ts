@@ -10,6 +10,8 @@ class SavedState {
     @observable google_sheet_tab_id: number;
     @observable google_sheet_id_retrieved: boolean;
 
+    @observable login_token: string;
+
     @computed
     get have_previous_selection(): boolean {
         return this.previous_sheet_id != null && this.previous_sheet_tab_id != 0;
@@ -22,7 +24,7 @@ class SavedState {
     }
 
     @action
-    clear_all() {
+    clear_all_sheet_state() {
         this.google_sheet_id = "";
         this.google_sheet_tab_id = 0;
         this.google_sheet_id_retrieved = false;
@@ -38,8 +40,8 @@ class UIStore {
     @observable selected_date: Date;
     @observable selected_role: Role;
 
-    @observable signed_in: boolean;
-    @observable login_token: string;
+    @observable signed_in_to_google: boolean;
+    @observable login_token_validated: boolean;
 
     /*
     Saved state
@@ -47,8 +49,14 @@ class UIStore {
     @observable saved_state: SavedState;
 
     constructor() {
-        this.signed_in = false;
+        this.login_token_validated = false;
+        this.signed_in_to_google = false;
         this.saved_state = new SavedState();
+    }
+
+    @computed
+    get signed_in(): boolean {
+        return this.saved_state.login_token && this.login_token_validated;
     }
 
     @computed
@@ -69,7 +77,12 @@ class UIStore {
     }
 
     clear_sheet_state() {
-        this.saved_state.clear_all();
+        this.saved_state.clear_all_sheet_state();
+    }
+
+    logout() {
+        this.saved_state.login_token = null;
+        this.signed_in_to_google = false;
     }
 }
 

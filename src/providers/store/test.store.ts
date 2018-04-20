@@ -41,6 +41,7 @@ let craig: Person = new Person("Craig Campbell");
 let chris: Person = new Person("Chris Evans");
 let jeremy_l: Person = new Person("Jeremy Legg");
 let andre_l: Person = new Person("Andre Legg");
+let suzie_l: Person = new Person("Suzie Legg");
 let jeremy_w: Person = new Person("Jeremy Watson");
 let john: Person = new Person("John Sutherland");
 
@@ -71,11 +72,18 @@ allie.add_unavailable(csd(2018, 7, 22));
 
 craig.add_unavailable_range(csd(2018, 8, 12), csd(2018, 9, 9));
 
+
 export class NPBCStoreConstruction {
     constructor() {
     }
 
     static SetupStore(person_store: PeopleStore, org_store: OrganizationStore) {
+
+        /*
+        Add specifics here
+        */
+        // daniel.put_on_specific_role_for_date(defaultComputerRole, csd(2018, 6, 17));
+
 
         org_store.addOrganizaton(new Organization("North Porirua Baptist Church"));
 
@@ -91,6 +99,7 @@ export class NPBCStoreConstruction {
         cherilyn.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(cherilyn, defaultKeysRole));
 
         person_store.add_person(christine)
+            .add_role(defaultVocalsRole)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
         // christine.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(christine, defaultVocalsRole));
 
@@ -124,7 +133,7 @@ export class NPBCStoreConstruction {
 
         person_store.add_person(craig)
             .add_role(defaultDrumsRole)
-            .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
+            .set_availability(new AvailabilityEveryNOfM(1, 3));
 
         person_store.add_person(ben)
             .add_role(defaultBass, 1)
@@ -181,6 +190,10 @@ export class NPBCStoreConstruction {
             .add_role(defaultElectricGuitar)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
+        person_store.add_person(suzie_l)
+            .add_role(defaultElectricGuitar)
+            .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
+
         person_store.add_person(jeremy_w)
             .add_role(defaultSoundRole, 2)
             .add_role(defaultComputerRole)
@@ -192,7 +205,6 @@ export class NPBCStoreConstruction {
             .avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
     }
 }
-
 
 
 export class ThamesTest {

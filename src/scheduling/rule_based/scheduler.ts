@@ -42,7 +42,9 @@ class ScheduleWithRules {
         this.logger.debug("Roles (in order of importance): " + JSON.stringify(role_names));
 
         this.facts.begin();
+
         role_groups.forEach(rg => this.process_role_group(rg));
+
         this.process_secondary_actions();
     }
 
@@ -60,6 +62,7 @@ class ScheduleWithRules {
 
             for (let role of role_group) {
                 this.facts.begin_new_role(current_date);
+                // Put everyone who wants to be doing something specifically on a certain date in place first
                 this.process_role(current_date, role, role_group);
             }
 
@@ -74,6 +77,25 @@ class ScheduleWithRules {
             }
 
         }
+    }
+
+    layout_specific_roles(current_date: Date, role: Role): Array<Person> {
+        // Check if anyone has specifics for this date
+        let placed_people = new Array<Person>();
+        this.params.people.people.forEach(person => {
+            // Find out if they want to do something specifically on this day
+            let specificRolesForDate = person.specific_roles_for_date(current_date);
+            if (specificRolesForDate) {
+                let applicable_roles = specificRolesForDate.filter(r => r.uuid == role.uuid);
+                if (applicable_roles) {
+                    applicable_roles.forEach(role => {
+                        this.facts.place_person_in_role(person, role, current_date, true, true, "because they want to be on specifically");
+                        placed_people.push(person);
+                    });
+                }
+            }
+        });
+        return placed_people;
     }
 
     is_role_filled_for_date(role: Role, date: Date) {
@@ -106,10 +128,13 @@ class ScheduleWithRules {
             return;
         }
 
-        this.facts.add_decision("Role: " + role.name, false);
-
         let iteration_max = people_for_this_role.length;
-        while (iteration_max > 0) {
+        let person_placed_into_role = null;
+
+        this.facts.add_decision("Role: " + role.name, false);
+        let specifically_placed_people = this.layout_specific_roles(current_date, role);
+
+        while (iteration_max > 0 && specific_day.number_of_people_in_role(role) < role.maximum_count) {
             iteration_max--;
 
             let next_suitable_person = this.facts.get_next_suitable_person_for(role);
@@ -135,34 +160,40 @@ class ScheduleWithRules {
             // TODO: This could be optional (might not want role_groups being mutually exclusive like this)
             if (_.includes(role_group, next_wanted_role_for_person) && !this.is_role_filled_for_date(next_wanted_role_for_person, current_date)) {
                 if (next_wanted_role_for_person.uuid != role.uuid) {
-                    this.facts.add_decision("Putting " + next_suitable_person.name + " into " + next_wanted_role_for_person + " instead of " + role + " due to a role weighting");
 
-                    this.facts.place_person_in_role(next_suitable_person, next_wanted_role_for_person, current_date);
+                    let other_decision = "Putting " + next_suitable_person.name + " into " + next_wanted_role_for_person + " instead of " + role + " due to a role weighting";
 
-                    this.facts.add_decision("Check role " + role + " again because of weighted placement");
-
-                    // now continue with the loop, because we still havn't found someone for the role we were originally looking for.
-                    continue;
+                    if (this.facts.place_person_in_role(next_suitable_person, next_wanted_role_for_person, current_date, true, true, other_decision)) {
+                        // now continue with the loop, because we still havn't found someone for the role we were originally looking for.
+                        this.facts.add_decision("Check role " + role + " again because of weighted placement");
+                        continue;
+                    }
                 }
             }
 
             // OK. So. Turns out the role is the same.
             // Place the person, and we're done filling this role.
-            this.facts.place_person_in_role(next_suitable_person, role, current_date);
-
-            try {
-                let peopleInRole = specific_day.people_in_role(role);
-                let message = peopleInRole.length + "/" + role.maximum_count + " in " + role;
-                if (peopleInRole.length >= role.maximum_count) {
-                    message += ". Done with role.";
-                    this.facts.add_decision(message);
-                    return;
-                } else {
-                    this.facts.add_decision(message);
-                }
-            } finally {
-                this.facts.end_role(next_suitable_person, role, current_date);
+            let did_place = this.facts.place_person_in_role(next_suitable_person, role, current_date);
+            if (did_place) {
+                person_placed_into_role = next_suitable_person;
             }
+
+            let numberOfPeopleInRole = specific_day.number_of_people_in_role(role);
+            if (numberOfPeopleInRole >= role.maximum_count) {
+                this.facts.add_decision("Done with role.");
+            }
+
+            if (person_placed_into_role) {
+                this.facts.set_decisions_for(person_placed_into_role, role, current_date);
+                person_placed_into_role = null;
+            }
+        }
+
+        if (specifically_placed_people.length) {
+            specifically_placed_people.forEach(p => {
+                this.facts.set_decisions_for(p, role, current_date, false);
+            });
+            this.facts.clear_decisions();
         }
     }
 

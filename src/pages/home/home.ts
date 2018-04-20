@@ -1,5 +1,5 @@
 import {Component} from '@angular/core';
-import {IonicPage, ModalController, NavController} from 'ionic-angular';
+import {IonicPage, NavController} from 'ionic-angular';
 import {RootStore} from "../../state/root";
 import {CSVExporter} from "../../exporters/csv.exporter";
 import {GAPIS} from "../../common/gapis-auth";
@@ -7,6 +7,7 @@ import {SheetSelectionPage} from "../sheet-selection/sheet-selection";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {toJS} from "mobx";
 import {SpreadsheetReader} from "../../common/spreadsheet_reader";
+import {ServerProvider} from "../../providers/server/server";
 
 
 @IonicPage({
@@ -23,13 +24,28 @@ export class HomePage {
     constructor(public navCtrl: NavController,
                 private loggingService: LoggingService,
                 private sheetAPI: GAPIS,
-                private modalController: ModalController,
+                private server: ServerProvider,
+                // private modalController: ModalController,
                 private rootStore: RootStore) {
-        this.logger = loggingService.getLogger("home");
+        this.logger = this.loggingService.getLogger("home");
     }
 
     ionViewDidEnter() {
         this.sheetAPI.init();
+
+        let readyEvent = this.rootStore.ready_event;
+        readyEvent.subscribe(value => {
+            if (value) {
+                this.server.validateLoginToken().subscribe(resp => {
+                    console.log(`Validation returned: ${JSON.stringify(resp)}`);
+                    if (!this.rootStore.ui_store.signed_in) {
+                        this.navCtrl.push('login');
+                    } else {
+
+                    }
+                });
+            }
+        });
     }
 
     clear_selection() {
@@ -118,6 +134,8 @@ export class HomePage {
     }
 
     logout() {
+        // Throw away our login token
+        this.rootStore.ui_store.logout();
         this.sheetAPI.signout();
     }
 }

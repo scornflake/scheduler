@@ -2,7 +2,6 @@ import {Role, RolesStore} from "../state/roles";
 import {PeopleStore, Person} from "../state/people";
 import * as _ from 'lodash';
 import {dayAndHourForDate} from "../common/date-utils";
-import {Unavailablity} from "../state/unavailability";
 
 class ScheduleScore {
     person?: Person;
@@ -37,7 +36,10 @@ class ScheduleInput {
     roles: RolesStore;
     people: PeopleStore;
 
+    manual_layouts: Map<Date, Role>;
+
     constructor(people: PeopleStore = new PeopleStore(), roles: RolesStore = new RolesStore()) {
+        this.manual_layouts = new Map<Date, Role>();
         this.days_per_period = 7;
         this.people = people;
         this.roles = roles;
@@ -105,7 +107,10 @@ class Exclusion {
     }
 
     valueOf() {
-        return JSON.stringify(this);
+        if (this.duration_in_days > 1) {
+            return `${this.start_date.toDateString()} => ${this.end_date.toDateString()}`;
+        }
+        return `${this.start_date.toDateString()}`;
     }
 }
 
@@ -167,6 +172,10 @@ class ScheduleAtDate {
         });
     }
 
+    number_of_people_in_role(role: Role): number {
+        return this.people_in_role(role).length;
+    }
+
     roles_of_person(person: Person): Array<Role> {
         let persons_score = this.people_score.get(person);
         if (!persons_score) {
@@ -182,7 +191,7 @@ class ScheduleAtDate {
         return this.date.toDateString() + " - " + _.join(names_with_tasks, ',');
     }
 
-    set_facts(person: Person, role: Role, decisions: Array<string>) {
+    set_decisions(person: Person, role: Role, decisions: Array<string>) {
         if (!this.people_score.has(person)) {
             throw Error("Cant set facts, no person");
         }
@@ -206,11 +215,15 @@ class ScheduleAtDate {
                 });
                 let new_score = to_date.score_for(owner);
                 new_score.decisions = new_score.decisions.concat(score.decisions);
-                if(reason) {
+                if (reason) {
                     new_score.decisions.push(reason)
                 }
             }
         }
+    }
+
+    can_place_person_in_role(person: Person, role: Role) {
+        return this.number_of_people_in_role(role) < role.maximum_count;
     }
 }
 

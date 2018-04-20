@@ -10,7 +10,7 @@ import {
     WeightedRoles
 } from "../scheduling/rule_based/rules";
 import {BaseStore, ObjectWithUUID} from "./common";
-import {throwOnInvalidDate} from "../common/date-utils";
+import {dayAndHourForDate, throwOnInvalidDate} from "../common/date-utils";
 import {RuleFacts} from "../scheduling/rule_based/rule-facts";
 
 import * as _ from "lodash";
@@ -18,9 +18,10 @@ import {Unavailablity} from "./unavailability";
 
 class Person extends ObjectWithUUID {
     public name: string;
-    public email: string;
 
     primary_roles: Map<Role, number>;
+    specific_roles: Map<string, Array<Role>>;
+
     @observable unavailable: Array<Unavailablity>;
     @observable prefs: SchedulePrefs;
 
@@ -32,10 +33,11 @@ class Person extends ObjectWithUUID {
     // in maps, which is a pain.
     // secondary_roles: Map<string, Array<Role>>;
 
-    constructor(name: string) {
+    constructor(name: string = "put name here") {
         super();
         this.name = name;
         this.primary_roles = new Map<Role, number>();
+        this.specific_roles = new Map<string, Array<Role>>();
         this.secondary_action_list = [];
         this.condition_rules = [];
         this.unavailable = [];
@@ -58,6 +60,20 @@ class Person extends ObjectWithUUID {
         rules.push(weighting);
 
         return rules;
+    }
+
+    put_on_specific_role_for_date(role: Role, date: Date) {
+        let key = dayAndHourForDate(date);
+        if (!this.specific_roles.has(key)) {
+            this.specific_roles.set(key, new Array<Role>());
+        }
+        let role_list = this.specific_roles.get(key);
+        role_list.push(role);
+    }
+
+    specific_roles_for_date(date: Date): Array<Role> {
+        let key = dayAndHourForDate(date);
+        return this.specific_roles.get(key);
     }
 
     @computed
@@ -98,7 +114,7 @@ class Person extends ObjectWithUUID {
     }
 
     add_secondary_action(action: SecondaryAction) {
-        if(action) {
+        if (action) {
             // Assign the owner
             action.owner = this;
             this.secondary_action_list.push(action);

@@ -4,13 +4,13 @@ import {SavedState, UIStore} from "./UIState";
 import {ApplicationRef, Injectable} from "@angular/core";
 import {Storage} from "@ionic/storage";
 import {NPBCStoreConstruction} from "../providers/store/test.store";
-import {autorun, IReactionDisposer, toJS} from "mobx";
+import {action, autorun, computed, IReactionDisposer, observable, toJS} from "mobx";
 import {ScheduleInput} from "../scheduling/common";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import {OrganizationStore} from "./organization";
-import {action, computed, observable} from "mobx";
 import {csd} from "../common/date-utils";
 import {Logger, LoggingService} from "ionic-logging-service";
+import {Observable} from "rxjs/Observable";
 
 const SAVED_STATE_KEY = 'saved_state';
 
@@ -24,11 +24,15 @@ class RootStore {
     @observable schedule: ScheduleWithRules;
     @observable previous_schedule: ScheduleWithRules;
 
+    ready_event: Observable<boolean>;
+
     private regenerator: IReactionDisposer;
     private saving: IReactionDisposer;
     private logger: Logger;
 
-    constructor(private storage: Storage, private loggingService: LoggingService, private appRef:ApplicationRef) {
+    constructor(private storage: Storage,
+                private loggingService: LoggingService,
+                private appRef: ApplicationRef) {
         this.people_store = new PeopleStore();
         this.roles_store = new RolesStore();
         this.organization_store = new OrganizationStore();
@@ -38,17 +42,25 @@ class RootStore {
         NPBCStoreConstruction.SetupStore(this.people_store, this.organization_store);
         // ThamesTest.SetupStore(this);
 
-        this.storage.get(SAVED_STATE_KEY).then((state) => {
-            if (state) {
-                this.logger.info("Restored saved state: " + JSON.stringify(state));
-                this.ui_store.saved_state = Object.assign(new SavedState(), state)
-            } else {
-                this.logger.info("Setup state first time");
-                this.ui_store.saved_state = new SavedState();
-            }
-            this.setupSaving();
-        });
+        this.load();
+    }
 
+    private load() {
+        this.ready_event = Observable.create(obs => {
+            this.storage.get(SAVED_STATE_KEY).then((state) => {
+                if (state) {
+                    this.logger.info("Restored saved state: " + JSON.stringify(state));
+                    this.ui_store.saved_state = Object.assign(new SavedState(), state)
+                } else {
+                    this.logger.info("Setup state first time");
+                    this.ui_store.saved_state = new SavedState();
+                }
+                this.setupSaving();
+                obs.next(true);
+                obs.complete();
+            });
+        });
+        this.ready_event.subscribe();
     }
 
     @action

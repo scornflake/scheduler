@@ -2,6 +2,7 @@ import {observable} from "mobx";
 import {Person} from "./people";
 import {throwOnInvalidDate} from "../common/date-utils";
 import {RuleFacts} from "../scheduling/rule_based/rule-facts";
+import {Role} from "./roles";
 
 export enum AvailabilityUnit {
     // Models availability such as "every 4 weeks".
@@ -81,9 +82,15 @@ export class AvailabilityEveryNOfM extends Availability {
         // Count the number of times this person has done something
         let number_of_placements = facts.placements_for_person(person, start_date, end_date);
         let num_placements = number_of_placements.length;
-        let is_available = num_placements <= this.period;
-        if (is_available && record_unavailability) {
-            facts.add_decision(" - Unavailable. Rule is every " + num_placements + " out of " + this.period_to_look_at + ". Would cause" + num_placements + " out of " + this.period);
+        let is_available = num_placements < this.period;
+        if (record_unavailability) {
+            facts.add_decision(`Looking between ${start_date.toDateString()} and ${end_date.toDateString()}. Have ${num_placements} in those dates`);
+            let rule = `Rule is every ${this.period} of ${this.period_to_look_at}`;
+            if (is_available) {
+                facts.add_decision(` - Available. ${rule}. Would cause ${num_placements + 1} out of ${this.period_to_look_at}`);
+            } else {
+                facts.add_decision(` - Unavailable. ${rule}. Would cause ${num_placements + 1} out of ${this.period_to_look_at}`);
+            }
         }
         return is_available;
     }

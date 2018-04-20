@@ -7,9 +7,9 @@ import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import {Subject} from "rxjs/Subject";
 import {fromPromise} from "rxjs/observable/fromPromise"
 
-declare namespace gapi.client {
-    const sheets: any;
-}
+// declare namespace gapi.client {
+//     const sheets: any;
+// }
 
 import * as _ from 'lodash';
 import {Logger, LoggingService} from "ionic-logging-service";
@@ -104,7 +104,8 @@ class GAPIS {
 
     private updateSigninStatus(isSignedIn: boolean) {
         this.logger.info("Updating signed in state to: " + isSignedIn);
-        this.ui_store.signed_in = isSignedIn;
+        let store = this.ui_store;
+        store.signed_in_to_google = isSignedIn;
         this.appRef.tick();
     }
 
