@@ -54,6 +54,9 @@ jeremy_selfe.add_unavailable(csd(2018, 6, 3));
 jeremy_selfe.add_unavailable(csd(2018, 7, 1));
 
 cherilyn.add_unavailable_range(csd(2018, 7, 14), csd(2018, 7, 29));
+cherilyn.add_unavailable(csd(2018, 6, 17), 'ob meeting');
+cherilyn.add_unavailable(csd(2018, 7, 1), 'ob meeting');
+cherilyn.add_unavailable(csd(2018, 8, 19), 'mental health!');
 
 christine.add_unavailable(csd(2018, 5, 6));
 christine.add_unavailable(csd(2018, 6, 17));
