@@ -14,6 +14,10 @@
         "logLevel": "INFO"
       },
       {
+        "loggerName": "server",
+        "logLevel": "INFO"
+      },
+      {
         "loggerName": "home",
         "logLevel": "INFO"
       },

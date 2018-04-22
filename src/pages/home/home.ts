@@ -135,7 +135,7 @@ export class HomePage {
 
     logout() {
         // Throw away our login token
-        this.rootStore.ui_store.logout();
+        // this.rootStore.ui_store.logout();
         this.sheetAPI.signout();
     }
 }

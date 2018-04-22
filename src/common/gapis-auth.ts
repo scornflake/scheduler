@@ -18,9 +18,9 @@ import {LoggingWrapper} from "./logging-wrapper";
 import Spreadsheet = gapi.client.sheets.Spreadsheet;
 import Sheet = gapi.client.sheets.Sheet;
 import ValueRange = gapi.client.sheets.ValueRange;
+import {ServerProvider} from "../providers/server/server";
 
 const API_KEY = "AIzaSyCVhzG0pEB1NfZsxpdPPon3XhEK4pctEYE";
-
 
 
 @Injectable()
@@ -32,6 +32,7 @@ class GAPIS {
 
     constructor(private rootStore: RootStore,
                 private loggingService: LoggingService,
+                private server: ServerProvider,
                 private appRef: ApplicationRef) {
         this.logger = LoggingWrapper.getLogger("google");
     }
@@ -52,7 +53,20 @@ class GAPIS {
             this.init(this.authenticate);
             return;
         }
-        gapi.auth2.getAuthInstance().signIn();
+        // gapi.auth2.getAuthInstance().signIn();
+        gapi.auth2.getAuthInstance().grantOfflineAccess().then(this.offlineAccess.bind(this));
+
+    }
+
+    offlineAccess(json) {
+        const {code} = json;
+        this.server.storeGoogleAccessCode(code).subscribe(r => {
+            if (!r.ok) {
+                this.logger.error(r.reason)
+            } else {
+                this.logger.info("Server stored and converted the one-time code to a token!");
+            }
+        })
     }
 
     signout() {

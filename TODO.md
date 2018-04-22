@@ -9,6 +9,8 @@ Opps
 
 
 - Two logins. One account, then the google stuff. We prob need to begin storing the google tokens as part of the user profile so they can be used by he UI. The UI would need to then persist these on the server.
-
+  - Have token on server for the user. Done.
+  - Allow a client to auth to google. I think that auth can be restored automatically (via GAPI).
+  - Snapshots and such could be taken by the client, processed, and stored on the server so the client doesn't ALWAYS have to process them
 
 - Get the tests going. They don't run. Karma complains about a lack of a constructor. Gee this JS/transpiling is pretty .... "Crap-O"
