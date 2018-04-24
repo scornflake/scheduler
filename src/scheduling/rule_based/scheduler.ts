@@ -1,9 +1,9 @@
 import {ScheduleAtDate, ScheduleInput} from "../common";
-import {Role} from "../../state/roles";
-import {Person} from "../../state/people";
+import {Role} from "../tests/roles";
+import {Person} from "../people";
 import * as _ from 'lodash';
 import {Logger} from "ionic-logging-service";
-import {dayAndHourForDate} from "../../common/date-utils";
+import {dayAndHourForDate} from "../common/date-utils";
 import {RuleFacts} from "./rule-facts";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 

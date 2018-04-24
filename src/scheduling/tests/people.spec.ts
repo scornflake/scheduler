@@ -1,6 +1,6 @@
-import {PeopleStore, Person} from "./people";
+import {PeopleStore, Person} from "../people";
 import {defaultKeysRole, defaultLeaderRole, Role, RolesStore} from "./roles";
-import {AssignedToRoleCondition, ScheduleOn} from "../scheduling/rule_based/rules";
+import {AssignedToRoleCondition, ScheduleOn} from "../rule_based/rules";
 import {csd} from "../common/date-utils";
 
 describe('people, ', () => {

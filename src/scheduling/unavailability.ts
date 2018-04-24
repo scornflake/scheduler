@@ -1,5 +1,5 @@
-import {ObjectWithUUID} from "./common";
-import {dayAndHourForDate} from "../common/date-utils";
+import {ObjectWithUUID} from "./common/base_model";
+import {dayAndHourForDate} from "./common/date-utils";
 
 export {Unavailablity};
 

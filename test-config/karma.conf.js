@@ -1,31 +1,23 @@
-var webpackConfig = require('./webpack.test.js');
+const webpackConfig = require('./webpack.test.js');
 
 module.exports = function (config) {
-    var _config = {
-        basePath: '../',
+    const _config = {
+        basePath: '',
 
-        frameworks: ['jasmine'],
+        frameworks: [
+            'jasmine'
+            // 'jasmine-matchers'
+        ],
 
         files: [
             {
-                pattern: './test-config/karma-test-shim.js',
+                pattern: './karma-test-shim.js',
                 watched: true
-            },
-            {
-                pattern: './src/assets/**/*',
-                watched: false,
-                included: false,
-                served: true,
-                nocache: false
             }
         ],
 
-        proxies: {
-            '/assets/': '/base/src/assets/'
-        },
-
         preprocessors: {
-            './test-config/karma-test-shim.js': ['webpack', 'sourcemap']
+            './karma-test-shim.js': ['webpack', 'sourcemap']
         },
 
         webpack: webpackConfig,
@@ -44,12 +36,9 @@ module.exports = function (config) {
             terminal: true
         },
 
-        coverageIstanbulReporter: {
-            reports: [ 'html', 'lcovonly' ],
-            fixWebpackSourcePaths: true
-        },
-
-        reporters: config.coverage ? ['kjhtml', 'dots', 'coverage-istanbul'] : ['kjhtml', 'dots'],
+        // reporters: ['kjhtml', 'dots'],
+        reporters: ['dots'],
+        // reporters: ['kjhtml'],
         port: 9876,
         colors: true,
         logLevel: config.LOG_INFO,

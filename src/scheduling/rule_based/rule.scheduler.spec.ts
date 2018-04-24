@@ -1,4 +1,4 @@
-import {PeopleStore, Person} from "../../state/people";
+import {PeopleStore, Person} from "../people";
 import {ScheduleInput} from "../common";
 import {
     defaultAcousticGuitar,
@@ -7,12 +7,12 @@ import {
     defaultSpeakerRole,
     defaultThemeRole,
     Role
-} from "../../state/roles";
+} from "../tests/roles";
 import {ScheduleWithRules} from "./scheduler";
-import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../../state/scheduling-types";
+import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../tests/scheduling-types";
 import includes from 'lodash/includes';
-import {CSVExporter} from "../../exporters/csv.exporter";
-import {addDaysToDate, constructSensibleDate} from "../../common/date-utils";
+import {CSVExporter} from "../exporter/csv.exporter";
+import {addDaysToDate, constructSensibleDate} from "../common/date-utils";
 
 describe('role scheduler', () => {
     let person_store: PeopleStore;

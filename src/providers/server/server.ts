@@ -4,8 +4,8 @@ import {ConfigurationService} from "ionic-configuration-service";
 import {LoginResponse, ValidationResponse} from "../../common/interfaces";
 import {Observable} from "rxjs/Observable";
 import "rxjs/add/operator/map";
-import {RootStore} from "../../state/root";
 import {Logger, LoggingService} from "ionic-logging-service";
+import {RootStore} from "../../store/root";
 
 @Injectable()
 export class ServerProvider {

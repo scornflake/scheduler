@@ -1,11 +1,11 @@
 import {ApplicationRef, Component, Input} from '@angular/core';
 import {isArray} from "util";
-import {Person} from "../../state/people";
-import {RootStore} from "../../state/root";
+import {Person} from "../../scheduling/people";
 import {PopoverController} from "ionic-angular";
 import {ReasonsComponent} from "../reasons/reasons";
 import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
 import {computed} from "mobx";
+import {RootStore} from "../../store/root";
 
 @Component({
     // changeDetection: ChangeDetectionStrategy.OnPush,

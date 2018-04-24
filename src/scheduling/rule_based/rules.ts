@@ -1,10 +1,10 @@
 import * as _ from 'lodash';
-import {Role} from "../../state/roles";
-import {Person} from "../../state/people";
+import {Role} from "../tests/roles";
+import {Person} from "../people";
 import {Logger} from "ionic-logging-service";
 import {RuleFacts} from "./rule-facts";
 import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Availability} from "../../state/scheduling-types";
+import {Availability} from "../tests/scheduling-types";
 import {daysBetween, ScheduleAtDate} from "../common";
 import {ScheduleWithRules} from "./scheduler";
 

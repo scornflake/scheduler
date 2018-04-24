@@ -1,5 +1,5 @@
-import {Unavailablity} from "../state/unavailability";
-import {dayAndHourForDate, parseDateFromSpreadsheetDate} from "../common/date-utils";
+import {dayAndHourForDate, parseDateFromSpreadsheetDate} from "./common/date-utils";
+import {Unavailablity} from "./unavailability";
 
 describe('unavailability', () => {
     it('can parse dates', () => {

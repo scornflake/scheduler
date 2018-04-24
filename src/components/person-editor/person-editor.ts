@@ -1,10 +1,10 @@
 import {Component} from '@angular/core';
 import includes from 'lodash/includes';
 import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
-import {UIStore} from "../../state/UIState";
-import {RootStore} from "../../state/root";
 import {computed} from "mobx";
-import {Person} from "../../state/people";
+import {Person} from "../../scheduling/people";
+import {RootStore} from "../../store/root";
+import {UIStore} from "../../store/UIState";
 
 @Component({
     // changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,7 +1,7 @@
 import {ScheduleAtDate} from "../common";
-import {Person} from "../../state/people";
-import {defaultBass, defaultLeaderRole, defaultSoundRole, defaultThemeRole} from "../../state/roles";
-import {constructSensibleDate} from "../../common/date-utils";
+import {Person} from "../people";
+import {defaultBass, defaultSoundRole} from "../tests/roles";
+import {constructSensibleDate} from "../common/date-utils";
 
 describe('schedule', () => {
     it('should be able to construct non retarded dates', function () {

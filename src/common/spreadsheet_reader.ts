@@ -1,4 +1,4 @@
-import {parseDateFromSpreadsheetDate, parseMomentDateFromSpreadsheetDate} from "./date-utils";
+import {parseDateFromSpreadsheetDate, parseMomentDateFromSpreadsheetDate} from "../scheduling/common/date-utils";
 import {isDefined, isUndefined} from "ionic-angular/util/util";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import * as moment from "moment";
@@ -6,7 +6,7 @@ import {Moment} from "moment";
 import {ScheduleInput} from "../scheduling/common";
 import {Logger} from "ionic-logging-service";
 import {NPBCStoreConstruction} from "../providers/store/test.store";
-import {OrganizationStore} from "../state/organization";
+import {OrganizationStore} from "../scheduling/organization";
 import {LoggingWrapper} from "./logging-wrapper";
 
 export class SpreadsheetReader {

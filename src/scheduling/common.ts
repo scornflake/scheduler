@@ -1,7 +1,7 @@
-import {Role, RolesStore} from "../state/roles";
-import {PeopleStore, Person} from "../state/people";
+import {Role, RolesStore} from "./tests/roles";
+import {PeopleStore, Person} from "./people";
 import * as _ from 'lodash';
-import {dayAndHourForDate} from "../common/date-utils";
+import {dayAndHourForDate} from "./common/date-utils";
 
 class ScheduleScore {
     person?: Person;

@@ -1,4 +1,4 @@
-import {Role} from "./roles";
+import {Role} from "../../scheduling/tests/roles";
 import {autorun} from "mobx";
 
 describe('role mobx tests', () => {

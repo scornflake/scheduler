@@ -1,24 +1,24 @@
+///<reference path="./fix.broken.gapi.types.d.ts"/>
+///<reference path="../../node_modules/@types/gapi.client.sheets/index.d.ts"/>
 import {ApplicationRef, Injectable} from "@angular/core";
 import {credentials, DISCOVERY_DOCS, SCOPES} from "./auth-common";
-import {RootStore} from "../state/root";
-import {SavedState, UIStore} from "../state/UIState";
 import {Observable} from "rxjs/Observable";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import {Subject} from "rxjs/Subject";
 import {fromPromise} from "rxjs/observable/fromPromise"
 
-// declare namespace gapi.client {
-//     const sheets: any;
-// }
-
 import * as _ from 'lodash';
+
 import {Logger, LoggingService} from "ionic-logging-service";
-import {formatDateForGoogleSpreadsheet} from "./date-utils";
+import {formatDateForGoogleSpreadsheet} from "../scheduling/common/date-utils";
 import {LoggingWrapper} from "./logging-wrapper";
+import {ServerProvider} from "../providers/server/server";
+
 import Spreadsheet = gapi.client.sheets.Spreadsheet;
 import Sheet = gapi.client.sheets.Sheet;
 import ValueRange = gapi.client.sheets.ValueRange;
-import {ServerProvider} from "../providers/server/server";
+import {RootStore} from "../store/root";
+import {SavedState, UIStore} from "../store/UIState";
 
 const API_KEY = "AIzaSyCVhzG0pEB1NfZsxpdPPon3XhEK4pctEYE";
 

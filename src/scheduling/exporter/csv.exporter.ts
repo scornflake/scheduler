@@ -1,6 +1,6 @@
 import json2csv from "json2csv";
 import fileSaver from "file-saver";
-import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
+import {ScheduleWithRules} from "../rule_based/scheduler";
 import * as _ from 'lodash';
 
 class CSVExporter {

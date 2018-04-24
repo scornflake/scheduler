@@ -1,4 +1,4 @@
-import {BaseStore, ObjectWithUUID} from "./common";
+import {BaseStore, ObjectWithUUID} from "../common/base_model";
 
 describe('base', () => {
     let store;

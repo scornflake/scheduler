@@ -1,5 +1,5 @@
-import {PeopleStore} from "./people";
-import {RolesStore} from "./roles";
+import {PeopleStore} from "../scheduling/people";
+import {RolesStore} from "../scheduling/tests/roles";
 import {SavedState, UIStore} from "./UIState";
 import {ApplicationRef, Injectable} from "@angular/core";
 import {Storage} from "@ionic/storage";
@@ -7,8 +7,8 @@ import {NPBCStoreConstruction} from "../providers/store/test.store";
 import {action, autorun, computed, IReactionDisposer, observable, toJS} from "mobx";
 import {ScheduleInput} from "../scheduling/common";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
-import {OrganizationStore} from "./organization";
-import {csd} from "../common/date-utils";
+import {OrganizationStore} from "../scheduling/organization";
+import {csd} from "../scheduling/common/date-utils";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
 
@@ -81,7 +81,7 @@ class RootStore {
         this.previous_schedule = schedule;
         this.schedule = null;
 
-        this.generate_schedule();
+        // this.generate_schedule();
     }
 
     @computed
@@ -100,7 +100,7 @@ class RootStore {
         });
         this.regenerator = autorun(() => {
             this.logger.info("Generate schedule...");
-            this.generate_schedule();
+            // this.generate_schedule();
         });
     }
 }

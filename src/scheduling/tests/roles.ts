@@ -1,7 +1,7 @@
 import {action, observable} from "mobx";
-import {PeopleStore, Person} from "./people";
-import {OnThisDate, Rule, UsageWeightedSequential} from "../scheduling/rule_based/rules";
-import {BaseStore, ObjectWithUUID} from "./common";
+import {PeopleStore, Person} from "../people";
+import {OnThisDate, Rule, UsageWeightedSequential} from "../rule_based/rules";
+import {BaseStore, ObjectWithUUID} from "../common/base_model";
 import {isUndefined} from "ionic-angular/util/util";
 
 export class Role extends ObjectWithUUID {

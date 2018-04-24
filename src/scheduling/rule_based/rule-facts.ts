@@ -1,8 +1,8 @@
 import {FixedRoleOnDate, OnThisDate, Rule, UsageWeightedSequential, WeightedRoles} from "./rules";
-import {Role, RolesStore} from "../../state/roles";
+import {Role, RolesStore} from "../tests/roles";
 import {Logger} from "ionic-logging-service";
-import {dayAndHourForDate, throwOnInvalidDate} from "../../common/date-utils";
-import {PeopleStore, Person} from "../../state/people";
+import {dayAndHourForDate, throwOnInvalidDate} from "../common/date-utils";
+import {PeopleStore, Person} from "../people";
 import {Exclusion, ScheduleAtDate} from "../common";
 import {isUndefined} from "ionic-angular/util/util";
 import {LoggingWrapper} from "../../common/logging-wrapper";

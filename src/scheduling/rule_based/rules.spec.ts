@@ -1,6 +1,6 @@
 import {FixedRoleOnDate, OnThisDate, UsageWeightedSequential, WeightedRoles} from "./rules";
-import {PeopleStore, Person} from "../../state/people";
-import {defaultSoundRole, Role, RolesStore} from "../../state/roles";
+import {PeopleStore, Person} from "../people";
+import {defaultSoundRole, Role, RolesStore} from "../tests/roles";
 import {RuleFacts} from "./rule-facts";
 
 describe('rules', () => {

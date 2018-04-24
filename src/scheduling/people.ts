@@ -1,6 +1,6 @@
 import {action, computed, observable} from "mobx";
-import {Role} from "./roles";
-import {Availability, AvailabilityUnit, SchedulePrefs} from "./scheduling-types";
+import {Role} from "./tests/roles";
+import {Availability, AvailabilityUnit, SchedulePrefs} from "./tests/scheduling-types";
 import {isUndefined} from "util";
 import {
     AssignedToRoleCondition,
@@ -8,16 +8,16 @@ import {
     Rule,
     SecondaryAction,
     WeightedRoles
-} from "../scheduling/rule_based/rules";
-import {BaseStore, ObjectWithUUID} from "./common";
-import {dayAndHourForDate, throwOnInvalidDate} from "../common/date-utils";
-import {RuleFacts} from "../scheduling/rule_based/rule-facts";
+} from "./rule_based/rules";
+import {BaseStore, ObjectWithUUID} from "./common/base_model";
+import {dayAndHourForDate, throwOnInvalidDate} from "./common/date-utils";
+import {RuleFacts} from "./rule_based/rule-facts";
 
-import * as _ from "lodash";
 import {Unavailablity} from "./unavailability";
+import * as _ from "lodash";
 
-class Person extends ObjectWithUUID {
-    public name: string;
+export class Person extends ObjectWithUUID {
+    name: string;
 
     primary_roles: Map<Role, number>;
     specific_roles: Map<string, Array<Role>>;
@@ -267,6 +267,3 @@ export class PeopleStore extends BaseStore<Person> {
 }
 
 
-export {
-    Person
-}

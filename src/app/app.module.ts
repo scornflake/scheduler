@@ -11,7 +11,6 @@ import {StatusBar} from '@ionic-native/status-bar';
 import {SplashScreen} from '@ionic-native/splash-screen';
 import {ComponentsModule} from "../components/components.module";
 import {NgPipesModule} from "angular-pipes";
-import {RootStore} from "../state/root";
 import {ApolloModule} from "apollo-angular";
 import {HttpLinkModule} from "apollo-angular-link-http";
 import {HttpClientModule} from "@angular/common/http";
@@ -25,6 +24,7 @@ import {loadConfiguration} from "./logging-configuration";
 import {ServerProvider} from "../providers/server/server";
 import {HomePageModule} from "../pages/home/home.module";
 import {LoginPageModule} from "../pages/login/login.module";
+import {RootStore} from "../store/root";
 
 // export function defaultDSPSetup(apollo, link) {
 //     return new DataStoreProvider(apollo, link, defaultConfiguration);

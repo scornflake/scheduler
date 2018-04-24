@@ -1,8 +1,7 @@
 import {observable} from "mobx";
-import {Person} from "./people";
+import {Person} from "../people";
 import {throwOnInvalidDate} from "../common/date-utils";
-import {RuleFacts} from "../scheduling/rule_based/rule-facts";
-import {Role} from "./roles";
+import {RuleFacts} from "../rule_based/rule-facts";
 
 export enum AvailabilityUnit {
     // Models availability such as "every 4 weeks".

@@ -9,14 +9,14 @@ import {
     defaultSaxRole,
     defaultSoundRole,
     defaultVocalsRole
-} from "../../state/roles";
+} from "../../scheduling/tests/roles";
 
-import {PeopleStore, Person} from "../../state/people";
-import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../../state/scheduling-types";
-import {RootStore} from "../../state/root";
+import {PeopleStore, Person} from "../../scheduling/people";
+import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../../scheduling/tests/scheduling-types";
 import {ScheduleOn, TryToScheduleWith} from "../../scheduling/rule_based/rules";
-import {Organization, OrganizationStore} from "../../state/organization";
-import {csd} from "../../common/date-utils";
+import {Organization, OrganizationStore} from "../../scheduling/organization";
+import {csd} from "../../scheduling/common/date-utils";
+import {RootStore} from "../../store/root";
 
 let neil: Person = new Person("Neil Clayton");
 let cherilyn: Person = new Person("Cherilyn Clayton");
