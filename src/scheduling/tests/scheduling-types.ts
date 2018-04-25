@@ -2,6 +2,8 @@ import {observable} from "mobx";
 import {Person} from "../people";
 import {throwOnInvalidDate} from "../common/date-utils";
 import {RuleFacts} from "../rule_based/rule-facts";
+import {Logger} from "ionic-logging-service";
+import {LoggingWrapper} from "../../common/logging-wrapper";
 
 export enum AvailabilityUnit {
     // Models availability such as "every 4 weeks".
@@ -18,10 +20,12 @@ export enum AvailabilityUnit {
 export class Availability {
     period: number;
     unit: AvailabilityUnit;
+    protected logger: Logger;
 
     constructor(period: number = 1, unit: AvailabilityUnit = AvailabilityUnit.AVAIL_ANYTIME) {
         this.period = period;
         this.unit = unit;
+        this.logger = LoggingWrapper.getLogger("scheduler.availability");
     }
 
     get_end_date_from(date: Date) {
@@ -78,10 +82,14 @@ export class AvailabilityEveryNOfM extends Availability {
             // facts.add_decision("Checking from " + start_date.toDateString() + " to " + end_date.toDateString());
         }
 
+
         // Count the number of times this person has done something
         let number_of_placements = facts.placements_for_person(person, start_date, end_date);
         let num_placements = number_of_placements.length;
         let is_available = num_placements < this.period;
+
+        this.logger.info(`${person.name} is available: ${is_available}. ${num_placements} < ${this.period}`);
+
         if (record_unavailability) {
             facts.add_decision(`Looking between ${start_date.toDateString()} and ${end_date.toDateString()}. Have ${num_placements} in those dates`);
             let rule = `Rule is every ${this.period} of ${this.period_to_look_at}`;

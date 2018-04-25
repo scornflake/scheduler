@@ -18,69 +18,68 @@ import {Organization, OrganizationStore} from "../../scheduling/organization";
 import {csd} from "../../scheduling/common/date-utils";
 import {RootStore} from "../../store/root";
 
-let neil: Person = new Person("Neil Clayton");
-let cherilyn: Person = new Person("Cherilyn Clayton");
-let kylie: Person = new Person("Kylie Welch-Herekiuha");
-let christine: Person = new Person("Christine Edlin");
-let stuart: Person = new Person("Stuart Campbell");
-let jeremy_selfe: Person = new Person("Jeremy Selfe");
-
-let daniel: Person = new Person("Daniel Gibbs");
-let ben: Person = new Person("Ben Watson");
-let courtney: Person = new Person("Courtney Anderson");
-let robs: Person = new Person("Rob Sweeney");
-let robp: Person = new Person("Rob Penhey");
-let dave: Person = new Person("Dave Humphries");
-let ralph: Person = new Person("Ralph Lambert");
-let anita: Person = new Person("Anita Lambert");
-let annie: Person = new Person("Annie McMullen");
-let jo: Person = new Person("Jo Marquet");
-let allie: Person = new Person("Allie Pope");
-let craig: Person = new Person("Craig Campbell");
-
-let chris: Person = new Person("Chris Evans");
-let jeremy_l: Person = new Person("Jeremy Legg");
-let andre_l: Person = new Person("Andre Legg");
-let suzie_l: Person = new Person("Suzie Legg");
-let jeremy_w: Person = new Person("Jeremy Watson");
-let john: Person = new Person("John Sutherland");
-
-/*
-Add unavailability here
- */
-chris.add_unavailable(csd(2018, 7, 15));
-
-jeremy_selfe.add_unavailable(csd(2018, 6, 3));
-jeremy_selfe.add_unavailable(csd(2018, 7, 1));
-
-cherilyn.add_unavailable_range(csd(2018, 7, 14), csd(2018, 7, 29));
-cherilyn.add_unavailable(csd(2018, 6, 17), 'ob meeting');
-cherilyn.add_unavailable(csd(2018, 7, 1), 'ob meeting');
-cherilyn.add_unavailable(csd(2018, 8, 19), 'mental health!');
-
-christine.add_unavailable(csd(2018, 5, 6));
-christine.add_unavailable(csd(2018, 6, 17));
-christine.add_unavailable(csd(2018, 7, 22));
-
-jeremy_l.add_unavailable(csd(2018, 6, 17));
-
-jeremy_w.add_unavailable(csd(2018, 6, 3));
-jeremy_w.add_unavailable(csd(2018, 7, 8));
-jeremy_w.add_unavailable(csd(2018, 7, 22));
-
-stuart.add_unavailable_range(csd(2018, 8, 12), csd(2018, 9, 9));
-
-allie.add_unavailable(csd(2018, 6, 3));
-allie.add_unavailable(csd(2018, 7, 22));
-
-craig.add_unavailable_range(csd(2018, 8, 12), csd(2018, 9, 9));
-
 
 export class NPBCStoreConstruction {
     constructor() {
     }
 
     static SetupStore(person_store: PeopleStore, org_store: OrganizationStore) {
+        let neil: Person = new Person("Neil Clayton");
+        let cherilyn: Person = new Person("Cherilyn Clayton");
+        let kylie: Person = new Person("Kylie Welch-Herekiuha");
+        let christine: Person = new Person("Christine Edlin");
+        let stuart: Person = new Person("Stuart Campbell");
+        let jeremy_selfe: Person = new Person("Jeremy Selfe");
+
+        let daniel: Person = new Person("Daniel Gibbs");
+        let ben: Person = new Person("Ben Watson");
+        let courtney: Person = new Person("Courtney Anderson");
+        let robs: Person = new Person("Rob Sweeney");
+        let robp: Person = new Person("Rob Penhey");
+        let dave: Person = new Person("Dave Humphries");
+        let ralph: Person = new Person("Ralph Lambert");
+        let anita: Person = new Person("Anita Lambert");
+        let annie: Person = new Person("Annie McMullen");
+        let jo: Person = new Person("Jo Marquet");
+        let allie: Person = new Person("Allie Pope");
+        let craig: Person = new Person("Craig Campbell");
+
+        let chris: Person = new Person("Chris Evans");
+        let jeremy_l: Person = new Person("Jeremy Legg");
+        let andre_l: Person = new Person("Andre Legg");
+        let suzie_l: Person = new Person("Suzie Legg");
+        let jeremy_w: Person = new Person("Jeremy Watson");
+        let john: Person = new Person("John Sutherland");
+
+        /*
+        Add unavailability here
+         */
+        chris.add_unavailable(csd(2018, 7, 15));
+
+        jeremy_selfe.add_unavailable(csd(2018, 6, 3));
+        jeremy_selfe.add_unavailable(csd(2018, 7, 1));
+
+        cherilyn.add_unavailable_range(csd(2018, 7, 14), csd(2018, 7, 29));
+        cherilyn.add_unavailable(csd(2018, 6, 17), 'ob meeting');
+        cherilyn.add_unavailable(csd(2018, 7, 1), 'ob meeting');
+        cherilyn.add_unavailable(csd(2018, 8, 19), 'mental health!');
+
+        christine.add_unavailable(csd(2018, 5, 6));
+        christine.add_unavailable(csd(2018, 6, 17));
+        christine.add_unavailable(csd(2018, 7, 22));
+
+        jeremy_l.add_unavailable(csd(2018, 6, 17));
+
+        jeremy_w.add_unavailable(csd(2018, 6, 3));
+        jeremy_w.add_unavailable(csd(2018, 7, 8));
+        jeremy_w.add_unavailable(csd(2018, 7, 22));
+
+        stuart.add_unavailable_range(csd(2018, 8, 12), csd(2018, 9, 9));
+
+        allie.add_unavailable(csd(2018, 6, 3));
+        allie.add_unavailable(csd(2018, 7, 22));
+
+        craig.add_unavailable_range(csd(2018, 8, 12), csd(2018, 9, 9));
 
         /*
         Add specifics here

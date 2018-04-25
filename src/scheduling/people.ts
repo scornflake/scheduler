@@ -1,7 +1,6 @@
 import {action, computed, observable} from "mobx";
 import {Role} from "./tests/roles";
 import {Availability, AvailabilityUnit, SchedulePrefs} from "./tests/scheduling-types";
-import {isUndefined} from "util";
 import {
     AssignedToRoleCondition,
     ConditionalRule,
@@ -15,6 +14,7 @@ import {RuleFacts} from "./rule_based/rule-facts";
 
 import {Unavailablity} from "./unavailability";
 import * as _ from "lodash";
+import {isUndefined} from "util";
 
 export class Person extends ObjectWithUUID {
     name: string;

@@ -23,7 +23,6 @@ export class LoggingWrapper {
                 });
                 this.loggingService = new LoggingService(config);
             }
-            // console.log("oBeTruthy()re instantiation in the hope it all works");
             return this.loggingService.getLogger(name);
         }
     }

@@ -100,7 +100,6 @@ describe('role scheduler', () => {
         let all_scheduled = Array.from(schedule.dates.values());
 
         let dates_with_neil = all_scheduled.filter(sad => {
-            console.log("Check " + JSON.stringify(sad.people));
             return includes(sad.people, neil);
         });
         expect(dates_with_neil.length).toEqual(2);
@@ -138,15 +137,20 @@ describe('role scheduler', () => {
 
         console.log("Schedule: " + new CSVExporter(schedule));
 
-        console.log("Test: " + start_date.toDateString());
+        console.log(`Test1: ${start_date.toDateString()}`);
         expect(facts.is_person_available(neil, start_date)).toBeTruthy();
 
+        /*
+        The reason this 2nd and 3rd tests should be false is that we are testing an EXISTING
+        schedule. At runtime, the counts will be N-1 (so, 2 would pass) because the person hasn't
+        been added to the role for the date in question. However; in this test, they already have.
+         */
         let next_date = addDaysToDate(start_date, 7);
-        console.log("Test: " + next_date.toDateString());
-        expect(facts.is_person_available(neil, next_date)).toBeTruthy();
+        console.log(`Test2: ${next_date.toDateString()}`);
+        expect(facts.is_person_available(neil, next_date)).toBeFalsy();
 
         next_date = addDaysToDate(start_date, 14);
-        console.log("Test: " + next_date.toDateString());
+        console.log(`Test3: ${next_date.toDateString()}`);
         expect(facts.is_person_available(neil, next_date)).toBeFalsy();
 
     });
