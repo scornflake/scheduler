@@ -18,6 +18,10 @@
         "logLevel": "INFO"
       },
       {
+        "loggerName": "page",
+        "logLevel": "INFO"
+      },
+      {
         "loggerName": "home",
         "logLevel": "INFO"
       },

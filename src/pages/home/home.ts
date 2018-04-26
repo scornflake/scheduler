@@ -37,7 +37,7 @@ export class HomePage {
         readyEvent.subscribe(value => {
             if (value) {
                 this.server.validateLoginToken().subscribe(resp => {
-                    console.log(`Validation returned: ${JSON.stringify(resp)}`);
+                    this.logger.info(`Validation returned: ${JSON.stringify(resp)}`);
                     if (!this.rootStore.ui_store.signed_in) {
                         this.navCtrl.push('login');
                     } else {

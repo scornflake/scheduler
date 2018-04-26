@@ -2,7 +2,10 @@ import {Component} from '@angular/core';
 import {AlertController, IonicPage, Loading, LoadingController, NavController} from 'ionic-angular';
 import {FormBuilder, FormGroup, Validators} from "@angular/forms";
 import {ServerProvider} from "../../providers/server/server";
-import {ValidationResponse} from "../../common/interfaces";
+import {isDefined} from "ionic-angular/util/util";
+import {Subject} from "rxjs/Subject";
+import "rxjs/add/operator/debounceTime";
+import {Logger, LoggingService} from "ionic-logging-service";
 
 class AbstractLoginPage {
     loginForm: FormGroup;
@@ -13,32 +16,44 @@ class AbstractLoginPage {
     registration_error: string;
 
     private _registration_username: string;
+    private username_checker: Subject<any>;
+    private logger: Logger;
 
     constructor(protected nav: NavController,
                 protected alertCtrl: AlertController,
+                protected logService: LoggingService,
                 protected server: ServerProvider,
                 protected loadingCtrl: LoadingController) {
+        this.registration_error = "";
+        this.logger = this.logService.getLogger("page.login.abstract");
+
+        this.username_checker = new Subject();
+        this.username_checker.debounceTime(500).subscribe(v => {
+            this.check_username()
+        });
     }
 
     get registration_username(): string {
         return this._registration_username;
     }
 
-    async set_registration_username(value: string, check_usability: boolean = false) {
+    set_registration_username(value: string) {
         this._registration_username = value;
-
-        // kick off validation
-        if(this.registration_error) {
+        if (this.registration_error) {
             this.registration_error = "";
         }
+        this.username_checker.next(value)
+    }
 
-        if (check_usability) {
+    private async check_username() {
+        let username = this._registration_username;
+        this.logger.info(`Checking that ${username} is ok...`);
+        if (isDefined(username)) {
             try {
-                this.username_usability = await this.server.isUsernameAvailableAndGood(this._registration_username).toPromise();
-            } catch(e) {
+                this.username_usability = await this.server.isUsernameAvailableAndGood(username).toPromise();
+            } catch (e) {
                 this.registration_error = JSON.stringify(e);
             }
-
         }
     }
 
@@ -105,10 +120,11 @@ class AbstractLoginPage {
 export class LoginPage extends AbstractLoginPage {
     constructor(protected nav: NavController,
                 protected alert: AlertController,
+                protected logService: LoggingService,
                 protected server: ServerProvider,
                 loading: LoadingController,
-                private formBuilder: FormBuilder,) {
-        super(nav, alert, server, loading);
+                private formBuilder: FormBuilder) {
+        super(nav, alert, logService, server, loading);
         this.loginForm = this.formBuilder.group({
             'email': ["", [Validators.email, Validators.required]],
             'password': ["", [Validators.required, Validators.minLength(8)]],
