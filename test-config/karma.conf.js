@@ -10,6 +10,7 @@ module.exports = function (config) {
         ],
 
         files: [
+            '../node_modules/babel-polyfill/browser.js',
             {
                 pattern: './karma-test-shim.js',
                 watched: true
@@ -43,8 +44,8 @@ module.exports = function (config) {
         colors: true,
         logLevel: config.LOG_INFO,
         autoWatch: true,
-        browsers: ['Chrome'],
-        singleRun: false
+        browsers: ['PhantomJS'],
+        singleRun: false,
     };
 
     config.set(_config);
