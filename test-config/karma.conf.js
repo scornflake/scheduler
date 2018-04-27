@@ -1,16 +1,16 @@
 const webpackConfig = require('./webpack.test.js');
 
 module.exports = function (config) {
+
     const _config = {
         basePath: '',
 
         frameworks: [
             'jasmine'
-            // 'jasmine-matchers'
         ],
 
         files: [
-            '../node_modules/babel-polyfill/browser.js',
+            // '../node_modules/babel-polyfill/browser.js',
             {
                 pattern: './karma-test-shim.js',
                 watched: true
@@ -18,7 +18,12 @@ module.exports = function (config) {
         ],
 
         preprocessors: {
-            './karma-test-shim.js': ['webpack', 'sourcemap']
+            // './karma-test-shim.js': ['webpack', 'sourcemap']
+            './karma-test-shim.js': ['webpack']
+        },
+
+        phantomJsLauncher: {
+            exitOnResourceError: true
         },
 
         webpack: webpackConfig,
@@ -44,7 +49,7 @@ module.exports = function (config) {
         colors: true,
         logLevel: config.LOG_INFO,
         autoWatch: true,
-        browsers: ['PhantomJS'],
+        browsers: ['Chrome'],
         singleRun: false,
     };
 

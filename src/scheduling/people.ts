@@ -15,6 +15,7 @@ import {RuleFacts} from "./rule_based/rule-facts";
 import {Unavailablity} from "./unavailability";
 import * as _ from "lodash";
 import {isUndefined} from "util";
+import {SafeJSON} from "../common/json/safe-stringify";
 
 export class Person extends ObjectWithUUID {
     name: string;
@@ -214,7 +215,7 @@ export class PeopleStore extends BaseStore<Person> {
         let all_people = this.people.filter(callback);
         if (all_people.length) {
             if (all_people.length > 1) {
-                throw new Error(`Searching for ${name} returns more than one person. Returns: ${JSON.stringify(all_people)}`);
+                throw new Error(`Searching for ${name} returns more than one person. Returns: ${SafeJSON.stringify(all_people)}`);
             }
             return all_people[0];
         }

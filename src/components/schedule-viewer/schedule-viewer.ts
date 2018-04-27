@@ -34,7 +34,7 @@ export class ScheduleViewerComponent {
         if (!this.schedule) {
             return [];
         }
-        // console.log(JSON.stringify(this.schedule.jsonResult()));
+        // console.log(SafeJSON.stringify(this.schedule.jsonResult()));
         return this.schedule.jsonResult();
     }
 

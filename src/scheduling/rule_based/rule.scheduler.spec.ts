@@ -13,6 +13,7 @@ import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../tests/sc
 import includes from 'lodash/includes';
 import {CSVExporter} from "../exporter/csv.exporter";
 import {addDaysToDate, constructSensibleDate} from "../common/date-utils";
+import {SafeJSON} from "../../common/json/safe-stringify";
 
 describe('role scheduler', () => {
     let person_store: PeopleStore;
@@ -69,8 +70,8 @@ describe('role scheduler', () => {
 
         // expect to see dates 7 days apart
         let first_schedule = dates[0];
-        // console.log("All: " + JSON.stringify(dates));
-        // console.log("First: " + JSON.stringify(first_schedule));
+        // console.log("All: " + SafeJSON.stringify(dates));
+        // console.log("First: " + SafeJSON.stringify(first_schedule));
         expect(first_schedule.date.getDate()).toEqual(1);
 
         // Check it has a person
@@ -170,9 +171,9 @@ describe('role scheduler', () => {
         schedule.create_schedule();
 
         let all_scheduled = Array.from(schedule.dates.values());
-        // console.log("ALL: " + JSON.stringify(all_scheduled));
+        // console.log("ALL: " + SafeJSON.stringify(all_scheduled));
         let dates_with_neil = all_scheduled.filter(sad => {
-            console.log("Check: " + JSON.stringify(sad));
+            console.log("Check: " + SafeJSON.stringify(sad));
             return includes(sad.people, neil);
         });
 

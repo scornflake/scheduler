@@ -165,7 +165,7 @@ export class RolesStore extends BaseStore<Role> {
         */
         rule.priority = 10;
         this.rules.push(rule);
-        // console.log("Rules now " + JSON.stringify(this.rules));
+        // console.log("Rules now " + SafeJSON.stringify(this.rules));
     }
 
     private rules_for_role(role: Role) {

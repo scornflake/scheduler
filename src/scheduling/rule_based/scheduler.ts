@@ -6,6 +6,7 @@ import {Logger} from "ionic-logging-service";
 import {dayAndHourForDate} from "../common/date-utils";
 import {RuleFacts} from "./rule-facts";
 import {LoggingWrapper} from "../../common/logging-wrapper";
+import {SafeJSON} from "../../common/json/safe-stringify";
 
 class ScheduleWithRules {
     params: ScheduleInput;
@@ -38,8 +39,8 @@ class ScheduleWithRules {
 
         let role_store = this.params.roles;
         let role_groups = role_store.roles_in_layout_order_grouped;
-        let role_names = role_groups.map(g => JSON.stringify(g.map(r => r.name)));
-        this.logger.debug("Roles (in order of importance): " + JSON.stringify(role_names));
+        let role_names = role_groups.map(g => SafeJSON.stringify(g.map(r => r.name)));
+        this.logger.debug("Roles (in order of importance): " + SafeJSON.stringify(role_names));
 
         this.facts.begin();
 
@@ -52,7 +53,7 @@ class ScheduleWithRules {
         this.facts.begin_new_role_group(role_group);
 
         let current_date = this.params.start_date;
-        this.logger.debug("\r\nNext group: " + JSON.stringify(role_group.map(r => r.name)));
+        this.logger.debug("\r\nNext group: " + SafeJSON.stringify(role_group.map(r => r.name)));
 
         // Iterate through all dates
         let iterations = 0;

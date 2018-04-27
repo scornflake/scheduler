@@ -7,6 +7,7 @@ import "rxjs/add/operator/map";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {RootStore} from "../../store/root";
 import {isUndefined} from "util";
+import {SafeJSON} from "../../common/json/safe-stringify";
 
 @Injectable()
 export class ServerProvider {
@@ -52,7 +53,7 @@ export class ServerProvider {
         if (isUndefined(token)) {
             return Observable.create({ok: false, reason: 'No token is defined', user: null});
         }
-        this.logger.info(`Validating login token: ${JSON.stringify(token)}`);
+        this.logger.info(`Validating login token: ${SafeJSON.stringify(token)}`);
         let url = this.server_url("validate_token/?token=" + token);
         return this.http.get(url).map(r => {
             let vr: ValidationResponse = {
@@ -77,7 +78,7 @@ export class ServerProvider {
     //         gapi.client.drive.files.list(sheets_only).then((response) => {
     //             let files = response.result.files;
     //             // for(let file of files) {
-    //             // this.logger.info("got: " + JSON.stringify(file));
+    //             // this.logger.info("got: " + SafeJSON.Stringify(file));
     //             observable.next(files);
     //             // }
     //             observable.complete();
@@ -113,7 +114,7 @@ export class ServerProvider {
             if (r.hasOwnProperty('ok') && r['ok']) {
                 return new LoginResponse(true);
             }
-            this.logger.info(`Token store returned: ${JSON.stringify(r)}`);
+            this.logger.info(`Token store returned: ${SafeJSON.stringify(r)}`);
             return new LoginResponse(false, r['detail']);
         })
     }

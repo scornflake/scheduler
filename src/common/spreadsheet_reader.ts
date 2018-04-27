@@ -8,6 +8,7 @@ import {Logger} from "ionic-logging-service";
 import {NPBCStoreConstruction} from "../providers/store/test.store";
 import {OrganizationStore} from "../scheduling/organization";
 import {LoggingWrapper} from "./logging-wrapper";
+import {SafeJSON} from "./json/safe-stringify";
 
 export class SpreadsheetReader {
     problems: Map<string, Set<string>>;
@@ -86,7 +87,7 @@ export class SpreadsheetReader {
                         this.logger.info(` - Role: ${role}`);
 
                         let peoples_names = col.split(",").map(v => v.trim());
-                        this.logger.info(`   - people: ${JSON.stringify(peoples_names)}`);
+                        this.logger.info(`   - people: ${SafeJSON.stringify(peoples_names)}`);
 
                         if (for_this_date) {
                             // Go through people and add them to this role

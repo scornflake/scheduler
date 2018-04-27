@@ -35,7 +35,7 @@ export class ShowFormErrorsComponent {
             let ctrl = this.control.get(fieldName);
             if (ctrl && ctrl.invalid) {
                 if (ctrl.errors) {
-                    // console.log(fieldName + " has errors: " + JSON.stringify(ctrl.errors));
+                    // console.log(fieldName + " has errors: " + SafeJSON.Stringify(ctrl.errors));
                     for (let errorType of Object.keys(ctrl.errors)) {
                         let theError = ctrl.errors[errorType];
                         let message = this.getMessage(fieldName, errorType, theError);

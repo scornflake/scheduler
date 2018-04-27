@@ -96,7 +96,7 @@ export class RuleFacts {
     //     this.all_pick_rules.forEach((list, role) => {
     //         this.logger.info(" - " + role.name);
     //         list.forEach(r => {
-    //             this.logger.info(" --- " + r.constructor.name + " = " + JSON.stringify(r));
+    //             this.logger.info(" --- " + r.constructor.name + " = " + SafeJSON.Stringify(r));
     //         })
     //     });
     // }
@@ -155,7 +155,7 @@ export class RuleFacts {
             return null;
         }
         for (let rule of pick_rules) {
-            // this.logger.info("Using rule " + rule.constructor.name + ", " + JSON.stringify(rule) + " next...");
+            // this.logger.info("Using rule " + rule.constructor.name + ", " + SafeJSON.Stringify(rule) + " next...");
             if (rule instanceof OnThisDate) {
                 let result = rule.execute(this);
                 if (result) return result;
@@ -256,7 +256,7 @@ export class RuleFacts {
 
     placements_for_person(person: Person, start_date: Date, end_date: Date) {
         let facts = this.filter(start_date, end_date);
-        // this.logger.info(" - facts: " + JSON.stringify(facts));
+        // this.logger.info(" - facts: " + SafeJSON.Stringify(facts));
         return facts.filter(fact => fact.includes_person(person));
     }
 

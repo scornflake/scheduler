@@ -86,7 +86,7 @@ class GAPIS {
             gapi.client.drive.files.list(sheets_only).then((response) => {
                 let files = response.result.files;
                 // for(let file of files) {
-                // this.logger.info("got: " + JSON.stringify(file));
+                // this.logger.info("got: " + SafeJSON.stringify(file));
                 observable.next(files);
                 // }
                 observable.complete();

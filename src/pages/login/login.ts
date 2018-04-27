@@ -6,6 +6,7 @@ import {isDefined} from "ionic-angular/util/util";
 import {Subject} from "rxjs/Subject";
 import "rxjs/add/operator/debounceTime";
 import {Logger, LoggingService} from "ionic-logging-service";
+import {SafeJSON} from "../../common/json/safe-stringify";
 
 class AbstractLoginPage {
     loginForm: FormGroup;
@@ -52,7 +53,7 @@ class AbstractLoginPage {
             try {
                 this.username_usability = await this.server.isUsernameAvailableAndGood(username).toPromise();
             } catch (e) {
-                this.registration_error = JSON.stringify(e);
+                this.registration_error = SafeJSON.stringify(e);
             }
         }
     }

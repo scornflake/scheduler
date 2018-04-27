@@ -11,6 +11,7 @@ import {OrganizationStore} from "../scheduling/organization";
 import {csd} from "../scheduling/common/date-utils";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
+import {SafeJSON} from "../common/json/safe-stringify";
 
 const SAVED_STATE_KEY = 'saved_state';
 
@@ -49,7 +50,7 @@ class RootStore {
         this.ready_event = Observable.create(obs => {
             this.storage.get(SAVED_STATE_KEY).then((state) => {
                 if (state) {
-                    this.logger.info("Restored saved state: " + JSON.stringify(state));
+                    this.logger.info("Restored saved state: " + SafeJSON.stringify(state));
                     this.ui_store.saved_state = Object.assign(new SavedState(), state)
                 } else {
                     this.logger.info("Setup state first time");
@@ -95,7 +96,7 @@ class RootStore {
             // toJS creates a deep clone, thus accesses all of the properties of this.state
             // so: we SHOULD respond to state changes.
             this.storage.set(SAVED_STATE_KEY, toJS(this.state)).then(() => {
-                this.logger.info("Saved state: " + JSON.stringify(this.state));
+                this.logger.info("Saved state: " + SafeJSON.stringify(this.state));
             });
         });
         this.regenerator = autorun(() => {

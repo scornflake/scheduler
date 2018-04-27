@@ -2,6 +2,7 @@ import {FixedRoleOnDate, OnThisDate, UsageWeightedSequential, WeightedRoles} fro
 import {PeopleStore, Person} from "../people";
 import {defaultSoundRole, Role, RolesStore} from "../tests/roles";
 import {RuleFacts} from "./rule-facts";
+import {SafeJSON} from "../../common/json/safe-stringify";
 
 describe('rules', () => {
     let people_store: PeopleStore;
@@ -44,9 +45,9 @@ describe('rules', () => {
             state.place_person_in_role(neil, defaultSoundRole, next_date);
 
             let dates = state.schedule_dates;
-            console.log("Have: " + JSON.stringify(dates));
+            console.log("Have: " + SafeJSON.stringify(dates));
             for (let schedule of dates) {
-                console.log(schedule.date.toDateString() + " - " + schedule.valueOf());
+                console.log(`${schedule.date.toDateString()} - ${schedule.valueOf()}`);
             }
 
             console.log("October...");

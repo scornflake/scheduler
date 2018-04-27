@@ -1,11 +1,12 @@
 import {dayAndHourForDate, parseDateFromSpreadsheetDate} from "./common/date-utils";
-import {Unavailablity} from "./unavailability";
+import {Unavailablity} from        "./unavailability";
+import {SafeJSON} from "../common/json/safe-stringify";
 
 describe('unavailability', () => {
     it('can parse dates', () => {
         let dateString = "Sun May 27 2018";
         let js_date = parseDateFromSpreadsheetDate(dateString);
-        console.log(`Got: ${JSON.stringify(js_date)}`);
+        console.log(`Got: ${SafeJSON.stringify(js_date)}`);
         expect(js_date.getMonth()).toEqual(4);
         expect(js_date.getFullYear()).toEqual(2018);
         expect(js_date.getDate()).toEqual(27);

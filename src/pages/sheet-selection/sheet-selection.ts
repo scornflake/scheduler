@@ -35,7 +35,7 @@ export class SheetSelectionPage {
 
     selectSheet(sheet_metadata) {
         if (sheet_metadata) {
-            // console.log("Clicked: " + JSON.stringify(sheet_metadata));
+            // console.log("Clicked: " + SafeJSON.stringify(sheet_metadata));
             // this.rootStore.state.google_sheet_id = sheet_metadata.id;
 
             // Push on the tab navigator

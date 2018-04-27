@@ -8,6 +8,7 @@ import {toJS} from "mobx";
 import {SpreadsheetReader} from "../../common/spreadsheet_reader";
 import {ServerProvider} from "../../providers/server/server";
 import {RootStore} from "../../store/root";
+import {SafeJSON} from "../../common/json/safe-stringify";
 
 
 @IonicPage({
@@ -37,7 +38,7 @@ export class HomePage {
         readyEvent.subscribe(value => {
             if (value) {
                 this.server.validateLoginToken().subscribe(resp => {
-                    this.logger.info(`Validation returned: ${JSON.stringify(resp)}`);
+                    this.logger.info(`Validation returned: ${SafeJSON.stringify(resp)}`);
                     if (!this.rootStore.ui_store.signed_in) {
                         this.navCtrl.push('login');
                     } else {
@@ -80,7 +81,7 @@ export class HomePage {
                             dump_map[key] = Array.from(reader.problems.get(key));
                         }
                         let problems = toJS(dump_map);
-                        let s = JSON.stringify(problems);
+                        let s = SafeJSON.stringify(problems);
                         this.logger.info(`Had problems: ${s}`);
                     }
                     this.logger.info("Made schedule!");
