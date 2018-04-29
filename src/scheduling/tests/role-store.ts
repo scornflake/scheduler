@@ -11,6 +11,7 @@ import {
 import {isUndefined} from "ionic-angular/util/util";
 import {PeopleStore, Person} from "../people";
 import {Role} from "../role";
+import {action, observable} from "mobx";
 
 export class RolesStore extends BaseStore<Role> {
     @observable rules: Array<Rule>;
