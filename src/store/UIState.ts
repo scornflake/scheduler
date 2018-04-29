@@ -1,5 +1,4 @@
-import {action, computed, observable} from "mobx";
-import {Role} from "../scheduling/tests/roles";
+import {Role} from "../scheduling/role";
 import {Person} from "../scheduling/people";
 
 class SavedState {

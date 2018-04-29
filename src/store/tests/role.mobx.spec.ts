@@ -1,12 +1,11 @@
-import {Role} from "../../scheduling/tests/roles";
-import {autorun} from "mobx";
+import {Role} from "../../scheduling/role";
 
 describe('role mobx tests', () => {
     it('should be observable', function (done) {
         let role = new Role("A role");
         let changed = false;
 
-        autorun(() => {
+        mobx.autorun(() => {
             console.log("Role name: " + role.name);
             changed = true;
             done();

@@ -1,49 +1,16 @@
-import {action, observable} from "mobx";
-import {PeopleStore, Person} from "../people";
+import {BaseStore} from "../common/base_model";
 import {OnThisDate, Rule, UsageWeightedSequential} from "../rule_based/rules";
-import {BaseStore, ObjectWithUUID} from "../common/base_model";
+import {
+    defaultAcousticGuitar,
+    defaultBass,
+    defaultComputerRole, defaultDrumsRole, defaultElectricGuitar,
+    defaultKeysRole, defaultLeaderRole, defaultSaxRole,
+    defaultSoundRole,
+    defaultVocalsRole
+} from "./sample-data";
 import {isUndefined} from "ionic-angular/util/util";
-
-export class Role extends ObjectWithUUID {
-    @observable name: string;
-    @observable maximum_count: number;
-    @observable layout_priority: number;
-
-    constructor(name: string, priority: number = 0, max_in_role: number = 1) {
-        super();
-        this.name = name;
-        this.maximum_count = max_in_role;
-        this.layout_priority = priority;
-    }
-
-    valueOf() {
-        return "[" + this.name + "]";
-    }
-}
-
-let speakerPriority = 12;
-let leaderPriority = 11;
-let soundPriority = 10; // 10
-let instrumentPriority = 10;
-
-let defaultSpeakerRole = new Role("Speaker", speakerPriority);
-let defaultThemeRole = new Role("Theme", speakerPriority);
-let defaultLeaderRole = new Role("Worship Leader", leaderPriority);
-
-let defaultSoundRole = new Role("Sound", soundPriority);
-let defaultComputerRole = new Role("Computer", soundPriority);
-
-let defaultBass = new Role("Bass", instrumentPriority);
-let defaultDrumsRole = new Role("Drums", instrumentPriority);
-let defaultKeysRole = new Role("Keys", instrumentPriority);
-let defaultAcousticGuitar = new Role("Guitar (Acoustic)", instrumentPriority);
-let defaultElectricGuitar = new Role("Guitar (Electric)", instrumentPriority);
-
-let defaultVocalsRole = new Role("Vocals", instrumentPriority);
-let defaultSaxRole = new Role("Sax", instrumentPriority);
-
-defaultAcousticGuitar.maximum_count = 2;
-defaultVocalsRole.maximum_count = 3;
+import {PeopleStore, Person} from "../people";
+import {Role} from "../role";
 
 export class RolesStore extends BaseStore<Role> {
     @observable rules: Array<Rule>;
@@ -122,7 +89,7 @@ export class RolesStore extends BaseStore<Role> {
     }
 
     find_role(role_name: string) {
-        if(isUndefined(role_name)) {
+        if (isUndefined(role_name)) {
             return null;
         }
         for (let role of this.roles) {
@@ -176,19 +143,4 @@ export class RolesStore extends BaseStore<Role> {
             return false;
         });
     }
-}
-
-export {
-    defaultSpeakerRole,
-    defaultThemeRole,
-    defaultLeaderRole,
-    defaultSoundRole,
-    defaultDrumsRole,
-    defaultVocalsRole,
-    defaultComputerRole,
-    defaultKeysRole,
-    defaultAcousticGuitar,
-    defaultElectricGuitar,
-    defaultBass,
-    defaultSaxRole
 }

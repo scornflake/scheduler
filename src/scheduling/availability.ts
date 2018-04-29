@@ -1,9 +1,9 @@
-import {observable} from "mobx";
-import {Person} from "../people";
-import {throwOnInvalidDate} from "../common/date-utils";
-import {RuleFacts} from "../rule_based/rule-facts";
+import {Person} from "./people";
+import {throwOnInvalidDate} from "./common/date-utils";
+import {RuleFacts} from "./rule_based/rule-facts";
 import {Logger} from "ionic-logging-service";
-import {LoggingWrapper} from "../../common/logging-wrapper";
+import {LoggingWrapper} from "../common/logging-wrapper";
+import {observable} from "mobx";
 
 export enum AvailabilityUnit {
     // Models availability such as "every 4 weeks".

@@ -1,17 +1,17 @@
 import {PeopleStore} from "../scheduling/people";
-import {RolesStore} from "../scheduling/tests/roles";
+import {RolesStore} from "../scheduling/tests/role-store";
 import {SavedState, UIStore} from "./UIState";
 import {ApplicationRef, Injectable} from "@angular/core";
 import {Storage} from "@ionic/storage";
 import {NPBCStoreConstruction} from "../providers/store/test.store";
-import {action, autorun, computed, IReactionDisposer, observable, toJS} from "mobx";
-import {ScheduleInput} from "../scheduling/common";
+import {ScheduleInput} from "../scheduling/shared";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import {OrganizationStore} from "../scheduling/organization";
 import {csd} from "../scheduling/common/date-utils";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
 import {SafeJSON} from "../common/json/safe-stringify";
+import {action, autorun, computed, IReactionDisposer, observable, toJS} from "mobx";
 
 const SAVED_STATE_KEY = 'saved_state';
 

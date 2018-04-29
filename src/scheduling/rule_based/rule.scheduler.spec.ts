@@ -1,19 +1,22 @@
+import {
+    Role
+} from "../role";
+
+import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../availability";
+import includes from 'lodash/includes';
+import {CSVExporter} from "../exporter/csv.exporter";
+import {addDaysToDate, constructSensibleDate} from "../common/date-utils";
+import {SafeJSON} from "../../common/json/safe-stringify";
 import {PeopleStore, Person} from "../people";
-import {ScheduleInput} from "../common";
+import {ScheduleInput} from "../shared";
 import {
     defaultAcousticGuitar,
     defaultSaxRole,
     defaultSoundRole,
     defaultSpeakerRole,
-    defaultThemeRole,
-    Role
-} from "../tests/roles";
+    defaultThemeRole
+} from "../tests/sample-data";
 import {ScheduleWithRules} from "./scheduler";
-import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../tests/scheduling-types";
-import includes from 'lodash/includes';
-import {CSVExporter} from "../exporter/csv.exporter";
-import {addDaysToDate, constructSensibleDate} from "../common/date-utils";
-import {SafeJSON} from "../../common/json/safe-stringify";
 
 describe('role scheduler', () => {
     let person_store: PeopleStore;

@@ -3,7 +3,7 @@ import {isDefined, isUndefined} from "ionic-angular/util/util";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import * as moment from "moment";
 import {Moment} from "moment";
-import {ScheduleInput} from "../scheduling/common";
+import {ScheduleInput} from "../scheduling/shared";
 import {Logger} from "ionic-logging-service";
 import {NPBCStoreConstruction} from "../providers/store/test.store";
 import {OrganizationStore} from "../scheduling/organization";

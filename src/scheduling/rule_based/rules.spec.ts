@@ -1,8 +1,10 @@
 import {FixedRoleOnDate, OnThisDate, UsageWeightedSequential, WeightedRoles} from "./rules";
 import {PeopleStore, Person} from "../people";
-import {defaultSoundRole, Role, RolesStore} from "../tests/roles";
+import {Role} from "../role";
 import {RuleFacts} from "./rule-facts";
 import {SafeJSON} from "../../common/json/safe-stringify";
+import {RolesStore} from "../tests/role-store";
+import {defaultSoundRole} from "../tests/sample-data";
 
 describe('rules', () => {
     let people_store: PeopleStore;

@@ -1,6 +1,5 @@
-import {action, computed, observable} from "mobx";
-import {Role} from "./tests/roles";
-import {Availability, AvailabilityUnit, SchedulePrefs} from "./tests/scheduling-types";
+import {Role} from "./role";
+import {Availability, AvailabilityUnit, SchedulePrefs} from "./availability";
 import {
     AssignedToRoleCondition,
     ConditionalRule,
@@ -16,6 +15,7 @@ import {Unavailablity} from "./unavailability";
 import * as _ from "lodash";
 import {isUndefined} from "util";
 import {SafeJSON} from "../common/json/safe-stringify";
+import {action, computed, observable} from "mobx";
 
 export class Person extends ObjectWithUUID {
     name: string;

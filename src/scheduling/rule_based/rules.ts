@@ -1,11 +1,11 @@
 import * as _ from 'lodash';
-import {Role} from "../tests/roles";
+import {Role} from "../role";
 import {Person} from "../people";
 import {Logger} from "ionic-logging-service";
 import {RuleFacts} from "./rule-facts";
 import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Availability} from "../tests/scheduling-types";
-import {daysBetween, ScheduleAtDate} from "../common";
+import {Availability} from "../availability";
+import {daysBetween, ScheduleAtDate} from "../shared";
 import {ScheduleWithRules} from "./scheduler";
 
 class RuleExecution {

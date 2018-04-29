@@ -1,5 +1,5 @@
-import {ScheduleAtDate, ScheduleInput} from "../common";
-import {Role} from "../tests/roles";
+import {ScheduleAtDate, ScheduleInput} from "../shared";
+import {Role} from "../role";
 import {Person} from "../people";
 import * as _ from 'lodash';
 import {Logger} from "ionic-logging-service";
