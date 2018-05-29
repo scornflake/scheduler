@@ -37,7 +37,8 @@ export class HomePage {
         let readyEvent = this.rootStore.ready_event;
         readyEvent.subscribe(value => {
             if (value) {
-                this.server.validateLoginToken().subscribe(resp => {
+                let validateLoginToken = this.server.validateLoginToken();
+                validateLoginToken.subscribe(resp => {
                     this.logger.info(`Validation returned: ${SafeJSON.stringify(resp)}`);
                     if (!this.rootStore.ui_store.signed_in) {
                         this.navCtrl.push('login');

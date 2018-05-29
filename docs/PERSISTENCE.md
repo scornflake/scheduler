@@ -5,6 +5,10 @@ Goals
 1. Keep client side objects, and methods. Typed.
 1. Simple OO interface to persistence in the client. I want to send/receive objects into the data provider without caring how that works, etc.
 
+Goals 2
+=======
+- Work Offline, sync later when reconnected (implies pouch really, doesn't it?)
+    - Except pouch make it REALLY hard to model relations, like "this is is part of many orgs data"
 
 Problems
 ========

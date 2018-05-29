@@ -8,6 +8,7 @@ import {Logger, LoggingService} from "ionic-logging-service";
 import {RootStore} from "../../store/root";
 import {isUndefined} from "util";
 import {SafeJSON} from "../../common/json/safe-stringify";
+import "rxjs/add/observable/from";
 
 @Injectable()
 export class ServerProvider {
@@ -51,7 +52,7 @@ export class ServerProvider {
     validateLoginToken(): Observable<ValidationResponse> {
         let token = this.store.ui_store.saved_state.login_token;
         if (isUndefined(token)) {
-            return Observable.create({ok: false, reason: 'No token is defined', user: null});
+            return Observable.from([{ok: false, reason: 'No token is defined', user: null}]);
         }
         this.logger.info(`Validating login token: ${SafeJSON.stringify(token)}`);
         let url = this.server_url("validate_token/?token=" + token);

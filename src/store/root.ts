@@ -58,10 +58,14 @@ class RootStore {
                 }
                 this.setupSaving();
                 obs.next(true);
-                obs.complete();
+                // obs.complete();
             });
         });
-        this.ready_event.subscribe();
+        this.ready_event.subscribe(v => {
+            this.logger.info("Root object 'ready' fired. App is ready to go!")
+        }, null, () => {
+            this.logger.info("Ready event complete")
+        });
     }
 
     @action
@@ -101,7 +105,7 @@ class RootStore {
         });
         this.regenerator = autorun(() => {
             this.logger.info("Generate schedule...");
-            // this.generate_schedule();
+            this.generate_schedule();
         });
     }
 }

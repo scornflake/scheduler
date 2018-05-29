@@ -54,6 +54,7 @@ class AbstractLoginPage {
                 this.username_usability = await this.server.isUsernameAvailableAndGood(username).toPromise();
             } catch (e) {
                 this.registration_error = SafeJSON.stringify(e);
+                console.log(e);
             }
         }
     }
@@ -149,10 +150,10 @@ export class LoginPage extends AbstractLoginPage {
         // let password = this.registration_password;
         let password = this.loginForm.get('password').value;
         console.log(`Starting login... using ${username} and ${password}`);
-        this.server.loginUser(username, password).subscribe(({user, ok, reason}) => {
-            console.log(`Login completed ${ok}: ${reason}`);
-            if (user == null) {
-                this.showError(reason);
+        this.server.loginUser(username, password).subscribe(({user, ok, detail}) => {
+            console.log(`Login completed ${ok}: ${detail}`);
+            if (!ok) {
+                this.showError(detail);
             } else {
                 // Using this rather that this.nav.pop(), so it works
                 // when the page is hit directly as a deep link

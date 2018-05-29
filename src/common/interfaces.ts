@@ -1,17 +1,17 @@
 export interface ValidationResponse {
     user?: string,
     ok: boolean,
-    reason: string
+    detail: string
 }
 
 export class LoginResponse implements ValidationResponse {
     user?: string;
     ok: boolean;
-    reason: string;
+    detail: string;
 
     constructor(ok: boolean = true, reason: string = "", user: string = null) {
         this.ok = ok;
-        this.reason = reason;
+        this.detail = reason;
         this.user = user;
     }
 }
