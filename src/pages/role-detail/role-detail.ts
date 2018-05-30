@@ -24,8 +24,4 @@ export class RoleDetailPage {
         }
 
     }
-
-    add_new_rule() {
-
-    }
 }

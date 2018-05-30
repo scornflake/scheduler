@@ -27,8 +27,7 @@ export class PersonDetailsComponent {
         if (this.person != null) {
             // this.role_tapped(this.person.roles[0]);
             // this.add_if_in_role_rule();
-
-            this.add_try_to_be_on_with_rule();
+            // this.add_try_to_be_on_with_rule();
         }
     }
 
