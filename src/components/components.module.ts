@@ -7,7 +7,7 @@ import {ReasonsComponent} from './reasons/reasons';
 import {ShowFormErrorsComponent} from "./show-form-errors/show-form-errors";
 import {PersonDetailsComponent} from './person-details/person-details';
 import { AvailabilityOptionsComponent } from './availability-options/availability-options';
-import { RoleOptionsComponent } from './role-options/role-options';
+import { RoleSummaryComponent } from './role-summary/role-summary';
 
 @NgModule({
     declarations: [
@@ -17,7 +17,7 @@ import { RoleOptionsComponent } from './role-options/role-options';
         ReasonsComponent,
         PersonDetailsComponent,
     AvailabilityOptionsComponent,
-    RoleOptionsComponent,
+    RoleSummaryComponent,
     ],
     imports: [
         IonicModule,
@@ -30,7 +30,7 @@ import { RoleOptionsComponent } from './role-options/role-options';
         ShowFormErrorsComponent,
         PersonDetailsComponent,
     AvailabilityOptionsComponent,
-    RoleOptionsComponent
+    RoleSummaryComponent
     ]
 })
 export class ComponentsModule {

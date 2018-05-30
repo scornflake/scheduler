@@ -3,10 +3,10 @@ import {Person} from "../../scheduling/people";
 import {Role} from "../../scheduling/role";
 
 @Component({
-    selector: 'role-options',
-    templateUrl: 'role-options.html'
+    selector: 'role-summary',
+    templateUrl: 'role-summary.html'
 })
-export class RoleOptionsComponent {
+export class RoleSummaryComponent {
     @Input() person: Person;
 
     constructor() {
