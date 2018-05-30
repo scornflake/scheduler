@@ -67,6 +67,26 @@ export class Availability {
                 return "Every N of M";
         }
     }
+
+    public unit_description(singular: boolean): string {
+        switch (this.unit) {
+            case AvailabilityUnit.EVERY_N_WEEKS:
+                return singular ? "week" : "weeks";
+            case AvailabilityUnit.EVERY_N_DAYS:
+                return singular ? "day" : "days";
+        }
+        return "";
+    }
+
+    public toString(): string {
+        if(this.unit == AvailabilityUnit.AVAIL_ANYTIME) {
+            return "anytime";
+        }
+        if (this.period == 1) {
+            return `Every ${this.period} ${this.unit_description(true)} `
+        }
+        return `Every ${this.period} ${this.unit_description(false)} `
+    }
 }
 
 export class AvailabilityEveryNOfM extends Availability {
@@ -113,6 +133,10 @@ export class AvailabilityEveryNOfM extends Availability {
             }
         }
         return is_available;
+    }
+
+    public toString():string {
+        return `Every ${this.period} in ${this.period_to_look_at} weeks`;
     }
 }
 

@@ -16,6 +16,9 @@ import * as _ from "lodash";
 import {isUndefined} from "util";
 import {SafeJSON} from "../common/json/safe-stringify";
 import {action, computed, observable} from "mobx";
+import {List} from "ionic-angular";
+import {ObjectValueNode} from "graphql";
+import {ObjectValidation} from "./shared";
 
 export class Person extends ObjectWithUUID {
     name: string;
@@ -195,6 +198,20 @@ export class Person extends ObjectWithUUID {
 
     valueOf() {
         return "[Person:" + this.name + "]";
+    }
+
+    validate(): ObjectValidation {
+        let validation = new ObjectValidation();
+        if (!this.name) {
+            validation.add_error("Name is required");
+        }
+        if (!this.roles || this.roles.length == 0) {
+            validation.add_warning("No roles defined");
+        }
+        if (!this.email) {
+            validation.add_error("Email is required");
+        }
+        return validation;
     }
 }
 

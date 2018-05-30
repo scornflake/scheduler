@@ -4,6 +4,21 @@ import * as _ from 'lodash';
 import {dayAndHourForDate} from "./common/date-utils";
 import {RolesStore} from "./tests/role-store";
 
+class ObjectValidation {
+    errors: string[] = new Array<string>();
+    warnings: string[] = new Array<string>();
+    ok: boolean = true;
+
+    public add_error(e: string) {
+        this.errors.push(e);
+        this.ok = false;
+    }
+
+    public add_warning(e: string) {
+        this.warnings.push(e);
+    }
+}
+
 class ScheduleScore {
     person?: Person;
     roles: Array<Role>;
@@ -234,5 +249,6 @@ export {
     ScheduleInput,
     ScheduleScore,
     ScheduleAtDate,
-    daysBetween
+    daysBetween,
+    ObjectValidation
 }

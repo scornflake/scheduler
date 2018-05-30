@@ -2,6 +2,15 @@
 
     <ion-navbar>
         <ion-title>{{person?.name}}</ion-title>
+
+        <ion-buttons start>
+            <button ion-button color="danger" (tap)="cancel_editing()" *ngIf="is_create">Cancel</button>
+        </ion-buttons>
+
+        <ion-buttons end (tap)="ok_editing()">
+            <button *ngIf="is_create" ion-button>Done</button>
+            <!--<button ion-button *ngIf="!is_create" color="danger" (tap)="delete_person()">Delete</button>-->
+        </ion-buttons>
     </ion-navbar>
 
 </ion-header>
