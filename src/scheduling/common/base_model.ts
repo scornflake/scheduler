@@ -53,6 +53,10 @@ class BaseStore<T extends ObjectWithUUID> {
         this.items = []
     }
 
+    find_by_uuid(uuid: string): T {
+        return this.items.find(v => v.uuid == uuid);
+    }
+
     findIndexOfObject(obj: T): number {
         return _.findIndex(this.items, o => obj.uuid == o.uuid);
     }

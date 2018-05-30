@@ -53,7 +53,7 @@ export class PeoplePage {
     ngAfterViewInit() {
         // for debug
         // this.add_new_person();
-        // this.show_person_detail(this.people()[0]);
+        this.show_person_detail(this.rootStore.people_store.find_person_with_name("Chris Evans"));
     }
 
     delete_person(person: Person) {

@@ -60,7 +60,7 @@ class WeightedRoles extends Rule {
 
     constructor(weightedRules: Map<Role, number>) {
         super();
-        this.weightedRoles = weightedRules;
+        this.weightedRoles = Object.assign({}, weightedRules);
         this.normalize_weights();
     }
 

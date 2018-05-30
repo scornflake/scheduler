@@ -155,6 +155,20 @@ export class Person extends ObjectWithUUID {
         return this;
     }
 
+    set_weight_for_role(r: Role, new_weight: number) {
+        if (this.primary_roles.has(r)) {
+            this.primary_roles.set(r, new_weight);
+        }
+    }
+
+    weight_for_role(r: Role): number {
+        let weight = this.primary_roles.get(r);
+        if (weight) {
+            return weight;
+        }
+        return 0;
+    }
+
     @action
     remove_role(r: Role): Person {
         this.primary_roles.delete(r);

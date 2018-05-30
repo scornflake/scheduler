@@ -1,24 +1,33 @@
 <div>
-    <ion-list *ngIf="person != null">
-        <ion-list>
-            <ion-item>
-                <ion-label>Name</ion-label>
-                <ion-input placeholder="Joe" [(ngModel)]="person.name"></ion-input>
-            </ion-item>
-            <ion-item>
-                <ion-label>Email</ion-label>
-                <ion-input [(ngModel)]="person.email"></ion-input>
-            </ion-item>
-            <ion-item>
-                <ion-label>Phone</ion-label>
-                <ion-input [(ngModel)]="person.phone"></ion-input>
-            </ion-item>
-
-        </ion-list>
+    <ion-list *ngIf="person != null" no-padding no-margin>
+        <ion-item>
+            <ion-label>Name</ion-label>
+            <ion-input placeholder="Joe" [(ngModel)]="person.name"></ion-input>
+        </ion-item>
+        <ion-item>
+            <ion-label>Email</ion-label>
+            <ion-input [(ngModel)]="person.email"></ion-input>
+        </ion-item>
+        <ion-item>
+            <ion-label>Phone</ion-label>
+            <ion-input [(ngModel)]="person.phone"></ion-input>
+        </ion-item>
     </ion-list>
 
     <ion-item-group>
         <ion-item-divider color="light">Availability</ion-item-divider>
         <availability-options [availability]="person?.availability"></availability-options>
+    </ion-item-group>
+
+    <ion-item-group>
+        <ion-item-divider color="light">
+            <ion-label>Roles</ion-label>
+            <ion-buttons item-end>
+                <button icon-only ion-button clear small (tap)="add_new_role()">
+                    <ion-icon name="add"></ion-icon>
+                </button>
+            </ion-buttons>
+        </ion-item-divider>
+        <role-options [person]="person"></role-options>
     </ion-item-group>
 </div>
