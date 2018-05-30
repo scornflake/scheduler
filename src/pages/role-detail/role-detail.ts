@@ -1,25 +1,31 @@
-import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
-
-/**
- * Generated class for the RoleDetailPage page.
- *
- * See https://ionicframework.com/docs/components/#navigation for more info on
- * Ionic pages and navigation.
- */
+import {Component, Input} from '@angular/core';
+import {IonicPage, NavController, NavParams} from 'ionic-angular';
+import {Role} from "../../scheduling/role";
+import {Person} from "../../scheduling/people";
 
 @IonicPage()
 @Component({
-  selector: 'page-role-detail',
-  templateUrl: 'role-detail.html',
+    selector: 'page-role-detail',
+    templateUrl: 'role-detail.html',
 })
 export class RoleDetailPage {
+    role: Role;
+    person: Person;
 
-  constructor(public navCtrl: NavController, public navParams: NavParams) {
-  }
+    constructor(public navCtrl: NavController, public navParams: NavParams) {
+        this.role = this.navParams.get('role');
+        this.person = this.navParams.get('person');
+    }
 
-  ionViewDidLoad() {
-    console.log('ionViewDidLoad RoleDetailPage');
-  }
+    ionViewDidLoad() {
+        if (!this.role || !this.person) {
+            // pop back to home, for debugging
+            this.navCtrl.setRoot('people')
+        }
 
+    }
+
+    add_new_rule() {
+
+    }
 }

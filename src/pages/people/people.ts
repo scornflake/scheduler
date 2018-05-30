@@ -1,9 +1,12 @@
 import {Component} from '@angular/core';
-import {AlertController, NavController} from 'ionic-angular';
+import {AlertController, IonicPage, NavController} from 'ionic-angular';
 import {RootStore} from "../../store/root";
 import {Person} from "../../scheduling/people";
 import {Logger, LoggingService} from "ionic-logging-service";
 
+@IonicPage({
+    name: 'people'
+})
 @Component({
     selector: 'page-people',
     templateUrl: 'people.html'
@@ -53,7 +56,7 @@ export class PeoplePage {
     ngAfterViewInit() {
         // for debug
         // this.add_new_person();
-        this.show_person_detail(this.rootStore.people_store.find_person_with_name("Chris Evans"));
+        this.show_person_detail(this.rootStore.people_store.find_person_with_name("Stuart Campbell"));
     }
 
     delete_person(person: Person) {

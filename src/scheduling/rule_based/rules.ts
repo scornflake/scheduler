@@ -35,6 +35,18 @@ class Rule {
     constructor(priority: number = 0) {
         this.priority = priority;
     }
+
+    get title() {
+        return "title";
+    }
+
+    get description() {
+        return "description";
+    }
+
+    toString() {
+        return this.description;
+    }
 }
 
 class FixedRoleOnDate extends Rule {
@@ -167,7 +179,7 @@ class UsageWeightedSequential extends Rule {
 }
 
 class ConditionalRule extends Rule {
-    private actions: Array<ConditionAction>;
+    actions: Array<ConditionAction>;
 
     constructor() {
         super();
@@ -202,6 +214,14 @@ class AssignedToRoleCondition extends ConditionalRule {
     condition(stat: RuleFacts, person: Person, role: Role): boolean {
         return this.role.uuid == role.uuid;
     }
+
+    get title() {
+        return `When on ${this.role}`
+    }
+
+    get description() {
+        return this.actions.join(", ")
+    }
 }
 
 class ConditionAction extends Rule {
@@ -226,6 +246,14 @@ class ScheduleOn extends ConditionAction {
             stat.add_decision(`Couldn't place ${this.person} in role, the role is full`);
         }
     }
+
+    get title() {
+        return `If on ${this.person}`
+    }
+
+    get description() {
+        return `Also be on ${this.role}`;
+    }
 }
 
 class SecondaryAction extends Rule {
@@ -248,7 +276,6 @@ class TryToScheduleWith extends SecondaryAction {
         this.reach = reach;
         this.max_number_of_times = max_number;
     }
-
 
     execute(schedule_at_date: ScheduleAtDate, schedule: ScheduleWithRules) {
         // If this line includes a use of self, does it also include a use of the other person?
@@ -285,6 +312,14 @@ class TryToScheduleWith extends SecondaryAction {
                 }
             }
         }
+    }
+
+    get title() {
+        return `If scheduled on...`;
+    }
+
+    get description() {
+        return `Try to team with ${this.other_person.initials} within ${this.reach.description(true)}, max ${this.max_number_of_times}`;
     }
 }
 

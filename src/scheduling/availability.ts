@@ -79,13 +79,17 @@ export class Availability {
     }
 
     public toString(): string {
-        if(this.unit == AvailabilityUnit.AVAIL_ANYTIME) {
+        return this.description();
+    }
+
+    public description(short: boolean = false) {
+        if (this.unit == AvailabilityUnit.AVAIL_ANYTIME) {
             return "anytime";
         }
         if (this.period == 1) {
-            return `Every ${this.period} ${this.unit_description(true)} `
+            return `${!short ? 'Every ' : ''}${this.period} ${this.unit_description(true)} `
         }
-        return `Every ${this.period} ${this.unit_description(false)} `
+        return `${!short ? 'Every ' : ""}${this.period} ${this.unit_description(false)} `
     }
 }
 
@@ -135,7 +139,7 @@ export class AvailabilityEveryNOfM extends Availability {
         return is_available;
     }
 
-    public toString():string {
+    public toString(): string {
         return `Every ${this.period} in ${this.period_to_look_at} weeks`;
     }
 }

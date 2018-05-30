@@ -5,7 +5,6 @@ import {MyApp} from './app.component';
 
 import {AboutPage} from '../pages/about/about';
 import {TabsPage} from '../pages/tabs/tabs';
-import {PeoplePage} from "../pages/people/people";
 
 import {StatusBar} from '@ionic-native/status-bar';
 import {SplashScreen} from '@ionic-native/splash-screen';
@@ -25,6 +24,7 @@ import {ServerProvider} from "../providers/server/server";
 import {HomePageModule} from "../pages/home/home.module";
 import {LoginPageModule} from "../pages/login/login.module";
 import {RootStore} from "../store/root";
+import {PeoplePageModule} from "../pages/people/people.module";
 
 // export function defaultDSPSetup(apollo, link) {
 //     return new DataStoreProvider(apollo, link, defaultConfiguration);
@@ -34,7 +34,6 @@ import {RootStore} from "../store/root";
     declarations: [
         MyApp,
         AboutPage,
-        PeoplePage,
         TabsPage
     ],
     imports: [
@@ -49,14 +48,14 @@ import {RootStore} from "../store/root";
         SheetSelectionPageModule,
         TabSelectionPageModule,
         HomePageModule,
-        LoginPageModule
+        LoginPageModule,
+        PeoplePageModule,
 
     ],
     bootstrap: [IonicApp],
     entryComponents: [
         MyApp,
         AboutPage,
-        PeoplePage,
         TabsPage,
     ],
     providers: [

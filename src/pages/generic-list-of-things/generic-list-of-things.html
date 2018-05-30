@@ -1,0 +1,17 @@
+<ion-header>
+
+    <ion-navbar>
+        <ion-title>{{title}}</ion-title>
+        <ion-buttons></ion-buttons>
+    </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+    <ion-list>
+        <ion-item *ngFor="let t of things" [attr.detail-push]="show_push" (tap)="item_pressed(t)">
+            <ion-label>{{label_for_thing(t)}}</ion-label>
+        </ion-item>
+    </ion-list>
+</ion-content>

@@ -14,20 +14,32 @@
         </ion-item>
     </ion-list>
 
+    <ion-list-header color="light">Availability</ion-list-header>
     <ion-item-group>
-        <ion-item-divider color="light">Availability</ion-item-divider>
         <availability-options [availability]="person?.availability"></availability-options>
     </ion-item-group>
 
+    <ion-list-header color="light">
+        Roles
+        <ion-buttons item-end>
+            <button ion-button clear small (tap)="add_new_role()">
+                Add Role
+            </button>
+        </ion-buttons>
+    </ion-list-header>
     <ion-item-group>
-        <ion-item-divider color="light">
-            <ion-label>Roles</ion-label>
-            <ion-buttons item-end>
-                <button icon-only ion-button clear small (tap)="add_new_role()">
-                    <ion-icon name="add"></ion-icon>
-                </button>
-            </ion-buttons>
-        </ion-item-divider>
-        <role-summary [person]="person"></role-summary>
+        <role-summary [person]="person" (tapped)="role_tapped($event)"></role-summary>
+    </ion-item-group>
+
+    <ion-list-header color="light">
+        Rules
+        <ion-buttons item-end>
+            <button ion-button clear small (tap)="add_new_rule()">
+                Add Rule
+            </button>
+        </ion-buttons>
+    </ion-list-header>
+    <ion-item-group>
+        <rule-details [role]="role" [person]="person"></rule-details>
     </ion-item-group>
 </div>

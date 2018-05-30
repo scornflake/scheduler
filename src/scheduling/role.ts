@@ -14,7 +14,11 @@ export class Role extends ObjectWithUUID {
     }
 
     valueOf() {
-        return "[" + this.name + "]";
+        return this.name;
+    }
+
+    toString() {
+        return this.valueOf();
     }
 }
 

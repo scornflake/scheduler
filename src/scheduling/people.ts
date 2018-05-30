@@ -123,6 +123,23 @@ export class Person extends ObjectWithUUID {
         return this.secondary_action_list;
     }
 
+    get initials() {
+        let words = this.name.split(" ");
+        return words.map(w => w[0]).join(".")
+    }
+
+    delete_rule(rule: Rule) {
+        let list: Array<Rule> = this.conditional_rules;
+        if (rule instanceof SecondaryAction) {
+            list = this.secondary_actions;
+        }
+        list.forEach((item, index) => {
+            if (item == rule) {
+                list.splice(index, 1);
+            }
+        });
+    }
+
     add_secondary_action(action: SecondaryAction) {
         if (action) {
             // Assign the owner
@@ -211,7 +228,7 @@ export class Person extends ObjectWithUUID {
     }
 
     valueOf() {
-        return "[Person:" + this.name + "]";
+        return this.name;
     }
 
     validate(): ObjectValidation {
@@ -226,6 +243,14 @@ export class Person extends ObjectWithUUID {
             validation.add_error("Email is required");
         }
         return validation;
+    }
+
+    private delete_secondary_action(rule: SecondaryAction) {
+        this.secondary_actions.forEach((item, index) => {
+            if (item == rule) {
+                this.secondary_actions.splice(index, 1);
+            }
+        });
     }
 }
 

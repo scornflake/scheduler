@@ -1,43 +1,41 @@
-<div>
-    <ion-item>
-        <ion-segment color="primary" [(ngModel)]="type" (ionChange)="build_availability()">
-            <ion-segment-button value="regular">Regularly, Every</ion-segment-button>
-            <ion-segment-button value="fraction">Every N in M</ion-segment-button>
-        </ion-segment>
-    </ion-item>
-    <div [ngSwitch]="type">
-        <div *ngSwitchCase="'regular'">
-            <ion-item *ngIf="state.unit != 'anytime'">
-                <ion-segment color="primary" [(ngModel)]="days" (ionChange)="build_availability()">
+<ion-item>
+    <ion-segment color="primary" [(ngModel)]="type" (ionChange)="build_availability()">
+        <ion-segment-button value="regular">Regularly, Every</ion-segment-button>
+        <ion-segment-button value="fraction">Every N in M</ion-segment-button>
+    </ion-segment>
+</ion-item>
+<div [ngSwitch]="type">
+    <div *ngSwitchCase="'regular'">
+        <ion-item *ngIf="state.unit != 'anytime'">
+            <ion-segment color="primary" [(ngModel)]="days" (ionChange)="build_availability()">
+                <ion-segment-button *ngFor="let num of regular_days_options()" value="{{num}}">{{num}}
+                </ion-segment-button>
+            </ion-segment>
+        </ion-item>
+        <ion-item>
+            <ion-segment color="primary" [(ngModel)]="state.unit" (ionChange)="build_availability()">
+                <ion-segment-button value="anytime">Anytime</ion-segment-button>
+                <ion-segment-button value="every_days">Days</ion-segment-button>
+                <ion-segment-button value="every_weeks">Weeks</ion-segment-button>
+            </ion-segment>
+        </ion-item>
+    </div>
+    <div *ngSwitchCase="'fraction'">
+        <ion-grid>
+            <ion-row>
+                <ion-segment col-4 item-start color="primary" [(ngModel)]="days"
+                             (ionChange)="build_availability()">
                     <ion-segment-button *ngFor="let num of regular_days_options()" value="{{num}}">{{num}}
                     </ion-segment-button>
                 </ion-segment>
-            </ion-item>
-            <ion-item>
-                <ion-segment color="primary" [(ngModel)]="state.unit" (ionChange)="build_availability()">
-                    <ion-segment-button value="anytime">Anytime</ion-segment-button>
-                    <ion-segment-button value="every_days">Days</ion-segment-button>
-                    <ion-segment-button value="every_weeks">Weeks</ion-segment-button>
+                <ion-label col-1 text-center>in</ion-label>
+                <ion-segment col-4 item-end color="primary" [(ngModel)]="weeks"
+                             (ionChange)="build_availability()">
+                    <ion-segment-button *ngFor="let num of regular_days_options()" value="{{num}}">{{num}}
+                    </ion-segment-button>
                 </ion-segment>
-            </ion-item>
-        </div>
-        <div *ngSwitchCase="'fraction'">
-            <ion-grid>
-                <ion-row>
-                    <ion-segment col-4 item-start color="primary" [(ngModel)]="days"
-                                 (ionChange)="build_availability()">
-                        <ion-segment-button *ngFor="let num of regular_days_options()" value="{{num}}">{{num}}
-                        </ion-segment-button>
-                    </ion-segment>
-                    <ion-label col-1 text-center>in</ion-label>
-                    <ion-segment col-4 item-end color="primary" [(ngModel)]="weeks"
-                                 (ionChange)="build_availability()">
-                        <ion-segment-button *ngFor="let num of regular_days_options()" value="{{num}}">{{num}}
-                        </ion-segment-button>
-                    </ion-segment>
-                    <ion-label col-2 text-center>weeks</ion-label>
-                </ion-row>
-            </ion-grid>
-        </div>
+                <ion-label col-2 text-center>weeks</ion-label>
+            </ion-row>
+        </ion-grid>
     </div>
 </div>

@@ -6,8 +6,10 @@ import {PersonEditorComponent} from './person-editor/person-editor';
 import {ReasonsComponent} from './reasons/reasons';
 import {ShowFormErrorsComponent} from "./show-form-errors/show-form-errors";
 import {PersonDetailsComponent} from './person-details/person-details';
-import { AvailabilityOptionsComponent } from './availability-options/availability-options';
-import { RoleSummaryComponent } from './role-summary/role-summary';
+import {AvailabilityOptionsComponent} from './availability-options/availability-options';
+import {RoleSummaryComponent} from './role-summary/role-summary';
+import {RoleDetailComponent} from './role-detail/role-detail';
+import { RuleDetailsComponent } from './rule-details/rule-details';
 
 @NgModule({
     declarations: [
@@ -16,8 +18,10 @@ import { RoleSummaryComponent } from './role-summary/role-summary';
         ShowFormErrorsComponent,
         ReasonsComponent,
         PersonDetailsComponent,
-    AvailabilityOptionsComponent,
-    RoleSummaryComponent,
+        AvailabilityOptionsComponent,
+        RoleSummaryComponent,
+        RoleDetailComponent,
+    RuleDetailsComponent,
     ],
     imports: [
         IonicModule,
@@ -29,8 +33,10 @@ import { RoleSummaryComponent } from './role-summary/role-summary';
         ReasonsComponent,
         ShowFormErrorsComponent,
         PersonDetailsComponent,
-    AvailabilityOptionsComponent,
-    RoleSummaryComponent
+        AvailabilityOptionsComponent,
+        RoleSummaryComponent,
+        RoleDetailComponent,
+    RuleDetailsComponent
     ]
 })
 export class ComponentsModule {

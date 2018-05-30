@@ -1,0 +1,12 @@
+<ion-list>
+    <ion-item>
+        <ion-label>Name</ion-label>
+        <ion-label>{{role?.name}}</ion-label>
+    </ion-item>
+    <ion-item *ngIf="role != null">
+        <h2>Weighting</h2>
+        <ion-segment item-end col-6 [ngModel]="weight_for(role)" (ngModelChange)="set_weight_for(role, $event)">
+            <ion-segment-button *ngFor="let w of role_weightings" value="{{w}}">{{w}}</ion-segment-button>
+        </ion-segment>
+    </ion-item>
+</ion-list>

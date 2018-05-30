@@ -3,7 +3,7 @@ import {IonicPageModule} from 'ionic-angular';
 import {PersonDetailsPage} from './person-details';
 import {ComponentsModule} from "../../components/components.module";
 import {AvailabilityOptionsPageModule} from "../availability-options/availability-options.module";
-import {AvailabilityOptionsPage} from "../availability-options/availability-options";
+import {TryToScheduleWithOtherPageModule} from "../try-to-schedule-with-other/try-to-schedule-with-other.module";
 
 @NgModule({
     declarations: [
@@ -12,6 +12,7 @@ import {AvailabilityOptionsPage} from "../availability-options/availability-opti
     imports: [
         ComponentsModule,
         AvailabilityOptionsPageModule,
+        TryToScheduleWithOtherPageModule,
         IonicPageModule.forChild(PersonDetailsPage),
     ],
 })

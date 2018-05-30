@@ -1,0 +1,11 @@
+<ion-list no-margin>
+    <ion-item-sliding *ngFor="let rule of rules_for_role()">
+        <ion-item>
+            <h2>{{rule.title}}</h2>
+            <p>{{rule.description}}</p>
+        </ion-item>
+        <ion-item-options side="right">
+            <button ion-button color="danger" (tap)="delete_rule(rule)">Delete</button>
+        </ion-item-options>
+    </ion-item-sliding>
+</ion-list>

@@ -1,16 +1,11 @@
-<div>
-    <ion-list no-border no-lines>
-        <ion-item-sliding *ngFor="let role of roles">
-            <ion-item  (tap)="show_role_detail(role)" detail-push>
-                <h2>{{role.name}}</h2>
-                <ion-segment item-end col-6 [ngModel]="weight_for(role)" (ngModelChange)="set_weight_for(role, $event)">
-                    <ion-segment-button *ngFor="let w of role_weightings" value="{{w}}">{{w}}</ion-segment-button>
-                </ion-segment>
-                <p>Foo on a basket with some fast cars</p>
-            </ion-item>
-            <ion-item-options side="right">
-                <button ion-button color="danger" (tap)="delete_role(role)">Delete</button>
-            </ion-item-options>
-        </ion-item-sliding>
-    </ion-list>
-</div>
+<ion-list no-margin>
+    <ion-item-sliding *ngFor="let role of roles">
+        <ion-item (tap)="show_role_detail(role)" detail-push>
+            <h2>{{role.name}}</h2>
+            <ion-badge item-end>{{weight_for(role)}}</ion-badge>
+        </ion-item>
+        <ion-item-options side="right">
+            <button ion-button color="danger" (tap)="delete_role(role)">Delete</button>
+        </ion-item-options>
+    </ion-item-sliding>
+</ion-list>

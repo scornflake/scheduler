@@ -17,6 +17,12 @@ class ObjectValidation {
     public add_warning(e: string) {
         this.warnings.push(e);
     }
+
+    static simple(personIsRequired: string) {
+        let validation = new ObjectValidation();
+        validation.add_error(personIsRequired);
+        return validation;
+    }
 }
 
 class ScheduleScore {
