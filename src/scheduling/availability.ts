@@ -8,13 +8,13 @@ import {observable} from "mobx";
 export enum AvailabilityUnit {
     // Models availability such as "every 4 weeks".
     // Use Availability
-    AVAIL_ANYTIME,
-    EVERY_N_DAYS,
-    EVERY_N_WEEKS,
+    AVAIL_ANYTIME = 'anytime',
+    EVERY_N_DAYS = 'every_days',
+    EVERY_N_WEEKS = 'every_weeks',
 
     // Models availability such as "every 2 out of 3"
     // Use AvailabilityEveryNOfM
-    EVERY_N_OF_M_WEEKS,
+    EVERY_N_OF_M_WEEKS = 'every_n_of_m',
 }
 
 export class Availability {
@@ -53,6 +53,19 @@ export class Availability {
 
     is_available(person: Person, date: Date, facts: RuleFacts, record_unavailability: boolean) {
         return true;
+    }
+
+    static StringForUnit(unit: AvailabilityUnit) {
+        switch (unit) {
+            case AvailabilityUnit.EVERY_N_WEEKS:
+                return "Every N weeks";
+            case AvailabilityUnit.EVERY_N_DAYS:
+                return "Every N days";
+            case AvailabilityUnit.AVAIL_ANYTIME:
+                return "Anytime";
+            case AvailabilityUnit.EVERY_N_OF_M_WEEKS:
+                return "Every N of M";
+        }
     }
 }
 

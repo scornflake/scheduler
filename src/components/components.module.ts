@@ -5,6 +5,8 @@ import {NgPipesModule} from "angular-pipes";
 import {PersonEditorComponent} from './person-editor/person-editor';
 import {ReasonsComponent} from './reasons/reasons';
 import {ShowFormErrorsComponent} from "./show-form-errors/show-form-errors";
+import {PersonDetailsComponent} from './person-details/person-details';
+import { AvailabilityOptionsComponent } from './availability-options/availability-options';
 
 @NgModule({
     declarations: [
@@ -12,6 +14,8 @@ import {ShowFormErrorsComponent} from "./show-form-errors/show-form-errors";
         PersonEditorComponent,
         ShowFormErrorsComponent,
         ReasonsComponent,
+        PersonDetailsComponent,
+    AvailabilityOptionsComponent,
     ],
     imports: [
         IonicModule,
@@ -21,7 +25,9 @@ import {ShowFormErrorsComponent} from "./show-form-errors/show-form-errors";
         ScheduleViewerComponent,
         PersonEditorComponent,
         ReasonsComponent,
-        ShowFormErrorsComponent
+        ShowFormErrorsComponent,
+        PersonDetailsComponent,
+    AvailabilityOptionsComponent
     ]
 })
 export class ComponentsModule {

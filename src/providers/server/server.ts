@@ -52,14 +52,14 @@ export class ServerProvider {
     validateLoginToken(): Observable<ValidationResponse> {
         let token = this.store.ui_store.saved_state.login_token;
         if (isUndefined(token)) {
-            return Observable.from([{ok: false, reason: 'No token is defined', user: null}]);
+            return Observable.from([{ok: false, detail: 'No token is defined', user: null}]);
         }
         this.logger.info(`Validating login token: ${SafeJSON.stringify(token)}`);
         let url = this.server_url("validate_token/?token=" + token);
         return this.http.get(url).map(r => {
             let vr: ValidationResponse = {
                 ok: r['ok'],
-                reason: r['reason'],
+                detail: r['detail'],
                 user: r['user']
             };
             this.store.ui_store.login_token_validated = vr.ok;

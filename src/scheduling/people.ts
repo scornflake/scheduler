@@ -19,6 +19,8 @@ import {action, computed, observable} from "mobx";
 
 export class Person extends ObjectWithUUID {
     name: string;
+    email: string;
+    phone: string;
 
     primary_roles: Map<Role, number>;
     specific_roles: Map<string, Array<Role>>;
@@ -61,6 +63,10 @@ export class Person extends ObjectWithUUID {
         rules.push(weighting);
 
         return rules;
+    }
+
+    get role_names(): string {
+        return this.roles.map(r => r.name).join(", ")
     }
 
     put_on_specific_role_for_date(role: Role, date: Date) {

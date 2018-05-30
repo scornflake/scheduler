@@ -62,7 +62,7 @@ class GAPIS {
         const {code} = json;
         this.server.storeGoogleAccessCode(code).subscribe(r => {
             if (!r.ok) {
-                this.logger.error(r.reason)
+                this.logger.error(r.detail)
             } else {
                 this.logger.info("Server stored and converted the one-time code to a token!");
             }

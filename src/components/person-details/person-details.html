@@ -1,0 +1,24 @@
+<div>
+    <ion-list *ngIf="person != null">
+        <ion-list>
+            <ion-item>
+                <ion-label>Name</ion-label>
+                <ion-input [(ngModel)]="person.name"></ion-input>
+            </ion-item>
+            <ion-item>
+                <ion-label>Email</ion-label>
+                <ion-input [(ngModel)]="person.email"></ion-input>
+            </ion-item>
+            <ion-item>
+                <ion-label>Phone</ion-label>
+                <ion-input [(ngModel)]="person.phone"></ion-input>
+            </ion-item>
+
+        </ion-list>
+    </ion-list>
+
+    <ion-item-group>
+        <ion-item-divider color="light">Availability</ion-item-divider>
+        <availability-options [availability]="person?.availability"></availability-options>
+    </ion-item-group>
+</div>

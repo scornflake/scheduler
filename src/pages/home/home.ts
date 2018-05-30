@@ -41,7 +41,7 @@ export class HomePage {
                 validateLoginToken.subscribe(resp => {
                     this.logger.info(`Validation returned: ${SafeJSON.stringify(resp)}`);
                     if (!this.rootStore.ui_store.signed_in) {
-                        this.navCtrl.push('login');
+                        // this.navCtrl.push('login');
                     } else {
 
                     }

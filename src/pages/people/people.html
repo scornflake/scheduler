@@ -1,11 +1,22 @@
 <ion-header>
     <ion-navbar>
         <ion-title>
-            People
+            Your People
         </ion-title>
+        <ion-buttons end>
+            <button ion-button icon-only>
+                <ion-icon name="person-add"></ion-icon>
+            </button>
+        </ion-buttons>
     </ion-navbar>
 </ion-header>
 
 <ion-content>
-  
+    <!--<ion-list-header color="primary">People</ion-list-header>-->
+    <ion-list>
+        <ion-item *ngFor="let person of people()" detail-push (tap)="show_person_detail(person)">
+            <h2>{{person.name}}</h2>
+            <p>{{person.role_names}}</p>
+        </ion-item>
+    </ion-list>
 </ion-content>
