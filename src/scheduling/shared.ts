@@ -136,10 +136,6 @@ class Exclusion {
     }
 }
 
-class ScheduleEntry {
-    person?: Person;
-}
-
 /*
  A line in the schedule, for a given date.
  People are in various roles on a date.

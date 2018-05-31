@@ -5,7 +5,6 @@ import * as moment from "moment";
 import {Moment} from "moment";
 import {ScheduleInput} from "../scheduling/shared";
 import {Logger} from "ionic-logging-service";
-import {NPBCStoreConstruction} from "../providers/store/test.store";
 import {OrganizationStore} from "../scheduling/organization";
 import {LoggingWrapper} from "./logging-wrapper";
 import {SafeJSON} from "./json/safe-stringify";
@@ -14,17 +13,19 @@ export class SpreadsheetReader {
     problems: Map<string, Set<string>>;
     schedule: ScheduleWithRules;
     private logger: Logger;
+    private organization_store: OrganizationStore;
 
-    constructor() {
+    constructor(org_store: OrganizationStore) {
         this.problems = new Map<string, Set<string>>();
         this.logger = LoggingWrapper.getLogger("spreadsheet.reader");
+        this.organization_store = org_store;
     }
 
     parse_schedule_from_spreadsheet(rowData: Array<any>) {
         // OK, we will preload a schedule using a previous schedule
         // To do this we need to derive the start and end date (so it's duration is valid)
         let input = new ScheduleInput();
-        NPBCStoreConstruction.SetupStore(input.people, new OrganizationStore());
+        // NPBCStoreConstruction.SetupStore(input.people, new OrganizationStore());
 
         this.logger.info("Parsing schedule...");
         // First, we validate we have the expected column names
@@ -95,7 +96,7 @@ export class SpreadsheetReader {
                                 if (isUndefined(persons_name)) {
                                     continue;
                                 }
-                                if(persons_name.length == 0) {
+                                if (persons_name.length == 0) {
                                     continue;
                                 }
 

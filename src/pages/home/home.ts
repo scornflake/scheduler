@@ -73,7 +73,7 @@ export class HomePage {
                 let sheet = spreadsheet.sheets.find(s => s.properties.sheetId == this.rootStore.state.previous_sheet_tab_id);
                 this.sheetAPI.read_spreadsheet_data(spreadsheet, sheet).subscribe(rows => {
 
-                    let reader = new SpreadsheetReader();
+                    let reader = new SpreadsheetReader(this.rootStore.organization_store);
                     reader.parse_schedule_from_spreadsheet(rows);
 
                     if (reader.has_problems) {
@@ -86,7 +86,7 @@ export class HomePage {
                         this.logger.info(`Had problems: ${s}`);
                     }
                     this.logger.info("Made schedule!");
-                    this.rootStore.set_previous_schedule(reader.schedule);
+                    this.rootStore.organization_store.set_previous_schedule(reader.schedule);
                 });
             });
         }
@@ -99,7 +99,7 @@ export class HomePage {
             this.sheetAPI.load_sheet_with_id(sheet_id).subscribe((spreadsheet) => {
                 console.log("Loaded the sheet!");
                 let sheet = spreadsheet.sheets.find(s => s.properties.sheetId == this.rootStore.state.google_sheet_tab_id);
-                this.sheetAPI.clear_and_write_schedule(spreadsheet, sheet, this.rootStore.schedule);
+                this.sheetAPI.clear_and_write_schedule(spreadsheet, sheet, this.rootStore.organization_store.schedule);
             }, (error) => {
                 console.log("Error loading sheet: " + error);
             });
@@ -127,7 +127,7 @@ export class HomePage {
     }
 
     export_as_csv() {
-        let exporter = new CSVExporter(this.rootStore.schedule);
+        let exporter = new CSVExporter(this.rootStore.organization_store.schedule);
         exporter.write_to_file("schedule.csv");
     }
 

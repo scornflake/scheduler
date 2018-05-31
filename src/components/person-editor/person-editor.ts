@@ -7,7 +7,6 @@ import {RootStore} from "../../store/root";
 import {UIStore} from "../../store/UIState";
 
 @Component({
-    // changeDetection: ChangeDetectionStrategy.OnPush,
     selector: 'person-editor',
     templateUrl: 'person-editor.html'
 })
@@ -17,7 +16,7 @@ export class PersonEditorComponent {
 
     @computed
     get schedule(): ScheduleWithRules {
-        return this.store.schedule;
+        return this.store.organization_store.schedule;
     }
 
     @computed

@@ -1,12 +1,6 @@
 import {Role} from "./role";
 import {Availability, AvailabilityUnit, SchedulePrefs} from "./availability";
-import {
-    AssignedToRoleCondition,
-    ConditionalRule,
-    Rule,
-    SecondaryAction,
-    WeightedRoles
-} from "./rule_based/rules";
+import {AssignedToRoleCondition, ConditionalRule, Rule, SecondaryAction, WeightedRoles} from "./rule_based/rules";
 import {BaseStore, ObjectWithUUID} from "./common/base_model";
 import {dayAndHourForDate, throwOnInvalidDate} from "./common/date-utils";
 import {RuleFacts} from "./rule_based/rule-facts";
@@ -16,8 +10,6 @@ import * as _ from "lodash";
 import {isUndefined} from "util";
 import {SafeJSON} from "../common/json/safe-stringify";
 import {action, computed, observable} from "mobx";
-import {List} from "ionic-angular";
-import {ObjectValueNode} from "graphql";
 import {ObjectValidation} from "./shared";
 
 export class Person extends ObjectWithUUID {
@@ -243,14 +235,6 @@ export class Person extends ObjectWithUUID {
             validation.add_error("Email is required");
         }
         return validation;
-    }
-
-    private delete_secondary_action(rule: SecondaryAction) {
-        this.secondary_actions.forEach((item, index) => {
-            if (item == rule) {
-                this.secondary_actions.splice(index, 1);
-            }
-        });
     }
 }
 
