@@ -112,7 +112,7 @@ export class PersonDetailsComponent {
 
         this.add_cancel_to_alert(alert);
 
-        alert.setTitle('Choose role to add');
+        alert.setTitle('Choose rule to add');
         alert.present()
     }
 

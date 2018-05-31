@@ -13,6 +13,7 @@ describe('rules', () => {
     let neil, bob, tim: Person;
     let date: Date;
 
+
     beforeEach(() => {
         people_store = new PeopleStore();
         role_store = new RolesStore();
