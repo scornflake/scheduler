@@ -1,4 +1,4 @@
-import {ScheduleAtDate, ScheduleInput} from "../shared";
+import {ScheduleAtDate} from "../shared";
 import {Role} from "../role";
 import {Person} from "../people";
 import * as _ from 'lodash';
@@ -11,18 +11,18 @@ import {Assignment} from "../assignment";
 import {Service} from "../service";
 
 class ScheduleWithRules {
-    params: ScheduleInput;
+    service: Service;
     facts: RuleFacts;
     free_text: {};
 
     private logger: Logger;
     private previous_scheduler: ScheduleWithRules;
 
-    constructor(input: ScheduleInput, previous: ScheduleWithRules = null) {
+    constructor(service: Service, previous: ScheduleWithRules = null) {
         this.logger = LoggingWrapper.getLogger("scheduler");
 
-        this.params = input;
-        this.params.validate();
+        this.service = service;
+        this.service.validate();
         this.free_text = {};
         if (previous) {
             this.warmup_using(previous);
@@ -35,22 +35,18 @@ class ScheduleWithRules {
     }
 
     get assignments(): Array<Assignment> {
-        return this.params.service.assignments;
-    }
-
-    get service(): Service {
-        return this.params.service;
+        return this.service.assignments;
     }
 
     create_schedule() {
-        if (!this.params.service) {
+        if (!this.service) {
             throw new Error("No service defined, cannot create the schedule");
         }
-        let schedule_duration = this.params.schedule_duration_in_days;
-        this.logger.info("Working from " + this.params.start_date + " to: " + this.params.end_date);
+        let schedule_duration = this.service.schedule_duration_in_days;
+        this.logger.info("Working from " + this.service.start_date + " to: " + this.service.end_date);
         this.logger.debug("Schedule is " + schedule_duration + " days long");
 
-        let role_groups = this.params.service.roles_in_layout_order_grouped;
+        let role_groups = this.service.roles_in_layout_order_grouped;
         let role_names = role_groups.map(g => SafeJSON.stringify(g.map(r => r.name)));
         this.logger.debug("Roles (in order of importance): " + SafeJSON.stringify(role_names));
 
@@ -64,13 +60,13 @@ class ScheduleWithRules {
     process_role_group(role_group: Array<Role>) {
         this.facts.begin_new_role_group(role_group);
 
-        let current_date = this.params.start_date;
+        let current_date = this.service.start_date;
         this.logger.debug("\r\nNext group: " + SafeJSON.stringify(role_group.map(r => r.name)));
 
         // Iterate through all dates
         let iterations = 0;
 
-        while (current_date.valueOf() <= this.params.end_date.valueOf()) {
+        while (current_date.valueOf() <= this.service.end_date.valueOf()) {
             this.logger.debug("Next date: " + current_date);
 
             for (let role of role_group) {
@@ -213,7 +209,7 @@ class ScheduleWithRules {
     private choose_next_schedule_date(date: Date): Date {
         let next_date = new Date(date);
         // this.logger.debug("Moving from date ... : " + next_date);
-        next_date.setDate(date.getDate() + this.params.days_per_period);
+        next_date.setDate(date.getDate() + this.service.days_per_period);
         // this.logger.debug(".... to date ... : " + next_date);
         return next_date;
     }

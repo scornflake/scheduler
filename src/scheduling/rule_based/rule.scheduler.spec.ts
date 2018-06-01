@@ -6,7 +6,6 @@ import {CSVExporter} from "../exporter/csv.exporter";
 import {addDaysToDate, constructSensibleDate} from "../common/date-utils";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {Person} from "../people";
-import {ScheduleInput} from "../shared";
 import {
     defaultAcousticGuitar,
     defaultComputerRole,
@@ -21,7 +20,6 @@ import {Service} from "../service";
 describe('role scheduler', () => {
     let neil: Person;
     let service: Service;
-    let params: ScheduleInput;
     let end_date: Date;
     let start_date: Date;
     let sound: Role;
@@ -33,10 +31,8 @@ describe('role scheduler', () => {
         end_date.setDate(start_date.getDate() + 30);
 
         service = new Service("role schedule test service");
-
-        params = new ScheduleInput(service);
-        params.start_date = start_date;
-        params.end_date = end_date;
+        service.start_date = start_date;
+        service.end_date = end_date;
 
         neil = new Person("Neil");
         service.add_person(neil).add_role(defaultSoundRole);
@@ -47,19 +43,19 @@ describe('role scheduler', () => {
     });
 
     it('cannot create empty', () => {
-        params.end_date = start_date;
+        service.end_date = start_date;
         service.remove_person(neil);
         expect(() => {
-            schedule = new ScheduleWithRules(params);
+            schedule = new ScheduleWithRules(service);
             schedule.create_schedule()
         }).toThrow();
     });
 
     it('can schedule neil weekly', () => {
-        params.start_date = new Date(2017, 9, 1);
-        params.end_date = new Date(2017, 9, 25);
+        service.start_date = new Date(2017, 9, 1);
+        service.end_date = new Date(2017, 9, 25);
 
-        schedule = new ScheduleWithRules(params);
+        schedule = new ScheduleWithRules(service);
         expect(schedule).not.toBeNull();
 
         schedule.create_schedule();
@@ -85,13 +81,13 @@ describe('role scheduler', () => {
     });
 
     it('exclusions affect the layout', () => {
-        params.start_date = new Date(2017, 9, 1);
-        params.end_date = new Date(2017, 9, 25);
+        service.start_date = new Date(2017, 9, 1);
+        service.end_date = new Date(2017, 9, 25);
 
         // Make myself available every 2 weeks, we should see a change to the schedule
         neil.prefs.availability = new Availability(2, AvailabilityUnit.EVERY_N_WEEKS);
 
-        schedule = new ScheduleWithRules(params);
+        schedule = new ScheduleWithRules(service);
         expect(schedule).not.toBeNull();
 
         schedule.create_schedule();
@@ -111,7 +107,7 @@ describe('role scheduler', () => {
          */
         neil.set_availability(new AvailabilityEveryNOfM(2, 3));
 
-        schedule = new ScheduleWithRules(params);
+        schedule = new ScheduleWithRules(service);
         expect(schedule).not.toBeNull();
         schedule.create_schedule();
 
@@ -123,7 +119,7 @@ describe('role scheduler', () => {
         This builds a schedule where neil is on every week.
         We can then test the schedule.is_person_available method
          */
-        schedule = new ScheduleWithRules(params);
+        schedule = new ScheduleWithRules(service);
         expect(schedule).not.toBeNull();
         schedule.create_schedule();
         let facts = schedule.facts;
@@ -155,16 +151,16 @@ describe('role scheduler', () => {
     });
 
     it('unavailable dates act like exclusion zones', () => {
-        params.start_date = new Date(2017, 9, 1);
-        params.end_date = new Date(2017, 9, 25);
+        service.start_date = new Date(2017, 9, 1);
+        service.end_date = new Date(2017, 9, 25);
 
         service.add_person(neil).remove_role(sound).add_role(defaultComputerRole);
         neil.prefs.availability = new Availability(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         // If unavailability affects exclusions we should end up with not being able to schedule on the first date
-        neil.add_unavailable(params.start_date);
+        neil.add_unavailable(service.start_date);
 
-        schedule = new ScheduleWithRules(params);
+        schedule = new ScheduleWithRules(service);
         expect(schedule).not.toBeNull();
         schedule.create_schedule();
 
@@ -182,8 +178,8 @@ describe('role scheduler', () => {
 
     it('limits placements based on max count', () => {
         // One week
-        params.start_date = new Date(2017, 10, 1);
-        params.end_date = new Date(2017, 10, 3);
+        service.start_date = new Date(2017, 10, 1);
+        service.end_date = new Date(2017, 10, 3);
 
         // Put neil on Guitar
         // And daniel on guitar as well
@@ -197,7 +193,7 @@ describe('role scheduler', () => {
 
         // Do a schedule. For one week.
         // We should see just ONE person on guitar.
-        schedule = new ScheduleWithRules(params);
+        schedule = new ScheduleWithRules(service);
         schedule.create_schedule();
 
         let firstSchedule = Array.from(schedule.dates.values())[0];
@@ -209,9 +205,9 @@ describe('role scheduler', () => {
     it('distributes among roles evenly', () => {
         // Make a 6 day schedule with 3 people, all available every day.
         // Expect to see a rotation, rather than the first person picked all the time
-        params.start_date = new Date(2017, 10, 1);
-        params.end_date = new Date(2017, 10, 6);
-        params.days_per_period = 1;
+        service.start_date = new Date(2017, 10, 1);
+        service.end_date = new Date(2017, 10, 6);
+        service.days_per_period = 1;
 
         let daniel = new Person("Daniel");
         service.add_person(daniel).add_role(defaultSoundRole);
@@ -219,7 +215,7 @@ describe('role scheduler', () => {
         let ben = new Person("Ben");
         service.add_person(ben).add_role(defaultSoundRole);
 
-        schedule = new ScheduleWithRules(params);
+        schedule = new ScheduleWithRules(service);
         schedule.create_schedule();
         let schedules = Array.from(schedule.dates.values());
 
@@ -238,7 +234,7 @@ describe('role scheduler', () => {
 
     describe('notes', () => {
         it('can record free text for a role position', function () {
-            schedule = new ScheduleWithRules(params);
+            schedule = new ScheduleWithRules(service);
             let date = constructSensibleDate(2018, 1, 5);
 
             schedule.add_note(date, defaultSpeakerRole, "Hello");

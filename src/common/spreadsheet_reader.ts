@@ -3,7 +3,6 @@ import {isDefined, isUndefined} from "ionic-angular/util/util";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import * as moment from "moment";
 import {Moment} from "moment";
-import {ScheduleInput} from "../scheduling/shared";
 import {Logger} from "ionic-logging-service";
 import {OrganizationStore} from "../scheduling/organization";
 import {LoggingWrapper} from "./logging-wrapper";
@@ -25,10 +24,9 @@ export class SpreadsheetReader {
     parse_schedule_from_spreadsheet(rowData: Array<any>) {
         // OK, we will preload a schedule using a previous schedule
         // To do this we need to derive the start and end date (so it's duration is valid)
-        let fake_service = new Service(`From spreadsheet`);
-        let input = new ScheduleInput(fake_service);
+        let service = new Service(`A Snapshot`);
 
-        // NPBCStoreConstruction.SetupStore(input.people, new OrganizationStore());
+        // NPBCStoreConstruction.SetupStore(service.people, new OrganizationStore());
 
         this.logger.info("Parsing schedule...");
         // First, we validate we have the expected column names
@@ -47,11 +45,11 @@ export class SpreadsheetReader {
         let min_date: Moment = allDates[0];
         let max_date: Moment = allDates[allDates.length - 1];
 
-        input.start_date = min_date.toDate();
-        input.end_date = max_date.toDate();
-        // this.logger.info(`Starting ${input.start_date} and ending ${input.end_date}`);
+        service.start_date = min_date.toDate();
+        service.end_date = max_date.toDate();
+        // this.logger.info(`Starting ${service.start_date} and ending ${service.end_date}`);
 
-        this.schedule = new ScheduleWithRules(input);
+        this.schedule = new ScheduleWithRules(service);
 
         // Now we read each row and add people into various roles/positions
         let roles_store = this.organization_store.roles_store;
@@ -107,7 +105,7 @@ export class SpreadsheetReader {
                                 if (person == null) {
                                     this.add_problem("person", `cannot find ${persons_name}`);
                                 } else {
-                                    let assignment = fake_service.add_person(person).add_role(global_role);
+                                    let assignment = service.add_person(person).add_role(global_role);
                                     this.schedule.facts.place_person_in_role(assignment, global_role, current_date, true, false);
                                     // this.schedule.facts.place_person_in_role(person, global_role, current_date, true, false);
                                 }

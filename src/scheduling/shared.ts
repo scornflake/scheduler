@@ -52,55 +52,6 @@ class ScheduleScore {
     }
 }
 
-class ScheduleInput {
-    start_date: Date;
-    end_date: Date;
-    days_per_period: number;
-
-    manual_layouts: Map<Date, Role>;
-    service: Service;
-
-    constructor(service: Service) {
-        this.manual_layouts = new Map<Date, Role>();
-        this.days_per_period = 7;
-        this.service = service;
-    }
-
-    get roles() {
-        return this.service.roles;
-    }
-
-    get people() {
-        return this.service.people;
-    }
-
-    validate() {
-        if (this.service.roles_in_layout_order.length == 0) {
-            throw Error("The dates parameters don't define any roles.");
-        }
-
-        if (this.days_per_period < 1) {
-            throw new Error("Period must be > 1");
-        }
-
-        if (!this.start_date || isNaN(this.start_date.valueOf())) {
-            throw new Error("No start date, or start date is invalid");
-        }
-        if (!this.end_date || isNaN(this.end_date.valueOf())) {
-            throw new Error("No end date, or end date is invalid");
-        }
-
-        if (this.schedule_duration_in_days <= 0) {
-            throw new Error("The dates has no sensible length (0 or -ve)");
-        }
-    }
-
-    get schedule_duration_in_days(): number {
-        return daysBetween(this.start_date, this.end_date);
-    }
-
-}
-
 function daysBetween(startDate: Date, endDate: Date): number {
     let msPerDay = 1000 * 60 * 60 * 24;
     return (endDate.valueOf() - startDate.valueOf()) / msPerDay;
@@ -293,7 +244,6 @@ class ScheduleAtDate {
 
 export {
     Exclusion,
-    ScheduleInput,
     ScheduleScore,
     ScheduleAtDate,
     daysBetween,

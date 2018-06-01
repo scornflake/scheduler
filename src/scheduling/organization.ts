@@ -6,7 +6,6 @@ import {Logger} from "ionic-logging-service";
 import {NPBCStoreConstruction} from "../providers/store/test.store";
 import {ScheduleWithRules} from "./rule_based/scheduler";
 import {csd} from "./common/date-utils";
-import {ScheduleInput} from "./shared";
 import {ApplicationRef} from "@angular/core";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {EventStore, Service} from "./service";
@@ -41,7 +40,11 @@ class OrganizationStore extends BaseStore<Organization> {
         NPBCStoreConstruction.SetupPeople(this.people_store);
 
         this.event_store = new EventStore();
+
+        // for testing, create some fake
         this.draft_service = this.event_store.add_event_named("Draft Service");
+        this.draft_service.start_date = csd(2018, 6, 3);
+        this.draft_service.end_date = csd(2018, 9, 30);
 
         this.logger = LoggingWrapper.getLogger("google");
 
@@ -59,12 +62,7 @@ class OrganizationStore extends BaseStore<Organization> {
 
     @action
     generate_schedule(): ScheduleWithRules {
-        // for testing, create some fake
-        let params = new ScheduleInput(this.draft_service);
-        params.start_date = csd(2018, 6, 3);
-        params.end_date = csd(2018, 9, 30);
-
-        this.schedule = new ScheduleWithRules(params, this.previous_schedule);
+        this.schedule = new ScheduleWithRules(this.draft_service, this.previous_schedule);
         this.schedule.create_schedule();
 
         this.appRef.tick();

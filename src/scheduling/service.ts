@@ -8,12 +8,19 @@ import * as _ from "lodash";
 import {Person} from "./people";
 import {OnThisDate, Rule, UsageWeightedSequential} from "./rule_based/rules";
 import {isUndefined} from "ionic-angular/util/util";
+import {daysBetween} from "./shared";
 
 class Service extends ObjectWithUUID {
     @observable name: string;
 
     // These are the rules applied to the people doing this service/event
     @observable rules: Array<Rule>;
+
+    start_date: Date;
+    end_date: Date;
+    days_per_period: number;
+
+    manual_layouts: Map<Date, Role>;
 
     // This is the people available for this service/event
     assignments: Array<Assignment>;
@@ -26,6 +33,34 @@ class Service extends ObjectWithUUID {
         this.assignments = new Array<Assignment>();
         this.logger = LoggingWrapper.getLogger("model.event");
         this.rules = new Array<Rule>();
+
+        this.manual_layouts = new Map<Date, Role>();
+        this.days_per_period = 7;
+    }
+
+    validate() {
+        if (this.roles_in_layout_order.length == 0) {
+            throw Error("The dates parameters don't define any roles.");
+        }
+
+        if (this.days_per_period < 1) {
+            throw new Error("Period must be > 1");
+        }
+
+        if (!this.start_date || isNaN(this.start_date.valueOf())) {
+            throw new Error("No start date, or start date is invalid");
+        }
+        if (!this.end_date || isNaN(this.end_date.valueOf())) {
+            throw new Error("No end date, or end date is invalid");
+        }
+
+        if (this.schedule_duration_in_days <= 0) {
+            throw new Error("The dates has no sensible length (0 or -ve)");
+        }
+    }
+
+    get schedule_duration_in_days(): number {
+        return daysBetween(this.start_date, this.end_date);
     }
 
     get_assignment_for(person: Person) {
