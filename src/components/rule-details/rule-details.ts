@@ -1,30 +1,28 @@
 import {Component, Input} from '@angular/core';
 import {Rule} from "../../scheduling/rule_based/rules";
-import {Person} from "../../scheduling/people";
-import {Role} from "../../scheduling/role";
+import {Assignment} from "../../scheduling/assignment";
 
 @Component({
     selector: 'rule-details',
     templateUrl: 'rule-details.html'
 })
 export class RuleDetailsComponent {
-    @Input('person') person: Person;
-    @Input('role') role: Role;
+    @Input('assignment') assignment: Assignment;
 
     constructor() {
     }
 
     rules_for_role() {
-        if (!this.person) {
+        if (!this.assignment) {
             return [];
         }
-        let rules: Array<Rule> = this.person.conditional_rules;
-        let actions = this.person.secondary_actions;
+        let rules: Array<Rule> = this.assignment.conditional_rules;
+        let actions = this.assignment.secondary_actions;
         return rules.concat(actions);
     }
 
     delete_rule(rule: any | Rule) {
-        this.person.delete_rule(rule);
+        this.assignment.delete_rule(rule);
     }
 
 }

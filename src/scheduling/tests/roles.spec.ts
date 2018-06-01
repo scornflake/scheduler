@@ -1,8 +1,4 @@
 import {Role} from "../role";
-import {PeopleStore, Person} from "../people";
-import {OnThisDate} from "../rule_based/rules";
-import {RuleFacts} from "../rule_based/rule-facts";
-import {defaultBass, defaultSaxRole, defaultSoundRole} from "./sample-data";
 import {RolesStore} from "./role-store";
 
 describe('roles', () => {
@@ -65,90 +61,4 @@ describe('roles', () => {
         expect(index).toEqual(1);
     });
 
-    it('can return roles sorted by layout order', () => {
-        let r = role_store.addRole(new Role("Foo"));
-        let r2 = role_store.addRole(new Role("Bar"));
-
-        r.layout_priority = 1;
-        r2.layout_priority = 3;
-
-        // Highest first
-        let sorted = role_store.roles_in_layout_order;
-        expect(sorted[0]).toEqual(r2);
-        expect(sorted[1]).toEqual(r);
-    });
-
-    it('can sort roles by priority, into groups', () => {
-        let r = role_store.addRole(new Role("Foo1", 1));
-        let r2 = role_store.addRole(new Role("Foo2", 3));
-        let r3 = role_store.addRole(new Role("Foo3", 3));
-
-        let groups = role_store.roles_in_layout_order_grouped;
-        expect(groups.length).toEqual(2);
-        expect(groups[0].length).toEqual(2);
-        expect(groups[1].length).toEqual(1);
-    });
-
-    describe('rules', () => {
-        let neil, rob: Person;
-        let people_store;
-        let state: RuleFacts;
-        let date: Date;
-
-        beforeEach(() => {
-            date = new Date(2017, 10, 1);
-
-            rob = new Person("rob");
-            rob.add_role(defaultBass);
-            rob.add_role(defaultSoundRole);
-
-            neil = new Person("neil");
-            neil.add_role(defaultSaxRole, 3);
-            neil.add_role(defaultSoundRole, 1);
-
-            people_store = new PeopleStore();
-            people_store.add_person(neil);
-            people_store.add_person(rob);
-
-            role_store.addRoles(people_store.roles_for_all_people);
-
-            state = new RuleFacts(people_store, role_store);
-            state.current_date = date;
-        });
-
-        it('creates role rules given people', () => {
-            let pick_roles = role_store.pick_rules(people_store);
-            expect(pick_roles.size).toEqual(3);
-
-            let just_roles = Array.from(pick_roles.keys());
-            expect(just_roles).toContain(defaultSaxRole);
-            expect(just_roles).toContain(defaultSoundRole);
-            expect(just_roles).toContain(defaultBass);
-
-            // If we choose sound, we should get a single UsageWeightedRule at the moment
-            let sound_rules = pick_roles.get(defaultSoundRole);
-            expect(sound_rules.length).toEqual(1);
-            // expect(sound_rules[0].constructor.name).toEqual("UsageWeightedSequential")
-        });
-
-        it('a person can have a fixed role on a date', () => {
-            // This would be the normal order
-            // [neil, rob]
-
-            role_store.addPickRule(new OnThisDate(date, rob, defaultSoundRole));
-            state.begin();
-            state.begin_new_role(date);
-
-            // If however; we give rob a 'fixed date' then we expect this to be reversed
-            let person = state.get_next_suitable_person_for(defaultSoundRole);
-            expect(person).toEqual(rob);
-
-            // Move to the next date, and it'll be OK.
-            state.current_date = new Date(2000, 1, 1);
-            person = state.get_next_suitable_person_for(defaultSoundRole);
-            expect(person).toEqual(neil);
-
-        });
-
-    })
 });

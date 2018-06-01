@@ -2,7 +2,6 @@ import {Component} from '@angular/core';
 import {IonicPage, NavController, NavParams, PopoverController, ToastController, ViewController} from 'ionic-angular';
 import {Person} from "../../scheduling/people";
 import {Logger, LoggingService} from "ionic-logging-service";
-import {AvailabilityOptionsPage} from "../availability-options/availability-options";
 import {ObjectValidation} from "../../scheduling/shared";
 
 @IonicPage()

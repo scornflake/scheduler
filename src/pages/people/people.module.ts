@@ -9,6 +9,7 @@ import {PeoplePage} from "./people";
     ],
     imports: [
         ComponentsModule,
+        // PersonDetailsPageModule,
         IonicPageModule.forChild(PeoplePage),
     ],
 })

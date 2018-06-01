@@ -4,14 +4,17 @@ import {AssignedToRoleCondition, ScheduleOn} from "../rule_based/rules";
 import {csd} from "../common/date-utils";
 import {defaultLeaderRole, defaultKeysRole} from "./sample-data";
 import {RolesStore} from "./role-store";
+import {Service} from "../service";
 
 describe('people, ', () => {
     let firstPerson: Person;
     let person_store: PeopleStore;
+    let service: Service;
     let someDate: Date = new Date(2010, 10, 3);
 
     beforeEach(() => {
         firstPerson = new Person('neilos');
+        service = new Service("test");
         person_store = new PeopleStore();
         person_store.add_person(firstPerson);
     });
@@ -60,41 +63,5 @@ describe('people, ', () => {
         expect(person_store.people).toContain(newPerson);
         expect(person_store.people).toContain(firstPerson);
     });
-
-    it('can add dependent roles', () => {
-        let cherilyn = new Person("Cherilyn");
-        person_store.add_person(cherilyn)
-            .if_assigned_to(defaultLeaderRole).then(new ScheduleOn(cherilyn, defaultKeysRole))
-
-        expect(cherilyn.roles.length).toEqual(1);
-        let rules = cherilyn.conditional_rules;
-        expect(rules.length).toEqual(1);
-
-        let first_rule = rules[0];
-        expect(first_rule instanceof AssignedToRoleCondition).toBeTruthy();
-
-        // TODO: could do more here
-        // We don't test that the condition has actions, or that they fire
-    });
-
-    it('can sort people by role layout priority', () => {
-        // people are in roles. Get a list of people based on their max role layout priority
-        let role_store = new RolesStore();
-        let leader = role_store.addRole(new Role("Leader", 10));
-        let keys = role_store.addRole(new Role("Keys", 5));
-        let gopher = role_store.addRole(new Role("Gopher", 1));
-
-        // Tim = Keys
-        let p2 = person_store.add_person(new Person("Tim").add_role(keys));
-        // Janice = Gopher
-        let p3 = person_store.add_person(new Person("Janice").add_role(gopher));
-        // Neil = Gopher + Leader
-        let p1 = person_store.add_person(new Person("Neil").add_role(gopher).add_role(leader));
-
-        // Expect Neil, Tim, Janice
-        let ordered = person_store.order_people_by_role_layout_priority();
-        expect(ordered[0]).toEqual(p1);
-        expect(ordered[1]).toEqual(p2);
-        expect(ordered[2]).toEqual(p3);
-    });
 });
+

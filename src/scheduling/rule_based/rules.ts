@@ -7,6 +7,7 @@ import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Availability} from "../availability";
 import {daysBetween, ScheduleAtDate} from "../shared";
 import {ScheduleWithRules} from "./scheduler";
+import {Assignment} from "../assignment";
 
 class RuleExecution {
     object: any;
@@ -82,12 +83,12 @@ class WeightedRoles extends Rule {
         });
     }
 
-    execute(state: RuleFacts, person: Person): Array<Role> {
+    execute(state: RuleFacts, assignment: Assignment): Array<Role> {
         // sort by current score, highest first.
         let roles_in_weight_order = this.roles_sorted_by_weight;
 
         let roles = Array.from(this.weightedRoles.keys());
-        let total_usages = state.total_number_of_times_person_placed_in_roles(person, roles);
+        let total_usages = state.total_number_of_times_person_placed_in_roles(assignment, roles);
         if (total_usages == 0) {
             return roles_in_weight_order;
         }
@@ -96,7 +97,7 @@ class WeightedRoles extends Rule {
         return _.sortBy(roles_in_weight_order, role => {
             let role_weighting = this.weightedRoles.get(role);
 
-            let current_score = state.number_of_times_role_used_by_person(role, person);
+            let current_score = state.number_of_times_role_used_by_person(role, assignment);
             let runtime_weighting = current_score / total_usages;
             // this.logger.info(role.name + ", weight: " + role_weighting + ". Has score: " + current_score + ". Runtime weight: " + runtime_weighting);
 
@@ -121,44 +122,44 @@ class WeightedRoles extends Rule {
 class OnThisDate extends Rule {
     role: Role;
     date: Date;
-    person: Person;
+    assignment: Assignment;
 
-    constructor(date: Date, person: Person, role: Role, priority: number = 0) {
+    constructor(date: Date, assignment: Assignment, role: Role, priority: number = 0) {
         super(priority);
         this.date = date;
         this.role = role;
-        this.person = person;
+        this.assignment = assignment;
     }
 
-    execute(state: RuleFacts): Person {
-        let hasPrimaryRole = this.person.has_primary_role(this.role);
+    execute(state: RuleFacts): Assignment {
+        let hasPrimaryRole = this.assignment.has_primary_role(this.role);
         if (state.current_date == this.date && hasPrimaryRole) {
-            return this.person;
+            return this.assignment;
         }
         return null;
     }
 }
 
 class UsageWeightedSequential extends Rule {
-    private usages: Map<Person, number>;
-    private original_index: Map<Person, number>;
+    private usages: Map<Assignment, number>;
+    private original_index: Map<Assignment, number>;
 
-    constructor(people: Array<Person>, priority: number = 0) {
+    constructor(assignments: Array<Assignment>, priority: number = 0) {
         super(priority);
-        this.usages = new Map<Person, number>();
-        this.original_index = new Map<Person, number>();
+        this.usages = new Map<Assignment, number>();
+        this.original_index = new Map<Assignment, number>();
 
-        people.forEach((p, index) => {
+        assignments.forEach((p, index) => {
             this.usages.set(p, 0);
             this.original_index.set(p, index);
         });
     }
 
-    execute(state: RuleFacts, role: Role): Array<Person> {
+    execute(state: RuleFacts, role: Role): Array<Assignment> {
         // Sort by number
-        return Array.from(this.usages.keys()).sort((p1: Person, p2: Person) => {
-            let usageForP1 = state.number_of_times_role_used_by_person(role, p1);
-            let usageForP2 = state.number_of_times_role_used_by_person(role, p2);
+        return Array.from(this.usages.keys()).sort((a1, a2) => {
+            let usageForP1 = state.number_of_times_role_used_by_person(role, a1);
+            let usageForP2 = state.number_of_times_role_used_by_person(role, a2);
             if (usageForP1 < usageForP2) {
                 return -1;
             } else if (usageForP1 > usageForP2) {
@@ -166,8 +167,8 @@ class UsageWeightedSequential extends Rule {
             }
 
             // Compare by index
-            let p1Index = state.index_of_person_in_role_group(p1, role);
-            let p2Index = state.index_of_person_in_role_group(p2, role);
+            let p1Index = state.index_of_person_in_role_group(a1.person, role);
+            let p2Index = state.index_of_person_in_role_group(a2.person, role);
             if (p1Index < p2Index) {
                 return -1;
             } else if (p1Index > p2Index) {
@@ -240,8 +241,9 @@ class ScheduleOn extends ConditionAction {
     }
 
     executeAction(stat: RuleFacts, person: Person, role: Role) {
-        if (stat.place_person_in_role(this.person, this.role, stat.current_date)) {
-            stat.add_decision("" + this.constructor.name + " executed, adding " + this.person + " to role " + this.role);
+        let assignment = stat.service.get_assignment_for(person);
+        if (stat.place_person_in_role(assignment, this.role, stat.current_date)) {
+            stat.add_decision(`${this.constructor.name} executed, adding ${this.person} to role ${this.role}`);
         } else {
             stat.add_decision(`Couldn't place ${this.person} in role, the role is full`);
         }

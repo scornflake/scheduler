@@ -8,6 +8,7 @@ import {Logger} from "ionic-logging-service";
 import {OrganizationStore} from "../scheduling/organization";
 import {LoggingWrapper} from "./logging-wrapper";
 import {SafeJSON} from "./json/safe-stringify";
+import {Service} from "../scheduling/service";
 
 export class SpreadsheetReader {
     problems: Map<string, Set<string>>;
@@ -24,7 +25,9 @@ export class SpreadsheetReader {
     parse_schedule_from_spreadsheet(rowData: Array<any>) {
         // OK, we will preload a schedule using a previous schedule
         // To do this we need to derive the start and end date (so it's duration is valid)
-        let input = new ScheduleInput();
+        let fake_service = new Service(`From spreadsheet`);
+        let input = new ScheduleInput(fake_service);
+
         // NPBCStoreConstruction.SetupStore(input.people, new OrganizationStore());
 
         this.logger.info("Parsing schedule...");
@@ -51,8 +54,8 @@ export class SpreadsheetReader {
         this.schedule = new ScheduleWithRules(input);
 
         // Now we read each row and add people into various roles/positions
-        let roles_store = input.roles;
-        let people_store = input.people;
+        let roles_store = this.organization_store.roles_store;
+        let people_store = this.organization_store.people_store;
 
         for (let row of dataRows) {
             // Iterate all the roles that we know of
@@ -83,9 +86,9 @@ export class SpreadsheetReader {
                 // Lookup the role!
                 let role_name = column_names[index];
                 if (role_name) {
-                    let role = roles_store.find_role(role_name);
-                    if (role) {
-                        this.logger.info(` - Role: ${role}`);
+                    let global_role = roles_store.find_role(role_name);
+                    if (global_role) {
+                        this.logger.info(` - Role: ${global_role}`);
 
                         let peoples_names = col.split(",").map(v => v.trim());
                         this.logger.info(`   - people: ${SafeJSON.stringify(peoples_names)}`);
@@ -104,8 +107,9 @@ export class SpreadsheetReader {
                                 if (person == null) {
                                     this.add_problem("person", `cannot find ${persons_name}`);
                                 } else {
-                                    this.schedule.facts.place_person_in_role(person, role, current_date, true, false);
-                                    // for_this_date.add_person(person, role);
+                                    let assignment = fake_service.add_person(person).add_role(global_role);
+                                    this.schedule.facts.place_person_in_role(assignment, global_role, current_date, true, false);
+                                    // this.schedule.facts.place_person_in_role(person, global_role, current_date, true, false);
                                 }
                             }
                         }

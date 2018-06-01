@@ -1,6 +1,7 @@
 import {action, observable} from "mobx";
 import ShortUniqueId from 'short-unique-id';
 import * as _ from 'lodash';
+import {isUndefined} from "util";
 
 class ObjectWithUUID {
     @observable uuid: string;
@@ -66,7 +67,23 @@ class BaseStore<T extends ObjectWithUUID> {
     }
 }
 
+function check_if_undefined(thing, message) {
+    if (thing == null || isUndefined(thing)) {
+        throw Error(message);
+    }
+}
+
+function delete_from_array<T>(array: Array<T>, object: T) {
+    array.forEach((item, index) => {
+        if (item == object) {
+            array.splice(index, 1);
+        }
+    });
+}
+
 export {
     ObjectWithUUID,
-    BaseStore
+    BaseStore,
+    check_if_undefined,
+    delete_from_array
 }

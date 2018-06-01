@@ -18,28 +18,4 @@
     <ion-item-group>
         <availability-options [availability]="person?.availability"></availability-options>
     </ion-item-group>
-
-    <ion-list-header color="light">
-        Roles
-        <ion-buttons item-end>
-            <button ion-button clear small (tap)="add_new_role()">
-                Add Role
-            </button>
-        </ion-buttons>
-    </ion-list-header>
-    <ion-item-group>
-        <role-summary [person]="person" (tapped)="role_tapped($event)"></role-summary>
-    </ion-item-group>
-
-    <ion-list-header color="light">
-        Rules
-        <ion-buttons item-end>
-            <button ion-button clear small (tap)="add_new_rule()">
-                Add Rule
-            </button>
-        </ion-buttons>
-    </ion-list-header>
-    <ion-item-group>
-        <rule-details [role]="role" [person]="person"></rule-details>
-    </ion-item-group>
 </div>

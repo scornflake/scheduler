@@ -1,7 +1,7 @@
 import {Component} from '@angular/core';
 import {IonicPage, NavController, NavParams} from 'ionic-angular';
 import {Role} from "../../scheduling/role";
-import {Person} from "../../scheduling/people";
+import {Assignment} from "../../scheduling/assignment";
 
 @IonicPage()
 @Component({
@@ -10,15 +10,15 @@ import {Person} from "../../scheduling/people";
 })
 export class RoleDetailPage {
     role: Role;
-    person: Person;
+    assignment: Assignment;
 
     constructor(public navCtrl: NavController, public navParams: NavParams) {
         this.role = this.navParams.get('role');
-        this.person = this.navParams.get('person');
+        this.assignment = this.navParams.get('assignment');
     }
 
     ionViewDidLoad() {
-        if (!this.role || !this.person) {
+        if (!this.role || !this.assignment) {
             // pop back to home, for debugging
             this.navCtrl.setRoot('people')
         }

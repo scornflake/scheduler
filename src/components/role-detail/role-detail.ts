@@ -1,14 +1,14 @@
 import {Component, Input} from '@angular/core';
 import {Role} from "../../scheduling/role";
-import {Person} from "../../scheduling/people";
 import {NavController} from "ionic-angular";
+import {Assignment} from "../../scheduling/assignment";
 
 @Component({
     selector: 'role-detail',
     templateUrl: 'role-detail.html'
 })
 export class RoleDetailComponent {
-    @Input('person') person: Person;
+    @Input('assignment') assignment: Assignment;
     @Input('role') role: Role;
 
     constructor(public navCtrl: NavController) {
@@ -19,12 +19,12 @@ export class RoleDetailComponent {
     }
 
     weight_for(role: Role): string {
-        return this.person.weight_for_role(role).toString();
+        return this.assignment.weight_for_role(role).toString();
     }
 
     set_weight_for(role, new_weight: any) {
         console.log(`Set r: ${role} to new weight: ${new_weight}`);
         let weight_number = parseFloat(new_weight);
-        this.person.set_weight_for_role(role, weight_number);
+        this.assignment.set_weight_for_role(role, weight_number);
     }
 }

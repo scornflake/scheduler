@@ -5,24 +5,27 @@ import {RuleFacts} from "./rule-facts";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {RolesStore} from "../tests/role-store";
 import {defaultSoundRole} from "../tests/sample-data";
+import {Service} from "../service";
+import {Assignment} from "../assignment";
 
 describe('rules', () => {
     let people_store: PeopleStore;
     let role_store: RolesStore;
-    let state;
-    let neil, bob, tim: Person;
+    let state, service;
+    let neil: Assignment, bob: Assignment, tim: Assignment;
     let date: Date;
 
 
     beforeEach(() => {
         people_store = new PeopleStore();
         role_store = new RolesStore();
-        state = new RuleFacts(people_store, role_store);
+        service = new Service("rules tests");
+        state = new RuleFacts(service);
 
         // If we have people in order, it just returns sequentially
-        neil = people_store.add_person(new Person("Neil").add_role(defaultSoundRole));
-        bob = people_store.add_person(new Person("Bob").add_role(defaultSoundRole));
-        tim = people_store.add_person(new Person("Tim").add_role(defaultSoundRole));
+        neil = service.add_person(new Person("Neil")).add_role(defaultSoundRole);
+        bob = service.add_person(new Person("Bob")).add_role(defaultSoundRole);
+        tim = service.add_person(new Person("Tim")).add_role(defaultSoundRole);
 
         date = new Date(2010, 10, 0);
         state.current_date = date;
@@ -34,7 +37,7 @@ describe('rules', () => {
             state.place_person_in_role(neil, defaultSoundRole, date);
 
             /*
-            Intentionally unorederd, to test that the filter returns a sorted list
+            Intentionally unordered, to test that the filter returns a sorted list
              */
 
             let next_date = new Date(date);
@@ -181,7 +184,7 @@ describe('rules', () => {
     describe('pick rules', () => {
         it('can do sequentially', () => {
             // If we have people in order, it just returns sequentially
-            let uw = new UsageWeightedSequential(people_store.people);
+            let uw = new UsageWeightedSequential(service.assignments);
 
             expect(uw.execute(state, defaultSoundRole)[0]).toEqual(neil);
             state.use_this_person_in_role(neil, defaultSoundRole);
@@ -196,7 +199,7 @@ describe('rules', () => {
         });
 
         it('simulated unavailability affects scoring', () => {
-            let uw = new UsageWeightedSequential(people_store.people);
+            let uw = new UsageWeightedSequential(service.assignments);
 
             // We expect neil first.
             let people_in_order = uw.execute(state, defaultSoundRole);

@@ -9,6 +9,7 @@ import {csd} from "./common/date-utils";
 import {ScheduleInput} from "./shared";
 import {ApplicationRef} from "@angular/core";
 import {LoggingWrapper} from "../common/logging-wrapper";
+import {EventStore, Service} from "./service";
 
 class Organization extends ObjectWithUUID {
     @observable name: string;
@@ -22,9 +23,12 @@ class Organization extends ObjectWithUUID {
 class OrganizationStore extends BaseStore<Organization> {
     @observable people_store: PeopleStore;
     @observable roles_store: RolesStore;
+    @observable event_store: EventStore;
 
     @observable schedule: ScheduleWithRules;
     @observable previous_schedule: ScheduleWithRules;
+
+    draft_service: Service;
 
     private logger: Logger;
 
@@ -33,9 +37,15 @@ class OrganizationStore extends BaseStore<Organization> {
 
         this.people_store = new PeopleStore();
         this.roles_store = new RolesStore();
+        NPBCStoreConstruction.SetupRoles(this.roles_store);
+        NPBCStoreConstruction.SetupPeople(this.people_store);
+
+        this.event_store = new EventStore();
+        this.draft_service = this.event_store.add_event_named("Draft Service");
+
         this.logger = LoggingWrapper.getLogger("google");
 
-        NPBCStoreConstruction.SetupStore(this.people_store, this);
+        NPBCStoreConstruction.SetupStore(this.people_store, this, this.draft_service);
         // ThamesTest.SetupStore(this);
     }
 
@@ -50,7 +60,7 @@ class OrganizationStore extends BaseStore<Organization> {
     @action
     generate_schedule(): ScheduleWithRules {
         // for testing, create some fake
-        let params = new ScheduleInput(this.people_store, this.roles_store);
+        let params = new ScheduleInput(this.draft_service);
         params.start_date = csd(2018, 6, 3);
         params.end_date = csd(2018, 9, 30);
 
@@ -65,6 +75,10 @@ class OrganizationStore extends BaseStore<Organization> {
         this.previous_schedule = schedule;
         this.schedule = null;
         // this.generate_schedule();
+    }
+
+    add_service(service_name: string) {
+        return this.event_store.add_event_named(service_name);
     }
 }
 

@@ -2,24 +2,24 @@ import {FixedRoleOnDate, OnThisDate, Rule, UsageWeightedSequential, WeightedRole
 import {Role} from "../role";
 import {Logger} from "ionic-logging-service";
 import {dayAndHourForDate, throwOnInvalidDate} from "../common/date-utils";
-import {PeopleStore, Person} from "../people";
+import {Person} from "../people";
 import {Exclusion, ScheduleAtDate} from "../shared";
 import {isUndefined} from "ionic-angular/util/util";
 import {LoggingWrapper} from "../../common/logging-wrapper";
-import {RolesStore} from "../tests/role-store";
+import {Service} from "../service";
+import {Assignment} from "../assignment";
 
 export class RuleFacts {
     current_date: Date;
     decisions_for_date: Array<string>;
+    service: Service;
 
     private all_pick_rules: Map<Role, Array<Rule>>;
-    private all_role_rules: Map<Person, Array<Rule>>;
+    private all_role_rules: Map<Assignment, Array<Rule>>;
 
     private exclusion_zones: Map<Person, Array<Exclusion>>;
-    private people: PeopleStore;
-    private roles: RolesStore;
 
-    private usage_counts: Map<Role, Map<Person, number>>;
+    private usage_counts: Map<Role, Map<Assignment, number>>;
 
     // This is the schedule, as it's being built
     private dates: Map<string, ScheduleAtDate>;
@@ -27,19 +27,18 @@ export class RuleFacts {
 
     private logger: Logger;
 
-    constructor(people: PeopleStore, roles: RolesStore) {
-        this.people = people;
-        this.roles = roles;
+    constructor(service: Service) {
+        this.service = service;
         this.begin();
 
         this.exclusion_zones = new Map<Person, Array<Exclusion>>();
-        this.usage_counts = new Map<Role, Map<Person, number>>();
+        this.usage_counts = new Map<Role, Map<Assignment, number>>();
 
         this.logger = LoggingWrapper.getLogger("scheduler.rules.facts");
     }
 
     copyUsageDataFrom(previous_facts: RuleFacts) {
-        this.usage_counts = new Map<Role, Map<Person, number>>();
+        this.usage_counts = new Map<Role, Map<Assignment, number>>();
         for (let person of Array.from(previous_facts.exclusion_zones.keys())) {
             let zones = previous_facts.exclusion_zones.get(person);
             this.exclusion_zones.set(person, zones);
@@ -84,11 +83,11 @@ export class RuleFacts {
 
     begin() {
         // This is all PickRules, for all roles
-        this.all_pick_rules = this.roles.pick_rules(this.people);
+        this.all_pick_rules = this.service.pick_rules();
         this.decision_depth = 0;
         // this.logPickRules();
 
-        this.all_role_rules = this.roles.role_rules(this.people);
+        this.all_role_rules = this.service.role_rules();
         this.dates = new Map<string, ScheduleAtDate>();
     }
 
@@ -149,7 +148,7 @@ export class RuleFacts {
         return [false, "clear!"];
     }
 
-    get_next_suitable_person_for(role: Role): Person {
+    get_next_suitable_assignment_for(role: Role): Assignment {
         // runs the pick rules for this role
         let pick_rules = this.all_pick_rules.get(role);
         if (!pick_rules) {
@@ -162,24 +161,24 @@ export class RuleFacts {
                 if (result) return result;
             }
             if (rule instanceof UsageWeightedSequential) {
-                let people = rule.execute(this, role);
-                if (people.length) {
-                    for (let possible_person of people) {
+                let assignments = rule.execute(this, role);
+                if (assignments.length) {
+                    for (let possible_assignment of assignments) {
                         // can't already be in the role on this date
-                        let [has_exclusion, reason] = this.has_exclusion_for(this.current_date, possible_person, role);
+                        let [has_exclusion, reason] = this.has_exclusion_for(this.current_date, possible_assignment.person, role);
                         if (has_exclusion) {
 
-                            this.add_decision(possible_person.name + " cant do it, they have an exclusion: " + reason);
+                            this.add_decision(possible_assignment.name + " cant do it, they have an exclusion: " + reason);
                             continue;
                         }
 
                         // Must be available
-                        if (!this.is_person_available(possible_person, this.current_date, true)) {
+                        if (!this.is_person_available(possible_assignment.person, this.current_date, true)) {
                             // No need to add decision. This will be done automatically.
                             continue;
                         }
 
-                        return possible_person;
+                        return possible_assignment;
                     }
                 }
                 return null;
@@ -187,8 +186,8 @@ export class RuleFacts {
         }
     }
 
-    get_next_suitable_role_for_person(person: Person) {
-        let role_rules = this.all_role_rules.get(person);
+    get_next_suitable_role_for_assignment(assignment: Assignment) {
+        let role_rules = this.all_role_rules.get(assignment);
         if (!role_rules) {
             return null;
         }
@@ -198,49 +197,49 @@ export class RuleFacts {
                 if (result) return result;
             }
             if (rule instanceof WeightedRoles) {
-                let result = rule.execute(this, person);
+                let result = rule.execute(this, assignment);
                 return result[0];
             }
         }
         return null;
     }
 
-    private get_person_count_for_role(role: Role, person: Person): Map<Person, number> {
+    private get_person_count_for_role(role: Role, assignment: Assignment): Map<Assignment, number> {
         if (role == null) {
             throw new Error("Role cannot be null here");
         }
-        if (person == null) {
+        if (assignment == null) {
             throw new Error("Person cannot be null here");
         }
         if (!this.usage_counts.has(role)) {
             this.logger.debug("Creating new role counter for " + role.name);
-            let new_count = new Map<Person, number>();
+            let new_count = new Map<Assignment, number>();
             this.usage_counts.set(role, new_count);
         }
 
         let by_person = this.usage_counts.get(role);
-        if (!by_person.has(person)) {
-            this.logger.info("Starting count at 0 for " + person.name);
-            by_person.set(person, 0);
+        if (!by_person.has(assignment)) {
+            this.logger.info("Starting count at 0 for " + assignment.person.name);
+            by_person.set(assignment, 0);
         }
         return by_person;
     }
 
-    number_of_times_role_used_by_person(role: Role, person: Person): number {
+    number_of_times_role_used_by_person(role: Role, assignment: Assignment): number {
         if (role == null) {
             throw new Error("Role cannot be null here");
         }
-        if (person == null) {
-            throw new Error("Person cannot be null here");
+        if (assignment == null) {
+            throw new Error("Assignment cannot be null here");
         }
-        return this.get_person_count_for_role(role, person).get(person);
+        return this.get_person_count_for_role(role, assignment).get(assignment);
     }
 
-    total_number_of_times_person_placed_in_roles(person: Person, roles: Array<Role>): number {
+    total_number_of_times_person_placed_in_roles(assignment: Assignment, roles: Array<Role>): number {
         let total = 0;
         for (let role of roles) {
-            let person_counter_for_role = this.get_person_count_for_role(role, person);
-            total = total + person_counter_for_role.get(person);
+            let person_counter_for_role = this.get_person_count_for_role(role, assignment);
+            total = total + person_counter_for_role.get(assignment);
         }
         return total;
     }
@@ -265,10 +264,10 @@ export class RuleFacts {
         return 0;
     }
 
-    use_this_person_in_role(person: Person, role: Role) {
-        let person_counter = this.get_person_count_for_role(role, person);
-        let current_count = person_counter.get(person);
-        person_counter.set(person, (current_count + 1));
+    use_this_person_in_role(assignment: Assignment, role: Role) {
+        let person_counter = this.get_person_count_for_role(role, assignment);
+        let current_count = person_counter.get(assignment);
+        person_counter.set(assignment, (current_count + 1));
         // this.logger.info("Up to " + person_counter.get(person));
     }
 
@@ -304,7 +303,7 @@ export class RuleFacts {
         return containining_this_date.length > 0;
     }
 
-    place_person_in_role(person: Person,
+    place_person_in_role(assignment: Assignment,
                          role: Role,
                          date: Date,
                          record_usage_stats = true,
@@ -312,21 +311,22 @@ export class RuleFacts {
                          decision_override: string = null): boolean {
         let specific_day = this.get_schedule_for_date(date);
 
+        let person = assignment.person;
         if (!specific_day.can_place_person_in_role(person, role)) {
             return false;
         }
 
         this.add_exclusion_for(person, role, date);
-        specific_day.add_person(person, role);
+        specific_day.add_person(assignment, role);
         this.add_decision(decision_override == null ? "Placing " + person.name + " into " + role : decision_override);
 
         if (record_usage_stats) {
-            this.use_this_person_in_role(person, role);
+            this.use_this_person_in_role(assignment, role);
         }
 
         // Execute any conditional actions on the person
         if (execute_conditionals) {
-            person.conditional_rules.forEach(r => {
+            assignment.conditional_rules.forEach(r => {
                 this.exec_sub_decision(() => {
                     r.run(this, person, role);
                 });
@@ -335,9 +335,9 @@ export class RuleFacts {
         return true;
     }
 
-    set_decisions_for(person: Person, role: Role, date: Date, clear_decisions: boolean = true) {
+    set_decisions_for(assignment: Assignment, role: Role, date: Date, clear_decisions: boolean = true) {
         let specific_day = this.get_schedule_for_date(date);
-        specific_day.set_decisions(person, role, this.decisions_for_date);
+        specific_day.set_decisions(assignment, role, this.decisions_for_date);
         if (clear_decisions) {
             this.clear_decisions();
         }

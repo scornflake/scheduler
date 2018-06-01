@@ -10,8 +10,6 @@ import {StatusBar} from '@ionic-native/status-bar';
 import {SplashScreen} from '@ionic-native/splash-screen';
 import {ComponentsModule} from "../components/components.module";
 import {NgPipesModule} from "angular-pipes";
-import {ApolloModule} from "apollo-angular";
-import {HttpLinkModule} from "apollo-angular-link-http";
 import {HttpClientModule} from "@angular/common/http";
 import {IonicStorageModule} from "@ionic/storage";
 import {GAPIS} from "../common/gapis-auth";
@@ -26,10 +24,6 @@ import {LoginPageModule} from "../pages/login/login.module";
 import {RootStore} from "../store/root";
 import {PeoplePageModule} from "../pages/people/people.module";
 
-// export function defaultDSPSetup(apollo, link) {
-//     return new DataStoreProvider(apollo, link, defaultConfiguration);
-// }
-
 @NgModule({
     declarations: [
         MyApp,
@@ -43,8 +37,6 @@ import {PeoplePageModule} from "../pages/people/people.module";
         IonicModule.forRoot(MyApp),
         IonicStorageModule.forRoot(),
         ComponentsModule,
-        ApolloModule,
-        HttpLinkModule,
         SheetSelectionPageModule,
         TabSelectionPageModule,
         HomePageModule,

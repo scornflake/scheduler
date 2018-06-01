@@ -40,9 +40,13 @@ export class PeoplePage {
     }
 
     public add_new_person() {
-        let p = new Person();
-        p.name = "";
-        this.navCtrl.push('PersonDetailsPage', {person: p, is_create: true, callback: this.add_person.bind(this)})
+        let new_object = new Person();
+        new_object.name = "";
+        this.navCtrl.push('PersonDetailsPage', {
+            person: new_object,
+            is_create: true,
+            callback: this.add_person.bind(this)
+        })
     }
 
     private add_person(new_person: Person) {
@@ -50,8 +54,8 @@ export class PeoplePage {
         this.rootStore.people_store.add_person(new_person);
     }
 
-    public show_person_detail(p: Person) {
-        this.navCtrl.push('PersonDetailsPage', {person: p})
+    public show_person_detail(person: Person) {
+        this.navCtrl.push('PersonDetailsPage', {person: person})
     }
 
     ngAfterViewInit() {

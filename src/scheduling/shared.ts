@@ -1,8 +1,10 @@
 import {Role} from "./role";
-import {PeopleStore, Person} from "./people";
+import {Person} from "./people";
 import * as _ from 'lodash';
 import {dayAndHourForDate} from "./common/date-utils";
-import {RolesStore} from "./tests/role-store";
+import {Service} from "./service";
+import {Assignment} from "./assignment";
+import {isUndefined} from "util";
 
 class ObjectValidation {
     errors: string[] = new Array<string>();
@@ -55,20 +57,25 @@ class ScheduleInput {
     end_date: Date;
     days_per_period: number;
 
-    roles: RolesStore;
-    people: PeopleStore;
-
     manual_layouts: Map<Date, Role>;
+    service: Service;
 
-    constructor(people: PeopleStore = new PeopleStore(), roles: RolesStore = new RolesStore()) {
+    constructor(service: Service) {
         this.manual_layouts = new Map<Date, Role>();
         this.days_per_period = 7;
-        this.people = people;
-        this.roles = roles;
+        this.service = service;
+    }
+
+    get roles() {
+        return this.service.roles;
+    }
+
+    get people() {
+        return this.service.people;
     }
 
     validate() {
-        if (this.roles.roles_in_layout_order.length == 0) {
+        if (this.service.roles_in_layout_order.length == 0) {
             throw Error("The dates parameters don't define any roles.");
         }
 
@@ -142,11 +149,11 @@ class Exclusion {
  */
 class ScheduleAtDate {
     date: Date;
-    people_score: Map<Person, ScheduleScore>;
+    assignment_by_score: Map<Assignment, ScheduleScore>;
 
     constructor(date: Date) {
         this.date = date;
-        this.people_score = new Map<Person, ScheduleScore>();
+        this.assignment_by_score = new Map<Assignment, ScheduleScore>();
     }
 
     get date_key(): string {
@@ -154,39 +161,59 @@ class ScheduleAtDate {
     }
 
     get people(): Array<Person> {
-        return Array.from(this.people_score.keys());
+        return Array.from(this.assignment_by_score.keys()).map(a => a.person);
+    }
+
+    get assignments(): Array<Assignment> {
+        return Array.from<Assignment>(this.assignment_by_score.keys());
     }
 
     get people_sorted_by_role_priority(): Array<Person> {
-        let people = this.people;
-        return people.sort((a: Person, b: Person) => {
+        return this.assignments.sort((a: Assignment, b: Assignment) => {
             if (a.highest_role_layout_priority > b.highest_role_layout_priority) {
                 return 1;
             } else if (a.highest_role_layout_priority < b.highest_role_layout_priority) {
                 return -1;
             }
             return 0;
-        });
+        }).map(a => a.person);
     }
 
     score_for(p: Person): ScheduleScore {
-        return this.people_score.get(p);
+        let assign = this.assignment_for_person(p);
+        if (assign) {
+            return this.assignment_by_score.get(assign);
+        }
+        return null;
     }
 
-    add_person(person: Person, role: Role) {
-        if (!this.people_score.get(person)) {
-            this.people_score.set(person, new ScheduleScore(role));
+    add_person(assignment: Assignment, role: Role) {
+        if(assignment == null) {
+            throw new Error("Cannot add a 'null' assignment");
+        }
+        if (!this.assignment_by_score.get(assignment)) {
+            this.assignment_by_score.set(assignment, new ScheduleScore(role));
         } else {
-            let score = this.people_score.get(person);
+            let score = this.assignment_by_score.get(assignment);
             score.add_role(role);
         }
     }
 
     people_in_role(role: Role): Array<Person> {
         // Return all people that have some score that records this role
-        return this.people.filter(p => {
-            let score = this.people_score.get(p);
-            return score.has_role(role);
+        let assigns = this.assignments;
+        let filterer = assigns.filter(a => {
+            let score = this.assignment_by_score.get(a);
+            if (score) {
+                return score.has_role(role);
+            }
+            return false;
+        });
+        return filterer.map((a) => {
+            if(isUndefined(a)) {
+                console.log("panic");
+            }
+            return a.person;
         });
     }
 
@@ -195,41 +222,59 @@ class ScheduleAtDate {
     }
 
     roles_of_person(person: Person): Array<Role> {
-        let persons_score = this.people_score.get(person);
-        if (!persons_score) {
-            return [];
+        let assignment = this.assignment_for_person(person);
+        if (assignment) {
+            return assignment.roles;
         }
-        return persons_score.roles;
+        return [];
+    }
+
+    assignment_for_person(person: Person): Assignment {
+        return this.assignments.find(a => a.person.uuid == person.uuid);
+    }
+
+    score_for_person(person: Person) {
+        let assignment = this.assignment_for_person(person);
+        if (assignment) {
+            return this.assignment_by_score.get(assignment).score;
+        }
+        return 0;
     }
 
     valueOf() {
         let names_with_tasks = this.people_sorted_by_role_priority.map(p => {
-            return p.name + "=" + this.people_score.get(p);
+            return `${p.name} = ${this.score_for(p)}`;
         });
         return this.date.toDateString() + " - " + _.join(names_with_tasks, ',');
     }
 
-    set_decisions(person: Person, role: Role, decisions: Array<string>) {
-        if (!this.people_score.has(person)) {
-            throw Error("Cant set facts, no person");
+    set_decisions(assignment: Assignment, role: Role, decisions: Array<string>) {
+        let score = this.assignment_by_score.get(assignment);
+        if (!score) {
+            throw Error("Cant set facts, no person/assignment in this date");
         }
-        let person_score = this.people_score.get(person);
-        person_score.decisions = decisions;
+        score.decisions = decisions;
     }
 
     includes_person(person: Person) {
-        return this.people_score.has(person);
+        let assigment = this.assignment_for_person(person);
+        return assigment != null;
     }
 
     move_person(owner: Person, to_date: ScheduleAtDate, reason: string = null) {
         // Find the roles this person was doing
-        let roles = this.roles_of_person(owner);
+        let assignment_of_owner = this.assignment_for_person(owner);
+        if (!assignment_of_owner) {
+            throw Error(`Cant move ${owner}, they are not assigned to this date`);
+        }
+        let roles = assignment_of_owner.roles;
         if (roles.length) {
-            let score = this.people_score.get(owner);
+            let score = this.assignment_by_score.get(assignment_of_owner);
             if (score) {
-                this.people_score.delete(owner);
+                this.assignment_by_score.delete(assignment_of_owner);
+                let assignment_at_target = to_date.assignment_for_person(owner);
                 roles.forEach(r => {
-                    to_date.add_person(owner, r);
+                    to_date.add_person(assignment_at_target, r);
                 });
                 let new_score = to_date.score_for(owner);
                 new_score.decisions = new_score.decisions.concat(score.decisions);
