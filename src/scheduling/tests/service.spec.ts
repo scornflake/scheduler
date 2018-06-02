@@ -9,7 +9,7 @@ import {
     defaultSaxRole,
     defaultSoundRole, SetupDefaultRoles
 } from "./sample-data";
-import {RolesStore} from "./role-store";
+import {RolesStore} from "../role-store";
 import {Service} from "../service";
 import {RuleFacts} from "../rule_based/rule-facts";
 import {Assignment} from "../assignment";

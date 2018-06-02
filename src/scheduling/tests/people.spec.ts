@@ -1,10 +1,11 @@
-import {PeopleStore, Person} from "../people";
+import {Person} from "../people";
 import {Role} from "../role";
 import {AssignedToRoleCondition, ScheduleOn} from "../rule_based/rules";
 import {csd} from "../common/date-utils";
 import {defaultLeaderRole, defaultKeysRole} from "./sample-data";
-import {RolesStore} from "./role-store";
+import {RolesStore} from "../role-store";
 import {Service} from "../service";
+import {PeopleStore} from "../people-store";
 
 describe('people, ', () => {
     let firstPerson: Person;

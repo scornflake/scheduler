@@ -6,8 +6,8 @@ import {Logger, LoggingService} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
 import {SafeJSON} from "../common/json/safe-stringify";
 import {autorun, computed, IReactionDisposer, observable, toJS} from "mobx";
-import {PeopleStore} from "../scheduling/people";
-import {RolesStore} from "../scheduling/tests/role-store";
+import {PeopleStore} from "../scheduling/people-store";
+import {RolesStore} from "../scheduling/role-store";
 
 const SAVED_STATE_KEY = 'saved_state';
 

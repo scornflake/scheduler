@@ -1,16 +1,15 @@
-import {ObjectWithUUID} from "./common/base_model";
+import {BaseStore, ObjectWithUUID} from "./common/base_model";
 import {observable} from "mobx";
+import {Person} from "./people";
 
-export class Role extends ObjectWithUUID {
+class Team extends ObjectWithUUID {
     @observable name: string;
-    @observable maximum_count: number;
-    @observable layout_priority: number;
+    members: BaseStore<Person>;
 
     constructor(name: string, priority: number = 0, max_in_role: number = 1) {
         super();
         this.name = name;
-        this.maximum_count = max_in_role;
-        this.layout_priority = priority;
+        this.members = new BaseStore<Person>();
     }
 
     valueOf() {
@@ -22,3 +21,6 @@ export class Role extends ObjectWithUUID {
     }
 }
 
+
+export {
+    Team}

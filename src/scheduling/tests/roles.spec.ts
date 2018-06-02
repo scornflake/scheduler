@@ -1,5 +1,5 @@
 import {Role} from "../role";
-import {RolesStore} from "./role-store";
+import {RolesStore} from "../role-store";
 
 describe('roles', () => {
     let role_store: RolesStore;

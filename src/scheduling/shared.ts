@@ -2,7 +2,6 @@ import {Role} from "./role";
 import {Person} from "./people";
 import * as _ from 'lodash';
 import {dayAndHourForDate} from "./common/date-utils";
-import {Service} from "./service";
 import {Assignment} from "./assignment";
 import {isUndefined} from "util";
 import {delete_from_array} from "./common/base_model";

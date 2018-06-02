@@ -1,4 +1,4 @@
-import {PeopleStore, Person} from "../../scheduling/people";
+import {Person} from "../../scheduling/people";
 import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../../scheduling/availability";
 import {ScheduleOn, TryToScheduleWith} from "../../scheduling/rule_based/rules";
 import {Organization, OrganizationStore} from "../../scheduling/organization";
@@ -12,8 +12,9 @@ import {
     defaultSoundRole,
     defaultVocalsRole, SetupDefaultRoles
 } from "../../scheduling/tests/sample-data";
-import {RolesStore} from "../../scheduling/tests/role-store";
+import {RolesStore} from "../../scheduling/role-store";
 import {Service} from "../../scheduling/service";
+import {PeopleStore} from "../../scheduling/people-store";
 
 
 export class NPBCStoreConstruction {

@@ -1,12 +1,13 @@
 import {BaseStore, ObjectWithUUID} from "./common/base_model";
 import {action, observable} from "mobx";
-import {PeopleStore} from "./people";
-import {RolesStore} from "./tests/role-store";
+import {PeopleStore} from "./people-store";
+import {RolesStore} from "./role-store";
 import {NPBCStoreConstruction} from "../providers/store/test.store";
 import {ScheduleWithRules} from "./rule_based/scheduler";
 import {csd} from "./common/date-utils";
 import {ApplicationRef} from "@angular/core";
 import {EventStore, Service} from "./service";
+import {TeamsStore} from "./teams-store";
 
 class Organization extends ObjectWithUUID {
     @observable name: string;
@@ -21,6 +22,7 @@ class OrganizationStore extends BaseStore<Organization> {
     @observable people_store: PeopleStore;
     @observable roles_store: RolesStore;
     @observable event_store: EventStore;
+    @observable teams_store: TeamsStore;
 
     @observable schedule: ScheduleWithRules;
     @observable previous_schedule: ScheduleWithRules;
@@ -32,6 +34,7 @@ class OrganizationStore extends BaseStore<Organization> {
 
         this.people_store = new PeopleStore();
         this.roles_store = new RolesStore();
+        this.teams_store = new TeamsStore();
 
         NPBCStoreConstruction.SetupRoles(this.roles_store);
         NPBCStoreConstruction.SetupPeople(this.people_store);
