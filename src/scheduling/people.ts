@@ -27,6 +27,18 @@ export class Person extends ObjectWithUUID {
         return this.prefs.availability;
     }
 
+    static sort_by_name(list: Array<Person>): Array<Person> {
+        return list.sort(((a, b) => {
+            if (a.name > b.name) {
+                return 1;
+            }
+            if (a.name < b.name) {
+                return -1;
+            }
+            return 0;
+        }));
+    }
+
     @action
     avail_every(a_number: number, unit: AvailabilityUnit): Person {
         return this.set_availability(new Availability(a_number, unit));

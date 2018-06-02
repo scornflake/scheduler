@@ -21,11 +21,12 @@ export class GenericListOfThingsPage {
     constructor(public navCtrl: NavController, public navParams: NavParams) {
         this.things = this.navParams.get('things');
         this.title = this.navParams.get('title');
-        this.item_pressed_callback = this.navParams.get('item-pressed');
         this.cancel_callback = this.navParams.get('cancel-pressed');
         this.label_callback = this.navParams.get('label-name');
 
+        this.item_pressed_callback = this.navParams.get('item-pressed');
         this.show_push = this.navParams.get('show-push');
+
 
         if (!this.label_callback) {
             this.label_callback = (thing) => {

@@ -34,6 +34,9 @@ class BaseStore<T extends ObjectWithUUID> extends ObjectWithUUID {
 
     @action
     add_object_to_array(instance: T): T {
+        if(!instance) {
+            throw new Error(`Cannot add 'null' to this list. We are: ${this.constructor.name}s`)
+        }
         if (_.findIndex(this.items, o => o.uuid == instance.uuid) >= 0) {
             return null;
         }

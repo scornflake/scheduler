@@ -1,4 +1,4 @@
-import {BaseStore, find_object_with_name, ObjectWithUUID} from "./common/base_model";
+import {BaseStore, find_object_with_name} from "./common/base_model";
 import {observable} from "mobx";
 import {Person} from "./people";
 
@@ -22,6 +22,10 @@ class Team extends BaseStore<Person> {
         return this.valueOf();
     }
 
+    get people(): Array<Person> {
+        return Person.sort_by_name(this.items);
+    }
+
     find_person_with_name(name: string, fuzzy_match: boolean = false) {
         return find_object_with_name(this.items, name, fuzzy_match);
     }
@@ -40,6 +44,10 @@ class Team extends BaseStore<Person> {
 
     add_person(person: Person): Person {
         return this.add_object_to_array(person);
+    }
+
+    remove_person(person: Person) {
+        this.remove_object_from_array(person);
     }
 }
 

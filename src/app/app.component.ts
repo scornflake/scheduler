@@ -1,5 +1,5 @@
 import {Component, ViewChild} from '@angular/core';
-import {MenuController, Nav, NavController, Platform} from 'ionic-angular';
+import {MenuController, Nav, Platform} from 'ionic-angular';
 import {StatusBar} from '@ionic-native/status-bar';
 import {SplashScreen} from '@ionic-native/splash-screen';
 import {HomePage} from "../pages/home/home";
@@ -26,6 +26,7 @@ export class MyApp {
 
     pages() {
         return [
+            {title: "Dashboard", page: 'home'},
             {title: "People", page: 'page-people'},
             {title: "Teams", page: 'page-teams'},
             {title: "Services", page: 'page-services'},

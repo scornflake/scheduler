@@ -2,7 +2,7 @@ import {Component} from '@angular/core';
 
 import {AboutPage} from '../about/about';
 import {HomePage} from '../home/home';
-import {AdministrationPage} from "../administration/administration";
+import {TeamsPage} from "../teams/teams";
 
 @Component({
     templateUrl: 'tabs.html'
@@ -10,7 +10,7 @@ import {AdministrationPage} from "../administration/administration";
 export class TabsPage {
 
     tab1Root = HomePage;
-    tab2Root = AdministrationPage;
+    tab2Root = TeamsPage;
     tab3Root = AboutPage;
 
     constructor() {

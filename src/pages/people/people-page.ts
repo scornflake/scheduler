@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, ViewChild} from '@angular/core';
 import {AlertController, IonicPage, NavController} from 'ionic-angular';
 import {RootStore} from "../../store/root";
 import {Person} from "../../scheduling/people";
@@ -10,10 +10,11 @@ import {Logger, LoggingService} from "ionic-logging-service";
 })
 @Component({
     selector: 'page-people',
-    templateUrl: 'people.html'
+    templateUrl: 'people-page.html'
 })
 export class PeoplePage {
     name_filter: string = "";
+    @ViewChild('personlist') pc;
     private logger: Logger;
 
     constructor(public navCtrl: NavController,
@@ -24,29 +25,11 @@ export class PeoplePage {
     }
 
     public people(): Array<Person> {
-        let people = this.rootStore.people_store.people.sort((a, b) => {
-            if (a.name > b.name) {
-                return 1;
-            }
-            if (a.name < b.name) {
-                return -1;
-            }
-            return 0;
-        });
+        let people = Person.sort_by_name(this.rootStore.people_store.people);
         if (this.name_filter.length > 0) {
             people = people.filter(p => p.name.toLowerCase().indexOf(this.name_filter.toLowerCase()) >= 0);
         }
         return people;
-    }
-
-    public add_new_person() {
-        let new_object = new Person();
-        new_object.name = "";
-        this.navCtrl.push('PersonDetailsPage', {
-            person: new_object,
-            is_create: true,
-            callback: this.add_person.bind(this)
-        })
     }
 
     private add_person(new_person: Person) {

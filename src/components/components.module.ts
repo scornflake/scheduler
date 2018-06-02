@@ -10,6 +10,7 @@ import {AvailabilityOptionsComponent} from './availability-options/availability-
 import {RoleSummaryComponent} from './role-summary/role-summary';
 import {RoleDetailComponent} from './role-detail/role-detail';
 import {RuleDetailsComponent} from './rule-details/rule-details';
+import {PeopleComponent} from './people/people';
 
 @NgModule({
     declarations: [
@@ -22,6 +23,7 @@ import {RuleDetailsComponent} from './rule-details/rule-details';
         RoleSummaryComponent,
         RoleDetailComponent,
         RuleDetailsComponent,
+        PeopleComponent,
     ],
     imports: [
         IonicModule,
@@ -37,6 +39,7 @@ import {RuleDetailsComponent} from './rule-details/rule-details';
         RoleSummaryComponent,
         RoleDetailComponent,
         RuleDetailsComponent,
+        PeopleComponent,
     ]
 })
 export class ComponentsModule {

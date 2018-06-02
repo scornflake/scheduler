@@ -15,6 +15,14 @@ class TeamsStore extends BaseStore<Team> {
     find_team_with_name(name: string, fuzzy_match: boolean = false) {
         return find_object_with_name(this.items, name, fuzzy_match);
     }
+
+    add_team(team: Team) {
+        this.add_object_to_array(team)
+    }
+
+    delete_team(team: Team) {
+        this.remove_object_from_array(team);
+    }
 }
 
 export {

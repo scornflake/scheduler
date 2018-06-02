@@ -38,10 +38,12 @@ class OrganizationStore extends BaseStore<Organization> {
         this.event_store = new EventStore();
         this.teams_store = new TeamsStore();
 
-        this.addOrganizaton(new Organization("North Porirua Baptist Church"));
+        let organization = new Organization("North Porirua Baptist Church");
+        this.add_organisation(organization);
 
         // make up a default team
         let team = new Team("Default", this.people_store.people);
+        this.teams_store.add_team(team);
 
         // for testing, create some fake
         this.draft_service = this.event_store.add_event_named("Draft Service", team);
@@ -54,7 +56,7 @@ class OrganizationStore extends BaseStore<Organization> {
         // ThamesTest.SetupStore(this);
     }
 
-    @action addOrganizaton(org: Organization) {
+    @action add_organisation(org: Organization) {
         this.add_object_to_array(org);
     }
 
@@ -65,7 +67,7 @@ class OrganizationStore extends BaseStore<Organization> {
     @action
     generate_schedule(): ScheduleWithRules {
         this.schedule = new ScheduleWithRules(this.draft_service, this.previous_schedule);
-        this.schedule.create_schedule();
+        // this.schedule.create_schedule();
         this.appRef.tick();
         return this.schedule;
     }

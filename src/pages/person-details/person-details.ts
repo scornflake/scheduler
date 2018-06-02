@@ -12,7 +12,7 @@ import {ObjectValidation} from "../../scheduling/shared";
 export class PersonDetailsPage {
     person: Person;
     is_create: boolean = false;
-    callback: any = null;
+    callback: (p: Person) => void = null;
     private logger: Logger;
 
     constructor(public navCtrl: NavController,

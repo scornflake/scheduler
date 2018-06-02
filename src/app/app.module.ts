@@ -19,8 +19,10 @@ import {ServerProvider} from "../providers/server/server";
 import {HomePageModule} from "../pages/home/home.module";
 import {LoginPageModule} from "../pages/login/login.module";
 import {RootStore} from "../store/root";
-import {PeoplePageModule} from "../pages/people/people.module";
+import {PeoplePageModule} from "../pages/people/people-page.module";
 import {AboutPageModule} from "../pages/about/about.module";
+import {TeamsPageModule} from "../pages/teams/teams.module";
+import {TeamPageModule} from "../pages/team/team.module";
 
 @NgModule({
     declarations: [
@@ -39,6 +41,8 @@ import {AboutPageModule} from "../pages/about/about.module";
         LoginPageModule,
         PeoplePageModule,
         AboutPageModule,
+        TeamsPageModule,
+        TeamPageModule,
     ],
     bootstrap: [IonicApp],
     entryComponents: [
