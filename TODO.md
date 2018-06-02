@@ -1,5 +1,24 @@
-Opps
+TODO
 ----
+- Make it so scheduler tells you if a required role isn't filled
+- Consider removing Role entirely? Perhaps they are defined ONLY as part of Team (and we make a way to default them, or provide a 'default set')
+    - thinking this because I don't think 'maximum_count' is useful any more (on Role) and layout_priority should be specified when adding the role to the team.
+    - so, all the info is REALLY held in ServiceRole.
+    - The upshot of which is I can:
+        - Remove Role
+        - Use ServiceRole (and fix everything)
+        - Rename ServiceRole to Role :)
+
+
+Big Refactor 2 - Teams
+-----
+- So I thought 'services/events' would be a good idea.  Then I thought 'teams' would be a good idea... a way to hold the people that would be available for a service/event.
+- Refactored so that:
+    - the possible roles to be filled are on Team.
+    - A Service is constructed with a Team, can only add people with role weighting if they are in that team
+    - Currently the role weightings are on Service. This is debatable. On one hand, it's right because you can have one service have different weightings that another. On the other hand that's possible if the weightings are on Team simply by virtue that when a Service is rendered into a schedule, it's read only at the point of being used... (cos you don't want to suddenly tell people everything changed).  So, weightings can be changed on a Team **for the current draft schedule**.  That also means that weightings don't have to be copied between 'Services' (if the Service ends up being saved, etc).  It does mean that you can't have one team do two different services with different weightings.
+- ServiceRole/Role definition kind of sucks. Weights and layout priorities are defined on Role, and then copied into ServiceRole.  Reason for ServiceRole was so that I could have a 'required' flag. I could also then use this to do display ordering (not done yet), without affecting Role.
+
 
 Beginning of June - after the big-refactor:
 -----

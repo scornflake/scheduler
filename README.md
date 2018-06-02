@@ -1,7 +1,7 @@
 # Scheduler of people
 Smart &amp; easy scheduling of music teams and/or people within a church setting.
 
-Basically it takes the pain out of working out the roster. It'll handle *all* of the layout for you (including unavailability etc). It'll do probably 95% of your scheduling work.
+Basically it takes the pain out of working out the roster. It'll handle all of the layout for you (including unavailability etc). It'll do probably 95% of your scheduling work.
 
 Born from having to schedule rosters for everyone in the music team at our church. There *has* to be a better (faster!) way! And there is.
 

@@ -90,7 +90,6 @@ export class NPBCStoreConstruction {
         // daniel.put_on_specific_role_for_date(defaultComputerRole, csd(2018, 6, 17));
 
 
-
         neil.avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
         cherilyn.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
         christine.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
@@ -260,16 +259,16 @@ export class NPBCStoreConstruction {
     }
 
     static SetupServiceRoles(service: Service) {
-        service.add_role(defaultLeaderRole, true, 1);
-        service.add_role(defaultSoundRole, true, 1);
-        service.add_role(defaultComputerRole, true, 1);
-        service.add_role(defaultKeysRole, true, 1);
-        service.add_role(defaultVocalsRole, true, 2);
-        service.add_role(defaultDrumsRole, true, 1);
-        service.add_role(defaultBass, true, 1);
-        service.add_role(defaultAcousticGuitar, true, 2);
-        service.add_role(defaultElectricGuitar, true, 1);
-        service.add_role(defaultSaxRole, true, 1);
+        service.add_role(defaultLeaderRole);
+        service.add_role(defaultSoundRole);
+        service.add_role(defaultComputerRole);
+        service.add_role(defaultKeysRole);
+        service.add_role(defaultVocalsRole, 1, 2);
+        service.add_role(defaultDrumsRole);
+        service.add_role(defaultBass);
+        service.add_role(defaultAcousticGuitar, 0, 2);
+        service.add_role(defaultElectricGuitar, 0, 1);
+        service.add_role(defaultSaxRole, 0, 1);
     }
 }
 

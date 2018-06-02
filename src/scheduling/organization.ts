@@ -35,12 +35,12 @@ class OrganizationStore extends BaseStore<Organization> {
 
         this.people_store = new PeopleStore();
         this.roles_store = new RolesStore();
-        this.teams_store = new TeamsStore();
 
         NPBCStoreConstruction.SetupRoles(this.roles_store);
         NPBCStoreConstruction.SetupPeople(this.people_store);
 
         this.event_store = new EventStore();
+        this.teams_store = new TeamsStore();
 
         this.addOrganizaton(new Organization("North Porirua Baptist Church"));
 

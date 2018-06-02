@@ -88,8 +88,8 @@ describe('service', () => {
     });
 
     it('can return roles sorted by layout order', () => {
-        service.add_role(defaultLeaderRole, false, 1, 3);
-        service.add_role(defaultSaxRole, false, 1, 1);
+        service.add_role(defaultLeaderRole, 1, 1, 3);
+        service.add_role(defaultSaxRole, 1, 1, 1);
 
         // Highest first
         let sorted = service.roles_in_layout_order;

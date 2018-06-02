@@ -13,20 +13,26 @@ import {Team} from "./teams";
 
 class ServiceRole {
     role: Role;
-    required: boolean;
 
-    maximum_count: number;
+    minimum_needed: number;
+    maximum_wanted: number;
     layout_priority: number;
+    display_order: number;
 
-    constructor(role: Role, required: boolean = false, maximum = 1, layout_priority = 1) {
+    constructor(role: Role, min_required: number = 1, maximum = 1, layout_priority = 1) {
         this.role = role;
-        this.required = required;
-        this.maximum_count = maximum;
+        this.minimum_needed = min_required;
+        this.maximum_wanted = maximum;
         this.layout_priority = layout_priority;
+        this.display_order = layout_priority;
     }
 
     get name() {
         return this.role.name;
+    }
+
+    get required(): boolean {
+        return this.minimum_needed > 1;
     }
 }
 
@@ -249,11 +255,11 @@ class Service extends ObjectWithUUID {
         return assignment_rule_map;
     }
 
-    add_role(role: Role, required: boolean = false, max_needed: number = 1, layout_priority: number = -1): ServiceRole {
+    add_role(role: Role, min_required: number = 1, max_needed: number = 1, layout_priority: number = -1): ServiceRole {
         if (layout_priority == -1) {
             layout_priority = role.layout_priority;
         }
-        let serviceRole = new ServiceRole(role, required, max_needed, layout_priority);
+        let serviceRole = new ServiceRole(role, min_required, max_needed, layout_priority);
         let existingIndex = this.roles.findIndex(p => p.role.uuid == role.uuid);
         if (existingIndex != -1) {
             this.roles.splice(existingIndex, 1);

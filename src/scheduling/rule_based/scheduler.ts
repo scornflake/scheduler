@@ -112,7 +112,7 @@ class ScheduleWithRules {
         }
         let specific_day = this.facts.get_schedule_for_date(date);
         let peopleInRole = specific_day.people_in_role(role.role);
-        return peopleInRole.length >= role.maximum_count;
+        return peopleInRole.length >= role.maximum_wanted;
     }
 
     process_role(current_date: Date, service_role: ServiceRole, role_group: Array<ServiceRole>) {
@@ -124,7 +124,7 @@ class ScheduleWithRules {
 
         // If already at max for this role, ignore it.
         if (this.is_role_filled_for_date(service_role, current_date)) {
-            this.logger.debug("Not processing " + service_role.name + ", already have " + service_role.maximum_count + " slotted in");
+            this.logger.debug("Not processing " + service_role.name + ", already have " + service_role.maximum_wanted + " slotted in");
             return;
         }
 
@@ -144,7 +144,7 @@ class ScheduleWithRules {
         this.facts.add_decision("Role: " + service_role.name, false);
         let specifically_placed_people = this.layout_specific_roles(current_date, role);
 
-        while (iteration_max > 0 && specific_day.number_of_people_in_role(role) < service_role.maximum_count) {
+        while (iteration_max > 0 && specific_day.number_of_people_in_role(role) < service_role.maximum_wanted) {
             iteration_max--;
 
             let next_suitable_assignment = this.facts.get_next_suitable_assignment_for(role);
@@ -189,7 +189,7 @@ class ScheduleWithRules {
             }
 
             let numberOfPeopleInRole = specific_day.number_of_people_in_role(role);
-            if (numberOfPeopleInRole >= service_role.maximum_count) {
+            if (numberOfPeopleInRole >= service_role.maximum_wanted) {
                 this.facts.add_decision("Done with role.");
             }
 

@@ -34,8 +34,8 @@ function SetupDefaultRoles() {
         defaultVocalsRole = new Role("Vocals", instrumentPriority);
         defaultSaxRole = new Role("Sax", instrumentPriority);
 
-        defaultAcousticGuitar.maximum_count = 2;
-        defaultVocalsRole.maximum_count = 3;
+        defaultAcousticGuitar.maximum_wanted = 2;
+        defaultVocalsRole.maximum_wanted = 3;
     }
 }
 
