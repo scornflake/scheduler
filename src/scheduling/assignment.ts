@@ -144,7 +144,9 @@ class Assignment {
         return matching_roles.length > 0;
     }
 
-
+    valueOf() {
+        return `${this.name} doing [${this.roles.join(",")}]`;
+    }
 }
 
 export {

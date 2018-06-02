@@ -62,11 +62,6 @@ import {PeoplePageModule} from "../pages/people/people.module";
             multi: true
         },
         {provide: ErrorHandler, useClass: IonicErrorHandler},
-        // {
-        //     provide: DataStoreProvider,
-        //     useFactory: defaultDSPSetup,
-        //     deps: [Apollo, HttpLink]
-        // },
         LoggingService,
         GAPIS,
         ServerProvider
@@ -74,7 +69,7 @@ import {PeoplePageModule} from "../pages/people/people.module";
 })
 
 export class AppModule {
-    static injector: Injector;
+    static injector: Injector = null;
 
     constructor(injector: Injector) {
         AppModule.injector = injector;

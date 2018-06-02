@@ -1,7 +1,6 @@
 {
   "server": {
-    "url": "http://localhost:8000",
-    "graphcool_connectToDevTools": true
+    "url": "http://localhost:8000"
   },
   "logging": {
     "logLevels": [
@@ -11,10 +10,10 @@
       },
       {
         "loggerName": "scheduler",
-        "logLevel": "INFO"
+        "logLevel": "DEBUG"
       },
       {
-        "loggerName": "server",
+        "loggerName": "model",
         "logLevel": "INFO"
       },
       {

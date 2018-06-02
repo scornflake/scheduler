@@ -1,7 +1,7 @@
 <div>
     <ion-grid>
         <ion-row>
-            <ion-col class="heading" *ngFor="let header of headers">{{header|uppercase}}</ion-col>
+            <ion-col class="heading" *ngFor="let header of headers">{{header.name|uppercase}}</ion-col>
         </ion-row>
         <ion-row *ngFor="let row of rows; let i = index" [ngClass]="{'even':i % 2 == 0}">
             <ion-col>

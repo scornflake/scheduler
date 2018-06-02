@@ -5,6 +5,7 @@ import {dayAndHourForDate} from "./common/date-utils";
 import {Service} from "./service";
 import {Assignment} from "./assignment";
 import {isUndefined} from "util";
+import {delete_from_array} from "./common/base_model";
 
 class ObjectValidation {
     errors: string[] = new Array<string>();
@@ -49,6 +50,10 @@ class ScheduleScore {
 
     add_role(role: Role) {
         this.roles.push(role);
+    }
+
+    remove_role(r: Role) {
+        delete_from_array(this.roles, r);
     }
 }
 
@@ -139,7 +144,7 @@ class ScheduleAtDate {
     }
 
     add_person(assignment: Assignment, role: Role) {
-        if(assignment == null) {
+        if (assignment == null) {
             throw new Error("Cannot add a 'null' assignment");
         }
         if (!this.assignment_by_score.get(assignment)) {
@@ -154,6 +159,7 @@ class ScheduleAtDate {
         // Return all people that have some score that records this role
         let assigns = this.assignments;
         let filterer = assigns.filter(a => {
+            let datekey = dayAndHourForDate(this.date);
             let score = this.assignment_by_score.get(a);
             if (score) {
                 return score.has_role(role);
@@ -161,7 +167,7 @@ class ScheduleAtDate {
             return false;
         });
         return filterer.map((a) => {
-            if(isUndefined(a)) {
+            if (isUndefined(a)) {
                 console.log("panic");
             }
             return a.person;
@@ -184,12 +190,12 @@ class ScheduleAtDate {
         return this.assignments.find(a => a.person.uuid == person.uuid);
     }
 
-    score_for_person(person: Person) {
+    score_for_person(person: Person): ScheduleScore {
         let assignment = this.assignment_for_person(person);
         if (assignment) {
-            return this.assignment_by_score.get(assignment).score;
+            return this.assignment_by_score.get(assignment);
         }
-        return 0;
+        return null;
     }
 
     valueOf() {
@@ -207,31 +213,33 @@ class ScheduleAtDate {
         score.decisions = decisions;
     }
 
-    includes_person(person: Person) {
+    includes_person(person: Person): boolean {
         let assigment = this.assignment_for_person(person);
         return assigment != null;
     }
 
     move_person(owner: Person, to_date: ScheduleAtDate, reason: string = null) {
         // Find the roles this person was doing
-        let assignment_of_owner = this.assignment_for_person(owner);
-        if (!assignment_of_owner) {
+        let assignment_for_owner = this.assignment_for_person(owner);
+        let score_for_owner = this.score_for_person(owner);
+        if (!score_for_owner) {
             throw Error(`Cant move ${owner}, they are not assigned to this date`);
         }
-        let roles = assignment_of_owner.roles;
+        let roles = score_for_owner.roles;
         if (roles.length) {
-            let score = this.assignment_by_score.get(assignment_of_owner);
-            if (score) {
-                this.assignment_by_score.delete(assignment_of_owner);
-                let assignment_at_target = to_date.assignment_for_person(owner);
-                roles.forEach(r => {
-                    to_date.add_person(assignment_at_target, r);
-                });
-                let new_score = to_date.score_for(owner);
-                new_score.decisions = new_score.decisions.concat(score.decisions);
-                if (reason) {
-                    new_score.decisions.push(reason)
-                }
+            // Delete the entire score for this date, since this person won't be on ANY of their roles for this date
+            this.assignment_by_score.delete(assignment_for_owner);
+
+            // Add the roles this person WAS doing on this date, to the new date.
+            roles.forEach(r => {
+                to_date.add_person(assignment_for_owner, r);
+            });
+
+            // Migrate their decisions over as well
+            let new_score = to_date.score_for(owner);
+            new_score.decisions = new_score.decisions.concat(score_for_owner.decisions);
+            if (reason) {
+                new_score.decisions.push(reason)
             }
         }
     }

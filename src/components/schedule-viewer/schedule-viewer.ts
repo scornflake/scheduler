@@ -14,7 +14,7 @@ import {RootStore} from "../../store/root";
 })
 export class ScheduleViewerComponent {
     @Input()
-    schedule:ScheduleWithRules;
+    schedule: ScheduleWithRules;
 
     constructor(private store: RootStore,
                 private appRef: ApplicationRef,
@@ -22,7 +22,7 @@ export class ScheduleViewerComponent {
     }
 
     @computed
-    get headers(): Array<string> {
+    get headers(): Array<{ name: string, priority: number }> {
         if (!this.schedule) {
             return [];
         }
@@ -39,8 +39,7 @@ export class ScheduleViewerComponent {
     }
 
     presentPopover(myEvent) {
-        let popover = this.popoverCtrl.create(ReasonsComponent, {
-        });
+        let popover = this.popoverCtrl.create(ReasonsComponent, {});
         popover.present({
             ev: myEvent
         });

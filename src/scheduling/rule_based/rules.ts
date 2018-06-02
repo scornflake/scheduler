@@ -37,6 +37,13 @@ class Rule {
         this.priority = priority;
     }
 
+    /*
+    Clear our any temporary state.
+    This is called once per schedule creation.
+     */
+    public prepare_for_execution() {
+    }
+
     get title() {
         return "title";
     }
@@ -267,22 +274,33 @@ class SecondaryAction extends Rule {
 }
 
 class TryToScheduleWith extends SecondaryAction {
-    private other_person: Person;
+    private readonly other_person: Person;
+    private readonly max_number_of_times: number;
+
     private reach: Availability;
-    private max_number_of_times: number;
     private success_executions: number = 0;
+    private logger: Logger;
 
     constructor(other_person: Person, reach: Availability, max_number = 99999) {
         super();
         this.other_person = other_person;
         this.reach = reach;
         this.max_number_of_times = max_number;
+        this.logger = LoggingWrapper.getLogger("scheduler.rules.tryto");
+    }
+
+    prepare_for_execution() {
+        super.prepare_for_execution();
+        this.success_executions = 0;
     }
 
     execute(schedule_at_date: ScheduleAtDate, schedule: ScheduleWithRules) {
         // If this line includes a use of self, does it also include a use of the other person?
-        if (schedule_at_date.includes_person(this.owner)) {
-            if (!schedule_at_date.includes_person(this.other_person)) {
+        let score_for_owner = schedule_at_date.score_for_person(this.owner);
+
+        if (score_for_owner) {
+            let score_for_other = schedule_at_date.score_for_person(this.other_person);
+            if (!score_for_other) {
                 //
                 // TODO: mark somehow that this is a movement, and it shouldn't be reprocessed?
                 // Only because we might get into a situation where we move someone, only to move them again with the next rule
@@ -304,8 +322,9 @@ class TryToScheduleWith extends SecondaryAction {
                 });
 
                 if (closest && this.success_executions < this.max_number_of_times) {
-                    console.log(`We should try to move ${this.owner} because they are not on with ${this.other_person}`);
-                    console.log(` - Try to move them to ${closest.date.toDateString()}`);
+                    let roles_of_owner = score_for_owner.roles;
+                    this.logger.info(`We should try to move ${this.owner} (${roles_of_owner.join(",")}) because they are not on with ${this.other_person}`);
+                    this.logger.info(` - Try to move them to ${closest.date.toDateString()}`);
 
                     let reason = `Moved from ${schedule_at_date.date.toDateString()} to be with ${this.other_person.name}`;
                     schedule_at_date.move_person(this.owner, closest, reason);

@@ -7,7 +7,7 @@ import {
     defaultKeysRole,
     defaultLeaderRole,
     defaultSaxRole,
-    defaultSoundRole
+    defaultSoundRole, SetupDefaultRoles
 } from "./sample-data";
 import {RolesStore} from "./role-store";
 import {Service} from "../service";
@@ -19,6 +19,7 @@ describe('service', () => {
 
     beforeEach(() => {
         service = new Service("test");
+        SetupDefaultRoles();
     });
 
     it('can add dependent roles', () => {
@@ -94,6 +95,8 @@ describe('service', () => {
 
         let groups = service.roles_in_layout_order_grouped;
         console.log(`Groups are: ${groups}`);
+        console.log(`Groups zero: ${groups[0]}`);
+        console.log(`Groups one: ${groups[1]}`);
         expect(groups.length).toEqual(2, 'group length isnt correct');
         expect(groups[0].length).toEqual(1, 'expected single with priority 1');
         expect(groups[1].length).toEqual(2, 'expected two with priority 2');

@@ -1,6 +1,7 @@
 import {AppModule} from "../app/app.module";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {MockConfigurationService} from "../app/logging-configuration";
+import {isUndefined} from "util";
 
 export class LoggingWrapper {
     static loggingService: LoggingService;

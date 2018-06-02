@@ -2,12 +2,10 @@ import {BaseStore, ObjectWithUUID} from "./common/base_model";
 import {action, observable} from "mobx";
 import {PeopleStore} from "./people";
 import {RolesStore} from "./tests/role-store";
-import {Logger} from "ionic-logging-service";
 import {NPBCStoreConstruction} from "../providers/store/test.store";
 import {ScheduleWithRules} from "./rule_based/scheduler";
 import {csd} from "./common/date-utils";
 import {ApplicationRef} from "@angular/core";
-import {LoggingWrapper} from "../common/logging-wrapper";
 import {EventStore, Service} from "./service";
 
 class Organization extends ObjectWithUUID {
@@ -29,13 +27,12 @@ class OrganizationStore extends BaseStore<Organization> {
 
     draft_service: Service;
 
-    private logger: Logger;
-
     constructor(private appRef: ApplicationRef) {
         super();
 
         this.people_store = new PeopleStore();
         this.roles_store = new RolesStore();
+
         NPBCStoreConstruction.SetupRoles(this.roles_store);
         NPBCStoreConstruction.SetupPeople(this.people_store);
 
@@ -45,8 +42,6 @@ class OrganizationStore extends BaseStore<Organization> {
         this.draft_service = this.event_store.add_event_named("Draft Service");
         this.draft_service.start_date = csd(2018, 6, 3);
         this.draft_service.end_date = csd(2018, 9, 30);
-
-        this.logger = LoggingWrapper.getLogger("google");
 
         NPBCStoreConstruction.SetupStore(this.people_store, this, this.draft_service);
         // ThamesTest.SetupStore(this);
@@ -64,7 +59,6 @@ class OrganizationStore extends BaseStore<Organization> {
     generate_schedule(): ScheduleWithRules {
         this.schedule = new ScheduleWithRules(this.draft_service, this.previous_schedule);
         this.schedule.create_schedule();
-
         this.appRef.tick();
         return this.schedule;
     }

@@ -1,5 +1,6 @@
 import {ObjectWithUUID} from "./common/base_model";
 import {observable} from "mobx";
+import {LoggingWrapper} from "../common/logging-wrapper";
 
 export class Role extends ObjectWithUUID {
     @observable name: string;

@@ -14,7 +14,7 @@ class CSVExporter {
         let {fields, rows} = this.generate_rows();
         return json2csv({
             data: rows,
-            fields: fields
+            fields: fields.map(v => v.name)
         });
     }
 
@@ -26,9 +26,9 @@ class CSVExporter {
                 Date: row.date.toDateString()
             };
             for (let field of fields) {
-                if (field == 'Date') continue;
-                let all_names = _.map(row[field], p => p.name);
-                new_row[field] = _.join(all_names, ", ");
+                if (field.name == 'Date') continue;
+                let all_names = _.map(row[field.name], p => p.name);
+                new_row[field.name] = _.join(all_names, ", ");
             }
             return new_row;
         });
@@ -42,7 +42,7 @@ class CSVExporter {
         let {fields, rows} = this.generate_rows();
         let result = json2csv({
             data: rows,
-            fields: fields
+            fields: fields.map(v => v.name)
         });
 
         let data = new Blob([result], {type: 'text/csv'});

@@ -1,7 +1,5 @@
 import {BaseStore, delete_from_array, ObjectWithUUID} from "./common/base_model";
 import {observable} from "mobx";
-import {Logger} from "ionic-logging-service";
-import {LoggingWrapper} from "../common/logging-wrapper";
 import {Assignment} from "./assignment";
 import {Role} from "./role";
 import * as _ from "lodash";
@@ -9,12 +7,11 @@ import {Person} from "./people";
 import {OnThisDate, Rule, UsageWeightedSequential} from "./rule_based/rules";
 import {isUndefined} from "ionic-angular/util/util";
 import {daysBetween} from "./shared";
+import {LoggingWrapper} from "../common/logging-wrapper";
+import {Logger} from "ionic-logging-service";
 
 class Service extends ObjectWithUUID {
     @observable name: string;
-
-    // These are the rules applied to the people doing this service/event
-    @observable rules: Array<Rule>;
 
     start_date: Date;
     end_date: Date;
@@ -23,19 +20,22 @@ class Service extends ObjectWithUUID {
     manual_layouts: Map<Date, Role>;
 
     // This is the people available for this service/event
-    assignments: Array<Assignment>;
+    private _assignments: Array<Assignment>;
 
+    // These are the rules applied to the people doing this service/event
+    private specific_role_rules: Array<Rule>;
     private logger: Logger;
 
     constructor(name: string) {
         super();
         this.name = name;
-        this.assignments = new Array<Assignment>();
-        this.logger = LoggingWrapper.getLogger("model.event");
-        this.rules = new Array<Rule>();
+        this._assignments = new Array<Assignment>();
+        this.specific_role_rules = new Array<Rule>();
 
         this.manual_layouts = new Map<Date, Role>();
         this.days_per_period = 7;
+
+        this.logger = LoggingWrapper.getLogger("model.service");
     }
 
     validate() {
@@ -63,22 +63,26 @@ class Service extends ObjectWithUUID {
         return daysBetween(this.start_date, this.end_date);
     }
 
+    get assignments(): Array<Assignment> {
+        return this._assignments;
+    }
+
     get_assignment_for(person: Person) {
-        return this.assignments.find(a => a.person.uuid == person.uuid);
+        return this._assignments.find(a => a.person.uuid == person.uuid);
     }
 
     get_or_create_assignment_for(person: Person): Assignment {
         let found = this.get_assignment_for(person);
         if (found == null) {
             let assignment = new Assignment(person);
-            this.assignments.push(assignment);
+            this._assignments.push(assignment);
             return assignment;
         }
         return found;
     }
 
     assignments_with_role(role: Role): Array<Assignment> {
-        return this.assignments.filter(assignment => {
+        return this._assignments.filter(assignment => {
             for (let person_role of assignment.roles) {
                 if (role.uuid == person_role.uuid) {
                     return true;
@@ -89,7 +93,7 @@ class Service extends ObjectWithUUID {
     }
 
     order_people_by_role_layout_priority() {
-        return this.assignments.sort((a1, a2) => {
+        return this._assignments.sort((a1, a2) => {
             let maxlp1 = a1.max_role_layout_priority;
             let maxlp2 = a2.max_role_layout_priority;
             return maxlp1 < maxlp2 ? 1 : maxlp1 > maxlp2 ? -1 : 0;
@@ -97,11 +101,11 @@ class Service extends ObjectWithUUID {
     }
 
     get people(): Array<Person> {
-        return this.assignments.map(a => a.person);
+        return this._assignments.map(a => a.person);
     }
 
     get roles(): Array<Role> {
-        let all_roles = _.flatMap(this.assignments, (a: Assignment) => a.roles);
+        let all_roles = _.flatMap(this._assignments, (a: Assignment) => a.roles);
         return _.uniqBy(all_roles, r => r.uuid);
     }
 
@@ -119,11 +123,15 @@ class Service extends ObjectWithUUID {
     remove_person(person: Person) {
         let assign = this.get_assignment_for(person);
         if (assign) {
-            delete_from_array(this.assignments, assign);
+            delete_from_array(this._assignments, assign);
         }
     }
 
     get roles_in_layout_order(): Array<Role> {
+        // this.roles produces a new array each time
+        let original_ordering = this.roles;
+        // this.logger.info(`Roles before layout order: ${original_ordering.join(",")}`);
+
         return this.roles.sort((a: Role, b: Role) => {
             if (a.layout_priority < b.layout_priority) {
                 return 1;
@@ -152,7 +160,7 @@ class Service extends ObjectWithUUID {
     }
 
     private rules_for_role(role: Role) {
-        return this.rules.filter(r => {
+        return this.specific_role_rules.filter(r => {
             if (r instanceof OnThisDate) {
                 return r.role.uuid == role.uuid;
             }
@@ -166,7 +174,7 @@ class Service extends ObjectWithUUID {
         UWS rules when executing. So we make sure they have a higher priority.
         */
         rule.priority = 10;
-        this.rules.push(rule);
+        this.specific_role_rules.push(rule);
         // console.log("Rules now " + SafeJSON.stringify(this.rules));
     }
 
@@ -174,6 +182,7 @@ class Service extends ObjectWithUUID {
         // Add all roles into a map
         let roles_in_order = this.roles_in_layout_order;
         let intermediate = new Map<number, Array<Role>>();
+        // this.logger.info(`Sorting following roles: ${roles_in_order.join(",")}`);
         for (let role of roles_in_order) {
             if (!intermediate.has(role.layout_priority)) {
                 intermediate.set(role.layout_priority, []);
@@ -181,17 +190,28 @@ class Service extends ObjectWithUUID {
             intermediate.set(role.layout_priority, [...intermediate.get(role.layout_priority), role]);
         }
 
-        // Turn into an array
-        let result = [];
-        intermediate.forEach((list, key: number) => {
-            result.push(list);
+        // Turn into an array, sorted by priority
+        let intermediate_keys = intermediate.keys();
+        let keys = Array.from(intermediate_keys).sort((a, b) => {
+            if (a < b) {
+                return 1;
+            }
+            if (a > b) {
+                return -1;
+            }
+            return 0;
         });
+        let result = [];
+        for (let key of keys) {
+            let list = intermediate.get(key);
+            result.push(list);
+        }
         return result;
     }
 
     role_rules(): Map<Assignment, Array<Rule>> {
         let assignment_rule_map = new Map<Assignment, Array<Rule>>();
-        for (let assignment of this.assignments) {
+        for (let assignment of this._assignments) {
             assignment_rule_map.set(assignment, assignment.role_rules());
         }
         return assignment_rule_map;
@@ -199,12 +219,10 @@ class Service extends ObjectWithUUID {
 }
 
 class EventStore extends BaseStore<Service> {
-    private logger: Logger;
     events: Array<Service>;
 
     constructor() {
         super();
-        this.logger = LoggingWrapper.getLogger("store.event");
         this.events = new Array<Service>();
     }
 

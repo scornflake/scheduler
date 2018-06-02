@@ -5,21 +5,40 @@ let leaderPriority = 11;
 let soundPriority = 10;
 let instrumentPriority = 10;
 
-let defaultSpeakerRole = new Role("Speaker", speakerPriority);
-let defaultThemeRole = new Role("Theme", speakerPriority);
-let defaultLeaderRole = new Role("Worship Leader", leaderPriority);
-let defaultSoundRole = new Role("Sound", soundPriority);
-let defaultComputerRole = new Role("Computer", soundPriority);
-let defaultBass = new Role("Bass", instrumentPriority);
-let defaultDrumsRole = new Role("Drums", instrumentPriority);
-let defaultKeysRole = new Role("Keys", instrumentPriority);
-let defaultAcousticGuitar = new Role("Guitar (Acoustic)", instrumentPriority);
-let defaultElectricGuitar = new Role("Guitar (Electric)", instrumentPriority);
-let defaultVocalsRole = new Role("Vocals", instrumentPriority);
-let defaultSaxRole = new Role("Sax", instrumentPriority);
+let defaultSpeakerRole: Role = null;
+let defaultThemeRole: Role = null;
+let defaultLeaderRole: Role = null;
+let defaultSoundRole: Role = null;
+let defaultComputerRole: Role = null;
+let defaultBass: Role = null;
+let defaultDrumsRole: Role = null;
+let defaultKeysRole: Role = null;
+let defaultAcousticGuitar: Role = null;
+let defaultElectricGuitar: Role = null;
+let defaultVocalsRole: Role = null;
+let defaultSaxRole: Role = null;
 
-defaultAcousticGuitar.maximum_count = 2;
-defaultVocalsRole.maximum_count = 3;
+
+function SetupDefaultRoles() {
+    if (defaultSoundRole == null) {
+        defaultSpeakerRole = new Role("Speaker", speakerPriority);
+        defaultThemeRole = new Role("Theme", speakerPriority);
+        defaultLeaderRole = new Role("Worship Leader", leaderPriority);
+        defaultSoundRole = new Role("Sound", soundPriority);
+        defaultComputerRole = new Role("Computer", soundPriority);
+        defaultBass = new Role("Bass", instrumentPriority);
+        defaultDrumsRole = new Role("Drums", instrumentPriority);
+        defaultKeysRole = new Role("Keys", instrumentPriority);
+        defaultAcousticGuitar = new Role("Guitar (Acoustic)", instrumentPriority);
+        defaultElectricGuitar = new Role("Guitar (Electric)", instrumentPriority);
+        defaultVocalsRole = new Role("Vocals", instrumentPriority);
+        defaultSaxRole = new Role("Sax", instrumentPriority);
+
+        defaultAcousticGuitar.maximum_count = 2;
+        defaultVocalsRole.maximum_count = 3;
+    }
+}
+
 
 export {
     defaultSpeakerRole,
@@ -34,5 +53,7 @@ export {
     defaultElectricGuitar,
     defaultVocalsRole,
     defaultSaxRole,
+
+    SetupDefaultRoles
 };
 

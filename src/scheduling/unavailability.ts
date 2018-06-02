@@ -1,9 +1,8 @@
 import {ObjectWithUUID} from "./common/base_model";
 import {dayAndHourForDate} from "./common/date-utils";
+import * as moment from "moment";
 
 export {Unavailablity};
-
-import * as moment from "moment";
 
 class Unavailablity extends ObjectWithUUID {
     from_date: Date = null;

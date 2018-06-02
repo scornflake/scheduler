@@ -10,7 +10,7 @@ import {
     defaultLeaderRole,
     defaultSaxRole,
     defaultSoundRole,
-    defaultVocalsRole
+    defaultVocalsRole, SetupDefaultRoles
 } from "../../scheduling/tests/sample-data";
 import {RolesStore} from "../../scheduling/tests/role-store";
 import {Service} from "../../scheduling/service";
@@ -237,7 +237,8 @@ export class NPBCStoreConstruction {
     }
 
     static SetupRoles(roles_store: RolesStore) {
-        roles_store.addRoles([
+        SetupDefaultRoles();
+        roles_store.add_roles([
             // defaultSpeakerRole,
             // defaultThemeRole,
             defaultLeaderRole,

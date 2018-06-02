@@ -5,10 +5,10 @@ import * as _ from 'lodash';
 import {Logger} from "ionic-logging-service";
 import {dayAndHourForDate} from "../common/date-utils";
 import {RuleFacts} from "./rule-facts";
-import {LoggingWrapper} from "../../common/logging-wrapper";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {Assignment} from "../assignment";
 import {Service} from "../service";
+import {LoggingWrapper} from "../../common/logging-wrapper";
 
 class ScheduleWithRules {
     service: Service;
@@ -19,8 +19,7 @@ class ScheduleWithRules {
     private previous_scheduler: ScheduleWithRules;
 
     constructor(service: Service, previous: ScheduleWithRules = null) {
-        this.logger = LoggingWrapper.getLogger("scheduler");
-
+        this.logger = LoggingWrapper.getLogger('scheduler');
         this.service = service;
         this.service.validate();
         this.free_text = {};
@@ -121,6 +120,7 @@ class ScheduleWithRules {
             throw new Error("No facts defined. Cannot process role");
         }
         let specific_day = this.facts.get_schedule_for_date(current_date);
+        this.logger.debug(`Processing role ${role}`);
 
         // If already at max for this role, ignore it.
         if (this.is_role_filled_for_date(role, current_date)) {
@@ -220,6 +220,7 @@ class ScheduleWithRules {
             this.facts.copyUsageDataFrom(this.previous_scheduler.facts);
             this.logger.info("Taking usage data from previous schedule...");
         }
+        this.prepare_rules_for_execution();
     }
 
     jsonResult(minimized: boolean = false) {
@@ -254,13 +255,13 @@ class ScheduleWithRules {
         return rows;
     }
 
-    jsonFields() {
+    jsonFields(): Array<{ name: string, priority: number }> {
         let ordered_roles = this.service.roles_in_layout_order;
         let field_names = ordered_roles.map(r => {
-            return r.name;
+            return {name: r.name, priority: r.layout_priority};
         });
         return [
-            "Date",
+            {name: "Date", priority: 100},
             ...field_names
         ]
     }
@@ -307,6 +308,13 @@ class ScheduleWithRules {
     warmup_using(previous_schedule: ScheduleWithRules) {
         this.previous_scheduler = previous_schedule;
         this.logger.info("Warming up using a previous schedule...");
+    }
+
+    private prepare_rules_for_execution() {
+        this.service.assignments.forEach(assignment => {
+            assignment.conditional_rules.forEach(a => a.prepare_for_execution());
+            assignment.secondary_actions.forEach(a => a.prepare_for_execution());
+        });
     }
 
     private process_secondary_actions() {

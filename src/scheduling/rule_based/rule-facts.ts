@@ -24,11 +24,13 @@ export class RuleFacts {
     // This is the schedule, as it's being built
     private dates: Map<string, ScheduleAtDate>;
     private decision_depth: number;
+    private working_state: Map<string, any>;
 
     private logger: Logger;
 
     constructor(service: Service) {
         this.service = service;
+        this.working_state = new Map<string, any>();
         this.begin();
 
         this.exclusion_zones = new Map<Person, Array<Exclusion>>();
@@ -115,7 +117,7 @@ export class RuleFacts {
         }
         text = "--- ".repeat(this.decision_depth) + text;
         if (log) {
-            this.logger.debug(text);
+            this.logger.debug('add_decision', text);
         }
         if (!this.decisions_for_date) {
             this.decisions_for_date = [];
@@ -167,7 +169,6 @@ export class RuleFacts {
                         // can't already be in the role on this date
                         let [has_exclusion, reason] = this.has_exclusion_for(this.current_date, possible_assignment.person, role);
                         if (has_exclusion) {
-
                             this.add_decision(possible_assignment.name + " cant do it, they have an exclusion: " + reason);
                             continue;
                         }
