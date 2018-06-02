@@ -1,13 +1,10 @@
 import {Person} from "../people";
-import {Role} from "../role";
-import {AssignedToRoleCondition, ScheduleOn} from "../rule_based/rules";
 import {csd} from "../common/date-utils";
-import {defaultLeaderRole, defaultKeysRole} from "./sample-data";
-import {RolesStore} from "../role-store";
 import {Service} from "../service";
 import {PeopleStore} from "../people-store";
+import {Team} from "../teams";
 
-describe('people, ', () => {
+describe('people', () => {
     let firstPerson: Person;
     let person_store: PeopleStore;
     let service: Service;
@@ -15,7 +12,7 @@ describe('people, ', () => {
 
     beforeEach(() => {
         firstPerson = new Person('neilos');
-        service = new Service("test");
+        service = new Service("test", new Team("Bar Scud"));
         person_store = new PeopleStore();
         person_store.add_person(firstPerson);
     });

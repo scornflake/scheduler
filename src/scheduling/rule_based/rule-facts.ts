@@ -6,7 +6,7 @@ import {Person} from "../people";
 import {Exclusion, ScheduleAtDate} from "../shared";
 import {isUndefined} from "ionic-angular/util/util";
 import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Service} from "../service";
+import {Service, ServiceRole} from "../service";
 import {Assignment} from "../assignment";
 
 export class RuleFacts {
@@ -103,7 +103,7 @@ export class RuleFacts {
     //     });
     // }
 
-    begin_new_role_group(role_group: Array<Role>) {
+    begin_new_role_group(role_group: Array<ServiceRole>) {
     }
 
     begin_new_role(date: Date) {

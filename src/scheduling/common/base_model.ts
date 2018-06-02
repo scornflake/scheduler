@@ -2,6 +2,7 @@ import {action, observable} from "mobx";
 import ShortUniqueId from 'short-unique-id';
 import * as _ from 'lodash';
 import {isUndefined} from "util";
+import {SafeJSON} from "../../common/json/safe-stringify";
 
 class ObjectWithUUID {
     @observable uuid: string;
@@ -24,14 +25,14 @@ class ObjectWithUUID {
 }
 
 class BaseStore<T extends ObjectWithUUID> {
-    @observable protected items: Array<T>;
+    @observable items: Array<T>;
 
     constructor() {
         this.items = [];
     }
 
     @action
-    protected add_object_to_array(instance: T): T {
+    add_object_to_array(instance: T): T {
         if (_.findIndex(this.items, o => o.uuid == instance.uuid) >= 0) {
             return null;
         }
@@ -40,12 +41,12 @@ class BaseStore<T extends ObjectWithUUID> {
     }
 
     @action
-    protected add_objects_to_array(many_items: T[]) {
+    add_objects_to_array(many_items: T[]) {
         many_items.forEach(i => this.add_object_to_array(i));
     }
 
     @action
-    protected remove_object_from_array(instance: T) {
+    remove_object_from_array(instance: T) {
         this.items = this.items.filter(o => o.uuid != instance.uuid);
     }
 
@@ -73,6 +74,37 @@ function check_if_undefined(thing, message) {
     }
 }
 
+function try_find_single_person_with(list, callback) {
+    let results = list.filter(callback);
+    if (results.length) {
+        if (results.length > 1) {
+            throw new Error(`Searching for ${name} returns more than one thing. Returns: ${SafeJSON.stringify(results)}`);
+        }
+        return results[0];
+    }
+    return null;
+}
+
+function find_object_with_name(list: Array<any>, name: string, fuzzy_match: boolean = false) {
+    if (isUndefined(name)) {
+        return null;
+    }
+    let person = try_find_single_person_with(list, obj => obj.name.toLocaleLowerCase() == name.toLocaleLowerCase());
+    if (!person && fuzzy_match) {
+        person = try_find_single_person_with(list, obj => obj.name.toLocaleLowerCase().startsWith(name.toLocaleLowerCase()));
+        if (!person) {
+            // Try first word and first char of 2nd word
+            let terms = name.split(' ');
+            if (terms.length > 1) {
+                let search = `${terms[0]} ${terms[1][0]}`.toLocaleLowerCase();
+                // console.log(`Try ${search} for ${name}`);
+                person = try_find_single_person_with(list, obj => obj.name.toLocaleLowerCase().startsWith(search));
+            }
+        }
+    }
+    return person;
+}
+
 function delete_from_array<T>(array: Array<T>, object: T) {
     array.forEach((item, index) => {
         if (item == object) {
@@ -85,5 +117,6 @@ export {
     ObjectWithUUID,
     BaseStore,
     check_if_undefined,
-    delete_from_array
+    delete_from_array,
+    find_object_with_name
 }

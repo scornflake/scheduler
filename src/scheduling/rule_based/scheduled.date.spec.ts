@@ -3,6 +3,7 @@ import {Person} from "../people";
 import {defaultBass, defaultSoundRole} from "../tests/sample-data";
 import {constructSensibleDate} from "../common/date-utils";
 import {Service} from "../service";
+import {Team} from "../teams";
 
 describe('schedule', () => {
     it('should be able to construct non retarded dates', function () {
@@ -16,10 +17,13 @@ describe('schedule', () => {
         let daniel = new Person("daniel");
 
         let sd = new ScheduleAtDate(new Date(2000, 0, 0));
-        let service = new Service("test");
+        let team = new Team("Scud Missile");
+        team.add_person(neil);
+        team.add_person(daniel);
+        let service = new Service("test", team);
 
-        let neil_assignment = service.add_person(neil);
-        let daniel_assignment = service.add_person(daniel);
+        let neil_assignment = service.assignment_for(neil);
+        let daniel_assignment = service.assignment_for(daniel);
 
         /*
         intentionally havn't added roles to neil,daniel at the Service level.

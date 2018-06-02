@@ -8,6 +8,7 @@ import {OrganizationStore} from "../scheduling/organization";
 import {LoggingWrapper} from "./logging-wrapper";
 import {SafeJSON} from "./json/safe-stringify";
 import {Service} from "../scheduling/service";
+import {Team} from "../scheduling/teams";
 
 export class SpreadsheetReader {
     problems: Map<string, Set<string>>;
@@ -24,7 +25,8 @@ export class SpreadsheetReader {
     parse_schedule_from_spreadsheet(rowData: Array<any>) {
         // OK, we will preload a schedule using a previous schedule
         // To do this we need to derive the start and end date (so it's duration is valid)
-        let service = new Service(`A Snapshot`);
+        let team = new Team("Snapshot Team");
+        let service = new Service(`A Snapshot`, team);
 
         // NPBCStoreConstruction.SetupStore(service.people, new OrganizationStore());
 
@@ -105,7 +107,10 @@ export class SpreadsheetReader {
                                 if (person == null) {
                                     this.add_problem("person", `cannot find ${persons_name}`);
                                 } else {
-                                    let assignment = service.add_person(person).add_role(global_role);
+                                    // Make sure they are part of the team
+                                    team.get_or_add_person(person);
+
+                                    let assignment = service.assignment_for(person).add_role(global_role);
                                     this.schedule.facts.place_person_in_role(assignment, global_role, current_date, true, false);
                                     // this.schedule.facts.place_person_in_role(person, global_role, current_date, true, false);
                                 }

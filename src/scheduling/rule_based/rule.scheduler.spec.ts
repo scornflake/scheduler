@@ -12,13 +12,15 @@ import {
     defaultSaxRole,
     defaultSoundRole,
     defaultSpeakerRole,
-    defaultThemeRole
+    defaultThemeRole, SetupDefaultRoles
 } from "../tests/sample-data";
 import {ScheduleWithRules} from "./scheduler";
 import {Service} from "../service";
+import {Team} from "../teams";
 
 describe('role scheduler', () => {
-    let neil: Person;
+    let team:Team;
+    let neil: Person, daniel: Person;
     let service: Service;
     let end_date: Date;
     let start_date: Date;
@@ -26,16 +28,27 @@ describe('role scheduler', () => {
     let schedule: ScheduleWithRules;
 
     beforeEach(() => {
+        SetupDefaultRoles();
+
         start_date = new Date();
         end_date = new Date();
         end_date.setDate(start_date.getDate() + 30);
 
-        service = new Service("role schedule test service");
+        daniel = new Person("Daniel");
+        neil = new Person("Neil");
+
+        team = new Team("Foo Scud");
+        team.add_person(neil);
+        team.add_person(daniel);
+
+        service = new Service("role schedule test service", team);
         service.start_date = start_date;
         service.end_date = end_date;
 
-        neil = new Person("Neil");
-        service.add_person(neil).add_role(defaultSoundRole);
+        service.add_role(defaultSoundRole);
+        service.add_role(defaultComputerRole);
+        service.add_role(defaultAcousticGuitar);
+        service.assignment_for(neil).add_role(defaultSoundRole);
 
         // Roles on a service are derived from the people in the service
         sound = service.find_role("Sound");
@@ -154,7 +167,7 @@ describe('role scheduler', () => {
         service.start_date = new Date(2017, 9, 1);
         service.end_date = new Date(2017, 9, 25);
 
-        service.add_person(neil).remove_role(sound).add_role(defaultComputerRole);
+        service.assignment_for(neil).remove_role(sound).add_role(defaultComputerRole);
         neil.prefs.availability = new Availability(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         // If unavailability affects exclusions we should end up with not being able to schedule on the first date
@@ -181,15 +194,12 @@ describe('role scheduler', () => {
         service.start_date = new Date(2017, 10, 1);
         service.end_date = new Date(2017, 10, 3);
 
-        // Put neil on Guitar
-        // And daniel on guitar as well
-        service.add_person(neil).remove_role(sound).add_role(defaultAcousticGuitar);
+        // Put neil on Guitar, and daniel on guitar as well
+        // Should see that the maximum number of placements in 'guitar' is one, not two.
+        service.assignment_for(neil).remove_role(sound).add_role(defaultAcousticGuitar);
         neil.prefs.availability = new Availability(1, AvailabilityUnit.AVAIL_ANYTIME);
 
-        let daniel = new Person("Daniel");
-        service.add_person(daniel).add_role(defaultAcousticGuitar);
-
-        defaultAcousticGuitar.maximum_count = 1;
+        service.assignment_for(daniel).add_role(defaultAcousticGuitar);
 
         // Do a schedule. For one week.
         // We should see just ONE person on guitar.
@@ -199,7 +209,7 @@ describe('role scheduler', () => {
         let firstSchedule = Array.from(schedule.dates.values())[0];
         expect(firstSchedule).not.toBeNull();
         expect(firstSchedule.people_in_role(defaultAcousticGuitar).length).toBe(1);
-        // console.log(schedule.jsonResult());
+        console.log(schedule.jsonResult());
     });
 
     it('distributes among roles evenly', () => {
@@ -209,11 +219,11 @@ describe('role scheduler', () => {
         service.end_date = new Date(2017, 10, 6);
         service.days_per_period = 1;
 
-        let daniel = new Person("Daniel");
-        service.add_person(daniel).add_role(defaultSoundRole);
-
         let ben = new Person("Ben");
-        service.add_person(ben).add_role(defaultSoundRole);
+        team.add_person(ben);
+
+        service.assignment_for(daniel).add_role(defaultSoundRole);
+        service.assignment_for(ben).add_role(defaultSoundRole);
 
         schedule = new ScheduleWithRules(service);
         schedule.create_schedule();

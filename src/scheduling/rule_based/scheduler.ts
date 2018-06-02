@@ -7,7 +7,7 @@ import {dayAndHourForDate} from "../common/date-utils";
 import {RuleFacts} from "./rule-facts";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {Assignment} from "../assignment";
-import {Service} from "../service";
+import {Service, ServiceRole} from "../service";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 
 class ScheduleWithRules {
@@ -45,22 +45,22 @@ class ScheduleWithRules {
         this.logger.info("Working from " + this.service.start_date + " to: " + this.service.end_date);
         this.logger.debug("Schedule is " + schedule_duration + " days long");
 
-        let role_groups = this.service.roles_in_layout_order_grouped;
-        let role_names = role_groups.map(g => SafeJSON.stringify(g.map(r => r.name)));
+        let service_role_groups = this.service.roles_in_layout_order_grouped;
+        let role_names = service_role_groups.map(g => SafeJSON.stringify(g.map(r => r.role.name)));
         this.logger.debug("Roles (in order of importance): " + SafeJSON.stringify(role_names));
 
         this.facts.begin();
 
-        role_groups.forEach(rg => this.process_role_group(rg));
+        service_role_groups.forEach(rg => this.process_role_group(rg));
 
         this.process_secondary_actions();
     }
 
-    process_role_group(role_group: Array<Role>) {
-        this.facts.begin_new_role_group(role_group);
+    process_role_group(service_role_group: Array<ServiceRole>) {
+        this.facts.begin_new_role_group(service_role_group);
 
         let current_date = this.service.start_date;
-        this.logger.debug("\r\nNext group: " + SafeJSON.stringify(role_group.map(r => r.name)));
+        this.logger.debug("\r\nNext group: " + SafeJSON.stringify(service_role_group.map(r => r.name)));
 
         // Iterate through all dates
         let iterations = 0;
@@ -68,10 +68,10 @@ class ScheduleWithRules {
         while (current_date.valueOf() <= this.service.end_date.valueOf()) {
             this.logger.debug("Next date: " + current_date);
 
-            for (let role of role_group) {
+            for (let service_role of service_role_group) {
                 this.facts.begin_new_role(current_date);
                 // Put everyone who wants to be doing something specifically on a certain date in place first
-                this.process_role(current_date, role, role_group);
+                this.process_role(current_date, service_role, service_role_group);
             }
 
             // Move to the next date
@@ -106,29 +106,30 @@ class ScheduleWithRules {
         return placements;
     }
 
-    is_role_filled_for_date(role: Role, date: Date) {
+    is_role_filled_for_date(role: ServiceRole, date: Date) {
         if (!this.facts) {
             return false;
         }
         let specific_day = this.facts.get_schedule_for_date(date);
-        let peopleInRole = specific_day.people_in_role(role);
+        let peopleInRole = specific_day.people_in_role(role.role);
         return peopleInRole.length >= role.maximum_count;
     }
 
-    process_role(current_date: Date, role: Role, role_group: Array<Role>) {
+    process_role(current_date: Date, service_role: ServiceRole, role_group: Array<ServiceRole>) {
         if (!this.facts) {
             throw new Error("No facts defined. Cannot process role");
         }
         let specific_day = this.facts.get_schedule_for_date(current_date);
-        this.logger.debug(`Processing role ${role}`);
+        this.logger.debug(`Processing role ${service_role}`);
 
         // If already at max for this role, ignore it.
-        if (this.is_role_filled_for_date(role, current_date)) {
-            this.logger.debug("Not processing " + role.name + ", already have " + role.maximum_count + " slotted in");
+        if (this.is_role_filled_for_date(service_role, current_date)) {
+            this.logger.debug("Not processing " + service_role.name + ", already have " + service_role.maximum_count + " slotted in");
             return;
         }
 
         // For this date, try to layout all people
+        let role = service_role.role;
         let people_for_this_role = this.service.assignments_with_role(role);
 
         // Setup our available people (which at the beginning, is 'everyone')
@@ -140,19 +141,19 @@ class ScheduleWithRules {
         let iteration_max = people_for_this_role.length;
         let person_placed_into_role = null;
 
-        this.facts.add_decision("Role: " + role.name, false);
+        this.facts.add_decision("Role: " + service_role.name, false);
         let specifically_placed_people = this.layout_specific_roles(current_date, role);
 
-        while (iteration_max > 0 && specific_day.number_of_people_in_role(role) < role.maximum_count) {
+        while (iteration_max > 0 && specific_day.number_of_people_in_role(role) < service_role.maximum_count) {
             iteration_max--;
 
             let next_suitable_assignment = this.facts.get_next_suitable_assignment_for(role);
             if (next_suitable_assignment == null) {
-                this.facts.add_decision("No people available for role " + role.name);
+                this.facts.add_decision("No people available for role " + service_role.name);
                 break;
             }
 
-            let message = "Can " + next_suitable_assignment.name + " do role " + role.name + "?";
+            let message = "Can " + next_suitable_assignment.name + " do role " + service_role.name + "?";
             this.facts.add_decision(message);
 
             if (_.includes(specific_day.people_in_role(role), next_suitable_assignment.person)) {
@@ -163,18 +164,18 @@ class ScheduleWithRules {
                 continue;
             }
 
-            let next_wanted_role_for_assignment = this.facts.get_next_suitable_role_for_assignment(next_suitable_assignment);
+            let next_wanted_role_for_assignment = this.service.service_role_matching(this.facts.get_next_suitable_role_for_assignment(next_suitable_assignment));
 
             // Only let this happen if the role is within the current group being processed
             // TODO: This could be optional (might not want role_groups being mutually exclusive like this)
             if (_.includes(role_group, next_wanted_role_for_assignment) && !this.is_role_filled_for_date(next_wanted_role_for_assignment, current_date)) {
-                if (next_wanted_role_for_assignment.uuid != role.uuid) {
+                if (next_wanted_role_for_assignment.role.uuid != role.uuid) {
 
-                    let other_decision = "Putting " + next_suitable_assignment.name + " into " + next_wanted_role_for_assignment + " instead of " + role + " due to a role weighting";
+                    let other_decision = "Putting " + next_suitable_assignment.name + " into " + next_wanted_role_for_assignment + " instead of " + service_role + " due to a role weighting";
 
-                    if (this.facts.place_person_in_role(next_suitable_assignment, next_wanted_role_for_assignment, current_date, true, true, other_decision)) {
+                    if (this.facts.place_person_in_role(next_suitable_assignment, next_wanted_role_for_assignment.role, current_date, true, true, other_decision)) {
                         // now continue with the loop, because we still havn't found someone for the role we were originally looking for.
-                        this.facts.add_decision("Check role " + role + " again because of weighted placement");
+                        this.facts.add_decision("Check role " + service_role + " again because of weighted placement");
                         continue;
                     }
                 }
@@ -188,7 +189,7 @@ class ScheduleWithRules {
             }
 
             let numberOfPeopleInRole = specific_day.number_of_people_in_role(role);
-            if (numberOfPeopleInRole >= role.maximum_count) {
+            if (numberOfPeopleInRole >= service_role.maximum_count) {
                 this.facts.add_decision("Done with role.");
             }
 
@@ -223,7 +224,7 @@ class ScheduleWithRules {
         this.prepare_rules_for_execution();
     }
 
-    jsonResult(minimized: boolean = false) {
+    jsonResult() {
         // An array of dictionaries
         // Each dict is ordered keys, being in order of the role
 
@@ -241,12 +242,12 @@ class ScheduleWithRules {
             rowDict['date'] = schedule_for_day.date;
             rowDict['date_key'] = schedule_for_day.date_key;
 
-            // Look at each known role. Fill in the people fulfilling that role
-            for (let role of ordered_roles) {
+            // Look at each known service_role. Fill in the people fulfilling that service_role
+            for (let service_role of ordered_roles) {
                 // Do we have a value, for this?
-                let free_text = this.notes_for_date(schedule_for_day.date, role);
-                let value_for_cell = schedule_for_day.people_in_role(role);
-                rowDict[role.name] = [...free_text, ...value_for_cell];
+                let free_text = this.notes_for_date(schedule_for_day.date, service_role.role);
+                let value_for_cell = schedule_for_day.people_in_role(service_role.role);
+                rowDict[service_role.role.name] = [...free_text, ...value_for_cell];
             }
 
             // Add the row
@@ -258,7 +259,7 @@ class ScheduleWithRules {
     jsonFields(): Array<{ name: string, priority: number }> {
         let ordered_roles = this.service.roles_in_layout_order;
         let field_names = ordered_roles.map(r => {
-            return {name: r.name, priority: r.layout_priority};
+            return {name: r.role.name, priority: r.layout_priority};
         });
         return [
             {name: "Date", priority: 100},

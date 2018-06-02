@@ -8,6 +8,7 @@ import {csd} from "./common/date-utils";
 import {ApplicationRef} from "@angular/core";
 import {EventStore, Service} from "./service";
 import {TeamsStore} from "./teams-store";
+import {Team} from "./teams";
 
 class Organization extends ObjectWithUUID {
     @observable name: string;
@@ -41,12 +42,19 @@ class OrganizationStore extends BaseStore<Organization> {
 
         this.event_store = new EventStore();
 
+        this.addOrganizaton(new Organization("North Porirua Baptist Church"));
+
+        // make up a default team
+        let team = new Team("Default", this.people_store.people);
+
         // for testing, create some fake
-        this.draft_service = this.event_store.add_event_named("Draft Service");
+        this.draft_service = this.event_store.add_event_named("Draft Service", team);
         this.draft_service.start_date = csd(2018, 6, 3);
         this.draft_service.end_date = csd(2018, 9, 30);
 
-        NPBCStoreConstruction.SetupStore(this.people_store, this, this.draft_service);
+
+        NPBCStoreConstruction.SetupServiceRoles(this.draft_service);
+        NPBCStoreConstruction.SetupService(this.draft_service, team);
         // ThamesTest.SetupStore(this);
     }
 
@@ -70,10 +78,6 @@ class OrganizationStore extends BaseStore<Organization> {
         this.previous_schedule = schedule;
         this.schedule = null;
         // this.generate_schedule();
-    }
-
-    add_service(service_name: string) {
-        return this.event_store.add_event_named(service_name);
     }
 }
 

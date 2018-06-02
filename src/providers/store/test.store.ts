@@ -1,53 +1,58 @@
 import {Person} from "../../scheduling/people";
 import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../../scheduling/availability";
 import {ScheduleOn, TryToScheduleWith} from "../../scheduling/rule_based/rules";
-import {Organization, OrganizationStore} from "../../scheduling/organization";
 import {csd} from "../../scheduling/common/date-utils";
 import {RootStore} from "../../store/root";
 import {
-    defaultAcousticGuitar, defaultBass, defaultComputerRole, defaultDrumsRole, defaultElectricGuitar,
+    defaultAcousticGuitar,
+    defaultBass,
+    defaultComputerRole,
+    defaultDrumsRole,
+    defaultElectricGuitar,
     defaultKeysRole,
     defaultLeaderRole,
     defaultSaxRole,
     defaultSoundRole,
-    defaultVocalsRole, SetupDefaultRoles
+    defaultVocalsRole,
+    SetupDefaultRoles
 } from "../../scheduling/tests/sample-data";
 import {RolesStore} from "../../scheduling/role-store";
 import {Service} from "../../scheduling/service";
 import {PeopleStore} from "../../scheduling/people-store";
+import {Team} from "../../scheduling/teams";
 
 
 export class NPBCStoreConstruction {
     constructor() {
     }
 
-    static SetupStore(person_store: PeopleStore, org_store: OrganizationStore, service: Service) {
-        let neil = person_store.find_person_with_name("Neil Clayton");
-        let cherilyn = person_store.find_person_with_name("Cherilyn Clayton");
-        let kylie = person_store.find_person_with_name("Kylie Welch-Herekiuha");
-        let christine = person_store.find_person_with_name("Christine Edlin");
-        let stuart = person_store.find_person_with_name("Stuart Campbell");
-        let jeremy_selfe = person_store.find_person_with_name("Jeremy Selfe");
+    static SetupService(service: Service, team: Team) {
+        let neil = team.find_person_with_name("Neil Clayton");
+        let cherilyn = team.find_person_with_name("Cherilyn Clayton");
+        let kylie = team.find_person_with_name("Kylie Welch-Herekiuha");
+        let christine = team.find_person_with_name("Christine Edlin");
+        let stuart = team.find_person_with_name("Stuart Campbell");
+        let jeremy_selfe = team.find_person_with_name("Jeremy Selfe");
 
-        let daniel = person_store.find_person_with_name("Daniel Gibbs");
-        let ben = person_store.find_person_with_name("Ben Watson");
-        let courtney = person_store.find_person_with_name("Courtney Anderson");
-        let robs = person_store.find_person_with_name("Rob Sweeney");
-        let robp = person_store.find_person_with_name("Rob Penhey");
-        let dave = person_store.find_person_with_name("Dave Humphries");
-        let ralph = person_store.find_person_with_name("Ralph Lambert");
-        let anita = person_store.find_person_with_name("Anita Lambert");
-        let annie = person_store.find_person_with_name("Annie McMullen");
-        let jo = person_store.find_person_with_name("Jo Marquet");
-        let allie = person_store.find_person_with_name("Allie Pope");
-        let craig = person_store.find_person_with_name("Craig Campbell");
+        let daniel = team.find_person_with_name("Daniel Gibbs");
+        let ben = team.find_person_with_name("Ben Watson");
+        let courtney = team.find_person_with_name("Courtney Anderson");
+        let robs = team.find_person_with_name("Rob Sweeney");
+        let robp = team.find_person_with_name("Rob Penhey");
+        let dave = team.find_person_with_name("Dave Humphries");
+        let ralph = team.find_person_with_name("Ralph Lambert");
+        let anita = team.find_person_with_name("Anita Lambert");
+        let annie = team.find_person_with_name("Annie McMullen");
+        let jo = team.find_person_with_name("Jo Marquet");
+        let allie = team.find_person_with_name("Allie Pope");
+        let craig = team.find_person_with_name("Craig Campbell");
 
-        let chris = person_store.find_person_with_name("Chris Evans");
-        let jeremy_l = person_store.find_person_with_name("Jeremy Legg");
-        let andre_l = person_store.find_person_with_name("Andre Legg");
-        let suzie_l = person_store.find_person_with_name("Suzie Legg");
-        let jeremy_w = person_store.find_person_with_name("Jeremy Watson");
-        let john_sutherland = person_store.find_person_with_name("John Sutherland");
+        let chris = team.find_person_with_name("Chris Evans");
+        let jeremy_l = team.find_person_with_name("Jeremy Legg");
+        let andre_l = team.find_person_with_name("Andre Legg");
+        let suzie_l = team.find_person_with_name("Suzie Legg");
+        let jeremy_w = team.find_person_with_name("Jeremy Watson");
+        let john_sutherland = team.find_person_with_name("John Sutherland");
 
         /*
         Add unavailability here
@@ -85,7 +90,6 @@ export class NPBCStoreConstruction {
         // daniel.put_on_specific_role_for_date(defaultComputerRole, csd(2018, 6, 17));
 
 
-        org_store.addOrganizaton(new Organization("North Porirua Baptist Church"));
 
         neil.avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
         cherilyn.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
@@ -112,96 +116,96 @@ export class NPBCStoreConstruction {
         john_sutherland.avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
 
 
-        service.add_person(neil)
+        service.assignment_for(neil)
             .add_role(defaultSoundRole, 1)
             .add_role(defaultSaxRole, 3)
             .add_secondary_action(new TryToScheduleWith(cherilyn, new Availability(1, AvailabilityUnit.EVERY_N_WEEKS), 2));
 
-        service.add_person(cherilyn)
+        service.assignment_for(cherilyn)
             .add_role(defaultKeysRole)
             .if_assigned_to(defaultLeaderRole).then(new ScheduleOn(cherilyn, defaultKeysRole));
 
-        service.add_person(christine)
+        service.assignment_for(christine)
             .add_role(defaultVocalsRole);
         // christine.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(christine, defaultVocalsRole));
 
-        let stuart_assignment = service.add_person(stuart);
+        let stuart_assignment = service.assignment_for(stuart);
         stuart_assignment
             .add_role(defaultAcousticGuitar)
             .add_role(defaultVocalsRole)
             .if_assigned_to(defaultLeaderRole).then(new ScheduleOn(stuart, defaultAcousticGuitar));
         stuart_assignment.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(stuart, defaultVocalsRole));
 
-        service.add_person(kylie)
+        service.assignment_for(kylie)
             .add_role(defaultAcousticGuitar)
             .if_assigned_to(defaultAcousticGuitar).then(new ScheduleOn(kylie, defaultVocalsRole));
 
-        service.add_person(jeremy_selfe)
+        service.assignment_for(jeremy_selfe)
             .add_role(defaultLeaderRole, 2)
             .add_role(defaultElectricGuitar)
             .if_assigned_to(defaultLeaderRole).then(new ScheduleOn(jeremy_selfe, defaultElectricGuitar));
 
-        service.add_person(ralph)
+        service.assignment_for(ralph)
             .add_role(defaultAcousticGuitar)
             .if_assigned_to(defaultAcousticGuitar).then(new ScheduleOn(anita, defaultVocalsRole));
 
-        service.add_person(daniel)
+        service.assignment_for(daniel)
             .add_role(defaultDrumsRole, 3)
             .add_role(defaultBass);
 
-        service.add_person(craig)
+        service.assignment_for(craig)
             .add_role(defaultDrumsRole);
 
-        service.add_person(ben)
+        service.assignment_for(ben)
             .add_role(defaultBass, 1);
 
-        service.add_person(courtney)
+        service.assignment_for(courtney)
             .add_role(defaultVocalsRole);
 
-        service.add_person(robp)
+        service.assignment_for(robp)
             .add_role(defaultBass, 3)
             .add_role(defaultSoundRole);
 
-        service.add_person(robs)
+        service.assignment_for(robs)
             .add_role(defaultBass);
 
-        service.add_person(dave)
+        service.assignment_for(dave)
             .add_role(defaultAcousticGuitar)
             .add_role(defaultVocalsRole)
             .if_assigned_to(defaultAcousticGuitar).then(new ScheduleOn(dave, defaultVocalsRole));
 
-        service.add_person(anita)
+        service.assignment_for(anita)
             .add_role(defaultVocalsRole);
 
-        service.add_person(annie)
+        service.assignment_for(annie)
             .add_role(defaultVocalsRole);
 
-        service.add_person(jo)
+        service.assignment_for(jo)
             .add_role(defaultVocalsRole);
 
-        service.add_person(allie)
+        service.assignment_for(allie)
             .add_role(defaultVocalsRole);
 
-        service.add_person(chris)
+        service.assignment_for(chris)
             .add_role(defaultSoundRole)
             .add_role(defaultElectricGuitar);
 
-        service.add_person(jeremy_l)
+        service.assignment_for(jeremy_l)
             .add_role(defaultSoundRole, 2)
             .add_role(defaultComputerRole);
 
-        service.add_person(andre_l)
+        service.assignment_for(andre_l)
             .add_role(defaultSoundRole)
             .add_role(defaultElectricGuitar);
 
-        service.add_person(suzie_l)
+        service.assignment_for(suzie_l)
             .add_role(defaultElectricGuitar);
 
-        service.add_person(jeremy_w)
+        service.assignment_for(jeremy_w)
             .add_role(defaultSoundRole, 2)
             .add_role(defaultComputerRole);
 
-        service.add_person(john_sutherland)
+        service.assignment_for(john_sutherland)
             .add_role(defaultSoundRole)
             .add_role(defaultComputerRole, 2)
     }
@@ -253,6 +257,19 @@ export class NPBCStoreConstruction {
             defaultElectricGuitar,
             defaultSaxRole
         ]);
+    }
+
+    static SetupServiceRoles(service: Service) {
+        service.add_role(defaultLeaderRole, true, 1);
+        service.add_role(defaultSoundRole, true, 1);
+        service.add_role(defaultComputerRole, true, 1);
+        service.add_role(defaultKeysRole, true, 1);
+        service.add_role(defaultVocalsRole, true, 2);
+        service.add_role(defaultDrumsRole, true, 1);
+        service.add_role(defaultBass, true, 1);
+        service.add_role(defaultAcousticGuitar, true, 2);
+        service.add_role(defaultElectricGuitar, true, 1);
+        service.add_role(defaultSaxRole, true, 1);
     }
 }
 

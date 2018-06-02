@@ -9,6 +9,26 @@ import {isUndefined} from "ionic-angular/util/util";
 import {daysBetween} from "./shared";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
+import {Team} from "./teams";
+
+class ServiceRole {
+    role: Role;
+    required: boolean;
+
+    maximum_count: number;
+    layout_priority: number;
+
+    constructor(role: Role, required: boolean = false, maximum = 1, layout_priority = 1) {
+        this.role = role;
+        this.required = required;
+        this.maximum_count = maximum;
+        this.layout_priority = layout_priority;
+    }
+
+    get name() {
+        return this.role.name;
+    }
+}
 
 class Service extends ObjectWithUUID {
     @observable name: string;
@@ -24,11 +44,18 @@ class Service extends ObjectWithUUID {
 
     // These are the rules applied to the people doing this service/event
     private specific_role_rules: Array<Rule>;
-    private logger: Logger;
 
-    constructor(name: string) {
+    private logger: Logger;
+    private team: Team;
+    private roles: Array<ServiceRole>;
+
+    constructor(name: string, team: Team) {
         super();
+
+        this.team = team;
         this.name = name;
+        this.roles = new Array<ServiceRole>();
+
         this._assignments = new Array<Assignment>();
         this.specific_role_rules = new Array<Rule>();
 
@@ -92,19 +119,19 @@ class Service extends ObjectWithUUID {
         });
     }
 
-    order_people_by_role_layout_priority() {
-        return this._assignments.sort((a1, a2) => {
-            let maxlp1 = a1.max_role_layout_priority;
-            let maxlp2 = a2.max_role_layout_priority;
-            return maxlp1 < maxlp2 ? 1 : maxlp1 > maxlp2 ? -1 : 0;
-        }).map(a => a.person);
-    }
+    // order_people_by_role_layout_priority() {
+    //     return this._assignments.sort((a1, a2) => {
+    //         let maxlp1 = a1.max_role_layout_priority;
+    //         let maxlp2 = a2.max_role_layout_priority;
+    //         return maxlp1 < maxlp2 ? 1 : maxlp1 > maxlp2 ? -1 : 0;
+    //     }).map(a => a.person);
+    // }
 
     get people(): Array<Person> {
         return this._assignments.map(a => a.person);
     }
 
-    get roles(): Array<Role> {
+    get derived_roles(): Array<Role> {
         let all_roles = _.flatMap(this._assignments, (a: Assignment) => a.roles);
         return _.uniqBy(all_roles, r => r.uuid);
     }
@@ -113,10 +140,18 @@ class Service extends ObjectWithUUID {
         if (isUndefined(role_name)) {
             return null;
         }
-        return this.roles.find(r => r.name.toLowerCase() == role_name.toLowerCase());
+        return this.derived_roles.find(r => r.name.toLowerCase() == role_name.toLowerCase());
     }
 
-    add_person(person: Person): Assignment {
+    assignment_for(person: Person): Assignment {
+        // This person must exist in the team.
+        let p = this.team.find_person_in_team(person);
+        if (!p) {
+            throw new Error(`Person ${person.name} not found in the team. Can't add them to this service`);
+        }
+
+        // OK. This person is in the team.
+        // Create an assignment (another way of saying "what are they gonna be doing?"
         return this.get_or_create_assignment_for(person)
     }
 
@@ -127,12 +162,8 @@ class Service extends ObjectWithUUID {
         }
     }
 
-    get roles_in_layout_order(): Array<Role> {
-        // this.roles produces a new array each time
-        let original_ordering = this.roles;
-        // this.logger.info(`Roles before layout order: ${original_ordering.join(",")}`);
-
-        return this.roles.sort((a: Role, b: Role) => {
+    get roles_in_layout_order(): Array<ServiceRole> {
+        return this.roles.sort((a, b) => {
             if (a.layout_priority < b.layout_priority) {
                 return 1;
             } else if (a.layout_priority > b.layout_priority) {
@@ -144,10 +175,11 @@ class Service extends ObjectWithUUID {
 
     pick_rules(): Map<Role, Array<Rule>> {
         let rule_map = new Map<Role, Array<Rule>>();
-        for (let role of this.roles_in_layout_order) {
+        for (let service_role of this.roles_in_layout_order) {
             let rules = [];
 
             // Find any specific rules for this date.
+            let role = service_role.role;
             rules = rules.concat(this.rules_for_role(role));
 
             // Ordering people sequentially
@@ -178,10 +210,10 @@ class Service extends ObjectWithUUID {
         // console.log("Rules now " + SafeJSON.stringify(this.rules));
     }
 
-    get roles_in_layout_order_grouped(): Array<Array<Role>> {
+    get roles_in_layout_order_grouped(): Array<Array<ServiceRole>> {
         // Add all roles into a map
         let roles_in_order = this.roles_in_layout_order;
-        let intermediate = new Map<number, Array<Role>>();
+        let intermediate = new Map<number, Array<ServiceRole>>();
         // this.logger.info(`Sorting following roles: ${roles_in_order.join(",")}`);
         for (let role of roles_in_order) {
             if (!intermediate.has(role.layout_priority)) {
@@ -216,6 +248,27 @@ class Service extends ObjectWithUUID {
         }
         return assignment_rule_map;
     }
+
+    add_role(role: Role, required: boolean = false, max_needed: number = 1, layout_priority: number = -1): ServiceRole {
+        if (layout_priority == -1) {
+            layout_priority = role.layout_priority;
+        }
+        let serviceRole = new ServiceRole(role, required, max_needed, layout_priority);
+        let existingIndex = this.roles.findIndex(p => p.role.uuid == role.uuid);
+        if (existingIndex != -1) {
+            this.roles.splice(existingIndex, 1);
+        }
+        this.roles.push(serviceRole);
+        return serviceRole;
+    }
+
+    service_role_matching(nextSuitableRoleForAssignment: Role): ServiceRole {
+        let found = this.roles.find(p => p.role.uuid == nextSuitableRoleForAssignment.uuid);
+        if (found) {
+            return found;
+        }
+        return null;
+    }
 }
 
 class EventStore extends BaseStore<Service> {
@@ -226,8 +279,8 @@ class EventStore extends BaseStore<Service> {
         this.events = new Array<Service>();
     }
 
-    add_event_named(event_name: string): Service {
-        let service = new Service(event_name);
+    add_event_named(event_name: string, team: Team): Service {
+        let service = new Service(event_name, team);
         this.events.push(service);
         return service;
     }
@@ -235,5 +288,6 @@ class EventStore extends BaseStore<Service> {
 
 export {
     Service,
+    ServiceRole,
     EventStore
 }

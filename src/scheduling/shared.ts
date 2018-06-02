@@ -158,7 +158,7 @@ class ScheduleAtDate {
         // Return all people that have some score that records this role
         let assigns = this.assignments;
         let filterer = assigns.filter(a => {
-            let datekey = dayAndHourForDate(this.date);
+            // let datekey = dayAndHourForDate(this.date);
             let score = this.assignment_by_score.get(a);
             if (score) {
                 return score.has_role(role);
