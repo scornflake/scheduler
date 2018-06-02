@@ -1,7 +1,7 @@
 import {Component, Input} from '@angular/core';
 import {NavController} from "ionic-angular";
 import {Assignment} from "../../scheduling/assignment";
-import {ServiceRole} from "../../scheduling/service";
+import {Role} from "../../scheduling/service";
 
 @Component({
     selector: 'role-detail',
@@ -9,7 +9,7 @@ import {ServiceRole} from "../../scheduling/service";
 })
 export class RoleDetailComponent {
     @Input('assignment') assignment: Assignment;
-    @Input('role') role: ServiceRole;
+    @Input('role') role: Role;
 
     constructor(public navCtrl: NavController) {
     }
@@ -18,7 +18,7 @@ export class RoleDetailComponent {
         return [1, 2, 3, 4, 5]
     }
 
-    weight_for(role: ServiceRole): string {
+    weight_for(role: Role): string {
         return this.assignment.weight_for_role(role).toString();
     }
 

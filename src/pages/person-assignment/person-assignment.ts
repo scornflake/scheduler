@@ -5,7 +5,7 @@ import {ScheduleOn, TryToScheduleWith} from "../../scheduling/rule_based/rules";
 import {Availability, AvailabilityUnit} from "../../scheduling/availability";
 import {Person} from "../../scheduling/people";
 import {RootStore} from "../../store/root";
-import {ServiceRole} from "../../scheduling/service";
+import {Role} from "../../scheduling/service";
 
 @IonicPage()
 @Component({
@@ -83,7 +83,7 @@ export class PersonAssignmentPage {
         alert.present()
     }
 
-    role_tapped(role: ServiceRole) {
+    role_tapped(role: Role) {
         this.navCtrl.push('RoleDetailPage', {
             'assignment': this.assignment,
             'role': role
@@ -141,7 +141,7 @@ export class PersonAssignmentPage {
         popover.present();
     }
 
-    private continue_add_in_role(if_in_this_role: ServiceRole) {
+    private continue_add_in_role(if_in_this_role: Role) {
         let roles = this.rootStore.draft_service.roles;
         this.navCtrl.push('list-of-things', {
             things: roles,
@@ -149,7 +149,7 @@ export class PersonAssignmentPage {
             'label-callback': (t) => {
                 t.toString()
             },
-            'item-pressed': (item: ServiceRole) => {
+            'item-pressed': (item: Role) => {
                 // DO IT
                 if (this.active) {
                     this.navCtrl.popTo(this.active);

@@ -6,7 +6,7 @@ import {dayAndHourForDate} from "../common/date-utils";
 import {RuleFacts} from "./rule-facts";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {Assignment} from "../assignment";
-import {Service, ServiceRole} from "../service";
+import {Service, Role} from "../service";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 
 class ScheduleWithRules {
@@ -55,7 +55,7 @@ class ScheduleWithRules {
         this.process_secondary_actions();
     }
 
-    process_role_group(service_role_group: Array<ServiceRole>) {
+    process_role_group(service_role_group: Array<Role>) {
         this.facts.begin_new_role_group(service_role_group);
 
         let current_date = this.service.start_date;
@@ -86,7 +86,7 @@ class ScheduleWithRules {
         }
     }
 
-    layout_specific_roles(current_date: Date, role: ServiceRole): Array<Assignment> {
+    layout_specific_roles(current_date: Date, role: Role): Array<Assignment> {
         // Check if anyone has specifics for this date
         let placements = new Array<Assignment>();
         this.assignments.forEach(assignment => {
@@ -105,7 +105,7 @@ class ScheduleWithRules {
         return placements;
     }
 
-    is_role_filled_for_date(role: ServiceRole, date: Date) {
+    is_role_filled_for_date(role: Role, date: Date) {
         if (!this.facts) {
             return false;
         }
@@ -114,7 +114,7 @@ class ScheduleWithRules {
         return peopleInRole.length >= role.maximum_wanted;
     }
 
-    process_role(current_date: Date, role: ServiceRole, role_group: Array<ServiceRole>) {
+    process_role(current_date: Date, role: Role, role_group: Array<Role>) {
         if (!this.facts) {
             throw new Error("No facts defined. Cannot process role");
         }
@@ -274,20 +274,20 @@ class ScheduleWithRules {
         return [];
     }
 
-    is_person_in_exclusion_zone(person: Person, role: ServiceRole, date_for_row: Date) {
+    is_person_in_exclusion_zone(person: Person, role: Role, date_for_row: Date) {
         return this.facts.is_person_in_exclusion_zone(person, role, date_for_row);
     }
 
-    add_note(date: Date, role: ServiceRole, note: string) {
+    add_note(date: Date, role: Role, note: string) {
         let role_map = this.get_role_map_for(date, role);
         role_map.push(note);
     }
 
-    notes_for_date(date: Date, role: ServiceRole): string[] {
+    notes_for_date(date: Date, role: Role): string[] {
         return this.get_role_map_for(date, role);
     }
 
-    private get_role_map_for(date: Date, role: ServiceRole): string[] {
+    private get_role_map_for(date: Date, role: Role): string[] {
         if (!this.free_text) {
             this.free_text = {};
         }

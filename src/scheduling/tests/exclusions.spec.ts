@@ -1,8 +1,8 @@
 import {Exclusion} from "../shared";
-import {ServiceRole} from "../service";
+import {Role} from "../service";
 
 describe('exclusions', () => {
-    let role = new ServiceRole("one");
+    let role = new Role("one");
 
     it('can detect overlap', () => {
         let ex1 = new Exclusion(new Date(2010, 0, 0), new Date(2010, 0, 5), role);

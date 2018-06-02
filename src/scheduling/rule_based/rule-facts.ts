@@ -5,7 +5,7 @@ import {Person} from "../people";
 import {Exclusion, ScheduleAtDate} from "../shared";
 import {isUndefined} from "ionic-angular/util/util";
 import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Service, ServiceRole} from "../service";
+import {Service, Role} from "../service";
 import {Assignment} from "../assignment";
 
 export class RuleFacts {
@@ -13,12 +13,12 @@ export class RuleFacts {
     decisions_for_date: Array<string>;
     service: Service;
 
-    private all_pick_rules: Map<ServiceRole, Array<Rule>>;
+    private all_pick_rules: Map<Role, Array<Rule>>;
     private all_role_rules: Map<Assignment, Array<Rule>>;
 
     private exclusion_zones: Map<Person, Array<Exclusion>>;
 
-    private usage_counts: Map<ServiceRole, Map<Assignment, number>>;
+    private usage_counts: Map<Role, Map<Assignment, number>>;
 
     // This is the schedule, as it's being built
     private dates: Map<string, ScheduleAtDate>;
@@ -33,13 +33,13 @@ export class RuleFacts {
         this.begin();
 
         this.exclusion_zones = new Map<Person, Array<Exclusion>>();
-        this.usage_counts = new Map<ServiceRole, Map<Assignment, number>>();
+        this.usage_counts = new Map<Role, Map<Assignment, number>>();
 
         this.logger = LoggingWrapper.getLogger("scheduler.rules.facts");
     }
 
     copyUsageDataFrom(previous_facts: RuleFacts) {
-        this.usage_counts = new Map<ServiceRole, Map<Assignment, number>>();
+        this.usage_counts = new Map<Role, Map<Assignment, number>>();
         for (let person of Array.from(previous_facts.exclusion_zones.keys())) {
             let zones = previous_facts.exclusion_zones.get(person);
             this.exclusion_zones.set(person, zones);
@@ -102,7 +102,7 @@ export class RuleFacts {
     //     });
     // }
 
-    begin_new_role_group(role_group: Array<ServiceRole>) {
+    begin_new_role_group(role_group: Array<Role>) {
     }
 
     begin_new_role(date: Date) {
@@ -124,7 +124,7 @@ export class RuleFacts {
         this.decisions_for_date.push(text);
     }
 
-    has_exclusion_for(date: Date, person: Person, role: ServiceRole): any[] {
+    has_exclusion_for(date: Date, person: Person, role: Role): any[] {
         // Is this person unavailable on this date?
         if (person.is_unavailable_on(date)) {
             return [true, "unavailable"];
@@ -149,7 +149,7 @@ export class RuleFacts {
         return [false, "clear!"];
     }
 
-    get_next_suitable_assignment_for(role: ServiceRole): Assignment {
+    get_next_suitable_assignment_for(role: Role): Assignment {
         // runs the pick rules for this role
         let pick_rules = this.all_pick_rules.get(role);
         if (!pick_rules) {
@@ -204,7 +204,7 @@ export class RuleFacts {
         return null;
     }
 
-    private get_person_count_for_role(role: ServiceRole, assignment: Assignment): Map<Assignment, number> {
+    private get_person_count_for_role(role: Role, assignment: Assignment): Map<Assignment, number> {
         if (role == null) {
             throw new Error("Role cannot be null here");
         }
@@ -225,7 +225,7 @@ export class RuleFacts {
         return by_person;
     }
 
-    number_of_times_role_used_by_person(role: ServiceRole, assignment: Assignment): number {
+    number_of_times_role_used_by_person(role: Role, assignment: Assignment): number {
         if (role == null) {
             throw new Error("Role cannot be null here");
         }
@@ -235,7 +235,7 @@ export class RuleFacts {
         return this.get_person_count_for_role(role, assignment).get(assignment);
     }
 
-    total_number_of_times_person_placed_in_roles(assignment: Assignment, roles: Array<ServiceRole>): number {
+    total_number_of_times_person_placed_in_roles(assignment: Assignment, roles: Array<Role>): number {
         let total = 0;
         for (let role of roles) {
             let person_counter_for_role = this.get_person_count_for_role(role, assignment);
@@ -260,18 +260,18 @@ export class RuleFacts {
         return facts.filter(fact => fact.includes_person(person));
     }
 
-    index_of_person_in_role_group(person: Person, role: ServiceRole) {
+    index_of_person_in_role_group(person: Person, role: Role) {
         return 0;
     }
 
-    use_this_person_in_role(assignment: Assignment, role: ServiceRole) {
+    use_this_person_in_role(assignment: Assignment, role: Role) {
         let person_counter = this.get_person_count_for_role(role, assignment);
         let current_count = person_counter.get(assignment);
         person_counter.set(assignment, (current_count + 1));
         // this.logger.info("Up to " + person_counter.get(person));
     }
 
-    add_exclusion_for(person: Person, role: ServiceRole, date: Date) {
+    add_exclusion_for(person: Person, role: Role, date: Date) {
         let exclusions_for_person = this.exclusion_zones.get(person);
         if (!exclusions_for_person) {
             exclusions_for_person = [];
@@ -287,7 +287,7 @@ export class RuleFacts {
         this.exclusion_zones.set(person, exclusions_for_person);
     }
 
-    is_person_in_exclusion_zone(person: Person, role: ServiceRole, date_for_row: Date) {
+    is_person_in_exclusion_zone(person: Person, role: Role, date_for_row: Date) {
         let exclusion_zones = this.exclusion_zones.get(person);
         if (!exclusion_zones) {
             return false;
@@ -304,7 +304,7 @@ export class RuleFacts {
     }
 
     place_person_in_role(assignment: Assignment,
-                         role: ServiceRole,
+                         role: Role,
                          date: Date,
                          record_usage_stats = true,
                          execute_conditionals = true,
@@ -335,7 +335,7 @@ export class RuleFacts {
         return true;
     }
 
-    set_decisions_for(assignment: Assignment, role: ServiceRole, date: Date, clear_decisions: boolean = true) {
+    set_decisions_for(assignment: Assignment, role: Role, date: Date, clear_decisions: boolean = true) {
         let specific_day = this.get_schedule_for_date(date);
         specific_day.set_decisions(assignment, role, this.decisions_for_date);
         if (clear_decisions) {

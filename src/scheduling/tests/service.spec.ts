@@ -8,7 +8,7 @@ import {
     defaultSaxRole,
     defaultSoundRole, SetupDefaultRoles
 } from "./sample-data";
-import {Service, ServiceRole} from "../service";
+import {Service, Role} from "../service";
 import {RuleFacts} from "../rule_based/rule-facts";
 import {Assignment} from "../assignment";
 import {Team} from "../teams";
@@ -52,7 +52,7 @@ describe('service', () => {
         leader.layout_priority = 10;
         let keys = service.add_role(defaultKeysRole);
         keys.layout_priority = 5;
-        let gopher = service.add_role(new ServiceRole("Gopher"));
+        let gopher = service.add_role(new Role("Gopher"));
 
         let tim = team.add_person(new Person("Tim"));
         let janice = team.add_person(new Person("Janice"));

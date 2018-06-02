@@ -3,7 +3,7 @@ import {Person} from "../people";
 import {RuleFacts} from "./rule-facts";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {defaultSoundRole} from "../tests/sample-data";
-import {Service, ServiceRole} from "../service";
+import {Service, Role} from "../service";
 import {Assignment} from "../assignment";
 import {PeopleStore} from "../people-store";
 import {Team} from "../teams";
@@ -86,12 +86,12 @@ describe('rules', () => {
     });
 
     describe('role rules', () => {
-        let role1 = new ServiceRole("Foo");
-        let role2 = new ServiceRole("Bar");
-        let weightings: Map<ServiceRole, number>;
+        let role1 = new Role("Foo");
+        let role2 = new Role("Bar");
+        let weightings: Map<Role, number>;
 
         beforeEach(() => {
-            weightings = new Map<ServiceRole, number>();
+            weightings = new Map<Role, number>();
             weightings.set(role1, 1);
             weightings.set(role2, 1);
         });

@@ -13,7 +13,7 @@ import {
     defaultThemeRole, SetupDefaultRoles
 } from "../tests/sample-data";
 import {ScheduleWithRules} from "./scheduler";
-import {Service, ServiceRole} from "../service";
+import {Service, Role} from "../service";
 import {Team} from "../teams";
 
 describe('role scheduler', () => {
@@ -22,7 +22,7 @@ describe('role scheduler', () => {
     let service: Service;
     let end_date: Date;
     let start_date: Date;
-    let sound: ServiceRole;
+    let sound: Role;
     let schedule: ScheduleWithRules;
 
     beforeEach(() => {

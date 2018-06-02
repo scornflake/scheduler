@@ -9,7 +9,7 @@ import {LoggingWrapper} from "../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {Team} from "./teams";
 
-class ServiceRole extends ObjectWithUUID {
+class Role extends ObjectWithUUID {
     name: string;
 
     minimum_needed: number;
@@ -38,7 +38,7 @@ class Service extends ObjectWithUUID {
     end_date: Date;
     days_per_period: number;
 
-    manual_layouts: Map<Date, ServiceRole>;
+    manual_layouts: Map<Date, Role>;
 
     // This is the people available for this service/event
     private _assignments: Array<Assignment>;
@@ -48,19 +48,19 @@ class Service extends ObjectWithUUID {
 
     private logger: Logger;
     private team: Team;
-    roles: Array<ServiceRole>;
+    roles: Array<Role>;
 
     constructor(name: string, team: Team) {
         super();
 
         this.team = team;
         this.name = name;
-        this.roles = new Array<ServiceRole>();
+        this.roles = new Array<Role>();
 
         this._assignments = new Array<Assignment>();
         this.specific_role_rules = new Array<Rule>();
 
-        this.manual_layouts = new Map<Date, ServiceRole>();
+        this.manual_layouts = new Map<Date, Role>();
         this.days_per_period = 7;
 
         this.logger = LoggingWrapper.getLogger("model.service");
@@ -109,7 +109,7 @@ class Service extends ObjectWithUUID {
         return found;
     }
 
-    assignments_with_role(role: ServiceRole): Array<Assignment> {
+    assignments_with_role(role: Role): Array<Assignment> {
         return this._assignments.filter(assignment => {
             for (let person_role of assignment.roles) {
                 if (role.uuid == person_role.uuid) {
@@ -132,14 +132,14 @@ class Service extends ObjectWithUUID {
         return this._assignments.map(a => a.person);
     }
 
-    find_role(role_name: string): ServiceRole {
+    find_role(role_name: string): Role {
         if (isUndefined(role_name)) {
             return null;
         }
         return this.roles.find(r => r.name.toLowerCase() == role_name.toLowerCase());
     }
 
-    find_role_by_uuid(uuid: string): ServiceRole {
+    find_role_by_uuid(uuid: string): Role {
         if (isUndefined(uuid)) {
             return null;
         }
@@ -165,7 +165,7 @@ class Service extends ObjectWithUUID {
         }
     }
 
-    get roles_in_layout_order(): Array<ServiceRole> {
+    get roles_in_layout_order(): Array<Role> {
         return this.roles.sort((a, b) => {
             if (a.layout_priority < b.layout_priority) {
                 return 1;
@@ -176,8 +176,8 @@ class Service extends ObjectWithUUID {
         });
     }
 
-    pick_rules(): Map<ServiceRole, Array<Rule>> {
-        let rule_map = new Map<ServiceRole, Array<Rule>>();
+    pick_rules(): Map<Role, Array<Rule>> {
+        let rule_map = new Map<Role, Array<Rule>>();
         for (let role of this.roles_in_layout_order) {
             let rules = [];
 
@@ -193,7 +193,7 @@ class Service extends ObjectWithUUID {
         return rule_map;
     }
 
-    private rules_for_role(role: ServiceRole) {
+    private rules_for_role(role: Role) {
         return this.specific_role_rules.filter(r => {
             if (r instanceof OnThisDate) {
                 return r.role.uuid == role.uuid;
@@ -212,10 +212,10 @@ class Service extends ObjectWithUUID {
         // console.log("Rules now " + SafeJSON.stringify(this.rules));
     }
 
-    get roles_in_layout_order_grouped(): Array<Array<ServiceRole>> {
+    get roles_in_layout_order_grouped(): Array<Array<Role>> {
         // Add all roles into a map
         let roles_in_order = this.roles_in_layout_order;
-        let intermediate = new Map<number, Array<ServiceRole>>();
+        let intermediate = new Map<number, Array<Role>>();
         // this.logger.info(`Sorting following roles: ${roles_in_order.join(",")}`);
         for (let role of roles_in_order) {
             if (!intermediate.has(role.layout_priority)) {
@@ -251,7 +251,7 @@ class Service extends ObjectWithUUID {
         return assignment_rule_map;
     }
 
-    add_role(sr: ServiceRole): ServiceRole {
+    add_role(sr: Role): Role {
         // let serviceRole = new ServiceRole(name, min_required, max_needed, layout_priority);
         let existingIndex = this.roles.findIndex(r => r.name == sr.name);
         if (existingIndex != -1) {
@@ -261,7 +261,7 @@ class Service extends ObjectWithUUID {
         return sr;
     }
 
-    remove_role(r: ServiceRole) {
+    remove_role(r: Role) {
         let existingIndex = this.roles.findIndex(r => r.uuid == r.uuid);
         if (existingIndex != -1) {
             this.roles.splice(existingIndex, 1);
@@ -286,6 +286,6 @@ class EventStore extends BaseStore<Service> {
 
 export {
     Service,
-    ServiceRole,
+    Role,
     EventStore
 }

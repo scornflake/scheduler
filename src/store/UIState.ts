@@ -1,6 +1,6 @@
 import {Person} from "../scheduling/people";
 import {action, computed, observable} from "mobx";
-import {ServiceRole} from "../scheduling/service";
+import {Role} from "../scheduling/service";
 
 class SavedState {
     @observable previous_sheet_id: string;
@@ -38,7 +38,7 @@ class UIStore {
      */
     @observable selected_person: Person;
     @observable selected_date: Date;
-    @observable selected_role: ServiceRole;
+    @observable selected_role: Role;
 
     @observable signed_in_to_google: boolean;
     @observable login_token_validated: boolean;
@@ -70,7 +70,7 @@ class UIStore {
     }
 
     @action("Select Person")
-    select(person: Person, date: Date, role: ServiceRole) {
+    select(person: Person, date: Date, role: Role) {
         this.selected_person = person;
         this.selected_date = date;
         this.selected_role = role;

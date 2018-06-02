@@ -3,40 +3,40 @@ import {AssignedToRoleCondition, ConditionalRule, Rule, SecondaryAction, Weighte
 import {action, computed} from "mobx";
 import {check_if_undefined, delete_from_array} from "./common/base_model";
 import {dayAndHourForDate} from "./common/date-utils";
-import {ServiceRole} from "./service";
+import {Role} from "./service";
 
 class Assignment {
     person: Person;
 
-    role_weightings: Map<ServiceRole, number>;
-    specific_roles: Map<string, Array<ServiceRole>>;
+    role_weightings: Map<Role, number>;
+    specific_roles: Map<string, Array<Role>>;
 
     private condition_rules: Array<ConditionalRule>;
     private secondary_action_list: Array<SecondaryAction>;
 
     constructor(person: Person = new Person()) {
         this.person = person;
-        this.role_weightings = new Map<ServiceRole, number>();
-        this.specific_roles = new Map<string, Array<ServiceRole>>();
+        this.role_weightings = new Map<Role, number>();
+        this.specific_roles = new Map<string, Array<Role>>();
         this.secondary_action_list = [];
         this.condition_rules = [];
     }
 
     @action
-    add_role(r: ServiceRole, weighting = 1): Assignment {
+    add_role(r: Role, weighting = 1): Assignment {
         check_if_undefined(this.person, "Cannot add a nil or undefined person");
         check_if_undefined(r, "Cannot add a nil or undefined role");
         this.role_weightings.set(r, weighting);
         return this;
     }
 
-    set_weight_for_role(r: ServiceRole, new_weight: number) {
+    set_weight_for_role(r: Role, new_weight: number) {
         if (this.role_weightings.has(r)) {
             this.role_weightings.set(r, new_weight);
         }
     }
 
-    weight_for_role(r: ServiceRole): number {
+    weight_for_role(r: Role): number {
         let weight = this.role_weightings.get(r);
         if (weight) {
             return weight;
@@ -45,7 +45,7 @@ class Assignment {
     }
 
     @action
-    remove_role(r: ServiceRole): Assignment {
+    remove_role(r: Role): Assignment {
         this.role_weightings.delete(r);
         return this;
     }
@@ -69,7 +69,7 @@ class Assignment {
     }
 
     @computed
-    get roles(): Array<ServiceRole> {
+    get roles(): Array<Role> {
         let iterable = this.role_weightings.keys();
         return Array.from(iterable);
     }
@@ -85,16 +85,16 @@ class Assignment {
         return this.person.name;
     }
 
-    put_on_specific_role_for_date(role: ServiceRole, date: Date) {
+    put_on_specific_role_for_date(role: Role, date: Date) {
         let key = dayAndHourForDate(date);
         if (!this.specific_roles.has(key)) {
-            this.specific_roles.set(key, new Array<ServiceRole>());
+            this.specific_roles.set(key, new Array<Role>());
         }
         let role_list = this.specific_roles.get(key);
         role_list.push(role);
     }
 
-    specific_roles_for_date(date: Date): Array<ServiceRole> {
+    specific_roles_for_date(date: Date): Array<Role> {
         let key = dayAndHourForDate(date);
         return this.specific_roles.get(key);
     }
@@ -129,7 +129,7 @@ class Assignment {
         }
     }
 
-    if_assigned_to(role: ServiceRole): ConditionalRule {
+    if_assigned_to(role: Role): ConditionalRule {
         this.add_role(role);
 
         let roleRule = new AssignedToRoleCondition(role);
@@ -137,7 +137,7 @@ class Assignment {
         return roleRule;
     }
 
-    has_primary_role(role: ServiceRole) {
+    has_primary_role(role: Role) {
         let matching_roles = this.roles.filter(r => {
             return r.uuid == role.uuid;
         });
