@@ -1,8 +1,12 @@
 <ion-header>
     <ion-toolbar>
         <ion-title>
-            Schedule <span *ngIf="rootStore.ui_store.have_selection">for {{rootStore.ui_store.selected_person?.name}}</span>
+            Schedule <span
+                *ngIf="rootStore.ui_store.have_selection">for {{rootStore.ui_store.selected_person?.name}}</span>
         </ion-title>
+        <button start ion-button menuToggle>
+            <ion-icon name="menu"></ion-icon>
+        </button>
         <ion-buttons end>
             <button ion-button
                     (click)="clear_selection()"
@@ -27,7 +31,7 @@
             <ion-col *ngIf="rootStore.ui_store.have_selection" col-3>
                 <person-editor></person-editor>
                 <reasons
-                    [decisions]="rootStore.organization_store.schedule.reasons_for(rootStore.ui_store.selected_person, rootStore.ui_store.selected_date)"
+                        [decisions]="rootStore.organization_store.schedule.reasons_for(rootStore.ui_store.selected_person, rootStore.ui_store.selected_date)"
                 >
                 </reasons>
             </ion-col>

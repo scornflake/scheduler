@@ -8,7 +8,7 @@ import {SafeJSON} from "../../common/json/safe-stringify";
 import {Assignment} from "../assignment";
 import {Service} from "../service";
 import {LoggingWrapper} from "../../common/logging-wrapper";
-import Role from "../role";
+import {Role} from "../role";
 
 class ScheduleWithRules {
     service: Service;

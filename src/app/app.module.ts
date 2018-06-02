@@ -3,9 +3,6 @@ import {BrowserModule} from '@angular/platform-browser';
 import {IonicApp, IonicErrorHandler, IonicModule} from 'ionic-angular';
 import {MyApp} from './app.component';
 
-import {AboutPage} from '../pages/about/about';
-import {TabsPage} from '../pages/tabs/tabs';
-
 import {StatusBar} from '@ionic-native/status-bar';
 import {SplashScreen} from '@ionic-native/splash-screen';
 import {ComponentsModule} from "../components/components.module";
@@ -23,12 +20,11 @@ import {HomePageModule} from "../pages/home/home.module";
 import {LoginPageModule} from "../pages/login/login.module";
 import {RootStore} from "../store/root";
 import {PeoplePageModule} from "../pages/people/people.module";
+import {AboutPageModule} from "../pages/about/about.module";
 
 @NgModule({
     declarations: [
         MyApp,
-        AboutPage,
-        TabsPage
     ],
     imports: [
         HttpClientModule,
@@ -42,13 +38,11 @@ import {PeoplePageModule} from "../pages/people/people.module";
         HomePageModule,
         LoginPageModule,
         PeoplePageModule,
-
+        AboutPageModule,
     ],
     bootstrap: [IonicApp],
     entryComponents: [
         MyApp,
-        AboutPage,
-        TabsPage,
     ],
     providers: [
         StatusBar,

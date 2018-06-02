@@ -7,7 +7,7 @@ import {Service} from "../service";
 import {Assignment} from "../assignment";
 import {PeopleStore} from "../people-store";
 import {Team} from "../teams";
-import Role from "../role";
+import {Role} from "../role";
 
 describe('rules', () => {
     let people_store: PeopleStore;

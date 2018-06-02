@@ -7,7 +7,7 @@ import {isUndefined} from "ionic-angular/util/util";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Service} from "../service";
 import {Assignment} from "../assignment";
-import Role from "../role";
+import {Role} from "../role";
 
 export class RuleFacts {
     current_date: Date;

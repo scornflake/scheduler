@@ -15,7 +15,7 @@ import {
 import {ScheduleWithRules} from "./scheduler";
 import {Service} from "../service";
 import {Team} from "../teams";
-import Role from "../role";
+import {Role} from "../role";
 
 describe('role scheduler', () => {
     let team:Team;

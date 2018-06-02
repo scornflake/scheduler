@@ -1,6 +1,6 @@
 import {Team} from "../teams";
 import {Service} from "../service";
-import Role from "../role";
+import {Role} from "../role";
 
 describe('roles', () => {
     let team: Team;

@@ -5,7 +5,7 @@ import {Person} from "../../scheduling/people";
 import {Logger, LoggingService} from "ionic-logging-service";
 
 @IonicPage({
-    name: 'people',
+    name: 'page-people',
     defaultHistory: ['home']
 })
 @Component({
