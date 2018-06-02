@@ -6,8 +6,9 @@ import {dayAndHourForDate} from "../common/date-utils";
 import {RuleFacts} from "./rule-facts";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {Assignment} from "../assignment";
-import {Service, Role} from "../service";
+import {Service} from "../service";
 import {LoggingWrapper} from "../../common/logging-wrapper";
+import Role from "../role";
 
 class ScheduleWithRules {
     service: Service;

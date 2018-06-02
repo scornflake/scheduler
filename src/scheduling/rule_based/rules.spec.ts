@@ -3,10 +3,11 @@ import {Person} from "../people";
 import {RuleFacts} from "./rule-facts";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {defaultSoundRole} from "../tests/sample-data";
-import {Service, Role} from "../service";
+import {Service} from "../service";
 import {Assignment} from "../assignment";
 import {PeopleStore} from "../people-store";
 import {Team} from "../teams";
+import Role from "../role";
 
 describe('rules', () => {
     let people_store: PeopleStore;

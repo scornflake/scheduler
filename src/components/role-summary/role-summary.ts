@@ -1,6 +1,6 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {Assignment} from "../../scheduling/assignment";
-import {Role} from "../../scheduling/service";
+import {Role} from "../../scheduling/role";
 
 @Component({
     selector: 'role-summary',

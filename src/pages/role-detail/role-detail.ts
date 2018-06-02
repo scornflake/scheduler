@@ -1,7 +1,7 @@
 import {Component} from '@angular/core';
 import {IonicPage, NavController, NavParams} from 'ionic-angular';
 import {Assignment} from "../../scheduling/assignment";
-import {Role} from "../../scheduling/service";
+import {Role} from "../../scheduling/role";
 
 @IonicPage()
 @Component({

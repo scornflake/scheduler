@@ -3,7 +3,7 @@ import {AssignedToRoleCondition, ConditionalRule, Rule, SecondaryAction, Weighte
 import {action, computed} from "mobx";
 import {check_if_undefined, delete_from_array} from "./common/base_model";
 import {dayAndHourForDate} from "./common/date-utils";
-import {Role} from "./service";
+import {Role} from "./role";
 
 class Assignment {
     person: Person;

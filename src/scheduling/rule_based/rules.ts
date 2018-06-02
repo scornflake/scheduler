@@ -7,7 +7,7 @@ import {Availability} from "../availability";
 import {daysBetween, ScheduleAtDate} from "../shared";
 import {ScheduleWithRules} from "./scheduler";
 import {Assignment} from "../assignment";
-import {Role} from "../service";
+import {Role} from "../role";
 
 class RuleExecution {
     object: any;

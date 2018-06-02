@@ -4,7 +4,7 @@ import {dayAndHourForDate} from "./common/date-utils";
 import {Assignment} from "./assignment";
 import {isUndefined} from "util";
 import {delete_from_array} from "./common/base_model";
-import {Role} from "./service";
+import {Role} from "./role";
 
 class ObjectValidation {
     errors: string[] = new Array<string>();

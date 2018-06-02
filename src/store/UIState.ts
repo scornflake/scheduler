@@ -1,6 +1,6 @@
 import {Person} from "../scheduling/people";
 import {action, computed, observable} from "mobx";
-import {Role} from "../scheduling/service";
+import {Role} from "../scheduling/role";
 
 class SavedState {
     @observable previous_sheet_id: string;

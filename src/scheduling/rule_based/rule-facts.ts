@@ -5,8 +5,9 @@ import {Person} from "../people";
 import {Exclusion, ScheduleAtDate} from "../shared";
 import {isUndefined} from "ionic-angular/util/util";
 import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Service, Role} from "../service";
+import {Service} from "../service";
 import {Assignment} from "../assignment";
+import Role from "../role";
 
 export class RuleFacts {
     current_date: Date;

@@ -1,7 +1,7 @@
 import {Component, Input} from '@angular/core';
 import {NavController} from "ionic-angular";
 import {Assignment} from "../../scheduling/assignment";
-import {Role} from "../../scheduling/service";
+import {Role} from "../../scheduling/role";
 
 @Component({
     selector: 'role-detail',

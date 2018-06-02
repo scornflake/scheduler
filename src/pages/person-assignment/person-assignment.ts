@@ -5,7 +5,7 @@ import {ScheduleOn, TryToScheduleWith} from "../../scheduling/rule_based/rules";
 import {Availability, AvailabilityUnit} from "../../scheduling/availability";
 import {Person} from "../../scheduling/people";
 import {RootStore} from "../../store/root";
-import {Role} from "../../scheduling/service";
+import {Role} from "../../scheduling/role";
 
 @IonicPage()
 @Component({

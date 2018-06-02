@@ -13,8 +13,9 @@ import {
     defaultThemeRole, SetupDefaultRoles
 } from "../tests/sample-data";
 import {ScheduleWithRules} from "./scheduler";
-import {Service, Role} from "../service";
+import {Service} from "../service";
 import {Team} from "../teams";
+import Role from "../role";
 
 describe('role scheduler', () => {
     let team:Team;

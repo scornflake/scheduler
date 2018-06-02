@@ -8,10 +8,11 @@ import {
     defaultSaxRole,
     defaultSoundRole, SetupDefaultRoles
 } from "./sample-data";
-import {Service, Role} from "../service";
+import {Service} from "../service";
 import {RuleFacts} from "../rule_based/rule-facts";
 import {Assignment} from "../assignment";
 import {Team} from "../teams";
+import {Role} from "../role";
 
 describe('service', () => {
     let service: Service;
