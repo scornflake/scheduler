@@ -3,7 +3,7 @@ import {Person} from "../people";
 import {RuleFacts} from "./rule-facts";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {defaultSoundRole} from "../tests/sample-data";
-import {Service} from "../service";
+import {Plan} from "../plan";
 import {Assignment} from "../assignment";
 import {PeopleStore} from "../people-store";
 import {Team} from "../teams";
@@ -21,7 +21,7 @@ describe('rules', () => {
     beforeEach(() => {
         people_store = new PeopleStore();
         team = new Team("Foo Bar");
-        service = new Service("rules tests", team);
+        service = new Plan("rules tests", team);
         state = new RuleFacts(service);
 
         // If we have people in order, it just returns sequentially

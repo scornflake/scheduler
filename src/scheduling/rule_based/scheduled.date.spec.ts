@@ -2,7 +2,7 @@ import {ScheduleAtDate} from "../shared";
 import {Person} from "../people";
 import {defaultBass, defaultSoundRole} from "../tests/sample-data";
 import {constructSensibleDate} from "../common/date-utils";
-import {Service} from "../service";
+import {Plan} from "../plan";
 import {Team} from "../teams";
 
 describe('schedule', () => {
@@ -20,10 +20,10 @@ describe('schedule', () => {
         let team = new Team("Scud Missile");
         team.add_person(neil);
         team.add_person(daniel);
-        let service = new Service("test", team);
+        let plan = new Plan("test", team);
 
-        let neil_assignment = service.assignment_for(neil);
-        let daniel_assignment = service.assignment_for(daniel);
+        let neil_assignment = plan.assignment_for(neil);
+        let daniel_assignment = plan.assignment_for(daniel);
 
         /*
         intentionally havn't added roles to neil,daniel at the Service level.

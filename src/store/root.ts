@@ -7,7 +7,7 @@ import {Observable} from "rxjs/Observable";
 import {SafeJSON} from "../common/json/safe-stringify";
 import {autorun, computed, IReactionDisposer, observable, toJS} from "mobx";
 import {PeopleStore} from "../scheduling/people-store";
-import {Service} from "../scheduling/service";
+import {Plan} from "../scheduling/plan";
 
 const SAVED_STATE_KEY = 'saved_state';
 
@@ -34,7 +34,7 @@ class RootStore {
         this.load();
     }
 
-    get draft_service(): Service {
+    get draft_service(): Plan {
         return this.organization_store.draft_service;
     }
 

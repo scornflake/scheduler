@@ -6,19 +6,19 @@ import {dayAndHourForDate} from "../common/date-utils";
 import {RuleFacts} from "./rule-facts";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {Assignment} from "../assignment";
-import {Service} from "../service";
+import {Plan} from "../plan";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Role} from "../role";
 
 class ScheduleWithRules {
-    service: Service;
+    service: Plan;
     facts: RuleFacts;
     free_text: {};
 
     private logger: Logger;
     private previous_scheduler: ScheduleWithRules;
 
-    constructor(service: Service, previous: ScheduleWithRules = null) {
+    constructor(service: Plan, previous: ScheduleWithRules = null) {
         this.logger = LoggingWrapper.getLogger('scheduler');
         this.service = service;
         this.service.validate();
@@ -45,22 +45,22 @@ class ScheduleWithRules {
         this.logger.info("Working from " + this.service.start_date + " to: " + this.service.end_date);
         this.logger.debug("Schedule is " + schedule_duration + " days long");
 
-        let service_role_groups = this.service.roles_in_layout_order_grouped;
-        let role_names = service_role_groups.map(g => SafeJSON.stringify(g.map(r => r.name)));
+        let role_groups = this.service.roles_in_layout_order_grouped;
+        let role_names = role_groups.map(g => SafeJSON.stringify(g.map(r => r.name)));
         this.logger.debug("Roles (in order of importance): " + SafeJSON.stringify(role_names));
 
         this.facts.begin();
 
-        service_role_groups.forEach(rg => this.process_role_group(rg));
+        role_groups.forEach(rg => this.process_role_group(rg));
 
         this.process_secondary_actions();
     }
 
-    process_role_group(service_role_group: Array<Role>) {
-        this.facts.begin_new_role_group(service_role_group);
+    process_role_group(role_group: Array<Role>) {
+        this.facts.begin_new_role_group(role_group);
 
         let current_date = this.service.start_date;
-        this.logger.debug("\r\nNext group: " + SafeJSON.stringify(service_role_group.map(r => r.name)));
+        this.logger.debug("\r\nNext group: " + SafeJSON.stringify(role_group.map(r => r.name)));
 
         // Iterate through all dates
         let iterations = 0;
@@ -68,10 +68,10 @@ class ScheduleWithRules {
         while (current_date.valueOf() <= this.service.end_date.valueOf()) {
             this.logger.debug("Next date: " + current_date);
 
-            for (let service_role of service_role_group) {
+            for (let role of role_group) {
                 this.facts.begin_new_role(current_date);
                 // Put everyone who wants to be doing something specifically on a certain date in place first
-                this.process_role(current_date, service_role, service_role_group);
+                this.process_role(current_date, role, role_group);
             }
 
             // Move to the next date

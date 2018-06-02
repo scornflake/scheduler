@@ -16,7 +16,7 @@ import {
     defaultVocalsRole,
     SetupDefaultRoles
 } from "../../scheduling/tests/sample-data";
-import {Service} from "../../scheduling/service";
+import {Plan} from "../../scheduling/plan";
 import {PeopleStore} from "../../scheduling/people-store";
 import {Team} from "../../scheduling/teams";
 
@@ -25,7 +25,7 @@ export class NPBCStoreConstruction {
     constructor() {
     }
 
-    static SetupService(service: Service, team: Team) {
+    static SetupService(service: Plan, team: Team) {
         let neil = team.find_person_with_name("Neil Clayton");
         let cherilyn = team.find_person_with_name("Cherilyn Clayton");
         let kylie = team.find_person_with_name("Kylie Welch-Herekiuha");
@@ -239,7 +239,7 @@ export class NPBCStoreConstruction {
 
     }
 
-    static SetupServiceRoles(service: Service) {
+    static SetupServiceRoles(service: Plan) {
         SetupDefaultRoles();
         service.add_role(defaultLeaderRole);
         service.add_role(defaultSoundRole);

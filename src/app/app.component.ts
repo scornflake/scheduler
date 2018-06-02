@@ -29,7 +29,7 @@ export class MyApp {
             {title: "Dashboard", page: 'home'},
             {title: "People", page: 'page-people'},
             {title: "Teams", page: 'page-teams'},
-            {title: "Services", page: 'page-services'},
+            {title: "Plans", page: 'page-plans'},
             {title: "About", page: 'page-about'},
         ]
     }

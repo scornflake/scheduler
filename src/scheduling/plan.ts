@@ -10,7 +10,7 @@ import {Logger} from "ionic-logging-service";
 import {Team} from "./teams";
 import {Role} from "./role";
 
-class Service extends ObjectWithUUID {
+class Plan extends ObjectWithUUID {
     @observable name: string;
 
     start_date: Date;
@@ -18,6 +18,7 @@ class Service extends ObjectWithUUID {
     days_per_period: number;
 
     manual_layouts: Map<Date, Role>;
+    roles: Array<Role>;
 
     // This is the people available for this service/event
     private _assignments: Array<Assignment>;
@@ -27,7 +28,6 @@ class Service extends ObjectWithUUID {
 
     private logger: Logger;
     private team: Team;
-    roles: Array<Role>;
 
     constructor(name: string, team: Team) {
         super();
@@ -42,7 +42,7 @@ class Service extends ObjectWithUUID {
         this.manual_layouts = new Map<Date, Role>();
         this.days_per_period = 7;
 
-        this.logger = LoggingWrapper.getLogger("model.service");
+        this.logger = LoggingWrapper.getLogger("model.plan");
     }
 
     validate() {
@@ -231,7 +231,6 @@ class Service extends ObjectWithUUID {
     }
 
     add_role(sr: Role): Role {
-        // let serviceRole = new ServiceRole(name, min_required, max_needed, layout_priority);
         let existingIndex = this.roles.findIndex(r => r.name == sr.name);
         if (existingIndex != -1) {
             this.roles.splice(existingIndex, 1);
@@ -248,22 +247,22 @@ class Service extends ObjectWithUUID {
     }
 }
 
-class EventStore extends BaseStore<Service> {
-    events: Array<Service>;
+class PlansStore extends BaseStore<Plan> {
+    plans: Array<Plan>;
 
     constructor() {
         super();
-        this.events = new Array<Service>();
+        this.plans = new Array<Plan>();
     }
 
-    add_event_named(event_name: string, team: Team): Service {
-        let service = new Service(event_name, team);
-        this.events.push(service);
-        return service;
+    add_plan_named(event_name: string, team: Team): Plan {
+        let plan = new Plan(event_name, team);
+        this.plans.push(plan);
+        return plan;
     }
 }
 
 export {
-    Service,
-    EventStore
+    Plan,
+    PlansStore
 }

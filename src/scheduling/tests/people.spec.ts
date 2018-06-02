@@ -1,18 +1,18 @@
 import {Person} from "../people";
 import {csd} from "../common/date-utils";
-import {Service} from "../service";
+import {Plan} from "../plan";
 import {PeopleStore} from "../people-store";
 import {Team} from "../teams";
 
 describe('people', () => {
     let firstPerson: Person;
     let person_store: PeopleStore;
-    let service: Service;
+    let plan: Plan;
     let someDate: Date = new Date(2010, 10, 3);
 
     beforeEach(() => {
         firstPerson = new Person('neilos');
-        service = new Service("test", new Team("Bar Scud"));
+        plan = new Plan("test", new Team("Bar Scud"));
         person_store = new PeopleStore();
         person_store.add_person(firstPerson);
     });

@@ -7,7 +7,7 @@ import {Logger} from "ionic-logging-service";
 import {OrganizationStore} from "../scheduling/organization";
 import {LoggingWrapper} from "./logging-wrapper";
 import {SafeJSON} from "./json/safe-stringify";
-import {Service} from "../scheduling/service";
+import {Plan} from "../scheduling/plan";
 import {Team} from "../scheduling/teams";
 import {NPBCStoreConstruction} from "../providers/store/test.store";
 
@@ -27,9 +27,9 @@ export class SpreadsheetReader {
         // OK, we will preload a schedule using a previous schedule
         // To do this we need to derive the start and end date (so it's duration is valid)
         let team = new Team("Snapshot Team");
-        let service = new Service(`A Snapshot`, team);
+        let plan = new Plan(`A Snapshot`, team);
 
-        NPBCStoreConstruction.SetupServiceRoles(service);
+        NPBCStoreConstruction.SetupServiceRoles(plan);
 
         this.logger.info("Parsing schedule...");
         // First, we validate we have the expected column names
@@ -48,11 +48,11 @@ export class SpreadsheetReader {
         let min_date: Moment = allDates[0];
         let max_date: Moment = allDates[allDates.length - 1];
 
-        service.start_date = min_date.toDate();
-        service.end_date = max_date.toDate();
+        plan.start_date = min_date.toDate();
+        plan.end_date = max_date.toDate();
         // this.logger.info(`Starting ${service.start_date} and ending ${service.end_date}`);
 
-        this.schedule = new ScheduleWithRules(service);
+        this.schedule = new ScheduleWithRules(plan);
 
         // Now we read each row and add people into various roles/positions
         let people_store = this.organization_store.people_store;
@@ -86,7 +86,7 @@ export class SpreadsheetReader {
                 // Lookup the role!
                 let role_name = column_names[index];
                 if (role_name) {
-                    let role = service.find_role(role_name);
+                    let role = plan.find_role(role_name);
                     if (role) {
                         this.logger.info(` - Role: ${role}`);
 
@@ -110,7 +110,7 @@ export class SpreadsheetReader {
                                     // Make sure they are part of the team
                                     team.get_or_add_person(person);
 
-                                    let assignment = service.assignment_for(person).add_role(role);
+                                    let assignment = plan.assignment_for(person).add_role(role);
                                     this.schedule.facts.place_person_in_role(assignment, role, current_date, true, false);
                                 }
                             }

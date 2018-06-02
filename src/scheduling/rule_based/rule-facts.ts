@@ -5,14 +5,14 @@ import {Person} from "../people";
 import {Exclusion, ScheduleAtDate} from "../shared";
 import {isUndefined} from "ionic-angular/util/util";
 import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Service} from "../service";
+import {Plan} from "../plan";
 import {Assignment} from "../assignment";
 import {Role} from "../role";
 
 export class RuleFacts {
     current_date: Date;
     decisions_for_date: Array<string>;
-    service: Service;
+    service: Plan;
 
     private all_pick_rules: Map<Role, Array<Rule>>;
     private all_role_rules: Map<Assignment, Array<Rule>>;
@@ -28,7 +28,7 @@ export class RuleFacts {
 
     private logger: Logger;
 
-    constructor(service: Service) {
+    constructor(service: Plan) {
         this.service = service;
         this.working_state = new Map<string, any>();
         this.begin();

@@ -8,14 +8,14 @@ import {
     defaultSaxRole,
     defaultSoundRole, SetupDefaultRoles
 } from "./sample-data";
-import {Service} from "../service";
+import {Plan} from "../plan";
 import {RuleFacts} from "../rule_based/rule-facts";
 import {Assignment} from "../assignment";
 import {Team} from "../teams";
 import {Role} from "../role";
 
 describe('service', () => {
-    let service: Service;
+    let plan: Plan;
     let team: Team;
     let neil: Person;
     let cherilyn: Person;
@@ -27,13 +27,13 @@ describe('service', () => {
         neil = team.add_person(new Person("neil"));
         tim = team.add_person(new Person("Tim"));
 
-        service = new Service("test", team);
+        plan = new Plan("test", team);
 
         SetupDefaultRoles();
     });
 
     it('can add dependent roles', () => {
-        let cher_assignment = service.assignment_for(cherilyn);
+        let cher_assignment = plan.assignment_for(cherilyn);
         cher_assignment.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(cherilyn, defaultKeysRole));
 
         expect(cher_assignment.roles.length).toEqual(1);
@@ -49,23 +49,23 @@ describe('service', () => {
 
     it('can sort people by role layout priority', () => {
         // people are in roles. Get a list of people based on their max role layout priority
-        let leader = service.add_role(defaultLeaderRole);
+        let leader = plan.add_role(defaultLeaderRole);
         leader.layout_priority = 10;
-        let keys = service.add_role(defaultKeysRole);
+        let keys = plan.add_role(defaultKeysRole);
         keys.layout_priority = 5;
-        let gopher = service.add_role(new Role("Gopher"));
+        let gopher = plan.add_role(new Role("Gopher"));
 
         let tim = team.add_person(new Person("Tim"));
         let janice = team.add_person(new Person("Janice"));
 
         // Tim = Keys
-        let p2 = service.assignment_for(tim).add_role(keys);
+        let p2 = plan.assignment_for(tim).add_role(keys);
 
         // Janice = Gopher
-        let p3 = service.assignment_for(janice).add_role(gopher);
+        let p3 = plan.assignment_for(janice).add_role(gopher);
 
         // Neil = Gopher + Leader
-        let neil_assignment = service.assignment_for(neil).add_role(gopher).add_role(leader);
+        let neil_assignment = plan.assignment_for(neil).add_role(gopher).add_role(leader);
 
         // // Expect Neil, Tim, Janice
         // let ordered = service.people();
@@ -75,29 +75,29 @@ describe('service', () => {
     });
 
     it('can return roles sorted by layout order', () => {
-        let sr2 = service.add_role(defaultSaxRole);
-        let sr1 = service.add_role(defaultLeaderRole);
+        let sr2 = plan.add_role(defaultSaxRole);
+        let sr1 = plan.add_role(defaultLeaderRole);
         sr1.layout_priority = 3;
 
         // Highest first
-        let sorted = service.roles_in_layout_order;
+        let sorted = plan.roles_in_layout_order;
         expect(sorted[0]).toEqual(sr1);
         expect(sorted[1]).toEqual(sr2);
     });
 
     it('can sort roles by priority, into groups', () => {
-        service.assignment_for(neil).add_role(defaultSoundRole);
-        service.assignment_for(tim).add_role(defaultAcousticGuitar);
-        service.assignment_for(cherilyn).add_role(defaultLeaderRole);
+        plan.assignment_for(neil).add_role(defaultSoundRole);
+        plan.assignment_for(tim).add_role(defaultAcousticGuitar);
+        plan.assignment_for(cherilyn).add_role(defaultLeaderRole);
 
         defaultSoundRole.layout_priority = 1;
         defaultAcousticGuitar.layout_priority = 1;
         defaultLeaderRole.layout_priority = 2;
-        service.add_role(defaultSoundRole);
-        service.add_role(defaultAcousticGuitar);
-        service.add_role(defaultLeaderRole);
+        plan.add_role(defaultSoundRole);
+        plan.add_role(defaultAcousticGuitar);
+        plan.add_role(defaultLeaderRole);
 
-        let groups = service.roles_in_layout_order_grouped;
+        let groups = plan.roles_in_layout_order_grouped;
         console.log(`Groups are: ${groups}`);
         console.log(`Groups zero: ${groups[0]}`);
         console.log(`Groups one: ${groups[1]}`);
@@ -115,22 +115,22 @@ describe('service', () => {
         beforeEach(() => {
             date = new Date(2017, 10, 1);
 
-            service.add_role(defaultSaxRole);
-            service.add_role(defaultSoundRole);
-            service.add_role(defaultBass);
+            plan.add_role(defaultSaxRole);
+            plan.add_role(defaultSoundRole);
+            plan.add_role(defaultBass);
 
-            neil_assignment = service.assignment_for(neil).add_role(defaultSaxRole, 3).add_role(defaultSoundRole, 1);
+            neil_assignment = plan.assignment_for(neil).add_role(defaultSaxRole, 3).add_role(defaultSoundRole, 1);
 
             rob = team.add_person(new Person("rob"));
-            rob_assignment = service.assignment_for(rob).add_role(defaultBass).add_role(defaultSoundRole);
+            rob_assignment = plan.assignment_for(rob).add_role(defaultBass).add_role(defaultSoundRole);
 
-            state = new RuleFacts(service);
+            state = new RuleFacts(plan);
             state.current_date = date;
         });
 
         it('creates role rules given people', () => {
 
-            let pick_roles = service.pick_rules();
+            let pick_roles = plan.pick_rules();
             expect(pick_roles.size).toEqual(3);
 
             let just_roles = Array.from(pick_roles.keys());
@@ -149,7 +149,7 @@ describe('service', () => {
             // [neil, rob]
 
             console.log(`will run for date: ${date}`);
-            service.addPickRule(new OnThisDate(date, rob_assignment, defaultSoundRole));
+            plan.addPickRule(new OnThisDate(date, rob_assignment, defaultSoundRole));
             state.begin();
             state.begin_new_role(date);
 

@@ -13,14 +13,14 @@ import {
     defaultThemeRole, SetupDefaultRoles
 } from "../tests/sample-data";
 import {ScheduleWithRules} from "./scheduler";
-import {Service} from "../service";
+import {Plan} from "../plan";
 import {Team} from "../teams";
 import {Role} from "../role";
 
 describe('role scheduler', () => {
     let team:Team;
     let neil: Person, daniel: Person;
-    let service: Service;
+    let plan: Plan;
     let end_date: Date;
     let start_date: Date;
     let sound: Role;
@@ -40,34 +40,34 @@ describe('role scheduler', () => {
         team.add_person(neil);
         team.add_person(daniel);
 
-        service = new Service("role schedule test service", team);
-        service.start_date = start_date;
-        service.end_date = end_date;
+        plan = new Plan("role schedule test plan", team);
+        plan.start_date = start_date;
+        plan.end_date = end_date;
 
-        service.add_role(defaultSoundRole);
-        service.add_role(defaultComputerRole);
-        service.add_role(defaultAcousticGuitar);
-        service.assignment_for(neil).add_role(defaultSoundRole);
+        plan.add_role(defaultSoundRole);
+        plan.add_role(defaultComputerRole);
+        plan.add_role(defaultAcousticGuitar);
+        plan.assignment_for(neil).add_role(defaultSoundRole);
 
-        // Roles on a service are derived from the people in the service
-        sound = service.find_role("Sound");
+        // Roles on a plan are derived from the people in the plan
+        sound = plan.find_role("Sound");
         expect(sound).not.toBeNull();
     });
 
     it('cannot create empty', () => {
-        service.end_date = start_date;
-        service.remove_person(neil);
+        plan.end_date = start_date;
+        plan.remove_person(neil);
         expect(() => {
-            schedule = new ScheduleWithRules(service);
+            schedule = new ScheduleWithRules(plan);
             schedule.create_schedule()
         }).toThrow();
     });
 
     it('can schedule neil weekly', () => {
-        service.start_date = new Date(2017, 9, 1);
-        service.end_date = new Date(2017, 9, 25);
+        plan.start_date = new Date(2017, 9, 1);
+        plan.end_date = new Date(2017, 9, 25);
 
-        schedule = new ScheduleWithRules(service);
+        schedule = new ScheduleWithRules(plan);
         expect(schedule).not.toBeNull();
 
         schedule.create_schedule();
@@ -93,13 +93,13 @@ describe('role scheduler', () => {
     });
 
     it('exclusions affect the layout', () => {
-        service.start_date = new Date(2017, 9, 1);
-        service.end_date = new Date(2017, 9, 25);
+        plan.start_date = new Date(2017, 9, 1);
+        plan.end_date = new Date(2017, 9, 25);
 
         // Make myself available every 2 weeks, we should see a change to the schedule
         neil.prefs.availability = new Availability(2, AvailabilityUnit.EVERY_N_WEEKS);
 
-        schedule = new ScheduleWithRules(service);
+        schedule = new ScheduleWithRules(plan);
         expect(schedule).not.toBeNull();
 
         schedule.create_schedule();
@@ -119,7 +119,7 @@ describe('role scheduler', () => {
          */
         neil.set_availability(new AvailabilityEveryNOfM(2, 3));
 
-        schedule = new ScheduleWithRules(service);
+        schedule = new ScheduleWithRules(plan);
         expect(schedule).not.toBeNull();
         schedule.create_schedule();
 
@@ -131,7 +131,7 @@ describe('role scheduler', () => {
         This builds a schedule where neil is on every week.
         We can then test the schedule.is_person_available method
          */
-        schedule = new ScheduleWithRules(service);
+        schedule = new ScheduleWithRules(plan);
         expect(schedule).not.toBeNull();
         schedule.create_schedule();
         let facts = schedule.facts;
@@ -163,16 +163,16 @@ describe('role scheduler', () => {
     });
 
     it('unavailable dates act like exclusion zones', () => {
-        service.start_date = new Date(2017, 9, 1);
-        service.end_date = new Date(2017, 9, 25);
+        plan.start_date = new Date(2017, 9, 1);
+        plan.end_date = new Date(2017, 9, 25);
 
-        service.assignment_for(neil).remove_role(sound).add_role(defaultComputerRole);
+        plan.assignment_for(neil).remove_role(sound).add_role(defaultComputerRole);
         neil.prefs.availability = new Availability(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         // If unavailability affects exclusions we should end up with not being able to schedule on the first date
-        neil.add_unavailable(service.start_date);
+        neil.add_unavailable(plan.start_date);
 
-        schedule = new ScheduleWithRules(service);
+        schedule = new ScheduleWithRules(plan);
         expect(schedule).not.toBeNull();
         schedule.create_schedule();
 
@@ -190,19 +190,19 @@ describe('role scheduler', () => {
 
     it('limits placements based on max count', () => {
         // One week
-        service.start_date = new Date(2017, 10, 1);
-        service.end_date = new Date(2017, 10, 3);
+        plan.start_date = new Date(2017, 10, 1);
+        plan.end_date = new Date(2017, 10, 3);
 
         // Put neil on Guitar, and daniel on guitar as well
         // Should see that the maximum number of placements in 'guitar' is one, not two.
-        service.assignment_for(neil).remove_role(sound).add_role(defaultAcousticGuitar);
+        plan.assignment_for(neil).remove_role(sound).add_role(defaultAcousticGuitar);
         neil.prefs.availability = new Availability(1, AvailabilityUnit.AVAIL_ANYTIME);
 
-        service.assignment_for(daniel).add_role(defaultAcousticGuitar);
+        plan.assignment_for(daniel).add_role(defaultAcousticGuitar);
 
         // Do a schedule. For one week.
         // We should see just ONE person on guitar.
-        schedule = new ScheduleWithRules(service);
+        schedule = new ScheduleWithRules(plan);
         schedule.create_schedule();
 
         let firstSchedule = Array.from(schedule.dates.values())[0];
@@ -214,17 +214,17 @@ describe('role scheduler', () => {
     it('distributes among roles evenly', () => {
         // Make a 6 day schedule with 3 people, all available every day.
         // Expect to see a rotation, rather than the first person picked all the time
-        service.start_date = new Date(2017, 10, 1);
-        service.end_date = new Date(2017, 10, 6);
-        service.days_per_period = 1;
+        plan.start_date = new Date(2017, 10, 1);
+        plan.end_date = new Date(2017, 10, 6);
+        plan.days_per_period = 1;
 
         let ben = new Person("Ben");
         team.add_person(ben);
 
-        service.assignment_for(daniel).add_role(defaultSoundRole);
-        service.assignment_for(ben).add_role(defaultSoundRole);
+        plan.assignment_for(daniel).add_role(defaultSoundRole);
+        plan.assignment_for(ben).add_role(defaultSoundRole);
 
-        schedule = new ScheduleWithRules(service);
+        schedule = new ScheduleWithRules(plan);
         schedule.create_schedule();
         let schedules = Array.from(schedule.dates.values());
 
@@ -243,7 +243,7 @@ describe('role scheduler', () => {
 
     describe('notes', () => {
         it('can record free text for a role position', function () {
-            schedule = new ScheduleWithRules(service);
+            schedule = new ScheduleWithRules(plan);
             let date = constructSensibleDate(2018, 1, 5);
 
             schedule.add_note(date, defaultSpeakerRole, "Hello");
