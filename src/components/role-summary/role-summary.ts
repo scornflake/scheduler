@@ -1,6 +1,6 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {Role} from "../../scheduling/role";
 import {Assignment} from "../../scheduling/assignment";
+import {ServiceRole} from "../../scheduling/service";
 
 @Component({
     selector: 'role-summary',
@@ -8,19 +8,19 @@ import {Assignment} from "../../scheduling/assignment";
 })
 export class RoleSummaryComponent {
     @Input() assignment: Assignment;
-    @Output() tapped = new EventEmitter<Role>();
+    @Output() tapped = new EventEmitter<ServiceRole>();
 
     constructor() {
     }
 
-    get roles(): Array<Role> {
+    get roles(): Array<ServiceRole> {
         if (this.assignment) {
             return this.assignment.roles;
         }
         return [];
     }
 
-    weight_for(role: Role): string {
+    weight_for(role: ServiceRole): string {
         return this.assignment.weight_for_role(role).toString();
     }
 
@@ -28,7 +28,7 @@ export class RoleSummaryComponent {
         this.assignment.remove_role(role);
     }
 
-    show_role_detail(role:Role) {
+    show_role_detail(role: ServiceRole) {
         this.tapped.emit(role);
     }
 }

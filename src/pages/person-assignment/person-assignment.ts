@@ -3,9 +3,9 @@ import {AlertController, IonicPage, NavController, NavParams, PopoverController,
 import {Assignment} from "../../scheduling/assignment";
 import {ScheduleOn, TryToScheduleWith} from "../../scheduling/rule_based/rules";
 import {Availability, AvailabilityUnit} from "../../scheduling/availability";
-import {Role} from "../../scheduling/role";
 import {Person} from "../../scheduling/people";
 import {RootStore} from "../../store/root";
+import {ServiceRole} from "../../scheduling/service";
 
 @IonicPage()
 @Component({
@@ -33,7 +33,7 @@ export class PersonAssignmentPage {
 
     add_roles_to_alert(alert, input_type = 'checkbox', handler = (r) => {
     }) {
-        let all_roles = this.rootStore.roles_store.roles;
+        let all_roles = this.rootStore.draft_service.roles;
         for (let r of all_roles) {
             if (input_type == 'button') {
                 alert.addButton({
@@ -70,7 +70,7 @@ export class PersonAssignmentPage {
             handler: data => {
                 // We receive an array of 'values'
                 for (let role_id of data) {
-                    let role_to_add = this.rootStore.roles_store.find_by_uuid(role_id);
+                    let role_to_add = this.rootStore.draft_service.find_role_by_uuid(role_id);
                     if (role_to_add) {
                         this.assignment.add_role(role_to_add);
                     }
@@ -83,7 +83,7 @@ export class PersonAssignmentPage {
         alert.present()
     }
 
-    role_tapped(role: Role) {
+    role_tapped(role: ServiceRole) {
         this.navCtrl.push('RoleDetailPage', {
             'assignment': this.assignment,
             'role': role
@@ -117,7 +117,7 @@ export class PersonAssignmentPage {
     }
 
     private add_if_in_role_rule() {
-        let list_of_things = this.rootStore.roles_store.roles;
+        let list_of_things = this.rootStore.draft_service.roles;
         this.navCtrl.push('list-of-things', {
             things: list_of_things,
             'title': 'When in role...',
@@ -141,15 +141,15 @@ export class PersonAssignmentPage {
         popover.present();
     }
 
-    private continue_add_in_role(if_in_this_role: Role) {
-        let roles = this.rootStore.roles_store.roles;
+    private continue_add_in_role(if_in_this_role: ServiceRole) {
+        let roles = this.rootStore.draft_service.roles;
         this.navCtrl.push('list-of-things', {
             things: roles,
             'title': 'Also be in role...',
             'label-callback': (t) => {
                 t.toString()
             },
-            'item-pressed': (item: Role) => {
+            'item-pressed': (item: ServiceRole) => {
                 // DO IT
                 if (this.active) {
                     this.navCtrl.popTo(this.active);

@@ -1,10 +1,10 @@
-import {Role} from "./role";
 import {Person} from "./people";
 import * as _ from 'lodash';
 import {dayAndHourForDate} from "./common/date-utils";
 import {Assignment} from "./assignment";
 import {isUndefined} from "util";
 import {delete_from_array} from "./common/base_model";
+import {ServiceRole} from "./service";
 
 class ObjectValidation {
     errors: string[] = new Array<string>();
@@ -29,17 +29,17 @@ class ObjectValidation {
 
 class ScheduleScore {
     person?: Person;
-    roles: Array<Role>;
+    roles: Array<ServiceRole>;
     decisions: Array<string>;
     score: number;
 
-    constructor(role: Role) {
+    constructor(role: ServiceRole) {
         this.roles = [role];
         this.score = 0;
         this.decisions = [];
     }
 
-    has_role(role: Role) {
+    has_role(role: ServiceRole) {
         return _.includes(this.roles, role);
     }
 
@@ -47,11 +47,11 @@ class ScheduleScore {
         return "Score: " + this.score + " for role: " + this.roles.join(", ");
     }
 
-    add_role(role: Role) {
+    add_role(role: ServiceRole) {
         this.roles.push(role);
     }
 
-    remove_role(r: Role) {
+    remove_role(r: ServiceRole) {
         delete_from_array(this.roles, r);
     }
 }
@@ -64,9 +64,9 @@ function daysBetween(startDate: Date, endDate: Date): number {
 class Exclusion {
     start_date: Date;
     end_date: Date;
-    role: Role;
+    role: ServiceRole;
 
-    constructor(start: Date, end: Date, because: Role) {
+    constructor(start: Date, end: Date, because: ServiceRole) {
         this.start_date = start;
         this.end_date = end;
         this.role = because;
@@ -142,7 +142,7 @@ class ScheduleAtDate {
         return null;
     }
 
-    add_person(assignment: Assignment, role: Role) {
+    add_person(assignment: Assignment, role: ServiceRole) {
         if (assignment == null) {
             throw new Error("Cannot add a 'null' assignment");
         }
@@ -154,7 +154,7 @@ class ScheduleAtDate {
         }
     }
 
-    people_in_role(role: Role): Array<Person> {
+    people_in_role(role: ServiceRole): Array<Person> {
         // Return all people that have some score that records this role
         let assigns = this.assignments;
         let filterer = assigns.filter(a => {
@@ -173,11 +173,11 @@ class ScheduleAtDate {
         });
     }
 
-    number_of_people_in_role(role: Role): number {
+    number_of_people_in_role(role: ServiceRole): number {
         return this.people_in_role(role).length;
     }
 
-    roles_of_person(person: Person): Array<Role> {
+    roles_of_person(person: Person): Array<ServiceRole> {
         let assignment = this.assignment_for_person(person);
         if (assignment) {
             return assignment.roles;
@@ -204,7 +204,7 @@ class ScheduleAtDate {
         return this.date.toDateString() + " - " + _.join(names_with_tasks, ',');
     }
 
-    set_decisions(assignment: Assignment, role: Role, decisions: Array<string>) {
+    set_decisions(assignment: Assignment, role: ServiceRole, decisions: Array<string>) {
         let score = this.assignment_by_score.get(assignment);
         if (!score) {
             throw Error("Cant set facts, no person/assignment in this date");
@@ -243,8 +243,8 @@ class ScheduleAtDate {
         }
     }
 
-    can_place_person_in_role(person: Person, role: Role) {
-        return this.number_of_people_in_role(role) < role.maximum_count;
+    can_place_person_in_role(person: Person, role: ServiceRole) {
+        return this.number_of_people_in_role(role) < role.maximum_wanted;
     }
 }
 

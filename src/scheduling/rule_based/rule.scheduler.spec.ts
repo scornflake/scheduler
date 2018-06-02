@@ -1,5 +1,3 @@
-import {Role} from "../role";
-
 import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../availability";
 import includes from 'lodash/includes';
 import {CSVExporter} from "../exporter/csv.exporter";
@@ -15,7 +13,7 @@ import {
     defaultThemeRole, SetupDefaultRoles
 } from "../tests/sample-data";
 import {ScheduleWithRules} from "./scheduler";
-import {Service} from "../service";
+import {Service, ServiceRole} from "../service";
 import {Team} from "../teams";
 
 describe('role scheduler', () => {
@@ -24,7 +22,7 @@ describe('role scheduler', () => {
     let service: Service;
     let end_date: Date;
     let start_date: Date;
-    let sound: Role;
+    let sound: ServiceRole;
     let schedule: ScheduleWithRules;
 
     beforeEach(() => {

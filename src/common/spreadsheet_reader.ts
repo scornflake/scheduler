@@ -9,6 +9,7 @@ import {LoggingWrapper} from "./logging-wrapper";
 import {SafeJSON} from "./json/safe-stringify";
 import {Service} from "../scheduling/service";
 import {Team} from "../scheduling/teams";
+import {NPBCStoreConstruction} from "../providers/store/test.store";
 
 export class SpreadsheetReader {
     problems: Map<string, Set<string>>;
@@ -28,7 +29,7 @@ export class SpreadsheetReader {
         let team = new Team("Snapshot Team");
         let service = new Service(`A Snapshot`, team);
 
-        // NPBCStoreConstruction.SetupStore(service.people, new OrganizationStore());
+        NPBCStoreConstruction.SetupServiceRoles(service);
 
         this.logger.info("Parsing schedule...");
         // First, we validate we have the expected column names
@@ -54,7 +55,6 @@ export class SpreadsheetReader {
         this.schedule = new ScheduleWithRules(service);
 
         // Now we read each row and add people into various roles/positions
-        let roles_store = this.organization_store.roles_store;
         let people_store = this.organization_store.people_store;
 
         for (let row of dataRows) {
@@ -86,9 +86,9 @@ export class SpreadsheetReader {
                 // Lookup the role!
                 let role_name = column_names[index];
                 if (role_name) {
-                    let global_role = roles_store.find_role(role_name);
-                    if (global_role) {
-                        this.logger.info(` - Role: ${global_role}`);
+                    let role = service.find_role(role_name);
+                    if (role) {
+                        this.logger.info(` - Role: ${role}`);
 
                         let peoples_names = col.split(",").map(v => v.trim());
                         this.logger.info(`   - people: ${SafeJSON.stringify(peoples_names)}`);
@@ -110,9 +110,8 @@ export class SpreadsheetReader {
                                     // Make sure they are part of the team
                                     team.get_or_add_person(person);
 
-                                    let assignment = service.assignment_for(person).add_role(global_role);
-                                    this.schedule.facts.place_person_in_role(assignment, global_role, current_date, true, false);
-                                    // this.schedule.facts.place_person_in_role(person, global_role, current_date, true, false);
+                                    let assignment = service.assignment_for(person).add_role(role);
+                                    this.schedule.facts.place_person_in_role(assignment, role, current_date, true, false);
                                 }
                             }
                         }

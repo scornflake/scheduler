@@ -1,7 +1,6 @@
 import {BaseStore, ObjectWithUUID} from "./common/base_model";
 import {action, observable} from "mobx";
 import {PeopleStore} from "./people-store";
-import {RolesStore} from "./role-store";
 import {NPBCStoreConstruction} from "../providers/store/test.store";
 import {ScheduleWithRules} from "./rule_based/scheduler";
 import {csd} from "./common/date-utils";
@@ -21,7 +20,6 @@ class Organization extends ObjectWithUUID {
 
 class OrganizationStore extends BaseStore<Organization> {
     @observable people_store: PeopleStore;
-    @observable roles_store: RolesStore;
     @observable event_store: EventStore;
     @observable teams_store: TeamsStore;
 
@@ -34,9 +32,7 @@ class OrganizationStore extends BaseStore<Organization> {
         super();
 
         this.people_store = new PeopleStore();
-        this.roles_store = new RolesStore();
 
-        NPBCStoreConstruction.SetupRoles(this.roles_store);
         NPBCStoreConstruction.SetupPeople(this.people_store);
 
         this.event_store = new EventStore();

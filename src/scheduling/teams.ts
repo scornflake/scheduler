@@ -1,4 +1,4 @@
-import {BaseStore, find_object_with_name} from "./common/base_model";
+import {BaseStore, find_object_with_name, ObjectWithUUID} from "./common/base_model";
 import {observable} from "mobx";
 import {Person} from "./people";
 

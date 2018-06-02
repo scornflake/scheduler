@@ -16,7 +16,6 @@ import {
     defaultVocalsRole,
     SetupDefaultRoles
 } from "../../scheduling/tests/sample-data";
-import {RolesStore} from "../../scheduling/role-store";
 import {Service} from "../../scheduling/service";
 import {PeopleStore} from "../../scheduling/people-store";
 import {Team} from "../../scheduling/teams";
@@ -240,35 +239,20 @@ export class NPBCStoreConstruction {
 
     }
 
-    static SetupRoles(roles_store: RolesStore) {
-        SetupDefaultRoles();
-        roles_store.add_roles([
-            // defaultSpeakerRole,
-            // defaultThemeRole,
-            defaultLeaderRole,
-            defaultSoundRole,
-            defaultComputerRole,
-            defaultKeysRole,
-            defaultVocalsRole,
-            defaultDrumsRole,
-            defaultBass,
-            defaultAcousticGuitar,
-            defaultElectricGuitar,
-            defaultSaxRole
-        ]);
-    }
-
     static SetupServiceRoles(service: Service) {
+        SetupDefaultRoles();
         service.add_role(defaultLeaderRole);
         service.add_role(defaultSoundRole);
         service.add_role(defaultComputerRole);
         service.add_role(defaultKeysRole);
-        service.add_role(defaultVocalsRole, 1, 2);
+        service.add_role(defaultVocalsRole).maximum_wanted = 2;
         service.add_role(defaultDrumsRole);
         service.add_role(defaultBass);
-        service.add_role(defaultAcousticGuitar, 0, 2);
-        service.add_role(defaultElectricGuitar, 0, 1);
-        service.add_role(defaultSaxRole, 0, 1);
+        service.add_role(defaultAcousticGuitar).maximum_wanted = 2;
+        service.add_role(defaultElectricGuitar).minimum_needed = 0;
+        service.add_role(defaultSaxRole).minimum_needed = 0;
+
+        defaultAcousticGuitar.minimum_needed = 0;
     }
 }
 

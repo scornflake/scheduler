@@ -1,5 +1,4 @@
 import * as _ from 'lodash';
-import {Role} from "../role";
 import {Person} from "../people";
 import {Logger} from "ionic-logging-service";
 import {RuleFacts} from "./rule-facts";
@@ -8,6 +7,7 @@ import {Availability} from "../availability";
 import {daysBetween, ScheduleAtDate} from "../shared";
 import {ScheduleWithRules} from "./scheduler";
 import {Assignment} from "../assignment";
+import {ServiceRole} from "../service";
 
 class RuleExecution {
     object: any;
@@ -59,15 +59,15 @@ class Rule {
 
 class FixedRoleOnDate extends Rule {
     date: Date;
-    role: Role;
+    role: ServiceRole;
 
-    constructor(date: Date, r: Role, priority = 0) {
+    constructor(date: Date, r: ServiceRole, priority = 0) {
         super(priority);
         this.date = date;
         this.role = r;
     }
 
-    execute(state: RuleFacts): Role {
+    execute(state: RuleFacts): ServiceRole {
         if (this.date == state.current_date) {
             return this.role;
         }
@@ -76,21 +76,21 @@ class FixedRoleOnDate extends Rule {
 }
 
 class WeightedRoles extends Rule {
-    weightedRoles: Map<Role, number>;
+    weightedRoles: Map<ServiceRole, number>;
 
-    constructor(weightedRules: Map<Role, number>) {
+    constructor(weightedRules: Map<ServiceRole, number>) {
         super();
-        this.weightedRoles = new Map<Role, number>(weightedRules);
+        this.weightedRoles = new Map<ServiceRole, number>(weightedRules);
         this.normalize_weights();
     }
 
-    get roles_sorted_by_weight(): Array<Role> {
+    get roles_sorted_by_weight(): Array<ServiceRole> {
         return _.sortBy(Array.from(this.weightedRoles.keys()), (o) => {
             return this.weightedRoles.get(o);
         });
     }
 
-    execute(state: RuleFacts, assignment: Assignment): Array<Role> {
+    execute(state: RuleFacts, assignment: Assignment): Array<ServiceRole> {
         // sort by current score, highest first.
         let roles_in_weight_order = this.roles_sorted_by_weight;
 
@@ -127,11 +127,11 @@ class WeightedRoles extends Rule {
 }
 
 class OnThisDate extends Rule {
-    role: Role;
+    role: ServiceRole;
     date: Date;
     assignment: Assignment;
 
-    constructor(date: Date, assignment: Assignment, role: Role, priority: number = 0) {
+    constructor(date: Date, assignment: Assignment, role: ServiceRole, priority: number = 0) {
         super(priority);
         this.date = date;
         this.role = role;
@@ -162,7 +162,7 @@ class UsageWeightedSequential extends Rule {
         });
     }
 
-    execute(state: RuleFacts, role: Role): Array<Assignment> {
+    execute(state: RuleFacts, role: ServiceRole): Array<Assignment> {
         // Sort by number
         return Array.from(this.usages.keys()).sort((a1, a2) => {
             let usageForP1 = state.number_of_times_role_used_by_person(role, a1);
@@ -194,11 +194,11 @@ class ConditionalRule extends Rule {
         this.actions = [];
     }
 
-    condition(stat: RuleFacts, person: Person, role: Role) {
+    condition(stat: RuleFacts, person: Person, role: ServiceRole) {
         return false;
     }
 
-    run(stat: RuleFacts, person: Person, role: Role) {
+    run(stat: RuleFacts, person: Person, role: ServiceRole) {
         if (this.condition(stat, person, role)) {
             _.sortBy(this.actions, o => o.priority).forEach(r => {
                 r.executeAction(stat, person, role);
@@ -212,14 +212,14 @@ class ConditionalRule extends Rule {
 }
 
 class AssignedToRoleCondition extends ConditionalRule {
-    private role: Role;
+    private role: ServiceRole;
 
-    constructor(role: Role) {
+    constructor(role: ServiceRole) {
         super();
         this.role = role;
     }
 
-    condition(stat: RuleFacts, person: Person, role: Role): boolean {
+    condition(stat: RuleFacts, person: Person, role: ServiceRole): boolean {
         return this.role.uuid == role.uuid;
     }
 
@@ -233,21 +233,21 @@ class AssignedToRoleCondition extends ConditionalRule {
 }
 
 class ConditionAction extends Rule {
-    executeAction(stat: RuleFacts, person: Person, role: Role) {
+    executeAction(stat: RuleFacts, person: Person, role: ServiceRole) {
     }
 }
 
 class ScheduleOn extends ConditionAction {
     private person: Person;
-    private role: Role;
+    private role: ServiceRole;
 
-    constructor(person: Person, role: Role) {
+    constructor(person: Person, role: ServiceRole) {
         super();
         this.person = person;
         this.role = role;
     }
 
-    executeAction(stat: RuleFacts, person: Person, role: Role) {
+    executeAction(stat: RuleFacts, person: Person, role: ServiceRole) {
         let assignment = stat.service.get_assignment_for(person);
         if (stat.place_person_in_role(assignment, this.role, stat.current_date)) {
             stat.add_decision(`${this.constructor.name} executed, adding ${this.person} to role ${this.role}`);

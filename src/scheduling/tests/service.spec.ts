@@ -1,5 +1,4 @@
 import {Person} from "../people";
-import {Role} from "../role";
 import {AssignedToRoleCondition, OnThisDate, ScheduleOn} from "../rule_based/rules";
 import {
     defaultAcousticGuitar,
@@ -9,12 +8,10 @@ import {
     defaultSaxRole,
     defaultSoundRole, SetupDefaultRoles
 } from "./sample-data";
-import {RolesStore} from "../role-store";
-import {Service} from "../service";
+import {Service, ServiceRole} from "../service";
 import {RuleFacts} from "../rule_based/rule-facts";
 import {Assignment} from "../assignment";
 import {Team} from "../teams";
-import {serialize} from "@angular/compiler/src/i18n/serializers/xml_helper";
 
 describe('service', () => {
     let service: Service;
@@ -49,36 +46,25 @@ describe('service', () => {
         // We don't test that the condition has actions, or that they fire
     });
 
-    it('can derive roles based on people that have been added', () => {
-        let cher = team.add_person(new Person("cher"));
-
-        service.assignment_for(neil).add_role(defaultSoundRole);
-        service.assignment_for(cher).add_role(defaultKeysRole);
-        let roles = service.derived_roles;
-        expect(roles.length).toBe(2);
-        expect(roles).toContain(defaultKeysRole);
-        expect(roles).toContain(defaultSoundRole);
-    });
-
-
     it('can sort people by role layout priority', () => {
         // people are in roles. Get a list of people based on their max role layout priority
-        let leader = service.add_role(new Role("Leader", 10));
-        let keys = service.add_role(new Role("Keys", 5));
-        let gopher = service.add_role(new Role("Gopher", 1));
+        let leader = service.add_role(defaultLeaderRole);
+        leader.layout_priority = 10;
+        let keys = service.add_role(defaultKeysRole);
+        keys.layout_priority = 5;
+        let gopher = service.add_role(new ServiceRole("Gopher"));
 
         let tim = team.add_person(new Person("Tim"));
         let janice = team.add_person(new Person("Janice"));
 
         // Tim = Keys
-        let p2 = service.assignment_for(tim).add_role(keys.role);
+        let p2 = service.assignment_for(tim).add_role(keys);
 
         // Janice = Gopher
-        let p3 = service.assignment_for(janice).add_role(gopher.role);
+        let p3 = service.assignment_for(janice).add_role(gopher);
 
         // Neil = Gopher + Leader
-        let neil_assignment = service.assignment_for(neil);
-        let p1 = neil_assignment.add_role(gopher.role).add_role(leader.role);
+        let neil_assignment = service.assignment_for(neil).add_role(gopher).add_role(leader);
 
         // // Expect Neil, Tim, Janice
         // let ordered = service.people();
@@ -88,13 +74,14 @@ describe('service', () => {
     });
 
     it('can return roles sorted by layout order', () => {
-        service.add_role(defaultLeaderRole, 1, 1, 3);
-        service.add_role(defaultSaxRole, 1, 1, 1);
+        let sr2 = service.add_role(defaultSaxRole);
+        let sr1 = service.add_role(defaultLeaderRole);
+        sr1.layout_priority = 3;
 
         // Highest first
         let sorted = service.roles_in_layout_order;
-        expect(sorted[0].role).toEqual(defaultLeaderRole);
-        expect(sorted[1].role).toEqual(defaultSaxRole);
+        expect(sorted[0]).toEqual(sr1);
+        expect(sorted[1]).toEqual(sr2);
     });
 
     it('can sort roles by priority, into groups', () => {

@@ -1,13 +1,13 @@
 import {BaseStore, find_object_with_name} from "./common/base_model";
-import {Role} from "./role";
+import {Team} from "./teams";
 
 
-class TeamsStore extends BaseStore<Role> {
+class TeamsStore extends BaseStore<Team> {
     constructor() {
         super();
     }
 
-    get teams(): Array<Role> {
+    get teams(): Array<Team> {
         return this.items;
     }
 

@@ -71,7 +71,7 @@ export class ScheduleViewerComponent {
         if (!person) {
             return false;
         }
-        let role = this.store.roles_store.find_role(role_name);
+        let role = this.store.draft_service.find_role(role_name);
         if (!role) {
             return false;
         }
@@ -97,13 +97,13 @@ export class ScheduleViewerComponent {
             if (obj.uuid != person.uuid) {
                 return false;
             }
-            return this.store.roles_store.find_role(role_name);
+            return this.store.draft_service.find_role(role_name);
         }
     }
 
     select(obj: Object, date: Date, role_name: string) {
         if (obj instanceof Person) {
-            let role = this.store.roles_store.find_role(role_name);
+            let role = this.store.draft_service.find_role(role_name);
             console.log("Selecting: " + obj + " on " + date.toDateString() + " for " + role.name);
 
             this.store.ui_store.select(obj, date, role);

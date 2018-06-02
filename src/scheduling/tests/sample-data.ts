@@ -1,41 +1,38 @@
-import {Role} from "../role";
+import {ServiceRole} from "../service";
 
 let speakerPriority = 12;
 let leaderPriority = 11;
 let soundPriority = 10;
 let instrumentPriority = 10;
 
-let defaultSpeakerRole: Role = null;
-let defaultThemeRole: Role = null;
-let defaultLeaderRole: Role = null;
-let defaultSoundRole: Role = null;
-let defaultComputerRole: Role = null;
-let defaultBass: Role = null;
-let defaultDrumsRole: Role = null;
-let defaultKeysRole: Role = null;
-let defaultAcousticGuitar: Role = null;
-let defaultElectricGuitar: Role = null;
-let defaultVocalsRole: Role = null;
-let defaultSaxRole: Role = null;
+let defaultSpeakerRole: ServiceRole = null;
+let defaultThemeRole: ServiceRole = null;
+let defaultLeaderRole: ServiceRole = null;
+let defaultSoundRole: ServiceRole = null;
+let defaultComputerRole: ServiceRole = null;
+let defaultBass: ServiceRole = null;
+let defaultDrumsRole: ServiceRole = null;
+let defaultKeysRole: ServiceRole = null;
+let defaultAcousticGuitar: ServiceRole = null;
+let defaultElectricGuitar: ServiceRole = null;
+let defaultVocalsRole: ServiceRole = null;
+let defaultSaxRole: ServiceRole = null;
 
 
 function SetupDefaultRoles() {
     if (defaultSoundRole == null) {
-        defaultSpeakerRole = new Role("Speaker", speakerPriority);
-        defaultThemeRole = new Role("Theme", speakerPriority);
-        defaultLeaderRole = new Role("Worship Leader", leaderPriority);
-        defaultSoundRole = new Role("Sound", soundPriority);
-        defaultComputerRole = new Role("Computer", soundPriority);
-        defaultBass = new Role("Bass", instrumentPriority);
-        defaultDrumsRole = new Role("Drums", instrumentPriority);
-        defaultKeysRole = new Role("Keys", instrumentPriority);
-        defaultAcousticGuitar = new Role("Guitar (Acoustic)", instrumentPriority);
-        defaultElectricGuitar = new Role("Guitar (Electric)", instrumentPriority);
-        defaultVocalsRole = new Role("Vocals", instrumentPriority);
-        defaultSaxRole = new Role("Sax", instrumentPriority);
-
-        defaultAcousticGuitar.maximum_wanted = 2;
-        defaultVocalsRole.maximum_wanted = 3;
+        defaultSpeakerRole = new ServiceRole("Speaker", 1, 1, speakerPriority);
+        defaultThemeRole = new ServiceRole("Theme", 1, 1, speakerPriority);
+        defaultLeaderRole = new ServiceRole("Worship Leader", 1, 1, leaderPriority);
+        defaultSoundRole = new ServiceRole("Sound", 1, 1, soundPriority);
+        defaultComputerRole = new ServiceRole("Computer", 1, 1, soundPriority);
+        defaultBass = new ServiceRole("Bass", 1, 1, instrumentPriority);
+        defaultDrumsRole = new ServiceRole("Drums", 1, 1, instrumentPriority);
+        defaultKeysRole = new ServiceRole("Keys", 1, 1, instrumentPriority);
+        defaultAcousticGuitar = new ServiceRole("Guitar (Acoustic)", 0, 2, instrumentPriority);
+        defaultElectricGuitar = new ServiceRole("Guitar (Electric)", 0, 1, instrumentPriority);
+        defaultVocalsRole = new ServiceRole("Vocals", 1, 3, instrumentPriority);
+        defaultSaxRole = new ServiceRole("Sax", 0, 2, instrumentPriority);
     }
 }
 

@@ -1,18 +1,15 @@
 import {FixedRoleOnDate, OnThisDate, UsageWeightedSequential, WeightedRoles} from "./rules";
 import {Person} from "../people";
-import {Role} from "../role";
 import {RuleFacts} from "./rule-facts";
 import {SafeJSON} from "../../common/json/safe-stringify";
-import {RolesStore} from "../role-store";
 import {defaultSoundRole} from "../tests/sample-data";
-import {Service} from "../service";
+import {Service, ServiceRole} from "../service";
 import {Assignment} from "../assignment";
 import {PeopleStore} from "../people-store";
 import {Team} from "../teams";
 
 describe('rules', () => {
     let people_store: PeopleStore;
-    let role_store: RolesStore;
     let state, service;
     let neil: Person, bob: Person, tim: Person;
     let neil_assign: Assignment, bob_assign: Assignment, tim_assign: Assignment;
@@ -22,7 +19,6 @@ describe('rules', () => {
 
     beforeEach(() => {
         people_store = new PeopleStore();
-        role_store = new RolesStore();
         team = new Team("Foo Bar");
         service = new Service("rules tests", team);
         state = new RuleFacts(service);
@@ -90,12 +86,12 @@ describe('rules', () => {
     });
 
     describe('role rules', () => {
-        let role1 = new Role("Foo");
-        let role2 = new Role("Bar");
-        let weightings: Map<Role, number>;
+        let role1 = new ServiceRole("Foo");
+        let role2 = new ServiceRole("Bar");
+        let weightings: Map<ServiceRole, number>;
 
         beforeEach(() => {
-            weightings = new Map<Role, number>();
+            weightings = new Map<ServiceRole, number>();
             weightings.set(role1, 1);
             weightings.set(role2, 1);
         });

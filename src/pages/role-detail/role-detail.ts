@@ -1,7 +1,7 @@
 import {Component} from '@angular/core';
 import {IonicPage, NavController, NavParams} from 'ionic-angular';
-import {Role} from "../../scheduling/role";
 import {Assignment} from "../../scheduling/assignment";
+import {ServiceRole} from "../../scheduling/service";
 
 @IonicPage()
 @Component({
@@ -9,7 +9,7 @@ import {Assignment} from "../../scheduling/assignment";
     templateUrl: 'role-detail.html',
 })
 export class RoleDetailPage {
-    role: Role;
+    role: ServiceRole;
     assignment: Assignment;
 
     constructor(public navCtrl: NavController, public navParams: NavParams) {

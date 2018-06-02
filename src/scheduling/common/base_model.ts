@@ -24,10 +24,11 @@ class ObjectWithUUID {
     }
 }
 
-class BaseStore<T extends ObjectWithUUID> {
+class BaseStore<T extends ObjectWithUUID> extends ObjectWithUUID {
     @observable items: Array<T>;
 
     constructor() {
+        super();
         this.items = [];
     }
 
