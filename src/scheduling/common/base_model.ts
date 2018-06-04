@@ -48,12 +48,16 @@ class BaseStore<T extends ObjectWithUUID> extends ObjectWithUUID {
     }
 
     @action
-    add_object_to_array(instance: T): T {
+    add_object_to_array(instance: T, overwrite_existing = false): T {
         if (!instance) {
             throw new Error(`Cannot add 'null' to this list. We are: ${this.constructor.name}s`)
         }
         if (_.findIndex(this.items, o => o.uuid == instance.uuid) >= 0) {
-            return null;
+            if(overwrite_existing) {
+                this.remove_object_from_array(instance);
+            } else {
+                return null;
+            }
         }
         this.items.push(instance);
         return instance;

@@ -1,11 +1,10 @@
-import {ObjectWithUUID} from "./common/base_model";
+import {PersistableObject} from "./common/base_model";
 import {dayAndHourForDate} from "./common/date-utils";
 import * as moment from "moment";
-import {persisted} from "../providers/server/db";
+import {persisted} from "../providers/server/db-decorators";
 
-export {Unavailablity};
 
-class Unavailablity extends ObjectWithUUID {
+class Unavailablity extends PersistableObject {
     @persisted()
     from_date: Date = null;
     @persisted()
@@ -13,11 +12,11 @@ class Unavailablity extends ObjectWithUUID {
     @persisted()
     reason: string = null;
 
-    constructor(from: Date, to: Date = null, reason = null) {
+    constructor(from: Date = null, to: Date = null, reason = null) {
         super();
-        if (from == null) {
-            throw new Error("From date cannot be null");
-        }
+        // if (from == null) {
+        //     throw new Error("From date cannot be null");
+        // }
         this.from_date = from;
         this.to_date = to;
         this.reason = reason;
@@ -51,3 +50,5 @@ class Unavailablity extends ObjectWithUUID {
         return date_as_moment.isBetween(start, the_end_date, null, "[]");
     }
 }
+
+export {Unavailablity};

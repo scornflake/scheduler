@@ -3,7 +3,7 @@ import {action, computed, observable} from "mobx";
 import {Role} from "../scheduling/role";
 import {Plan} from "../scheduling/plan";
 import {ObjectWithUUID} from "../scheduling/common/base_model";
-import {persisted} from "../providers/server/db";
+import {persisted} from "../providers/server/db-decorators";
 
 class SavedState extends ObjectWithUUID {
     @observable

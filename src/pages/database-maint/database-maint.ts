@@ -41,6 +41,8 @@ export class DatabaseMaintPage {
     }
 
     store_fake_data() {
+        // Store unavailabilty for all people. Hmm. Do I want this as a ref?
+
         for(let person of this.rootStore.people_store.people) {
             this.db.store_or_update_object(person);
         }

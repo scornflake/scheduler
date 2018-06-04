@@ -4,58 +4,15 @@ import PouchDBFind from 'pouchdb-find';
 import {Logger, LoggingService, LogLevel} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
 import {share} from "rxjs/operators";
-import {ObjectWithUUID, PersistableObject} from "../../scheduling/common/base_model";
+import {BaseStore, ObjectWithUUID, PersistableObject} from "../../scheduling/common/base_model";
 import 'reflect-metadata';
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {isObservableArray} from "mobx";
+import {PersistenceType} from "./db-types";
+import {PersistenceProperty, propsMetadataKey, REF_PREFIX} from "./db-decorators";
 import Database = PouchDB.Database;
-import {SavedState} from "../../store/UIState";
+import {Creator} from "./db-creator";
 
-const propsMetadataKey = Symbol('persisted');
-const classesMetadataKey = Symbol('classes');
-
-function persisted() {
-    return registerPersisted;
-}
-
-class Creator {
-    static makeNew(type: string) {
-        switch (type) {
-            case 'SavedState': {
-                return new SavedState()
-            }
-            default:
-                throw Error(`No type ${type} registered. Cannot create the object`);
-        }
-    }
-}
-
-function registerPersisted(target: object, propertyKey: string) {
-    let class_name = target.constructor.name;
-    if (target.hasOwnProperty('constructor')) {
-        console.log(`Register persisted property: ${class_name}, prop: ${propertyKey}`);
-
-    }
-    let properties: string[] = Reflect.getMetadata(propsMetadataKey, target);
-    if (properties) {
-        properties.push(propertyKey);
-    } else {
-        properties = [propertyKey];
-        Reflect.defineMetadata(propsMetadataKey, properties, target);
-    }
-
-    let class_names: string[] = Reflect.getMetadata(classesMetadataKey, SchedulerDatabase);
-    if (class_names) {
-        if (class_names.indexOf(class_name) == -1) {
-            class_names.push(class_name);
-            console.log(`Register persisted class: ${class_name}`);
-        }
-    } else {
-        class_names = [class_name];
-        console.log(`Register persisted class: ${class_name}`);
-        Reflect.defineMetadata(classesMetadataKey, class_names, SchedulerDatabase);
-    }
-}
 
 @Injectable()
 class SchedulerDatabase {
@@ -117,16 +74,6 @@ class SchedulerDatabase {
         return this.current_indexes.indexes.find(idx => idx.name == name) != null;
     }
 
-    create_json_blob_from(object: PersistableObject) {
-        let json_object = this.persisted_properties(object);
-        json_object['type'] = object.type;
-        if (object instanceof ObjectWithUUID) {
-            json_object['_id'] = object._id;
-            json_object['_rev'] = object._rev;
-        }
-        return json_object;
-    }
-
     async load_object_with_id(id: string): Promise<any> {
         let data = await this.db.get(id);
         if (data['type']) {
@@ -139,6 +86,51 @@ class SchedulerDatabase {
         }
         return data;
     }
+
+    create_json_from_object(object: PersistableObject) {
+        let json_object = this._persisted_properties(object);
+        json_object['type'] = object.type;
+        if (object instanceof ObjectWithUUID) {
+            json_object['_id'] = object._id;
+            json_object['_rev'] = object._rev;
+        }
+        return json_object;
+    }
+
+    private _persisted_properties(origin: object): object {
+        const properties: PersistenceProperty[] = Reflect.getMetadata(propsMetadataKey, origin);
+        const result = {};
+        if (properties) {
+            properties.forEach(prop => {
+                    let value = origin[prop.name];
+                    result[prop.name] = this._convert_to_json(value, propsMetadataKey);
+                }
+            );
+        }
+        return result;
+    }
+
+    private _convert_to_json(value: object, metadataKey) {
+        if (value instanceof ObjectWithUUID) {
+            // MUST be serialized as a reference
+            return this.reference_for_object(value);
+        } else if (value instanceof PersistableObject) {
+            let po = this._persisted_properties(value);
+            po['type'] = value.type;
+            return po;
+        } else if (isObservableArray(value)) {
+            // Recurse
+            return value.map(v => {
+                return this._convert_to_json(v, metadataKey)
+            });
+        } else if (Array.isArray(value)) {
+            // Recurse
+            value.map(v => this._convert_to_json(v, metadataKey));
+        } else {
+            return value;
+        }
+    }
+
 
     async store_or_update_object(object: ObjectWithUUID, force_rev_check: boolean = false, ignore_not_found: boolean = false) {
         // Get the latest rev
@@ -159,7 +151,7 @@ class SchedulerDatabase {
             }
         }
 
-        let json_object = this.create_json_blob_from(object);
+        let json_object = this.create_json_from_object(object);
 
         try {
             let new_object = await this.db.put(json_object);
@@ -187,48 +179,119 @@ class SchedulerDatabase {
         }
     }
 
-    persisted_properties(origin: object): object {
-        return this.registered_stuff(origin, propsMetadataKey);
-    }
+    private convert_from_json_to_object(json_obj: PouchDB.Core.Document<{}>, new_object: PersistableObject) {
+        /*
+        Assumption is that we begin with an object that has an ID and a type.
+         */
+        const target_properties: PersistenceProperty[] = Reflect.getMetadata(propsMetadataKey, new_object);
+        if (target_properties.length == 0) {
+            throw new Error(`Cannot hydrate ${json_obj['type']} because we don't know what it's persistable properties are`)
+        }
 
-    private registered_stuff(origin: object, metadataKey) {
-        const properties: string[] = Reflect.getMetadata(metadataKey, origin);
-        const result = {};
-        if (properties) {
-            properties.forEach(key => {
-                    result[key] = this.convert_to_json(origin[key], metadataKey);
+        // Now we need to go through the properties, and see
+        target_properties.forEach(prop => {
+            let value = json_obj[prop.name];
+            if (prop.name == 'id') {
+                new_object['_id'] = value;
+            } else if (prop.name == 'rev') {
+                new_object['_rev'] = value;
+            } else if (prop.name == 'type') {
+                if (new_object.type != json_obj['type']) {
+                    throw new Error(`Unable to hydrate ${json_obj} into object. Type ${new_object.type} != ${json_obj['type']}`);
                 }
-            );
-        }
-        return result;
+            } else {
+                // OK. Now we don't know what this is.
+                // If it's a 'ref:type:id', we know to find the object and set it
+                if (value == null) {
+                    return;
+                }
+
+                switch (prop.type) {
+                    case PersistenceType.Property: {
+                        new_object[prop.name] = json_obj[prop.name];
+                        break;
+                    }
+
+                    /*
+                    Expect the value to be a blob representing the new object.  Create it, then set it as the property
+                     */
+                    case PersistenceType.NestedObject: {
+                        let new_type = value['type'];
+                        let new_instance = Creator.makeNew(new_type);
+                        new_object[prop.name] = this.convert_from_json_to_object(value, new_instance);
+                        break;
+                    }
+
+                    case PersistenceType.NestedObjectList: {
+                        let new_objects = [];
+                        value.forEach(v => {
+                            let new_type = v['type'];
+                            let new_instance = Creator.makeNew(new_type);
+                            new_objects.push(this.convert_from_json_to_object(v, new_instance));
+                        });
+                        new_object[prop.name] = new_objects;
+                        break;
+                    }
+
+                    case PersistenceType.Reference: {
+                        new_object[prop.name] = this.lookup_object_reference(value);
+                        break;
+                    }
+
+                    case PersistenceType.ReferenceList: {
+                        // Assume 'value' is a list of object references
+                        new_object[prop.name] = value.map(ref => this.lookup_object_reference(ref));
+                        break;
+                    }
+                }
+            }
+        });
+
+        return new_object;
     }
 
-    private convert_to_json(value: object, metadataKey) {
-        if (value instanceof ObjectWithUUID) {
-            // MUST be serialized as a reference
-            return this.reference_for_object(value);
-        } else if (value instanceof PersistableObject) {
-            return this.registered_stuff(value, metadataKey);
-        } else if (isObservableArray(value)) {
-            // Recurse
-            return value.map(v => {
-                return this.convert_to_json(v, metadataKey)
-            });
-        } else if (Array.isArray(value)) {
-            // Recurse
-            value.map(v => this.convert_to_json(v, metadataKey));
-        } else {
-            return value;
+    async load_all_of_type(type: string) {
+        let new_object = Creator.makeNew(type);
+        let type_name = new_object.constructor.name;
+        let all_objects_of_type = await this.db.find({selector: {type: type_name}});
+        this.logger.info(`Loading all ${all_objects_of_type.docs.length} objects of type ${type} into object store...`);
+        return all_objects_of_type.docs.map(doc => {
+            let new_object = Creator.makeNew(type);
+            return this.convert_from_json_to_object(doc, new_object);
+        })
+    }
+
+    async load_into_store<T extends ObjectWithUUID>(object_store: BaseStore<T>, type: string) {
+        let loaded_objects = await this.load_all_of_type(type);
+        let uuid_objs = new Array<ObjectWithUUID>();
+        loaded_objects.forEach(o => {
+            let ooo = o as T;
+            if(ooo) {
+                object_store.add_object_to_array(ooo, true);
+            } else {
+                this.logger.warn(`Skipped ${o} because its not of the expected type: ${type}`);
+            }
+        });
+    }
+
+    private lookup_object_reference(reference: string) {
+        let parts = reference.split(':');
+        if (parts.length != 3) {
+            throw new Error(`Invalid reference ${reference}. Expected 3 parts`);
         }
+        if (parts[0] != REF_PREFIX) {
+            throw new Error(`Invalid reference ${reference}. Expected part[0] to be 'ref'`);
+        }
+        let object_id = parts[2];
+        return this.load_object_with_id(object_id);
     }
 
     private reference_for_object(obj: ObjectWithUUID) {
-        return `ref:${obj.type}:${obj._id}`;
+        return `${REF_PREFIX}:${obj.type}:${obj._id}`;
     }
 }
 
 
 export {
     SchedulerDatabase,
-    persisted,
 }

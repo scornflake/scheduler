@@ -7,7 +7,8 @@ import {Unavailablity} from "./unavailability";
 import * as _ from "lodash";
 import {action, observable} from "mobx";
 import {ObjectValidation} from "./shared";
-import {persisted} from "../providers/server/db";
+import {PersistenceType} from "../providers/server/db-types";
+import {persisted} from "../providers/server/db-decorators";
 
 export class Person extends ObjectWithUUID {
     @persisted()
@@ -17,10 +18,10 @@ export class Person extends ObjectWithUUID {
     @persisted()
     phone: string;
 
-    @observable @persisted()
+    @observable @persisted(PersistenceType.NestedObject)
     availability: Availability;
 
-    @observable @persisted()
+    @observable @persisted(PersistenceType.NestedObjectList)
     unavailable: Array<Unavailablity>;
 
     constructor(name: string = "put name here") {

@@ -9,7 +9,7 @@ import {LoggingWrapper} from "../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {Team} from "./teams";
 import {Role} from "./role";
-import {persisted} from "../providers/server/db";
+import {persisted} from "../providers/server/db-decorators";
 
 class Plan extends ObjectWithUUID {
     @persisted()

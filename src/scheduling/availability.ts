@@ -3,9 +3,8 @@ import {throwOnInvalidDate} from "./common/date-utils";
 import {RuleFacts} from "./rule_based/rule-facts";
 import {Logger} from "ionic-logging-service";
 import {LoggingWrapper} from "../common/logging-wrapper";
-import {observable} from "mobx";
-import {persisted} from "../providers/server/db";
 import {PersistableObject} from "./common/base_model";
+import {persisted} from "../providers/server/db-decorators";
 
 export enum AvailabilityUnit {
     // Models availability such as "every 4 weeks".
@@ -102,7 +101,7 @@ export class Availability extends PersistableObject {
 export class AvailabilityEveryNOfM extends Availability {
     period_to_look_at: number;
 
-    constructor(every: number, of_weeks: number) {
+    constructor(every: number = 1, of_weeks: number = 1) {
         super(every, AvailabilityUnit.EVERY_N_OF_M_WEEKS);
         this.period_to_look_at = of_weeks;
     }

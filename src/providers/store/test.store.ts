@@ -235,8 +235,6 @@ export class NPBCStoreConstruction {
         people_store.add_person(new Person("Suzie Legg"));
         people_store.add_person(new Person("Jeremy Watson"));
         people_store.add_person(new Person("John Sutherland"));
-
-
     }
 
     static SetupServiceRoles(service: Plan) {

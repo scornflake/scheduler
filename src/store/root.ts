@@ -1,14 +1,19 @@
 import {SavedState, UIStore} from "./UIState";
 import {ApplicationRef, Injectable} from "@angular/core";
-import {OrganizationStore} from "../scheduling/organization";
+import {Organization, OrganizationStore} from "../scheduling/organization";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
 import {share} from "rxjs/operators";
 import {SafeJSON} from "../common/json/safe-stringify";
 import {autorun, computed, IReactionDisposer, observable, toJS} from "mobx";
 import {PeopleStore} from "../scheduling/people-store";
-import {Plan} from "../scheduling/plan";
+import {Plan, PlansStore} from "../scheduling/plan";
 import {SchedulerDatabase} from "../providers/server/db";
+import {NPBCStoreConstruction} from "../providers/store/test.store";
+import {Team} from "../scheduling/teams";
+import {TeamsStore} from "../scheduling/teams-store";
+import {csd} from "../scheduling/common/date-utils";
+import {Person} from "../scheduling/people";
 
 @Injectable()
 class RootStore {
@@ -43,6 +48,8 @@ class RootStore {
             // Wait for the DB to be ready, then load data
             this.db.ready_event.subscribe(r => {
                 this.load().then(r => {
+                    this.setup_fake_data();
+                    this.setupSaving();
                     obs.next(true);
                 });
             });
@@ -62,7 +69,12 @@ class RootStore {
             this.ui_store.saved_state = new SavedState('saved-state');
             this.logger.info("No stored saved state. Starting from fresh.");
         }
-        this.setupSaving();
+
+        await this.db.load_into_store<Person>(this.people_store, 'Person');
+    }
+
+    get teams_store():TeamsStore {
+        return this.organization_store.teams_store;
     }
 
     get people_store(): PeopleStore {
@@ -91,6 +103,32 @@ class RootStore {
         });
     }
 
+    private setup_fake_data() {
+        let organization = new Organization("North Porirua Baptist Church");
+        let org_store = this.organization_store;
+        org_store.add_organisation(organization);
+
+        // Peoples!
+        // this.setup_fake_people();
+
+        // make up a default team
+        let team = new Team("Default", this.people_store.people);
+        this.teams_store.add_team(team);
+
+        // for testing, create some fake
+        org_store.draft_service = org_store.plans_store.add_plan_named("Sunday Morning Service", team);
+        org_store.draft_service.start_date = csd(2018, 6, 3);
+        org_store.draft_service.end_date = csd(2018, 9, 30);
+
+        NPBCStoreConstruction.SetupServiceRoles(org_store.draft_service);
+        NPBCStoreConstruction.SetupService(org_store.draft_service, team);
+        // ThamesTest.SetupStore(this);
+
+    }
+
+    private setup_fake_people() {
+        NPBCStoreConstruction.SetupPeople(this.people_store);
+    }
 }
 
 export {RootStore}
