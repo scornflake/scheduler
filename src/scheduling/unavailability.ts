@@ -1,12 +1,16 @@
 import {ObjectWithUUID} from "./common/base_model";
 import {dayAndHourForDate} from "./common/date-utils";
 import * as moment from "moment";
+import {persisted} from "../providers/server/db";
 
 export {Unavailablity};
 
 class Unavailablity extends ObjectWithUUID {
+    @persisted()
     from_date: Date = null;
+    @persisted()
     to_date: Date = null;
+    @persisted()
     reason: string = null;
 
     constructor(from: Date, to: Date = null, reason = null) {

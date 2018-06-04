@@ -18,7 +18,7 @@ import {Team} from "../teams";
 import {Role} from "../role";
 
 describe('role scheduler', () => {
-    let team:Team;
+    let team: Team;
     let neil: Person, daniel: Person;
     let plan: Plan;
     let end_date: Date;
@@ -97,7 +97,7 @@ describe('role scheduler', () => {
         plan.end_date = new Date(2017, 9, 25);
 
         // Make myself available every 2 weeks, we should see a change to the schedule
-        neil.prefs.availability = new Availability(2, AvailabilityUnit.EVERY_N_WEEKS);
+        neil.availability = new Availability(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         schedule = new ScheduleWithRules(plan);
         expect(schedule).not.toBeNull();
@@ -117,7 +117,7 @@ describe('role scheduler', () => {
         /*
         This builds a schedule where neil is on every 2 of 3 weeks.
          */
-        neil.set_availability(new AvailabilityEveryNOfM(2, 3));
+        neil.availability = new AvailabilityEveryNOfM(2, 3);
 
         schedule = new ScheduleWithRules(plan);
         expect(schedule).not.toBeNull();
@@ -140,7 +140,7 @@ describe('role scheduler', () => {
         Only change neil AFTER the schedule is built. Since we don't want
         the availability to affect the building of the schedule in this test
          */
-        neil.set_availability(new AvailabilityEveryNOfM(2, 3));
+        neil.availability = new AvailabilityEveryNOfM(2, 3);
 
         console.log("Schedule: " + new CSVExporter(schedule));
 
@@ -167,7 +167,7 @@ describe('role scheduler', () => {
         plan.end_date = new Date(2017, 9, 25);
 
         plan.assignment_for(neil).remove_role(sound).add_role(defaultComputerRole);
-        neil.prefs.availability = new Availability(2, AvailabilityUnit.EVERY_N_WEEKS);
+        neil.availability = new Availability(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         // If unavailability affects exclusions we should end up with not being able to schedule on the first date
         neil.add_unavailable(plan.start_date);
@@ -196,7 +196,7 @@ describe('role scheduler', () => {
         // Put neil on Guitar, and daniel on guitar as well
         // Should see that the maximum number of placements in 'guitar' is one, not two.
         plan.assignment_for(neil).remove_role(sound).add_role(defaultAcousticGuitar);
-        neil.prefs.availability = new Availability(1, AvailabilityUnit.AVAIL_ANYTIME);
+        neil.availability = new Availability(1, AvailabilityUnit.AVAIL_ANYTIME);
 
         plan.assignment_for(daniel).add_role(defaultAcousticGuitar);
 

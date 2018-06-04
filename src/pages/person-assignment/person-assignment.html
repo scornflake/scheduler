@@ -7,18 +7,16 @@
 </ion-header>
 
 
-<ion-content padding>
-    <ion-list *ngIf="person != null" no-padding no-margin>
+<ion-content padding *ngIf="person != null">
+    <ion-list no-padding no-margin>
         <ion-item>
-            <h2>Name</h2>
-            <p [(ngModel)]="person.email"></p>
-            <p [(ngModel)]="person.phone"></p>
+            <ion-label>{{person.name}} {{other_details}}</ion-label>
         </ion-item>
     </ion-list>
 
     <ion-list-header color="light">Availability</ion-list-header>
     <ion-item-group>
-        <availability-options [availability]="person?.availability"></availability-options>
+        <availability-options [availability]="person.availability"></availability-options>
     </ion-item-group>
 
     <ion-list-header color="light">

@@ -1,28 +1,36 @@
 <ion-header>
     <ion-toolbar>
-        <ion-title>
-            Schedule <span
-                *ngIf="rootStore.ui_store.have_selection">for {{rootStore.ui_store.selected_person?.name}}</span>
-        </ion-title>
+        <ion-title>Dashboard</ion-title>
         <button start ion-button menuToggle>
             <ion-icon name="menu"></ion-icon>
         </button>
-        <ion-buttons end>
-            <button ion-button
-                    (click)="clear_selection()"
-                    [disabled]="!rootStore.ui_store.have_selection">Deselect
-            </button>
-            <button ion-button *ngIf="!rootStore.ui_store.signed_in_to_google"
-                    (click)="login()">Login
-            </button>
-            <button ion-button *ngIf="rootStore.ui_store.signed_in_to_google"
-                    (click)="logout()">Logout
-            </button>
-        </ion-buttons>
+        <!--<ion-buttons end>-->
+        <!--<button ion-button-->
+        <!--(click)="clear_selection()"-->
+        <!--[disabled]="!rootStore.ui_store.have_selection">Deselect-->
+        <!--</button>-->
+        <!--<button ion-button *ngIf="!rootStore.ui_store.signed_in_to_google"-->
+        <!--(click)="login()">Login-->
+        <!--</button>-->
+        <!--<button ion-button *ngIf="rootStore.ui_store.signed_in_to_google"-->
+        <!--(click)="logout()">Logout-->
+        <!--</button>-->
+        <!--</ion-buttons>-->
     </ion-toolbar>
 </ion-header>
 
 <ion-content padding>
+    <ion-item id="planselection">
+        <ion-label class="hidden-sm-down">Showing Plan</ion-label>
+        <ion-select col-sm col-md-8 text-center
+                    [(ngModel)]="selected_plan_uuid"
+                    placeholder="Plan">
+            <ion-option *ngFor="let p of plans_by_date_latest_first"
+                        value="{{p.uuid}}">
+                {{p.name}} {{p.start_date|date:'shortDate'}}-{{p.end_date|date:'shortDate'}}
+            </ion-option>
+        </ion-select>
+    </ion-item>
     <ion-grid>
         <ion-row>
             <ion-col auto>

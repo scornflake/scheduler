@@ -23,6 +23,10 @@ import {PeoplePageModule} from "../pages/people/people-page.module";
 import {AboutPageModule} from "../pages/about/about.module";
 import {TeamsPageModule} from "../pages/teams/teams.module";
 import {TeamPageModule} from "../pages/team/team.module";
+import {PersonAssignmentPageModule} from "../pages/person-assignment/person-assignment.module";
+import {PageUtils} from "../pages/page-utils";
+import {SchedulerDatabase} from "../providers/server/db";
+import {DatabaseMaintPageModule} from "../pages/database-maint/database-maint.module";
 
 @NgModule({
     declarations: [
@@ -43,6 +47,8 @@ import {TeamPageModule} from "../pages/team/team.module";
         AboutPageModule,
         TeamsPageModule,
         TeamPageModule,
+        PersonAssignmentPageModule,
+        DatabaseMaintPageModule,
     ],
     bootstrap: [IonicApp],
     entryComponents: [
@@ -52,6 +58,8 @@ import {TeamPageModule} from "../pages/team/team.module";
         StatusBar,
         SplashScreen,
         RootStore,
+        SchedulerDatabase,
+        PageUtils,
         ConfigurationService,
         {
             provide: APP_INITIALIZER,

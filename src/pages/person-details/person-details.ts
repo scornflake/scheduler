@@ -1,8 +1,8 @@
 import {Component} from '@angular/core';
-import {IonicPage, NavController, NavParams, PopoverController, ToastController, ViewController} from 'ionic-angular';
+import {IonicPage, NavController, NavParams, PopoverController, ViewController} from 'ionic-angular';
 import {Person} from "../../scheduling/people";
 import {Logger, LoggingService} from "ionic-logging-service";
-import {ObjectValidation} from "../../scheduling/shared";
+import {PageUtils} from "../page-utils";
 
 @IonicPage()
 @Component({
@@ -18,7 +18,7 @@ export class PersonDetailsPage {
     constructor(public navCtrl: NavController,
                 public navParams: NavParams,
                 public viewCtrl: ViewController,
-                public toastController: ToastController,
+                public pageUtils: PageUtils,
                 public popoverCtrl: PopoverController,
                 private loggingService: LoggingService) {
         this.person = this.navParams.get('person');
@@ -55,22 +55,12 @@ export class PersonDetailsPage {
     ok_editing() {
         let validation = this.person.validate();
         if (!validation.ok) {
-            this.show_validation_error(validation);
+            this.pageUtils.show_validation_error(validation);
             return;
         }
         if (this.callback) {
             this.callback(this.person);
         }
         this.navCtrl.pop();
-    }
-
-
-    private show_validation_error(validation: ObjectValidation) {
-        let t = this.toastController.create({
-            message: validation.errors.join(", "),
-            duration: 3000,
-            cssClass: 'validation'
-        });
-        t.present();
     }
 }

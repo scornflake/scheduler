@@ -1,10 +1,10 @@
 import {Component, ViewChild} from '@angular/core';
-import {AlertController, IonicPage, NavController, NavParams, ToastController, ViewController} from 'ionic-angular';
+import {AlertController, IonicPage, NavController, NavParams, ViewController} from 'ionic-angular';
 import {Team} from "../../scheduling/teams";
 import {Person} from "../../scheduling/people";
-import {GenericListOfThingsPage} from "../generic-list-of-things/generic-list-of-things";
 import {RootStore} from "../../store/root";
 import {ObjectValidation} from "../../scheduling/shared";
+import {PageUtils} from "../page-utils";
 
 @IonicPage({
     name: 'page-team',
@@ -21,7 +21,7 @@ export class TeamPage {
 
     constructor(public navCtrl: NavController,
                 public viewCtrl: ViewController,
-                public toastController: ToastController,
+                public pageUtils: PageUtils,
                 public alertCtrl: AlertController,
                 public rootStore: RootStore,
                 public navParams: NavParams) {
@@ -70,7 +70,8 @@ export class TeamPage {
         });
         let people_not_in_list = this.rootStore.people_store.people.filter(p => this.team.find_person_in_team(p) == null);
         if (people_not_in_list.length == 0) {
-            this.show_validation_error(ObjectValidation.simple("All people are already in the list"));
+            let validation = ObjectValidation.simple("All people are already in the list");
+            this.pageUtils.show_validation_error(validation);
             return;
         }
         for (let p of Person.sort_by_name(people_not_in_list)) {
@@ -97,15 +98,6 @@ export class TeamPage {
             }
         });
         alert.present();
-    }
-
-    private show_validation_error(validation: ObjectValidation) {
-        let t = this.toastController.create({
-            message: validation.errors.join(", "),
-            duration: 3000,
-            cssClass: 'validation'
-        });
-        t.present();
     }
 }
 

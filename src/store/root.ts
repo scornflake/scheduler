@@ -1,15 +1,14 @@
 import {SavedState, UIStore} from "./UIState";
 import {ApplicationRef, Injectable} from "@angular/core";
-import {Storage} from "@ionic/storage";
 import {OrganizationStore} from "../scheduling/organization";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
+import {share} from "rxjs/operators";
 import {SafeJSON} from "../common/json/safe-stringify";
 import {autorun, computed, IReactionDisposer, observable, toJS} from "mobx";
 import {PeopleStore} from "../scheduling/people-store";
 import {Plan} from "../scheduling/plan";
-
-const SAVED_STATE_KEY = 'saved_state';
+import {SchedulerDatabase} from "../providers/server/db";
 
 @Injectable()
 class RootStore {
@@ -22,7 +21,7 @@ class RootStore {
     private saving: IReactionDisposer;
     private logger: Logger;
 
-    constructor(private storage: Storage,
+    constructor(public db: SchedulerDatabase,
                 private loggingService: LoggingService,
                 private appRef: ApplicationRef) {
 
@@ -31,33 +30,39 @@ class RootStore {
         this.organization_store = new OrganizationStore(this.appRef);
         this.ui_store = new UIStore();
 
-        this.load();
+        this.initialize();
     }
 
     get draft_service(): Plan {
         return this.organization_store.draft_service;
     }
 
-    private load() {
+
+    initialize() {
         this.ready_event = Observable.create(obs => {
-            this.storage.get(SAVED_STATE_KEY).then((state) => {
-                if (state) {
-                    this.logger.info("Restored saved state: " + SafeJSON.stringify(state));
-                    this.ui_store.saved_state = Object.assign(new SavedState(), state)
-                } else {
-                    this.logger.info("Setup state first time");
-                    this.ui_store.saved_state = new SavedState();
-                }
-                this.setupSaving();
-                obs.next(true);
-                // obs.complete();
+            // Wait for the DB to be ready, then load data
+            this.db.ready_event.subscribe(r => {
+                this.load().then(r => {
+                    obs.next(true);
+                });
             });
-        });
-        this.ready_event.subscribe(v => {
-            this.logger.info("Root object 'ready' fired. App is ready to go!")
-        }, null, () => {
-            this.logger.info("Ready event complete")
-        });
+        }).pipe(share());
+
+        this.ready_event.subscribe(r => {
+            this.logger.info("RootStore done with init");
+        })
+    }
+
+    async load() {
+        try {
+            let saved_state = await this.db.load_object_with_id('saved-state');
+            this.logger.info(`Retrieved state: ${SafeJSON.stringify(saved_state)}`);
+            this.ui_store.saved_state = saved_state;
+        } catch (e) {
+            this.ui_store.saved_state = new SavedState('saved-state');
+            this.logger.info("No stored saved state. Starting from fresh.");
+        }
+        this.setupSaving();
     }
 
     get people_store(): PeopleStore {
@@ -69,13 +74,15 @@ class RootStore {
         return this.ui_store.saved_state;
     }
 
-    private setupSaving() {
+    private async setupSaving() {
         this.logger.info("Setting up state auto-saving...");
         this.saving = autorun(() => {
             // toJS creates a deep clone, thus accesses all of the properties of this.state
             // so: we SHOULD respond to state changes.
-            this.storage.set(SAVED_STATE_KEY, toJS(this.state)).then(() => {
-                this.logger.info("Saved state: " + SafeJSON.stringify(this.state));
+            this.db.store_or_update_object(this.state, true, true).then(() => {
+                this.logger.info(`Saved state: ${SafeJSON.stringify(this.state)}`);
+            }, rej => {
+                this.logger.error(`Could not save state: ${rej}`);
             });
         });
         this.regenerator = autorun(() => {
@@ -83,6 +90,7 @@ class RootStore {
             this.organization_store.generate_schedule();
         });
     }
+
 }
 
 export {RootStore}

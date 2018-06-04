@@ -21,6 +21,10 @@ let throwOnInvalidDate = (date: Date, message: string = "Date is not valid") => 
     }
 };
 
+let dateForISODateString = (isoDate: string): Date => {
+    return moment(isoDate).toDate();
+};
+
 let formatDateForGoogleSpreadsheet = (date: Date): string => {
     return date.toDateString();
 };
@@ -59,6 +63,7 @@ export {
     dayAndHourForDate,
     parseDateFromSpreadsheetDate,
     parseMomentDateFromSpreadsheetDate,
+    dateForISODateString,
     csd
 
 }

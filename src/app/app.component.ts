@@ -30,6 +30,7 @@ export class MyApp {
             {title: "People", page: 'page-people'},
             {title: "Teams", page: 'page-teams'},
             {title: "Plans", page: 'page-plans'},
+            {title: "DB Maint", page: 'page-db'},
             {title: "About", page: 'page-about'},
         ]
     }

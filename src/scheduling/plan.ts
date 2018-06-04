@@ -9,16 +9,22 @@ import {LoggingWrapper} from "../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {Team} from "./teams";
 import {Role} from "./role";
+import {persisted} from "../providers/server/db";
 
 class Plan extends ObjectWithUUID {
+    @persisted()
     @observable name: string;
 
+    @persisted()
     start_date: Date;
+    @persisted()
     end_date: Date;
+    @persisted()
     days_per_period: number;
 
     manual_layouts: Map<Date, Role>;
     roles: Array<Role>;
+    team: Team;
 
     // This is the people available for this service/event
     private _assignments: Array<Assignment>;
@@ -27,7 +33,6 @@ class Plan extends ObjectWithUUID {
     private specific_role_rules: Array<Rule>;
 
     private logger: Logger;
-    private team: Team;
 
     constructor(name: string, team: Team) {
         super();
@@ -253,6 +258,17 @@ class PlansStore extends BaseStore<Plan> {
     constructor() {
         super();
         this.plans = new Array<Plan>();
+    }
+
+    get plans_by_date_latest_first(): Array<Plan> {
+        return this.plans.sort(((a, b) => {
+            if (a.start_date > b.start_date) {
+                return -1;
+            } else if (a.start_date < b.start_date) {
+                return 1;
+            }
+            return 0;
+        }))
     }
 
     add_plan_named(event_name: string, team: Team): Plan {

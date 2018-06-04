@@ -33,7 +33,6 @@ export class PeoplePage {
     }
 
     private add_person(new_person: Person) {
-        this.logger.info(`Guess I should add: ${new_person}`);
         this.rootStore.people_store.add_person(new_person);
     }
 

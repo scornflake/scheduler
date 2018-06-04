@@ -1,16 +1,32 @@
 import {Person} from "../scheduling/people";
 import {action, computed, observable} from "mobx";
 import {Role} from "../scheduling/role";
+import {Plan} from "../scheduling/plan";
+import {ObjectWithUUID} from "../scheduling/common/base_model";
+import {persisted} from "../providers/server/db";
 
-class SavedState {
-    @observable previous_sheet_id: string;
+class SavedState extends ObjectWithUUID {
+    @observable
+    @persisted()
+    previous_sheet_id: string;
+
+    @persisted()
     @observable previous_sheet_tab_id: number;
 
+    @persisted()
     @observable google_sheet_id: string;
+
+    @persisted()
     @observable google_sheet_tab_id: number;
+
+    @persisted()
     @observable google_sheet_id_retrieved: boolean;
 
+    @persisted()
     @observable login_token: string;
+
+    @persisted()
+    @observable selected_plan_uuid: string;
 
     @computed
     get have_previous_selection(): boolean {
@@ -51,7 +67,7 @@ class UIStore {
     constructor() {
         this.login_token_validated = false;
         this.signed_in_to_google = false;
-        this.saved_state = new SavedState();
+        this.saved_state = new SavedState('saved-state');
     }
 
     @computed
@@ -67,6 +83,14 @@ class UIStore {
     @action
     clear_selection() {
         this.selected_person = null;
+    }
+
+    select_plan(p: Plan) {
+        if (p) {
+            this.saved_state.selected_plan_uuid = p.uuid;
+        } else {
+            this.saved_state.selected_plan_uuid = null;
+        }
     }
 
     @action("Select Person")

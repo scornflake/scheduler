@@ -1,4 +1,4 @@
-import {Availability, AvailabilityUnit, SchedulePrefs} from "./availability";
+import {Availability, AvailabilityUnit} from "./availability";
 import {ObjectWithUUID} from "./common/base_model";
 import {throwOnInvalidDate} from "./common/date-utils";
 import {RuleFacts} from "./rule_based/rule-facts";
@@ -7,24 +7,27 @@ import {Unavailablity} from "./unavailability";
 import * as _ from "lodash";
 import {action, observable} from "mobx";
 import {ObjectValidation} from "./shared";
+import {persisted} from "../providers/server/db";
 
 export class Person extends ObjectWithUUID {
+    @persisted()
     name: string;
+    @persisted()
     email: string;
+    @persisted()
     phone: string;
 
-    @observable unavailable: Array<Unavailablity>;
-    @observable prefs: SchedulePrefs;
+    @observable @persisted()
+    availability: Availability;
+
+    @observable @persisted()
+    unavailable: Array<Unavailablity>;
 
     constructor(name: string = "put name here") {
         super();
         this.name = name;
         this.unavailable = [];
-        this.prefs = new SchedulePrefs();
-    }
-
-    get availability(): Availability {
-        return this.prefs.availability;
+        this.availability = new Availability();
     }
 
     static sort_by_name(list: Array<Person>): Array<Person> {
@@ -41,12 +44,7 @@ export class Person extends ObjectWithUUID {
 
     @action
     avail_every(a_number: number, unit: AvailabilityUnit): Person {
-        return this.set_availability(new Availability(a_number, unit));
-    }
-
-    @action
-    set_availability(availability: Availability): Person {
-        this.prefs.availability = availability;
+        this.availability = new Availability(a_number, unit);
         return this;
     }
 

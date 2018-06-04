@@ -10,7 +10,7 @@
       },
       {
         "loggerName": "scheduler",
-        "logLevel": "DEBUG"
+        "logLevel": "WARN"
       },
       {
         "loggerName": "model",
@@ -26,11 +26,15 @@
       },
       {
         "loggerName": "google",
-        "logLevel": "INFO"
+        "logLevel": "WARN"
       },
       {
         "loggerName": "store",
         "logLevel": "INFO"
+      },
+      {
+        "loggerName": "store.db",
+        "logLevel": "TRACE"
       }
     ],
     "browserConsoleAppender": {

@@ -20,7 +20,7 @@ class Organization extends ObjectWithUUID {
 
 class OrganizationStore extends BaseStore<Organization> {
     @observable people_store: PeopleStore;
-    @observable event_store: PlansStore;
+    @observable plans_store: PlansStore;
     @observable teams_store: TeamsStore;
 
     @observable schedule: ScheduleWithRules;
@@ -35,7 +35,7 @@ class OrganizationStore extends BaseStore<Organization> {
 
         NPBCStoreConstruction.SetupPeople(this.people_store);
 
-        this.event_store = new PlansStore();
+        this.plans_store = new PlansStore();
         this.teams_store = new TeamsStore();
 
         let organization = new Organization("North Porirua Baptist Church");
@@ -46,7 +46,7 @@ class OrganizationStore extends BaseStore<Organization> {
         this.teams_store.add_team(team);
 
         // for testing, create some fake
-        this.draft_service = this.event_store.add_plan_named("Sun Service", team);
+        this.draft_service = this.plans_store.add_plan_named("Sunday Morning Service", team);
         this.draft_service.start_date = csd(2018, 6, 3);
         this.draft_service.end_date = csd(2018, 9, 30);
 

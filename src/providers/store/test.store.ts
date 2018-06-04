@@ -96,7 +96,7 @@ export class NPBCStoreConstruction {
         kylie.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
         jeremy_selfe.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
         ralph.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
-        craig.set_availability(new AvailabilityEveryNOfM(1, 3));
+        craig.availability = new AvailabilityEveryNOfM(1, 3);
         ben.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
         courtney.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
         robp.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);

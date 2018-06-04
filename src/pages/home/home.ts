@@ -9,6 +9,8 @@ import {SpreadsheetReader} from "../../common/spreadsheet_reader";
 import {ServerProvider} from "../../providers/server/server";
 import {RootStore} from "../../store/root";
 import {SafeJSON} from "../../common/json/safe-stringify";
+import {Plan} from "../../scheduling/plan";
+import {SavedState} from "../../store/UIState";
 
 
 @IonicPage({
@@ -26,7 +28,6 @@ export class HomePage {
                 private loggingService: LoggingService,
                 private sheetAPI: GAPIS,
                 private server: ServerProvider,
-                // private modalController: ModalController,
                 private rootStore: RootStore) {
         this.logger = this.loggingService.getLogger("home");
     }
@@ -52,6 +53,32 @@ export class HomePage {
 
     clear_selection() {
         this.rootStore.ui_store.clear_selection();
+    }
+
+    get saved_state(): SavedState {
+        return this.rootStore.ui_store.saved_state;
+    }
+
+    get selected_plan(): Plan {
+        return this.rootStore.organization_store.plans_store.find_by_uuid(this.saved_state.selected_plan_uuid);
+    }
+
+    get selected_plan_uuid(): string {
+        if (this.selected_plan == null) {
+            if (this.plans_by_date_latest_first.length) {
+                this.rootStore.ui_store.select_plan(this.plans_by_date_latest_first[0]);
+            }
+        }
+        return this.rootStore.ui_store.saved_state.selected_plan_uuid;
+    }
+
+    get plans_by_date_latest_first(): Array<Plan> {
+        // Sort by date, latest first
+        return this.rootStore.organization_store.plans_store.plans_by_date_latest_first;
+    }
+
+    plan_title(p: Plan): string {
+        return `${p.name} ${p.start_date}-${p.end_date}`
     }
 
     select_previous_schedule() {

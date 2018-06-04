@@ -1,0 +1,47 @@
+<ion-header>
+
+    <ion-navbar>
+        <ion-title>Plan Detail</ion-title>
+    </ion-navbar>
+
+</ion-header>
+
+
+<ion-content *ngIf="plan != null">
+    <ion-list no-padding no-margin>
+        <ion-item>
+            <ion-label>Name</ion-label>
+            <ion-input text-right placeholder="Plan name" [(ngModel)]="plan.name"></ion-input>
+        </ion-item>
+        <ion-item>
+            <ion-label>Start Date</ion-label>
+            <ion-datetime [ngModel]="plan.start_date.toISOString()"
+                          (ngModelChange)="set_start_date($event)"></ion-datetime>
+        </ion-item>
+        <ion-item>
+            <ion-label>End Date</ion-label>
+            <ion-datetime [ngModel]="plan.end_date.toISOString()" (ngModelChange)="set_end_date($event)"></ion-datetime>
+        </ion-item>
+
+    </ion-list>
+    <ion-list-header color="primary">
+        Role Assignment
+        <!--<ion-buttons item-end>-->
+        <button item-end ion-button icon-only (tap)="add_assignment()">
+            <ion-icon name="add-circle"></ion-icon>
+        </button>
+        <!--</ion-buttons>-->
+    </ion-list-header>
+    <ion-list>
+        <ion-item-sliding *ngFor="let p of sorted_people">
+            <ion-item (tap)="show_assignment(p)">
+                <h2>{{p.name}}</h2>
+                <p>{{plan.get_assignment_for(p).roles.join(", ")}}</p>
+            </ion-item>
+            <ion-item-options side="right">
+                <button ion-button color="danger" (tap)="delete_assignment_for_person(p)">Delete</button>
+            </ion-item-options>
+        </ion-item-sliding>
+    </ion-list>
+
+</ion-content>

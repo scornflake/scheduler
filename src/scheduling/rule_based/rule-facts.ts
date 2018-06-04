@@ -138,7 +138,7 @@ export class RuleFacts {
         }
 
         // Does the exclusion zone for this person overlap with any existing?
-        let availability = person.prefs.availability;
+        let availability = person.availability;
         let end_date = availability.get_end_date_from(date);
         let new_exclusion = new Exclusion(date, end_date, role);
 
@@ -279,7 +279,7 @@ export class RuleFacts {
         }
 
         // make the exclusion
-        let availability = person.prefs.availability;
+        let availability = person.availability;
         let end_date = availability.get_end_date_from(date);
 
         let exclusion = new Exclusion(date, end_date, role);

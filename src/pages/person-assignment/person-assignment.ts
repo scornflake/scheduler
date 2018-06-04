@@ -7,7 +7,10 @@ import {Person} from "../../scheduling/people";
 import {RootStore} from "../../store/root";
 import {Role} from "../../scheduling/role";
 
-@IonicPage()
+@IonicPage({
+    name: 'page-person-assignment',
+    defaultHistory: ['page-plan-details', "home"]
+})
 @Component({
     selector: 'page-person-assignment',
     templateUrl: 'person-assignment.html',
@@ -21,15 +24,38 @@ export class PersonAssignmentPage {
                 public alertCtrl: AlertController,
                 public popoverCtrl: PopoverController,
                 public navParams: NavParams) {
-        this.assignment = navParams.get('assignment')
+
+        this.assignment = navParams.get('assignment');
     }
 
     ionViewDidLoad() {
+        if (this.assignment == null) {
+            this.navCtrl.pop();
+        }
     }
 
     get person(): Person {
-        return this.assignment.person;
+        if (this.assignment) {
+            console.log(`PROVIDE PERSON ${this.assignment.person.name}`);
+            return this.assignment.person;
+        }
+        return null;
     }
+
+    get other_details(): string {
+        if (this.person) {
+            let list = [];
+            if(this.person.name) {
+                list.push(this.person.name);
+            }
+            if(this.person.email) {
+                list.push(this.person.email)
+            }
+            return list.join(",")
+        }
+        return "";
+    }
+
 
     add_roles_to_alert(alert, input_type = 'checkbox', handler = (r) => {
     }) {

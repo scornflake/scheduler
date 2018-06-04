@@ -4,6 +4,8 @@ import {RuleFacts} from "./rule_based/rule-facts";
 import {Logger} from "ionic-logging-service";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {observable} from "mobx";
+import {persisted} from "../providers/server/db";
+import {PersistableObject} from "./common/base_model";
 
 export enum AvailabilityUnit {
     // Models availability such as "every 4 weeks".
@@ -17,12 +19,16 @@ export enum AvailabilityUnit {
     EVERY_N_OF_M_WEEKS = 'every_n_of_m',
 }
 
-export class Availability {
+export class Availability extends PersistableObject {
+    @persisted()
     period: number;
+    @persisted()
     unit: AvailabilityUnit;
+
     protected logger: Logger;
 
     constructor(period: number = 1, unit: AvailabilityUnit = AvailabilityUnit.AVAIL_ANYTIME) {
+        super();
         this.period = period;
         this.unit = unit;
         this.logger = LoggingWrapper.getLogger("scheduler.availability");
@@ -141,19 +147,6 @@ export class AvailabilityEveryNOfM extends Availability {
 
     public toString(): string {
         return `Every ${this.period} in ${this.period_to_look_at} weeks`;
-    }
-}
-
-export class SchedulePrefs {
-    @observable slip_aggressiveness: number;
-    @observable fill_aggresiveness: number;
-    @observable preferred_leader: Person;
-    @observable availability: Availability;
-
-    constructor() {
-        this.slip_aggressiveness = 0;
-        this.fill_aggresiveness = 0;
-        this.availability = new Availability();
     }
 }
 

@@ -1,25 +1,40 @@
-import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import {Component} from '@angular/core';
+import {IonicPage, NavController, NavParams} from 'ionic-angular';
+import {Plan} from "../../scheduling/plan";
+import {RootStore} from "../../store/root";
 
-/**
- * Generated class for the PlansPage page.
- *
- * See https://ionicframework.com/docs/components/#navigation for more info on
- * Ionic pages and navigation.
- */
-
-@IonicPage()
+@IonicPage({
+    name: 'page-plans',
+    defaultHistory: ['home']
+})
 @Component({
-  selector: 'page-plans',
-  templateUrl: 'plans.html',
+    selector: 'page-plans',
+    templateUrl: 'plans.html',
 })
 export class PlansPage {
+    private plans: Array<Plan>;
 
-  constructor(public navCtrl: NavController, public navParams: NavParams) {
-  }
+    constructor(public navCtrl: NavController,
+                public rootStore: RootStore,
+                public navParams: NavParams) {
+        this.plans = this.rootStore.organization_store.plans_store.plans;
+    }
 
-  ionViewDidLoad() {
-    console.log('ionViewDidLoad PlansPage');
-  }
+    ionViewDidLoad() {
 
+        // for debugging
+        // this.show_plan_detail(this.plans[0])
+    }
+
+    add_plan() {
+
+    }
+
+    show_plan_detail(plan: Plan) {
+        this.navCtrl.push('page-plan-details', {plan: plan})
+    }
+
+    delete_plan(plan: Plan) {
+
+    }
 }

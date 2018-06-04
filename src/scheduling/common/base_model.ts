@@ -4,22 +4,37 @@ import * as _ from 'lodash';
 import {isUndefined} from "util";
 import {SafeJSON} from "../../common/json/safe-stringify";
 
-class ObjectWithUUID {
-    @observable uuid: string;
+class PersistableObject {
+    @observable type: string;
+
+    constructor() {
+        this.type = this.constructor.name;
+    }
+}
+
+class ObjectWithUUID extends PersistableObject {
+    @observable _id: string;
+    @observable _rev: string;
     is_new: boolean;
 
     constructor(uuid: string = null) {
+        super();
         if (uuid == null) {
             let uuid_gen = new ShortUniqueId();
-            uuid = uuid_gen.randomUUID(8);
-            this.is_new = true;
+            uuid = uuid_gen.randomUUID(64);
         }
-        this.uuid = uuid;
+        this.is_new = true;
+        this._id = uuid;
+    }
+
+    get uuid(): string {
+        return this._id;
     }
 
     update_from_server(state) {
         // migrate properties to this
-        this.uuid = state['id'];
+        this._id = state['_id'];
+        this._rev = state['_rev'];
         this.is_new = false;
     }
 }
@@ -34,7 +49,7 @@ class BaseStore<T extends ObjectWithUUID> extends ObjectWithUUID {
 
     @action
     add_object_to_array(instance: T): T {
-        if(!instance) {
+        if (!instance) {
             throw new Error(`Cannot add 'null' to this list. We are: ${this.constructor.name}s`)
         }
         if (_.findIndex(this.items, o => o.uuid == instance.uuid) >= 0) {
@@ -119,6 +134,7 @@ function delete_from_array<T>(array: Array<T>, object: T) {
 
 export {
     ObjectWithUUID,
+    PersistableObject,
     BaseStore,
     check_if_undefined,
     delete_from_array,
