@@ -12,18 +12,8 @@ export class LoggingWrapper {
             }
         }
         if (!this.loggingService) {
-            let config = new MockConfigurationService(null);
-            config.setVars({
-                "logging": {
-                    "logLevels": [
-                        {
-                            "loggerName": "root",
-                            "logLevel": "INFO"
-                        }
-                    ]
-                }
-            });
-            this.loggingService = new LoggingService(config);
+            let mock_config = MockConfigurationService.ServiceForTests();
+            this.loggingService = new LoggingService(mock_config);
         }
         return this.loggingService.getLogger(name);
     }

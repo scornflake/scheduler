@@ -117,7 +117,7 @@ class Plan extends ObjectWithUUID {
     }
 
     find_role(role_name: string): Role {
-        if (isUndefined(role_name)) {
+        if (isUndefined(role_name) || role_name == null) {
             return null;
         }
         return this.roles.find(r => r.name.toLowerCase() == role_name.toLowerCase());

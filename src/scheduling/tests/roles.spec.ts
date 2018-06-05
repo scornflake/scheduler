@@ -43,7 +43,8 @@ describe('roles', () => {
         expect(plan.roles.length).toEqual(1);
 
         let r2 = plan.add_role(new Role("Foo"));
-        expect(r2).toBeNull("didn't expect to be able to add this 2nd element");
+        expect(r2).not.toBeNull();
+        expect(r2).not.toBe(r);
 
         expect(plan.roles.length).toEqual(1);
     });

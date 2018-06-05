@@ -3,23 +3,29 @@ const webpackConfig = require('./webpack.test.js');
 module.exports = function (config) {
 
     const _config = {
-        basePath: '',
+        basePath: '.',
 
         frameworks: [
             'jasmine'
         ],
-
         files: [
             // '../node_modules/babel-polyfill/browser.js',
             {
                 pattern: './karma-test-shim.js',
                 watched: true
             }
+            // {
+            //     pattern: './**/*.spec.js',
+            //     watched: false,
+            //     included: true,
+            //     served: true
+            // }
         ],
 
         preprocessors: {
             // './karma-test-shim.js': ['webpack', 'sourcemap']
             './karma-test-shim.js': ['webpack']
+            // './**/*.spec.js': ['webpack']
         },
 
         phantomJsLauncher: {

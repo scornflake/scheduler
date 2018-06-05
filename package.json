@@ -10,7 +10,8 @@
     "lint": "ionic-app-scripts lint",
     "ionic:build": "ionic-app-scripts build --copy ./config/copy.config.js",
     "ionic:serve": "ionic-app-scripts serve --copy ./config/copy.config.js",
-    "test": "karma start test-config/karma.conf.js"
+    "test": "karma start test-config/karma.conf.js",
+    "testwatch": "karma start test-config/karma.conf.js --auto-watch"
   },
   "dependencies": {
     "@angular/common": "5.0.3",

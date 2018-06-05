@@ -1,10 +1,14 @@
-import {PersistenceType} from "./db-types";
+import {PersistenceType, PersistenceTypeNames} from "./db-types";
 
 const propsMetadataKey = Symbol('persisted');
 const classesMetadataKey = Symbol('classes');
 const REF_PREFIX: string = 'rrr';
 
 type PersistenceProperty = { type: PersistenceType, name: string };
+
+function NameOfPersistenceProp(prop:PersistenceProperty) {
+    return PersistenceTypeNames[prop.type];
+}
 
 class Us {
 
@@ -15,7 +19,6 @@ function persisted(type: PersistenceType = PersistenceType.Property): PropertyDe
         let class_name = target.constructor.name;
         if (target.hasOwnProperty('constructor')) {
             console.debug(`Register persisted property [${type}]: ${class_name}, prop: ${propertyKey}`);
-
         }
         let properties: PersistenceProperty[] = Reflect.getMetadata(propsMetadataKey, target);
         if (properties) {
@@ -45,5 +48,6 @@ export {
     PersistenceProperty,
     persisted,
     REF_PREFIX,
-    propsMetadataKey
+    propsMetadataKey,
+    NameOfPersistenceProp
 }

@@ -206,8 +206,9 @@ describe('role scheduler', () => {
         schedule.create_schedule();
 
         let firstSchedule = Array.from(schedule.dates.values())[0];
-        expect(firstSchedule).not.toBeNull();
-        expect(firstSchedule.people_in_role(defaultAcousticGuitar).length).toBe(1);
+        console.log(`First Schedule is: ${firstSchedule}`);
+        expect(firstSchedule).not.toBeNull("expected to get a firstSchedule");
+        expect(firstSchedule.people_in_role(defaultAcousticGuitar).length).toBe(1, "expected one person to be in role 'accoustic guitar'");
         console.log(schedule.jsonResult());
     });
 

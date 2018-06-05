@@ -1,7 +1,7 @@
 import {Injectable} from "@angular/core";
 import PouchDB from 'pouchdb';
 import PouchDBFind from 'pouchdb-find';
-import {Logger, LoggingService, LogLevel} from "ionic-logging-service";
+import {Logger, LogLevel} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
 import {share} from "rxjs/operators";
 import {BaseStore, ObjectWithUUID, PersistableObject} from "../../scheduling/common/base_model";
@@ -9,9 +9,11 @@ import 'reflect-metadata';
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {isObservableArray} from "mobx";
 import {PersistenceType} from "./db-types";
-import {PersistenceProperty, propsMetadataKey, REF_PREFIX} from "./db-decorators";
-import Database = PouchDB.Database;
+import {NameOfPersistenceProp, PersistenceProperty, propsMetadataKey, REF_PREFIX} from "./db-decorators";
 import {Creator} from "./db-creator";
+import {LoggingWrapper} from "../../common/logging-wrapper";
+import {ConfigurationService} from "ionic-configuration-service";
+import Database = PouchDB.Database;
 
 
 @Injectable()
@@ -21,12 +23,15 @@ class SchedulerDatabase {
     private db: Database<{}>;
     private logger: Logger;
     private current_indexes: PouchDB.Find.GetIndexesResponse<{}>;
+    private db_name: string;
 
-    constructor(public logService: LoggingService) {
-        this.logger = logService.getLogger("store.db");
+    constructor(configService: ConfigurationService) {
+        let db_config = configService.getValue("database");
+        this.db_name = db_config['name'];
+        this.logger = LoggingWrapper.getLogger("store.db");
         PouchDB.plugin(PouchDBFind);
 
-        this.logger.info("Setting up database...");
+        this.logger.info(`Setting up database '${this.db_name}'...`);
 
         this.ready_event = Observable.create(obs => {
             this.initialize().then(done => {
@@ -40,7 +45,7 @@ class SchedulerDatabase {
     }
 
     async initialize(destroy_first: boolean = false) {
-        this.db = await new PouchDB("scheduler");
+        this.db = await new PouchDB(this.db_name);
 
         if (destroy_first) {
             console.log("Destroying DB...");
@@ -87,50 +92,56 @@ class SchedulerDatabase {
         return data;
     }
 
-    create_json_from_object(object: PersistableObject) {
-        let json_object = this._persisted_properties(object);
-        json_object['type'] = object.type;
-        if (object instanceof ObjectWithUUID) {
-            json_object['_id'] = object._id;
-            json_object['_rev'] = object._rev;
-        }
-        return json_object;
+    gap(width: number): string {
+        return " ".repeat(width);
     }
 
-    private _persisted_properties(origin: object): object {
+    persistence_debug(message, nesting) {
+        this.logger.debug(`${this.gap(nesting)}${message}`);
+    }
+
+    create_json_from_object(object: PersistableObject, nesting: number = 0) {
+        this.persistence_debug(`Persisting object: ${object.type}, ${SafeJSON.stringify(object)}`, nesting);
+        // At this level, if we're given an ObjectWithUUID, we don't want a reference.
+        // So we tell the converter it's a nested object (it'll output id/rev/type)
+        let result = this._convert_object_value_to_dict({
+            type: PersistenceType.NestedObject,
+            name: 'root'
+        }, object, nesting);
+        return this._convert_add_type_id_and_rev(result, object, true);
+    }
+
+    private _convert_by_iterating_persistable_properties(origin: object, nesting: number = 0): object {
         const properties: PersistenceProperty[] = Reflect.getMetadata(propsMetadataKey, origin);
         const result = {};
         if (properties) {
+            this.persistence_debug(`Iterating ${properties.length} properties of ${origin.constructor.name}`, nesting);
             properties.forEach(prop => {
                     let value = origin[prop.name];
-                    result[prop.name] = this._convert_to_json(value, propsMetadataKey);
+                    result[prop.name] = this._convert_object_value_to_dict(prop, value, nesting);
+                    this.persistence_debug(`${NameOfPersistenceProp(prop)} - ${prop.name}`, nesting);
                 }
             );
-        }
-        return result;
-    }
-
-    private _convert_to_json(value: object, metadataKey) {
-        if (value instanceof ObjectWithUUID) {
-            // MUST be serialized as a reference
-            return this.reference_for_object(value);
-        } else if (value instanceof PersistableObject) {
-            let po = this._persisted_properties(value);
-            po['type'] = value.type;
-            return po;
-        } else if (isObservableArray(value)) {
-            // Recurse
-            return value.map(v => {
-                return this._convert_to_json(v, metadataKey)
-            });
-        } else if (Array.isArray(value)) {
-            // Recurse
-            value.map(v => this._convert_to_json(v, metadataKey));
         } else {
-            return value;
+            this.persistence_debug(`Object has no properties`, nesting);
         }
+        return this._convert_add_type_id_and_rev(result, origin);
     }
 
+    private _convert_object_value_to_dict(prop, value, nesting: number = 0) {
+        switch (prop.type) {
+            case PersistenceType.Reference:
+                return this._convert_to_reference(prop, value, nesting + 1);
+            case PersistenceType.ReferenceList:
+                return this._convert_to_reference_list(prop, value, nesting + 1);
+            case PersistenceType.Property:
+                return value;
+            case PersistenceType.NestedObject:
+                return this._convert_to_nested_object_dict(prop, value, nesting + 1);
+            case PersistenceType.NestedObjectList:
+                return this._convert_to_nested_object_list_of_dict(prop, value, nesting + 1);
+        }
+    }
 
     async store_or_update_object(object: ObjectWithUUID, force_rev_check: boolean = false, ignore_not_found: boolean = false) {
         // Get the latest rev
@@ -263,10 +274,9 @@ class SchedulerDatabase {
 
     async load_into_store<T extends ObjectWithUUID>(object_store: BaseStore<T>, type: string) {
         let loaded_objects = await this.load_all_of_type(type);
-        let uuid_objs = new Array<ObjectWithUUID>();
         loaded_objects.forEach(o => {
             let ooo = o as T;
-            if(ooo) {
+            if (ooo) {
                 object_store.add_object_to_array(ooo, true);
             } else {
                 this.logger.warn(`Skipped ${o} because its not of the expected type: ${type}`);
@@ -286,8 +296,67 @@ class SchedulerDatabase {
         return this.load_object_with_id(object_id);
     }
 
-    private reference_for_object(obj: ObjectWithUUID) {
+    reference_for_object(obj: ObjectWithUUID) {
         return `${REF_PREFIX}:${obj.type}:${obj._id}`;
+    }
+
+    private _convert_to_reference(prop: PersistenceProperty, value: any, nesting: number = 0) {
+        if (Array.isArray(value)) {
+            throw new Error(`REF: Cannot convert ${prop.name} to ${NameOfPersistenceProp(prop)}, it is an array`)
+        }
+        if (isObservableArray(value)) {
+            throw new Error(`REF: Cannot convert ${prop.name} to ${NameOfPersistenceProp(prop)}, it is an mbox array`);
+        }
+        if (!(value instanceof ObjectWithUUID)) {
+            throw new Error(`REF: Cannot convert ${prop.name} to ${NameOfPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a ObjectWithUUID`);
+        }
+        this.persistence_debug(`Convert ${value} to reference`, nesting);
+        return this.reference_for_object(value);
+    }
+
+    private _convert_to_nested_object_dict(prop: PersistenceProperty, value: any, nesting: number = 0) {
+        if (!(value instanceof PersistableObject)) {
+            throw new Error(`NESTED OBJ: Cannot convert ${prop.name} to ${NameOfPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a PersistableObject`);
+        }
+        this.persistence_debug(`Converting ${value.constructor.name} by iterating its properties...`, nesting);
+        return this._convert_by_iterating_persistable_properties(value, nesting + 1);
+    }
+
+    private _convert_add_type_id_and_rev(dict, value, include_id_and_rev: boolean = false) {
+        let po = value as PersistableObject;
+        if (po) {
+            dict.type = po.type;
+            let owuid = po as ObjectWithUUID;
+            if (owuid && include_id_and_rev) {
+                dict._id = owuid._id;
+                dict._rev = owuid._rev;
+            }
+        }
+        return dict;
+    }
+
+    private _convert_to_nested_object_list_of_dict(prop: any, value: any, nesting: number = 0) {
+        if (isObservableArray(value) || Array.isArray(value)) {
+            return value.map(v => {
+                return this._convert_by_iterating_persistable_properties(v, nesting + 1);
+            });
+        } else {
+            throw new Error(`NESTEDLIST: Cannot convert ${prop.name} to ${NameOfPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a list or mbox list`);
+        }
+    }
+
+    private _convert_to_reference_list(prop: any, value: any, nesting: number = 0) {
+        if (isObservableArray(value) || Array.isArray(value)) {
+            let type_names = Array.from(new Set(value.map(v => v.constructor.name))).join(",");
+            this.persistence_debug(`convert list of ${value.length} items, types: ${type_names}`, nesting);
+            return value.map((v, index) => {
+                this.persistence_debug(`converting a ${v.constructor.name}`, nesting);
+                let indexes_prop = {type: PersistenceType.Reference, name: `${prop.name}[${index}}`};
+                return this._convert_to_reference(indexes_prop, v, nesting + 1);
+            });
+        } else {
+            throw new Error(`REF: Cannot convert ${prop.name} to ${NameOfPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a list or mbox list`);
+        }
     }
 }
 

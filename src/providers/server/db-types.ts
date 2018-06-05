@@ -1,4 +1,3 @@
-
 enum PersistenceType {
     Property = 'prop',
     Reference = 'ref',
@@ -7,4 +6,14 @@ enum PersistenceType {
     NestedObjectList = 'lst',
 }
 
-export {PersistenceType};
+const PersistenceTypeNames = {};
+PersistenceTypeNames[PersistenceType.Property] = "Property";
+PersistenceTypeNames[PersistenceType.Reference] = "Reference";
+PersistenceTypeNames[PersistenceType.ReferenceList] = "ReferenceList";
+PersistenceTypeNames[PersistenceType.NestedObject] = "NestedObject";
+PersistenceTypeNames[PersistenceType.NestedObjectList] = "NestedObjectList";
+
+export {
+    PersistenceType,
+    PersistenceTypeNames
+};

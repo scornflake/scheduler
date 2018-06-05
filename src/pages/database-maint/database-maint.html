@@ -10,4 +10,11 @@
 <ion-content padding>
     <button ion-button (tap)="store_fake_data()">Store Fake Stuff</button>
     <button ion-button color="danger" (tap)="delete_db()">Delete DB</button>
+
+    <ion-list>
+        <ion-item *ngFor="let i of stats">
+            <ion-label>{{i.label}}</ion-label>
+            <ion-label>{{i.value}}</ion-label>
+        </ion-item>
+    </ion-list>
 </ion-content>

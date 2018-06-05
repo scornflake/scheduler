@@ -78,9 +78,11 @@ describe('service', () => {
         let sr2 = plan.add_role(defaultSaxRole);
         let sr1 = plan.add_role(defaultLeaderRole);
         sr1.layout_priority = 3;
+        console.log(`Plan has roles: ${plan.roles}`);
 
         // Highest first
         let sorted = plan.roles_in_layout_order;
+        console.log(`Sorted by layout order =: ${plan.roles}`);
         expect(sorted[0]).toEqual(sr1);
         expect(sorted[1]).toEqual(sr2);
     });
