@@ -5,7 +5,7 @@ import {Logger} from "ionic-logging-service";
 import {BaseStore, ObjectWithUUID, PersistableObject} from "../../scheduling/common/base_model";
 import 'reflect-metadata';
 import {SafeJSON} from "../../common/json/safe-stringify";
-import {isObservableArray} from "mobx";
+import {autorun, isObservableArray} from "mobx";
 import {PersistenceType} from "./db-types";
 import {
     create_new_object_of_type,
@@ -118,11 +118,13 @@ class SchedulerDatabase {
             throw new Error("load_object_with_id failed. You must pass in an id (you passed in 'undefined')");
         }
         let doc = await this.db.get(id);
+        this.logger.debug(`Doc for loaded object: ${SafeJSON.stringify(doc)}`);
         if (doc['type']) {
             let object_type = doc['type'];
             this.persistence_debug(`load object ${id}, type: ${object_type}`, nesting);
             let instance = create_new_object_of_type(object_type);
-            return this.convert_from_json_to_object(doc, instance, nesting + 1);
+            this.convert_from_json_to_object(doc, instance, nesting + 1);
+            return instance;
         }
         throw new Error(`Loaded doc from store with id ${id}, but it doesn't have a 'type' field. Don't know how to turn it into an object!`);
     }
@@ -143,7 +145,7 @@ class SchedulerDatabase {
             type: PersistenceType.NestedObject,
             name: 'root'
         }, object, nesting);
-        return this._convert_add_type_id_and_rev(result, object, true);
+        return this._convert_add_type_id_and_rev(result, object, true, nesting);
     }
 
     private _convert_by_iterating_persistable_properties(origin: object, nesting: number = 0): object {
@@ -152,15 +154,15 @@ class SchedulerDatabase {
         if (properties) {
             this.persistence_debug(`Iterating ${properties.length} properties of ${origin.constructor.name}`, nesting);
             properties.forEach(prop => {
-                    let value = origin[prop.name];
-                    result[prop.name] = this._convert_object_value_to_dict(prop, value, nesting);
                     this.persistence_debug(`${NameOfPersistenceProp(prop)} - ${prop.name}`, nesting);
+                    let value = origin[prop.name];
+                    result[prop.name] = this._convert_object_value_to_dict(prop, value, nesting + 1);
                 }
             );
         } else {
             this.persistence_debug(`Object has no properties`, nesting);
         }
-        return this._convert_add_type_id_and_rev(result, origin);
+        return this._convert_add_type_id_and_rev(result, origin, false, nesting);
     }
 
     private _convert_object_value_to_dict(prop, value, nesting: number = 0) {
@@ -227,26 +229,31 @@ class SchedulerDatabase {
             throw new Error(`Cannot hydrate ${json_obj['type']} because we don't know what it's persistable properties are`)
         }
 
-        // Now we need to go through the properties, and see
+        if (new_object instanceof ObjectWithUUID) {
+            let fields = new_object.update_from_server(json_obj);
+            if(fields.length) {
+                this.persistence_debug(`Set ${fields.join("/")} from doc`, nesting);
+            }
+        }
+
+        // Now we need to go through the properties, and hydrate each and assign
         target_properties.forEach(prop => {
             let value = json_obj[prop.name];
-            this.persistence_debug(`${prop.name}`, nesting);
-            if (new_object instanceof ObjectWithUUID) {
-                new_object.update_from_server(json_obj);
-            }
+
             if (prop.name == 'type') {
+                // No reason why this shouldn't be the case, but you know, paranoia
                 if (new_object.type != json_obj['type']) {
                     throw new Error(`Unable to hydrate ${json_obj} into object. Type ${new_object.type} != ${json_obj['type']}`);
                 }
             } else {
-                // OK. Now we don't know what this is.
-                // If it's a 'ref:type:id', we know to find the object and set it
                 if (value == null) {
+                    this.persistence_debug(`Skipping ${prop.name}, its null`, nesting);
                     return;
                 }
 
                 switch (prop.type) {
                     case PersistenceType.Property: {
+                        this.persistence_debug(`${prop.name} = ${value}`, nesting);
                         new_object[prop.name] = json_obj[prop.name];
                         break;
                     }
@@ -256,36 +263,40 @@ class SchedulerDatabase {
                      */
                     case PersistenceType.NestedObject: {
                         let new_type = value['type'];
+                        this.persistence_debug(`${prop.name} = new instance of ${new_type}`, nesting);
                         let new_instance = create_new_object_of_type(new_type);
-                        this.persistence_debug(`created new instance of ${new_type}`, nesting);
                         new_object[prop.name] = this.convert_from_json_to_object(value, new_instance, nesting + 1);
                         break;
                     }
 
                     case PersistenceType.NestedObjectList: {
                         let new_objects = [];
-                        this.persistence_debug(`creating ${value.length} objects ...`, nesting);
+                        this.persistence_debug(`${prop.name} = list of ${value.length} objects ...`, nesting);
                         value.forEach(v => {
                             let new_type = v['type'];
+                            this.persistence_debug(`creating new instance of ${new_type}`, nesting + 1);
                             let new_instance = create_new_object_of_type(new_type);
-                            this.persistence_debug(`created new instance of ${new_type}`, nesting);
-                            new_objects.push(this.convert_from_json_to_object(v, new_instance, nesting + 1));
+                            new_objects.push(this.convert_from_json_to_object(v, new_instance, nesting + 2));
                         });
                         new_object[prop.name] = new_objects;
                         break;
                     }
 
                     case PersistenceType.Reference: {
-                        this.persistence_debug(`looking up reference: ${value}`, nesting);
+                        this.persistence_debug(`${prop.name} = reference: ${value}`, nesting);
                         new_object[prop.name] = this.lookup_object_reference(value, nesting + 1);
                         break;
                     }
 
                     case PersistenceType.ReferenceList: {
                         // Assume 'value' is a list of object references
-                        this.persistence_debug(`looking up ${value.length} references`, nesting);
+                        this.persistence_debug(`${prop.name} = list of ${value.length} references`, nesting);
                         new_object[prop.name] = value.map(ref => this.lookup_object_reference(ref, nesting + 1));
                         break;
+                    }
+
+                    default: {
+                        throw new Error(`Fail. Dunno how to handle PersistenceType: ${prop.type}`);
                     }
                 }
             }
@@ -354,22 +365,28 @@ class SchedulerDatabase {
             throw new Error(`NESTED OBJ: Cannot convert ${prop.name} to ${NameOfPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a PersistableObject`);
         }
         this.persistence_debug(`Converting ${value.constructor.name} by iterating its properties...`, nesting);
-        return this._convert_by_iterating_persistable_properties(value, nesting + 1);
+        return this._convert_add_type_id_and_rev(this._convert_by_iterating_persistable_properties(value, nesting + 1), value, false, nesting);
     }
 
-    private _convert_add_type_id_and_rev(dict, value, include_id_and_rev: boolean = false) {
+    private _convert_add_type_id_and_rev(dict, value, include_id_and_rev: boolean = false, nesting: number = 0) {
+        let messages = [];
         if (value instanceof PersistableObject) {
+            messages.push(`set type to be ${value.type}`);
             dict.type = value.type;
             if (value instanceof ObjectWithUUID && include_id_and_rev) {
+                messages.push(`set _id=${value._id} and _rev=${value._rev}`);
                 dict._id = value._id;
                 dict._rev = value._rev;
             }
+            this.persistence_debug(messages.join(", "), nesting);
         }
         return dict;
     }
 
     private _convert_to_nested_object_list_of_dict(prop: any, value: any, nesting: number = 0) {
         if (isObservableArray(value) || Array.isArray(value)) {
+            let type_names = Array.from(new Set(value.map(v => v.constructor.name))).join(",");
+            this.persistence_debug(`convert nested list of ${value.length} items, types: ${type_names}`, nesting);
             return value.map(v => {
                 return this._convert_by_iterating_persistable_properties(v, nesting + 1);
             });
@@ -390,6 +407,13 @@ class SchedulerDatabase {
         } else {
             throw new Error(`REF: Cannot convert ${prop.name} to ${NameOfPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a list or mbox list`);
         }
+    }
+
+    async delete_object(person: ObjectWithUUID) {
+        if (person.is_new) {
+            throw new Error("Cannot remove object that is 'new' and hasn't been saved yet");
+        }
+        return this.db.remove({_id: person.uuid, _rev: person._rev});
     }
 }
 

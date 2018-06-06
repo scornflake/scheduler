@@ -1,4 +1,4 @@
-import {action, observable} from "mobx";
+import {action, autorun, observable} from "mobx";
 import * as _ from 'lodash';
 import {isUndefined} from "util";
 import {SafeJSON} from "../../common/json/safe-stringify";
@@ -41,18 +41,18 @@ class ObjectWithUUID extends PersistableObject {
     }
 
     update_from_server(state) {
+        let fields = [];
         // migrate properties to this
         if(state._id) {
             this._id = state['_id'];
-        } else {
-            throw new Error(`Cannot update ${this.type}, no _id in provided state`);
+            fields.push("_id");
         }
         if(state._rev) {
             this._rev = state['_rev'];
-        } else {
-            throw new Error(`Cannot update ${this.type}, no _rev in provided state`);
+            fields.push("_rev");
         }
         this.is_new = false;
+        return fields;
     }
 }
 
@@ -62,6 +62,11 @@ class BaseStore<T extends ObjectWithUUID> extends ObjectWithUUID {
     constructor() {
         super();
         this.items = [];
+
+        // autorun(() => {
+        //     this.items.slice();
+        //     console.log("DO SOMETHING");
+        // })
     }
 
     @action

@@ -34,6 +34,7 @@ export class PeoplePage {
 
     private add_person(new_person: Person) {
         this.rootStore.people_store.add_person(new_person);
+        this.rootStore.save_or_update(new_person);
     }
 
     public show_person_detail(person: Person) {
@@ -61,6 +62,7 @@ export class PeoplePage {
                     handler: () => {
                         alert.dismiss().then(() => {
                             this.rootStore.people_store.remove_person(person);
+                            this.rootStore.remove_object(person);
                         });
                         return false;
                     },

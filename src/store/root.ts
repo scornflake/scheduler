@@ -14,6 +14,7 @@ import {Team} from "../scheduling/teams";
 import {TeamsStore} from "../scheduling/teams-store";
 import {csd} from "../scheduling/common/date-utils";
 import {Person} from "../scheduling/people";
+import {ObjectWithUUID} from "../scheduling/common/base_model";
 
 @Injectable()
 class RootStore {
@@ -132,6 +133,15 @@ class RootStore {
 
     private setup_fake_people() {
         NPBCStoreConstruction.SetupPeople(this.people_store);
+    }
+
+    save_or_update(object: ObjectWithUUID) {
+        this.db.store_or_update_object(object);
+    }
+
+    remove_object(object: ObjectWithUUID) {
+        this.logger.info(`Deleting object of type ${object.type}, id: ${object.uuid}`)
+        return this.db.delete_object(object);
     }
 }
 

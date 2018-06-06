@@ -99,6 +99,7 @@ export class Availability extends PersistableObject {
 }
 
 export class AvailabilityEveryNOfM extends Availability {
+    @persisted()
     period_to_look_at: number;
 
     constructor(every: number = 1, of_weeks: number = 1) {

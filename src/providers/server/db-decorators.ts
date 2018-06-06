@@ -1,5 +1,5 @@
 import {PersistenceType, PersistenceTypeNames} from "./db-types";
-import {PersistableObject} from "../../scheduling/common/base_model";
+import {ObjectWithUUID, PersistableObject} from "../../scheduling/common/base_model";
 
 const propsMetadataKey = Symbol('persisted');
 const classesMetadataKey = Symbol('classes');
@@ -60,11 +60,20 @@ function persisted(type: PersistenceType = PersistenceType.Property): PropertyDe
 
 function create_new_object_of_type(type: string): PersistableObject {
     const factories: ClassFactory[] = Reflect.getMetadata(classesMetadataKey, Us);
+    if(!factories) {
+        throw new Error(`Cannot create new ${type}, no factories registered (1)`);
+    }
     if (factories.length == 0) {
-        throw new Error(`Cannot create new ${type}, no factories registered`);
+        throw new Error(`Cannot create new ${type}, no factories registered (2)`);
     }
     let factory = factories.find(cf => cf.class_name == type);
-    return factory.factory();
+    let instance = factory.factory();
+    if(instance instanceof ObjectWithUUID) {
+        // clear out the _id and _rev, we don't want the defaults
+        instance._id = undefined;
+        instance._rev = undefined;
+    }
+    return instance;
 }
 
 export {
