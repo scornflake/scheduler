@@ -1,13 +1,19 @@
 import {PersistenceType, PersistenceTypeNames} from "./db-types";
+import {PersistableObject} from "../../scheduling/common/base_model";
 
 const propsMetadataKey = Symbol('persisted');
 const classesMetadataKey = Symbol('classes');
 const REF_PREFIX: string = 'rrr';
 
 type PersistenceProperty = { type: PersistenceType, name: string };
+type ClassFactory = { class_name: string, factory: () => any };
 
-function NameOfPersistenceProp(prop:PersistenceProperty) {
+function NameOfPersistenceProp(prop: PersistenceProperty) {
     return PersistenceTypeNames[prop.type];
+}
+
+function NameOfPersistencePropType(type: PersistenceType) {
+    return PersistenceTypeNames[type];
 }
 
 class Us {
@@ -18,7 +24,7 @@ function persisted(type: PersistenceType = PersistenceType.Property): PropertyDe
     function _persisted(target: object, propertyKey: string) {
         let class_name = target.constructor.name;
         if (target.hasOwnProperty('constructor')) {
-            console.debug(`Register persisted property [${type}]: ${class_name}, prop: ${propertyKey}`);
+            console.debug(`Register property ${propertyKey}, type [${NameOfPersistencePropType(type)}], on class: ${class_name}`);
         }
         let properties: PersistenceProperty[] = Reflect.getMetadata(propsMetadataKey, target);
         if (properties) {
@@ -28,14 +34,22 @@ function persisted(type: PersistenceType = PersistenceType.Property): PropertyDe
             Reflect.defineMetadata(propsMetadataKey, properties, target);
         }
 
-        let class_names: string[] = Reflect.getMetadata(classesMetadataKey, Us);
+        let class_names: ClassFactory[] = Reflect.getMetadata(classesMetadataKey, Us);
+        let factory = () => {
+            let instance = Object.create(target);
+            instance.constructor.apply(instance);
+            return instance;
+        };
+        let new_factory = {class_name: class_name, factory: factory};
         if (class_names) {
-            if (class_names.indexOf(class_name) == -1) {
-                class_names.push(class_name);
+            let existing = class_names.find(cf => cf.class_name == class_name);
+            if (!existing) {
                 console.debug(`Register persisted class: ${class_name}`);
+                class_names.push(new_factory);
             }
         } else {
-            class_names = [class_name];
+            // Nothing at all. Register the first.
+            class_names = [new_factory];
             console.debug(`Register persisted class: ${class_name}`);
             Reflect.defineMetadata(classesMetadataKey, class_names, Us);
         }
@@ -44,10 +58,20 @@ function persisted(type: PersistenceType = PersistenceType.Property): PropertyDe
     return _persisted;
 }
 
+function create_new_object_of_type(type: string): PersistableObject {
+    const factories: ClassFactory[] = Reflect.getMetadata(classesMetadataKey, Us);
+    if (factories.length == 0) {
+        throw new Error(`Cannot create new ${type}, no factories registered`);
+    }
+    let factory = factories.find(cf => cf.class_name == type);
+    return factory.factory();
+}
+
 export {
     PersistenceProperty,
     persisted,
     REF_PREFIX,
     propsMetadataKey,
-    NameOfPersistenceProp
+    NameOfPersistenceProp,
+    create_new_object_of_type
 }

@@ -1,29 +1,56 @@
 import {Injectable} from "@angular/core";
 import PouchDB from 'pouchdb';
 import PouchDBFind from 'pouchdb-find';
-import {Logger, LogLevel} from "ionic-logging-service";
-import {Observable} from "rxjs/Observable";
-import {share} from "rxjs/operators";
+import {Logger} from "ionic-logging-service";
 import {BaseStore, ObjectWithUUID, PersistableObject} from "../../scheduling/common/base_model";
 import 'reflect-metadata';
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {isObservableArray} from "mobx";
 import {PersistenceType} from "./db-types";
-import {NameOfPersistenceProp, PersistenceProperty, propsMetadataKey, REF_PREFIX} from "./db-decorators";
-import {Creator} from "./db-creator";
+import {
+    create_new_object_of_type,
+    NameOfPersistenceProp,
+    PersistenceProperty,
+    propsMetadataKey,
+    REF_PREFIX
+} from "./db-decorators";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {ConfigurationService} from "ionic-configuration-service";
+import {Subject} from "rxjs/Subject";
+import {ReplaySubject} from "rxjs/ReplaySubject";
+import {Observable} from "rxjs/Observable";
+import "rxjs/add/observable/fromPromise";
 import Database = PouchDB.Database;
+import {isUndefined} from "util";
 
 
 @Injectable()
 class SchedulerDatabase {
-    ready_event: Observable<boolean>;
+    ready_event: Subject<boolean>;
 
     private db: Database<{}>;
-    private logger: Logger;
+    private is_ready: boolean = false;
+    logger: Logger;
     private current_indexes: PouchDB.Find.GetIndexesResponse<{}>;
     private db_name: string;
+
+    static ConstructAndWait(configService: ConfigurationService, delete_first: boolean = false): Promise<SchedulerDatabase> {
+        return new Promise<SchedulerDatabase>((resolve, reject) => {
+            let instance = new SchedulerDatabase(configService);
+            instance.logger.info("Starting DB setup for TEST");
+
+            instance.ready_event.subscribe(r => {
+                if (delete_first) {
+                    instance.logger.info("Making sure DB is dead...");
+                    instance.delete_all().then(r => {
+                        resolve(instance);
+                    });
+                } else {
+                    resolve(instance);
+                }
+            })
+        });
+    }
 
     constructor(configService: ConfigurationService) {
         let db_config = configService.getValue("database");
@@ -31,17 +58,19 @@ class SchedulerDatabase {
         this.logger = LoggingWrapper.getLogger("store.db");
         PouchDB.plugin(PouchDBFind);
 
-        this.logger.info(`Setting up database '${this.db_name}'...`);
+        this.logger.info(`Setting up database: ${this.db_name} ...`);
 
-        this.ready_event = Observable.create(obs => {
-            this.initialize().then(done => {
-                obs.next(true);
-            });
-        }).pipe(share());
+        this.ready_event = new ReplaySubject();
+
+        this.initialize();
 
         this.ready_event.subscribe(val => {
-            this.logger.info("DB is ready");
-        })
+            if (val) {
+                this.logger.info("DB is ready");
+            } else {
+                this.logger.info("DB is NOT ready");
+            }
+        });
     }
 
     async initialize(destroy_first: boolean = false) {
@@ -50,12 +79,17 @@ class SchedulerDatabase {
         if (destroy_first) {
             console.log("Destroying DB...");
             await this.delete_all();
+            this.db = await new PouchDB(this.db_name);
         }
 
         this.logger.info("Getting DB information");
         let info = await this.db.info();
         this.logger.info(`DB: ${info.db_name} using backend: ${info.backend_adapter}. ${info.doc_count} docs.`);
         await this.setup_indexes();
+
+        this.is_ready = true;
+
+        Observable.create(obs => obs.next(true)).subscribe(this.ready_event);
     }
 
     async setup_indexes() {
@@ -72,24 +106,24 @@ class SchedulerDatabase {
 
     async delete_all() {
         await this.db.destroy();
-        this.db = await new PouchDB("scheduler");
+        await this.initialize();
     }
 
     private index_exists(name: string): boolean {
         return this.current_indexes.indexes.find(idx => idx.name == name) != null;
     }
 
-    async load_object_with_id(id: string): Promise<any> {
-        let data = await this.db.get(id);
-        if (data['type']) {
-            let object_type = data['type'];
-            let instance = Creator.makeNew(object_type);
-            if (instance instanceof ObjectWithUUID) {
-                instance.is_new = false;
-            }
-            return Object.assign(instance, data);
+    async load_object_with_id(id: string): Promise<PersistableObject> {
+        if (isUndefined(id)) {
+            throw new Error("load_object_with_id failed. You must pass in an id (you passed in 'undefined')");
         }
-        return data;
+        let doc = await this.db.get(id);
+        if (doc['type']) {
+            let object_type = doc['type'];
+            let instance = create_new_object_of_type(object_type);
+            return this.convert_from_json_to_object(doc, instance);
+        }
+        throw new Error(`Loaded doc from store with id ${id}, but it doesn't have a 'type' field. Don't know how to turn it into an object!`);
     }
 
     gap(width: number): string {
@@ -143,7 +177,7 @@ class SchedulerDatabase {
         }
     }
 
-    async store_or_update_object(object: ObjectWithUUID, force_rev_check: boolean = false, ignore_not_found: boolean = false) {
+    async store_or_update_object(object: ObjectWithUUID, force_rev_check: boolean = false, ignore_not_found: boolean = false): Promise<ObjectWithUUID> {
         // Get the latest rev
         let object_state = object.is_new ? "new" : "existing";
         if (object.is_new == false || force_rev_check) {
@@ -162,31 +196,24 @@ class SchedulerDatabase {
             }
         }
 
-        let json_object = this.create_json_from_object(object);
-
+        let dict_of_object = this.create_json_from_object(object);
         try {
-            let new_object = await this.db.put(json_object);
-            if (new_object.ok) {
-                if (this.logger.getLogLevel() == LogLevel.INFO) {
-                    this.logger.info(`Stored ${object_state} object ${object.type} with new ID: ${object._id}`);
-                }
-                if (this.logger.getLogLevel() == LogLevel.TRACE) {
-                    this.logger.info(`Stored ${object_state} object ${object.type} with ${SafeJSON.stringify(json_object)}`);
-                }
-                if (object._id != new_object.id) {
-                    object._id = new_object.id;
-                }
-                if (object._rev != new_object.rev) {
-                    object._rev = new_object.rev;
-                }
-                if (object.is_new) {
-                    object.is_new = false;
-                }
-            } else {
-                this.logger.error(`Failed to store ${object_state} object of type ${object.type}, id: ${object.uuid}.`);
+            let response = await this.db.put(dict_of_object);
+
+            this.logger.info(`Stored ${object_state} object ${object.type} with new ID: ${object._id}`);
+            if (object._id != response.id) {
+                object._id = response.id;
             }
+            if (object._rev != response.rev) {
+                object._rev = response.rev;
+            }
+            if (object.is_new) {
+                object.is_new = false;
+            }
+            return object;
         } catch (err) {
-            throw Error(`Exception while storing ${object_state} object of type ${object.type}, id: ${object.uuid}. ${err}`);
+            this.logger.debug(`Failed to store entity. Err: ${err}. Data: ${SafeJSON.stringify(dict_of_object)}`);
+            throw Error(`Exception while storing ${object_state} type ${object.type}. ${err}. id: ${object.uuid}.`);
         }
     }
 
@@ -202,11 +229,11 @@ class SchedulerDatabase {
         // Now we need to go through the properties, and see
         target_properties.forEach(prop => {
             let value = json_obj[prop.name];
-            if (prop.name == 'id') {
-                new_object['_id'] = value;
-            } else if (prop.name == 'rev') {
-                new_object['_rev'] = value;
-            } else if (prop.name == 'type') {
+            let new_objwithuuid = new_object as ObjectWithUUID;
+            if (new_objwithuuid) {
+                new_objwithuuid.update_from_server(json_obj);
+            }
+            if (prop.name == 'type') {
                 if (new_object.type != json_obj['type']) {
                     throw new Error(`Unable to hydrate ${json_obj} into object. Type ${new_object.type} != ${json_obj['type']}`);
                 }
@@ -228,7 +255,7 @@ class SchedulerDatabase {
                      */
                     case PersistenceType.NestedObject: {
                         let new_type = value['type'];
-                        let new_instance = Creator.makeNew(new_type);
+                        let new_instance = create_new_object_of_type(new_type);
                         new_object[prop.name] = this.convert_from_json_to_object(value, new_instance);
                         break;
                     }
@@ -237,7 +264,7 @@ class SchedulerDatabase {
                         let new_objects = [];
                         value.forEach(v => {
                             let new_type = v['type'];
-                            let new_instance = Creator.makeNew(new_type);
+                            let new_instance = create_new_object_of_type(new_type);
                             new_objects.push(this.convert_from_json_to_object(v, new_instance));
                         });
                         new_object[prop.name] = new_objects;
@@ -262,12 +289,12 @@ class SchedulerDatabase {
     }
 
     async load_all_of_type(type: string) {
-        let new_object = Creator.makeNew(type);
+        let new_object = create_new_object_of_type(type);
         let type_name = new_object.constructor.name;
         let all_objects_of_type = await this.db.find({selector: {type: type_name}});
         this.logger.info(`Loading all ${all_objects_of_type.docs.length} objects of type ${type} into object store...`);
         return all_objects_of_type.docs.map(doc => {
-            let new_object = Creator.makeNew(type);
+            new_object = create_new_object_of_type(type);
             return this.convert_from_json_to_object(doc, new_object);
         })
     }

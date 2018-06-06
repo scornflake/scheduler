@@ -64,7 +64,7 @@ class RootStore {
         try {
             let saved_state = await this.db.load_object_with_id('saved-state');
             this.logger.info(`Retrieved state: ${SafeJSON.stringify(saved_state)}`);
-            this.ui_store.saved_state = saved_state;
+            this.ui_store.saved_state = saved_state as SavedState;
         } catch (e) {
             this.ui_store.saved_state = new SavedState('saved-state');
             this.logger.info("No stored saved state. Starting from fresh.");

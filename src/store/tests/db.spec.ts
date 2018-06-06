@@ -5,6 +5,7 @@ import {persisted} from "../../providers/server/db-decorators";
 import {PersistenceType} from "../../providers/server/db-types";
 import {MockConfigurationService} from "../../app/logging-configuration";
 import {observable} from "mobx";
+import {SafeJSON} from "../../common/json/safe-stringify";
 
 class SomeEntity extends ObjectWithUUID {
     @persisted() some_field: string = "a value";
@@ -16,9 +17,12 @@ class Empty extends ObjectWithUUID {
 describe('db', () => {
     let db;
 
-    beforeEach(() => {
+    beforeEach((done) => {
         let config = MockConfigurationService.ServiceForTests();
-        db = new SchedulerDatabase(config);
+        SchedulerDatabase.ConstructAndWait(config).then(new_db => {
+            db = new_db;
+            done();
+        });
     });
 
     it('can create reference of person object', function () {
@@ -128,8 +132,24 @@ describe('db', () => {
             {type: 'SomeEntity', some_field: "a value"},
             {type: 'SomeEntity', some_field: "a value"},
         ];
-        console.log(`JSON: ${JSON.stringify(json)}`);
+        // console.log(`JSON: ${JSON.stringify(json)}`);
         expect(json.my_list).toEqual(expected_items);
 
+    });
+
+    it('can load a simple single object with uuid', (done) => {
+        let an_entity = new SomeEntity();
+        db.store_or_update_object(an_entity).then((saved_object) => {
+
+            console.log(`Response from store: ${SafeJSON.stringify(saved_object)}`);
+            let obj_id = saved_object._id;
+            console.log(`ID should be: ${obj_id}, with returned type: ${saved_object.constructor.name}`);
+
+            db.load_object_with_id(obj_id).then(loaded_entity => {
+                console.log(`Response from load: ${SafeJSON.stringify(loaded_entity)}`);
+                expect(loaded_entity.uuid).toEqual(an_entity.uuid);
+                done();
+            });
+        });
     });
 });

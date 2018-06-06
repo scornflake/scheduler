@@ -1,5 +1,4 @@
 import {action, observable} from "mobx";
-import ShortUniqueId from 'short-unique-id';
 import * as _ from 'lodash';
 import {isUndefined} from "util";
 import {SafeJSON} from "../../common/json/safe-stringify";
@@ -20,11 +19,21 @@ class ObjectWithUUID extends PersistableObject {
     constructor(uuid: string = null) {
         super();
         if (uuid == null) {
-            let uuid_gen = new ShortUniqueId();
-            uuid = uuid_gen.randomUUID(64);
+            uuid = this.guid();
         }
         this.is_new = true;
         this._id = uuid;
+    }
+
+    guid() {
+        return this.s4() + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' +
+            this.s4() + '-' + this.s4() + this.s4() + this.s4();
+    }
+
+    s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
     }
 
     get uuid(): string {
@@ -33,8 +42,16 @@ class ObjectWithUUID extends PersistableObject {
 
     update_from_server(state) {
         // migrate properties to this
-        this._id = state['_id'];
-        this._rev = state['_rev'];
+        if(state._id) {
+            this._id = state['_id'];
+        } else {
+            throw new Error(`Cannot update ${this.type}, no _id in provided state`);
+        }
+        if(state._rev) {
+            this._rev = state['_rev'];
+        } else {
+            throw new Error(`Cannot update ${this.type}, no _rev in provided state`);
+        }
         this.is_new = false;
     }
 }
@@ -53,7 +70,7 @@ class BaseStore<T extends ObjectWithUUID> extends ObjectWithUUID {
             throw new Error(`Cannot add 'null' to this list. We are: ${this.constructor.name}s`)
         }
         if (_.findIndex(this.items, o => o.uuid == instance.uuid) >= 0) {
-            if(overwrite_existing) {
+            if (overwrite_existing) {
                 this.remove_object_from_array(instance);
             } else {
                 return null;
