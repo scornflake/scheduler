@@ -113,15 +113,16 @@ class SchedulerDatabase {
         return this.current_indexes.indexes.find(idx => idx.name == name) != null;
     }
 
-    async load_object_with_id(id: string): Promise<PersistableObject> {
+    async load_object_with_id(id: string, nesting: number = 0): Promise<PersistableObject> {
         if (isUndefined(id)) {
             throw new Error("load_object_with_id failed. You must pass in an id (you passed in 'undefined')");
         }
         let doc = await this.db.get(id);
         if (doc['type']) {
             let object_type = doc['type'];
+            this.persistence_debug(`load object ${id}, type: ${object_type}`, nesting);
             let instance = create_new_object_of_type(object_type);
-            return this.convert_from_json_to_object(doc, instance);
+            return this.convert_from_json_to_object(doc, instance, nesting + 1);
         }
         throw new Error(`Loaded doc from store with id ${id}, but it doesn't have a 'type' field. Don't know how to turn it into an object!`);
     }
@@ -217,7 +218,7 @@ class SchedulerDatabase {
         }
     }
 
-    private convert_from_json_to_object(json_obj: PouchDB.Core.Document<{}>, new_object: PersistableObject) {
+    private convert_from_json_to_object(json_obj: PouchDB.Core.Document<{}>, new_object: PersistableObject, nesting: number = 0) {
         /*
         Assumption is that we begin with an object that has an ID and a type.
          */
@@ -229,9 +230,9 @@ class SchedulerDatabase {
         // Now we need to go through the properties, and see
         target_properties.forEach(prop => {
             let value = json_obj[prop.name];
-            let new_objwithuuid = new_object as ObjectWithUUID;
-            if (new_objwithuuid) {
-                new_objwithuuid.update_from_server(json_obj);
+            this.persistence_debug(`${prop.name}`, nesting);
+            if (new_object instanceof ObjectWithUUID) {
+                new_object.update_from_server(json_obj);
             }
             if (prop.name == 'type') {
                 if (new_object.type != json_obj['type']) {
@@ -256,29 +257,34 @@ class SchedulerDatabase {
                     case PersistenceType.NestedObject: {
                         let new_type = value['type'];
                         let new_instance = create_new_object_of_type(new_type);
-                        new_object[prop.name] = this.convert_from_json_to_object(value, new_instance);
+                        this.persistence_debug(`created new instance of ${new_type}`, nesting);
+                        new_object[prop.name] = this.convert_from_json_to_object(value, new_instance, nesting + 1);
                         break;
                     }
 
                     case PersistenceType.NestedObjectList: {
                         let new_objects = [];
+                        this.persistence_debug(`creating ${value.length} objects ...`, nesting);
                         value.forEach(v => {
                             let new_type = v['type'];
                             let new_instance = create_new_object_of_type(new_type);
-                            new_objects.push(this.convert_from_json_to_object(v, new_instance));
+                            this.persistence_debug(`created new instance of ${new_type}`, nesting);
+                            new_objects.push(this.convert_from_json_to_object(v, new_instance, nesting + 1));
                         });
                         new_object[prop.name] = new_objects;
                         break;
                     }
 
                     case PersistenceType.Reference: {
-                        new_object[prop.name] = this.lookup_object_reference(value);
+                        this.persistence_debug(`looking up reference: ${value}`, nesting);
+                        new_object[prop.name] = this.lookup_object_reference(value, nesting + 1);
                         break;
                     }
 
                     case PersistenceType.ReferenceList: {
                         // Assume 'value' is a list of object references
-                        new_object[prop.name] = value.map(ref => this.lookup_object_reference(ref));
+                        this.persistence_debug(`looking up ${value.length} references`, nesting);
+                        new_object[prop.name] = value.map(ref => this.lookup_object_reference(ref, nesting + 1));
                         break;
                     }
                 }
@@ -292,10 +298,12 @@ class SchedulerDatabase {
         let new_object = create_new_object_of_type(type);
         let type_name = new_object.constructor.name;
         let all_objects_of_type = await this.db.find({selector: {type: type_name}});
-        this.logger.info(`Loading all ${all_objects_of_type.docs.length} objects of type ${type} into object store...`);
+        this.persistence_debug(`Loading all ${all_objects_of_type.docs.length} objects of type ${type} into object store...`, 0);
         return all_objects_of_type.docs.map(doc => {
             new_object = create_new_object_of_type(type);
-            return this.convert_from_json_to_object(doc, new_object);
+            let new_type = new_object.constructor.name;
+            this.persistence_debug(`Creating new object of type ${type} (check ${type} == ${new_type} ... ${type == new_type ? "Yay!" : "Oh. Darn."})...`, 0);
+            return this.convert_from_json_to_object(doc, new_object, 1);
         })
     }
 
@@ -311,7 +319,7 @@ class SchedulerDatabase {
         });
     }
 
-    private lookup_object_reference(reference: string) {
+    private lookup_object_reference(reference: string, nesting: number = 0) {
         let parts = reference.split(':');
         if (parts.length != 3) {
             throw new Error(`Invalid reference ${reference}. Expected 3 parts`);
@@ -320,7 +328,7 @@ class SchedulerDatabase {
             throw new Error(`Invalid reference ${reference}. Expected part[0] to be 'ref'`);
         }
         let object_id = parts[2];
-        return this.load_object_with_id(object_id);
+        return this.load_object_with_id(object_id, nesting);
     }
 
     reference_for_object(obj: ObjectWithUUID) {
@@ -350,13 +358,11 @@ class SchedulerDatabase {
     }
 
     private _convert_add_type_id_and_rev(dict, value, include_id_and_rev: boolean = false) {
-        let po = value as PersistableObject;
-        if (po) {
-            dict.type = po.type;
-            let owuid = po as ObjectWithUUID;
-            if (owuid && include_id_and_rev) {
-                dict._id = owuid._id;
-                dict._rev = owuid._rev;
+        if (value instanceof PersistableObject) {
+            dict.type = value.type;
+            if (value instanceof ObjectWithUUID && include_id_and_rev) {
+                dict._id = value._id;
+                dict._rev = value._rev;
             }
         }
         return dict;
