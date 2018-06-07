@@ -27,10 +27,12 @@ import {PersonAssignmentPageModule} from "../pages/person-assignment/person-assi
 import {PageUtils} from "../pages/page-utils";
 import {SchedulerDatabase} from "../providers/server/db";
 import {DatabaseMaintPageModule} from "../pages/database-maint/database-maint.module";
+import {TabsPage} from "../pages/tabs/tabs";
 
 @NgModule({
     declarations: [
         MyApp,
+        TabsPage,
     ],
     imports: [
         HttpClientModule,
@@ -53,6 +55,7 @@ import {DatabaseMaintPageModule} from "../pages/database-maint/database-maint.mo
     bootstrap: [IonicApp],
     entryComponents: [
         MyApp,
+        TabsPage,
     ],
     providers: [
         StatusBar,

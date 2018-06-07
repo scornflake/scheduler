@@ -1,5 +1,5 @@
 import {BaseStore, find_object_with_name} from "./common/base_model";
-import {action, computed} from "mobx";
+import {action, computed} from "mobx-angular";
 import {Person} from "./people";
 
 export class PeopleStore extends BaseStore<Person> {

@@ -5,7 +5,7 @@ import {RuleFacts} from "./rule_based/rule-facts";
 
 import {Unavailablity} from "./unavailability";
 import * as _ from "lodash";
-import {action, observable} from "mobx";
+import {action, observable} from "mobx-angular";
 import {ObjectValidation} from "./shared";
 import {PersistenceType} from "../providers/server/db-types";
 import {persisted} from "../providers/server/db-decorators";

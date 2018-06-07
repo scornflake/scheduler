@@ -1,5 +1,5 @@
 import {BaseStore, delete_from_array, ObjectWithUUID} from "./common/base_model";
-import {observable} from "mobx";
+import {observable} from "mobx-angular";
 import {Assignment} from "./assignment";
 import {Person} from "./people";
 import {OnThisDate, Rule, UsageWeightedSequential} from "./rule_based/rules";

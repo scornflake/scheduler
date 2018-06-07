@@ -1,6 +1,6 @@
 import {Person} from "./people";
 import {AssignedToRoleCondition, ConditionalRule, Rule, SecondaryAction, WeightedRoles} from "./rule_based/rules";
-import {action, computed} from "mobx";
+import {action, computed} from "mobx-angular";
 import {check_if_undefined, delete_from_array} from "./common/base_model";
 import {dayAndHourForDate} from "./common/date-utils";
 import {Role} from "./role";

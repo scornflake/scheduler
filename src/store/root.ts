@@ -75,6 +75,7 @@ class RootStore {
             this.logger.info("No stored saved state. Starting from fresh.");
         }
 
+
         await this.db.load_into_store<Person>(this.people_store, 'Person');
     }
 

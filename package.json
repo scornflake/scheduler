@@ -6,10 +6,11 @@
   "private": true,
   "scripts": {
     "clean": "ionic-app-scripts clean",
-    "build": "ionic-app-scripts build --copy ./config/copy.config.js",
+    "build": "ionic-app-scripts build --copy ./config/copy.config.js --prod",
     "lint": "ionic-app-scripts lint",
     "ionic:build": "ionic-app-scripts build --copy ./config/copy.config.js",
     "ionic:serve": "ionic-app-scripts serve --copy ./config/copy.config.js",
+    "ionic:prod": "ionic-app-scripts serve --copy ./config/copy.config.js --prod",
     "test": "karma start test-config/karma.conf.js",
     "testwatch": "karma start test-config/karma.conf.js --auto-watch"
   },
@@ -36,6 +37,7 @@
     "@types/pouchdb-find": "^6.3.2",
     "angular-pipes": "^6.5.3",
     "cordova-browser": "5.0.1",
+    "cordova-ios": "4.5.4",
     "cordova-plugin-device": "^1.1.4",
     "cordova-plugin-ionic-webview": "^1.1.16",
     "cordova-plugin-splashscreen": "^4.0.3",

@@ -4,7 +4,7 @@ import {Person} from "../../scheduling/people";
 import {PopoverController} from "ionic-angular";
 import {ReasonsComponent} from "../reasons/reasons";
 import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
-import {computed} from "mobx";
+import {computed} from "mobx-angular";
 import {RootStore} from "../../store/root";
 
 @Component({

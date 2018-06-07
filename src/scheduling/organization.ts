@@ -1,5 +1,5 @@
 import {BaseStore, ObjectWithUUID} from "./common/base_model";
-import {action, observable} from "mobx";
+import {action, observable} from "mobx-angular";
 import {PeopleStore} from "./people-store";
 import {ScheduleWithRules} from "./rule_based/scheduler";
 import {ApplicationRef} from "@angular/core";

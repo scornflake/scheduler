@@ -2,7 +2,7 @@ import {PersistableObject} from "./common/base_model";
 import {dayAndHourForDate} from "./common/date-utils";
 import * as moment from "moment";
 import {persisted} from "../providers/server/db-decorators";
-import {observable} from "mobx";
+import {observable} from "mobx-angular";
 
 
 class Unavailablity extends PersistableObject {

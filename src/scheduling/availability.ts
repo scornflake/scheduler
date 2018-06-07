@@ -5,8 +5,7 @@ import {Logger} from "ionic-logging-service";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {PersistableObject} from "./common/base_model";
 import {persisted} from "../providers/server/db-decorators";
-import {observable} from "mobx";
-import {Unavailablity} from "./unavailability";
+import {observable} from "mobx-angular";
 
 export enum AvailabilityUnit {
     // Models availability such as "every 4 weeks".

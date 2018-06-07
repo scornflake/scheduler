@@ -1,5 +1,5 @@
 import {BaseStore, find_object_with_name} from "./common/base_model";
-import {observable} from "mobx";
+import {observable} from "mobx-angular";
 import {Person} from "./people";
 
 class Team extends BaseStore<Person> {

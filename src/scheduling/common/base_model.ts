@@ -1,4 +1,4 @@
-import {action, observable} from "mobx";
+import {action, observable} from "mobx-angular";
 import * as _ from 'lodash';
 import {isUndefined} from "util";
 import {SafeJSON} from "../../common/json/safe-stringify";
