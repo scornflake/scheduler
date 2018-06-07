@@ -9,17 +9,15 @@ import {action, observable} from "mobx";
 import {ObjectValidation} from "./shared";
 import {PersistenceType} from "../providers/server/db-types";
 import {persisted} from "../providers/server/db-decorators";
+import {ObjectUtils} from "../pages/page-utils";
 
 export class Person extends ObjectWithUUID {
-    @persisted()
-    name: string;
-    @persisted()
-    email: string;
-    @persisted()
-    phone: string;
+    @persisted() @observable name: string;
+    @persisted() @observable email: string;
+    @persisted() @observable phone: string;
 
     @observable @persisted(PersistenceType.NestedObject)
-    availability: Availability;
+    _availability: Availability;
 
     @observable @persisted(PersistenceType.NestedObjectList)
     unavailable: Array<Unavailablity>;
@@ -49,6 +47,17 @@ export class Person extends ObjectWithUUID {
         return this;
     }
 
+    get availability(): Availability {
+        return this._availability;
+    }
+
+    set availability(new_value: Availability) {
+        if (ObjectUtils.deep_equal(this.availability, new_value)) {
+            return;
+        }
+        this._availability = new_value;
+    }
+
     get initials() {
         let words = this.name.split(" ");
         return words.map(w => w[0]).join(".")
@@ -56,11 +65,20 @@ export class Person extends ObjectWithUUID {
 
     @action
     add_unavailable(d: Date, reason = null) {
-        this.unavailable.push(new Unavailablity(d, null, reason));
+        let new_unavail = new Unavailablity(d, null, reason);
+        this._add_unavail(new_unavail);
     }
 
     add_unavailable_range(from: Date, to: Date, reason = null) {
-        this.unavailable.push(new Unavailablity(from, to, reason));
+        let unavailablity = new Unavailablity(from, to, reason);
+        this._add_unavail(unavailablity);
+    }
+
+    private _add_unavail(new_unavail: Unavailablity) {
+        if (this.unavailable.find(u => u.isEqual(new_unavail))) {
+            return;
+        }
+        this.unavailable.push(new_unavail);
     }
 
     remove_unavailable(d: Date) {

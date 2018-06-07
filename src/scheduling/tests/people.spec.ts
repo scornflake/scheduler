@@ -23,6 +23,20 @@ describe('people', () => {
         expect(firstPerson.is_unavailable_on(someDate)).toBeTruthy();
     });
 
+    it('should not add same unavailability twice', function () {
+        firstPerson.add_unavailable(someDate);
+        expect(firstPerson.unavailable.length).toBe(1);
+        firstPerson.add_unavailable(someDate);
+        expect(firstPerson.unavailable.length).toBe(1);
+    });
+
+    it('should not add same unavailability ranges twice', function () {
+        firstPerson.add_unavailable_range(new Date(2010, 5, 1), new Date(2010, 11, 1));
+        expect(firstPerson.unavailable.length).toBe(1);
+        firstPerson.add_unavailable_range(new Date(2010, 5, 1), new Date(2010, 11, 1));
+        expect(firstPerson.unavailable.length).toBe(1);
+    });
+
     it('can add unavailability range', () => {
         expect(firstPerson.is_unavailable_on(someDate)).toBeFalsy();
         firstPerson.add_unavailable_range(new Date(2010, 5, 1), new Date(2010, 11, 1));

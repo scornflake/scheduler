@@ -203,4 +203,23 @@ describe('db', () => {
             });
         })
     });
+
+    it('should store a person with nested availability', function (done) {
+        let me = new Person("Neil");
+        expect(me.availability).not.toBeNull();
+        expect(me.availability.unit).not.toBeNull();
+
+        let dict_obj = db.create_json_from_object(me);
+        console.log(`I made: ${SafeJSON.stringify(dict_obj)}`);
+        expect(false).toBeTruthy();
+
+        db.store_or_update_object(me).then(() => {
+            db.load_object_with_id(me.uuid).then((loaded_obj) => {
+                let reconstructed_dict = db.create_json_from_object(loaded_obj);
+                console.log(`I loaded: ${SafeJSON.stringify(dict_obj)}`);
+                expect(loaded_obj).toEqual(dict_obj);
+                done();
+            })
+        })
+    });
 });

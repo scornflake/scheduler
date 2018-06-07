@@ -5,23 +5,24 @@ import {Logger} from "ionic-logging-service";
 import {BaseStore, ObjectWithUUID, PersistableObject} from "../../scheduling/common/base_model";
 import 'reflect-metadata';
 import {SafeJSON} from "../../common/json/safe-stringify";
-import {autorun, isObservableArray} from "mobx";
 import {PersistenceType} from "./db-types";
 import {
-    create_new_object_of_type,
-    NameOfPersistenceProp,
+    CreateNewObjectOfType,
+    getTheTypeNameOfTheObject,
+    NameForPersistenceProp,
     PersistenceProperty,
     propsMetadataKey,
     REF_PREFIX
 } from "./db-decorators";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {ConfigurationService} from "ionic-configuration-service";
-import {Subject} from "rxjs/Subject";
-import {ReplaySubject} from "rxjs/ReplaySubject";
-import {Observable} from "rxjs/Observable";
-import "rxjs/add/observable/fromPromise";
-import Database = PouchDB.Database;
 import {isUndefined} from "util";
+import {ObjectChange, ObjectChangeTracker} from "./db-change-detection";
+import {Subject} from "rxjs/Subject";
+import {Observable} from "rxjs/Rx";
+import {ReplaySubject} from "rxjs/ReplaySubject";
+import {debounceTime} from "rxjs/operators";
+import Database = PouchDB.Database;
 
 
 @Injectable()
@@ -33,16 +34,17 @@ class SchedulerDatabase {
     logger: Logger;
     private current_indexes: PouchDB.Find.GetIndexesResponse<{}>;
     private db_name: string;
+    private tracker: ObjectChangeTracker;
 
     static ConstructAndWait(configService: ConfigurationService, delete_first: boolean = false): Promise<SchedulerDatabase> {
-        return new Promise<SchedulerDatabase>((resolve, reject) => {
+        return new Promise<SchedulerDatabase>((resolve) => {
             let instance = new SchedulerDatabase(configService);
             instance.logger.info("Starting DB setup for TEST");
 
-            instance.ready_event.subscribe(r => {
+            instance.ready_event.subscribe(() => {
                 if (delete_first) {
                     instance.logger.info("Making sure DB is dead...");
-                    instance.delete_all().then(r => {
+                    instance.delete_all().then(() => {
                         resolve(instance);
                     });
                 } else {
@@ -55,14 +57,20 @@ class SchedulerDatabase {
     constructor(configService: ConfigurationService) {
         let db_config = configService.getValue("database");
         this.db_name = db_config['name'];
-        this.logger = LoggingWrapper.getLogger("store.db");
+        this.logger = LoggingWrapper.getLogger("db");
         PouchDB.plugin(PouchDBFind);
 
         this.logger.info(`Setting up database: ${this.db_name} ...`);
 
         this.ready_event = new ReplaySubject();
+        this.tracker = new ObjectChangeTracker();
 
         this.initialize();
+
+        let changes = this.tracker.changes.pipe(
+            debounceTime(1500)
+        );
+        changes.subscribe(this.trackerNotification.bind(this));
 
         this.ready_event.subscribe(val => {
             if (val) {
@@ -122,9 +130,9 @@ class SchedulerDatabase {
         if (doc['type']) {
             let object_type = doc['type'];
             this.persistence_debug(`load object ${id}, type: ${object_type}`, nesting);
-            let instance = create_new_object_of_type(object_type);
+            let instance = CreateNewObjectOfType(object_type);
             this.convert_from_json_to_object(doc, instance, nesting + 1);
-            return instance;
+            return this.trackChanges(instance);
         }
         throw new Error(`Loaded doc from store with id ${id}, but it doesn't have a 'type' field. Don't know how to turn it into an object!`);
     }
@@ -154,7 +162,7 @@ class SchedulerDatabase {
         if (properties) {
             this.persistence_debug(`Iterating ${properties.length} properties of ${origin.constructor.name}`, nesting);
             properties.forEach(prop => {
-                    this.persistence_debug(`${NameOfPersistenceProp(prop)} - ${prop.name}`, nesting);
+                    this.persistence_debug(`${NameForPersistenceProp(prop)} - ${prop.name}`, nesting);
                     let value = origin[prop.name];
                     result[prop.name] = this._convert_object_value_to_dict(prop, value, nesting + 1);
                 }
@@ -182,41 +190,50 @@ class SchedulerDatabase {
 
     async store_or_update_object(object: ObjectWithUUID, force_rev_check: boolean = false, ignore_not_found: boolean = false): Promise<ObjectWithUUID> {
         // Get the latest rev
-        let object_state = object.is_new ? "new" : "existing";
-        if (object.is_new == false || force_rev_check) {
-            try {
-                let existing = await this.db.get(object._id);
-                if (existing._rev != object._rev) {
-                    // better update it!
-                    this.logger.info(`Updating rev on ${object} because the server is different`);
-                    object._rev = existing._rev;
-                }
-            } catch (err) {
-                if (!ignore_not_found) {
-                    this.logger.error(`Cannot update ${object_state} doc (cannot be read from the db, was it deleted?), ${err}`);
-                    return;
-                }
-            }
+        if (object == null || isUndefined(object)) {
+            throw new Error("Trying to save nothing / undefined?");
         }
 
-        let dict_of_object = this.create_json_from_object(object);
+        this.tracker.disable_tracking_for(object);
         try {
-            let response = await this.db.put(dict_of_object);
+            let object_state = object.is_new ? "new" : "existing";
+            if (object.is_new == false || force_rev_check) {
+                try {
+                    let existing = await this.db.get(object._id);
+                    if (existing._rev != object._rev) {
+                        // better update it!
+                        this.logger.info(`Updating rev on ${object} because the server is different`);
+                        object._rev = existing._rev;
+                    }
+                } catch (err) {
+                    if (!ignore_not_found) {
+                        this.logger.error(`Cannot update ${object_state} doc (cannot be read from the db, was it deleted?), ${err}`);
+                        return;
+                    }
+                }
+            }
 
-            this.logger.info(`Stored ${object_state} object ${object.type} with new ID: ${object._id}`);
-            if (object._id != response.id) {
-                object._id = response.id;
+            let dict_of_object = this.create_json_from_object(object);
+            try {
+                let response = await this.db.put(dict_of_object);
+
+                this.logger.info(`Stored ${object_state} object ${object.type} with new ID: ${object._id}`);
+                if (object._id != response.id) {
+                    object._id = response.id;
+                }
+                if (object._rev != response.rev) {
+                    object._rev = response.rev;
+                }
+                if (object.is_new) {
+                    object.is_new = false;
+                }
+                return object;
+            } catch (err) {
+                this.logger.debug(`Failed to store entity. Err: ${err}. Data: ${SafeJSON.stringify(dict_of_object)}`);
+                throw Error(`Exception while storing ${object_state} type ${object.type}. ${err}. id: ${object.uuid}.`);
             }
-            if (object._rev != response.rev) {
-                object._rev = response.rev;
-            }
-            if (object.is_new) {
-                object.is_new = false;
-            }
-            return object;
-        } catch (err) {
-            this.logger.debug(`Failed to store entity. Err: ${err}. Data: ${SafeJSON.stringify(dict_of_object)}`);
-            throw Error(`Exception while storing ${object_state} type ${object.type}. ${err}. id: ${object.uuid}.`);
+        } finally {
+            this.tracker.enable_tracking_for(object);
         }
     }
 
@@ -231,7 +248,7 @@ class SchedulerDatabase {
 
         if (new_object instanceof ObjectWithUUID) {
             let fields = new_object.update_from_server(json_obj);
-            if(fields.length) {
+            if (fields.length) {
                 this.persistence_debug(`Set ${fields.join("/")} from doc`, nesting);
             }
         }
@@ -264,7 +281,7 @@ class SchedulerDatabase {
                     case PersistenceType.NestedObject: {
                         let new_type = value['type'];
                         this.persistence_debug(`${prop.name} = new instance of ${new_type}`, nesting);
-                        let new_instance = create_new_object_of_type(new_type);
+                        let new_instance = CreateNewObjectOfType(new_type);
                         new_object[prop.name] = this.convert_from_json_to_object(value, new_instance, nesting + 1);
                         break;
                     }
@@ -275,7 +292,7 @@ class SchedulerDatabase {
                         value.forEach(v => {
                             let new_type = v['type'];
                             this.persistence_debug(`creating new instance of ${new_type}`, nesting + 1);
-                            let new_instance = create_new_object_of_type(new_type);
+                            let new_instance = CreateNewObjectOfType(new_type);
                             new_objects.push(this.convert_from_json_to_object(v, new_instance, nesting + 2));
                         });
                         new_object[prop.name] = new_objects;
@@ -305,13 +322,13 @@ class SchedulerDatabase {
         return new_object;
     }
 
-    async load_all_of_type(type: string) {
-        let new_object = create_new_object_of_type(type);
+    private async _load_all_of_type(type: string) {
+        let new_object = CreateNewObjectOfType(type);
         let type_name = new_object.constructor.name;
         let all_objects_of_type = await this.db.find({selector: {type: type_name}});
         this.persistence_debug(`Loading all ${all_objects_of_type.docs.length} objects of type ${type} into object store...`, 0);
         return all_objects_of_type.docs.map(doc => {
-            new_object = create_new_object_of_type(type);
+            new_object = CreateNewObjectOfType(type);
             let new_type = new_object.constructor.name;
             this.persistence_debug(`Creating new object of type ${type} (check ${type} == ${new_type} ... ${type == new_type ? "Yay!" : "Oh. Darn."})...`, 0);
             return this.convert_from_json_to_object(doc, new_object, 1);
@@ -319,15 +336,19 @@ class SchedulerDatabase {
     }
 
     async load_into_store<T extends ObjectWithUUID>(object_store: BaseStore<T>, type: string) {
-        let loaded_objects = await this.load_all_of_type(type);
+        let loaded_objects = await this._load_all_of_type(type);
         loaded_objects.forEach(o => {
             let ooo = o as T;
             if (ooo) {
                 object_store.add_object_to_array(ooo, true);
+                this.trackChanges(ooo);
             } else {
                 this.logger.warn(`Skipped ${o} because its not of the expected type: ${type}`);
             }
         });
+
+        // Also track changes to the store itself
+        this.trackChanges(object_store);
     }
 
     private lookup_object_reference(reference: string, nesting: number = 0) {
@@ -347,14 +368,11 @@ class SchedulerDatabase {
     }
 
     private _convert_to_reference(prop: PersistenceProperty, value: any, nesting: number = 0) {
-        if (Array.isArray(value)) {
-            throw new Error(`REF: Cannot convert ${prop.name} to ${NameOfPersistenceProp(prop)}, it is an array`)
-        }
-        if (isObservableArray(value)) {
-            throw new Error(`REF: Cannot convert ${prop.name} to ${NameOfPersistenceProp(prop)}, it is an mbox array`);
+        if (getTheTypeNameOfTheObject(value) == "array") {
+            throw new Error(`REF: Cannot convert ${prop.name} to ${NameForPersistenceProp(prop)}, it is an array`)
         }
         if (!(value instanceof ObjectWithUUID)) {
-            throw new Error(`REF: Cannot convert ${prop.name} to ${NameOfPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a ObjectWithUUID`);
+            throw new Error(`REF: Cannot convert ${prop.name} to ${NameForPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a ObjectWithUUID`);
         }
         this.persistence_debug(`Convert ${value} to reference`, nesting);
         return this.reference_for_object(value);
@@ -362,7 +380,7 @@ class SchedulerDatabase {
 
     private _convert_to_nested_object_dict(prop: PersistenceProperty, value: any, nesting: number = 0) {
         if (!(value instanceof PersistableObject)) {
-            throw new Error(`NESTED OBJ: Cannot convert ${prop.name} to ${NameOfPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a PersistableObject`);
+            throw new Error(`NESTED OBJ: Cannot convert ${prop.name} to ${NameForPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a PersistableObject`);
         }
         this.persistence_debug(`Converting ${value.constructor.name} by iterating its properties...`, nesting);
         return this._convert_add_type_id_and_rev(this._convert_by_iterating_persistable_properties(value, nesting + 1), value, false, nesting);
@@ -384,19 +402,19 @@ class SchedulerDatabase {
     }
 
     private _convert_to_nested_object_list_of_dict(prop: any, value: any, nesting: number = 0) {
-        if (isObservableArray(value) || Array.isArray(value)) {
+        if (getTheTypeNameOfTheObject(value) == "array") {
             let type_names = Array.from(new Set(value.map(v => v.constructor.name))).join(",");
             this.persistence_debug(`convert nested list of ${value.length} items, types: ${type_names}`, nesting);
             return value.map(v => {
                 return this._convert_by_iterating_persistable_properties(v, nesting + 1);
             });
         } else {
-            throw new Error(`NESTEDLIST: Cannot convert ${prop.name} to ${NameOfPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a list or mbox list`);
+            throw new Error(`NESTEDLIST: Cannot convert ${prop.name} to ${NameForPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a list or mbox list`);
         }
     }
 
     private _convert_to_reference_list(prop: any, value: any, nesting: number = 0) {
-        if (isObservableArray(value) || Array.isArray(value)) {
+        if (getTheTypeNameOfTheObject(value) == "array") {
             let type_names = Array.from(new Set(value.map(v => v.constructor.name))).join(",");
             this.persistence_debug(`convert list of ${value.length} items, types: ${type_names}`, nesting);
             return value.map((v, index) => {
@@ -405,19 +423,67 @@ class SchedulerDatabase {
                 return this._convert_to_reference(indexes_prop, v, nesting + 1);
             });
         } else {
-            throw new Error(`REF: Cannot convert ${prop.name} to ${NameOfPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a list or mbox list`);
+            throw new Error(`REF: Cannot convert ${prop.name} to ${NameForPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a list or mbox list`);
         }
     }
 
-    async delete_object(person: ObjectWithUUID) {
-        if (person.is_new) {
+    async delete_object(object: ObjectWithUUID) {
+        if (object.is_new) {
             throw new Error("Cannot remove object that is 'new' and hasn't been saved yet");
         }
-        return this.db.remove({_id: person.uuid, _rev: person._rev});
+        this.tracker.untrack(object);
+        return this.db.remove({_id: object.uuid, _rev: object._rev});
+    }
+
+    trackChanges(object: any): ObjectWithUUID {
+        if (object instanceof ObjectWithUUID) {
+            this.tracker.track(object);
+        }
+        return object;
+    }
+
+    trackerNotification(thing: ObjectChange) {
+        // Don't worry about the changes per-say, since we're using debounce.
+        // Just go ask the tracker what objects we should save
+        this.tracker.getChangedObjects().forEach((owner) => {
+            if(owner instanceof  ObjectWithUUID) {
+                this.store_or_update_object(owner).then(() => {
+                    this.logger.info(`Save object: ${owner.uuid}`);
+                    this.tracker.clear_changes_for(owner);
+                });
+            }
+            // console.log(`XXXXXXXXX: ${SafeJSON.stringify(owner['uuid'])}`);
+        });
+    }
+
+    bufferedTrackerNotification(bunch_of_changes) {
+        if (bunch_of_changes.length > 0) {
+
+            let objects_by_id = new Map<string, ObjectWithUUID>();
+            bunch_of_changes.forEach((change: ObjectChange) => {
+                let key = change.owner.uuid;
+                let obj = objects_by_id.get(key);
+                if (!obj) {
+                    objects_by_id.set(key, change.owner);
+                } else {
+                    // already got it, skip
+                }
+            });
+
+            console.log(`Got ${bunch_of_changes.length} changes, reduced to ${objects_by_id.size}`);
+            objects_by_id.forEach(owner => {
+                this.logger.info(`Save object: ${owner.uuid}`);
+                // this.store_or_update_object(owner).then(() => {
+                //     this.logger.info(`Save object: ${owner.uuid}`);
+                //     this.tracker.clear_changes_for(owner);
+                // });
+            });
+
+        }
     }
 }
 
 
 export {
-    SchedulerDatabase,
+    SchedulerDatabase
 }

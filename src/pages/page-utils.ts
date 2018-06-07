@@ -1,6 +1,8 @@
 import {ObjectValidation} from "../scheduling/shared";
 import {ToastController} from "ionic-angular";
 import {Injectable} from "@angular/core";
+import deepEqual from "deep-equal";
+
 
 @Injectable()
 class PageUtils {
@@ -18,6 +20,14 @@ class PageUtils {
     }
 }
 
+@Injectable()
+class ObjectUtils {
+    static deep_equal(old_data, new_data): boolean {
+        return deepEqual(old_data, new_data);
+    }
+}
+
 export {
-    PageUtils
+    PageUtils,
+    ObjectUtils
 }

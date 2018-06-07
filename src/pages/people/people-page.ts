@@ -1,5 +1,5 @@
 import {Component, ViewChild} from '@angular/core';
-import {AlertController, IonicPage, NavController} from 'ionic-angular';
+import {IonicPage, NavController} from 'ionic-angular';
 import {RootStore} from "../../store/root";
 import {Person} from "../../scheduling/people";
 import {Logger, LoggingService} from "ionic-logging-service";
@@ -19,7 +19,6 @@ export class PeoplePage {
 
     constructor(public navCtrl: NavController,
                 public logService: LoggingService,
-                public alertCtrl: AlertController,
                 public rootStore: RootStore) {
         this.logger = logService.getLogger('page.people');
     }
@@ -32,11 +31,6 @@ export class PeoplePage {
         return people;
     }
 
-    private add_person(new_person: Person) {
-        this.rootStore.people_store.add_person(new_person);
-        this.rootStore.save_or_update(new_person);
-    }
-
     public show_person_detail(person: Person) {
         this.navCtrl.push('PersonDetailsPage', {person: person})
     }
@@ -47,28 +41,13 @@ export class PeoplePage {
         // this.show_person_detail(this.rootStore.people_store.find_person_with_name("Stuart Campbell"));
     }
 
+    private add_person(new_person: Person) {
+        this.rootStore.people_store.add_person(new_person);
+        this.rootStore.save_or_update(new_person);
+    }
+
     delete_person(person: Person) {
-        let alert = this.alertCtrl.create({
-            message: "Are you sure?",
-            buttons: [
-                {
-                    text: 'Cancel',
-                    handler: () => {
-                    }
-                },
-                {
-                    text: 'Delete',
-                    role: 'cancel',
-                    handler: () => {
-                        alert.dismiss().then(() => {
-                            this.rootStore.people_store.remove_person(person);
-                            this.rootStore.remove_object(person);
-                        });
-                        return false;
-                    },
-                }
-            ]
-        });
-        alert.present()
+        this.rootStore.people_store.remove_person(person);
+        this.rootStore.remove_object(person);
     }
 }

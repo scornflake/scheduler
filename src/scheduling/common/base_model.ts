@@ -1,13 +1,23 @@
-import {action, autorun, observable} from "mobx";
+import {action, observable} from "mobx";
 import * as _ from 'lodash';
 import {isUndefined} from "util";
 import {SafeJSON} from "../../common/json/safe-stringify";
 
-class PersistableObject {
+abstract class PersistableObject {
     @observable type: string;
 
     constructor() {
         this.type = this.constructor.name;
+    }
+
+    isEqual(obj: object): boolean {
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof PersistableObject)) {
+            return false;
+        }
+        return this.type == obj.type;
     }
 }
 
@@ -23,6 +33,15 @@ class ObjectWithUUID extends PersistableObject {
         }
         this.is_new = true;
         this._id = uuid;
+    }
+
+    isEqual(obj: object): boolean {
+        if (!super.isEqual(obj)) {
+            return false;
+        }
+        if (obj instanceof ObjectWithUUID) {
+            return this._id == obj._id && this._rev == obj._rev;
+        }
     }
 
     guid() {
@@ -43,11 +62,11 @@ class ObjectWithUUID extends PersistableObject {
     update_from_server(state) {
         let fields = [];
         // migrate properties to this
-        if(state._id) {
+        if (state._id) {
             this._id = state['_id'];
             fields.push("_id");
         }
-        if(state._rev) {
+        if (state._rev) {
             this._rev = state['_rev'];
             fields.push("_rev");
         }
@@ -57,16 +76,11 @@ class ObjectWithUUID extends PersistableObject {
 }
 
 class BaseStore<T extends ObjectWithUUID> extends ObjectWithUUID {
-    @observable items: Array<T>;
+    items: Array<T>;
 
     constructor() {
         super();
         this.items = [];
-
-        // autorun(() => {
-        //     this.items.slice();
-        //     console.log("DO SOMETHING");
-        // })
     }
 
     @action

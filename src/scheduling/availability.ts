@@ -5,6 +5,8 @@ import {Logger} from "ionic-logging-service";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {PersistableObject} from "./common/base_model";
 import {persisted} from "../providers/server/db-decorators";
+import {observable} from "mobx";
+import {Unavailablity} from "./unavailability";
 
 export enum AvailabilityUnit {
     // Models availability such as "every 4 weeks".
@@ -19,10 +21,8 @@ export enum AvailabilityUnit {
 }
 
 export class Availability extends PersistableObject {
-    @persisted()
-    period: number;
-    @persisted()
-    unit: AvailabilityUnit;
+    @persisted() @observable period: number;
+    @persisted() @observable unit: AvailabilityUnit;
 
     protected logger: Logger;
 
@@ -92,15 +92,25 @@ export class Availability extends PersistableObject {
             return "anytime";
         }
         if (this.period == 1) {
-            return `${!short ? 'Every ' : ''}${this.period} ${this.unit_description(true)} `
+            return `${!short ? 'Every ' : ''}${this.period} ${this.unit_description(true)}`
         }
-        return `${!short ? 'Every ' : ""}${this.period} ${this.unit_description(false)} `
+        return `${!short ? 'Every ' : ""}${this.period} ${this.unit_description(false)}`
     }
+
+    isEqual(obj: object): boolean {
+        if (!super.isEqual(obj)) {
+            return false;
+        }
+        if (obj instanceof Availability) {
+            return this.unit == obj.unit &&
+                this.period == obj.period;
+        }
+    }
+
 }
 
 export class AvailabilityEveryNOfM extends Availability {
-    @persisted()
-    period_to_look_at: number;
+    @persisted() @observable period_to_look_at: number;
 
     constructor(every: number = 1, of_weeks: number = 1) {
         super(every, AvailabilityUnit.EVERY_N_OF_M_WEEKS);
@@ -143,6 +153,15 @@ export class AvailabilityEveryNOfM extends Availability {
             }
         }
         return is_available;
+    }
+
+    isEqual(obj: object): boolean {
+        if (!super.isEqual(obj)) {
+            return false;
+        }
+        if (obj instanceof AvailabilityEveryNOfM) {
+            return this.period_to_look_at == obj.period_to_look_at;
+        }
     }
 
     public toString(): string {

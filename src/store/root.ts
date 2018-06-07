@@ -1,7 +1,7 @@
 import {SavedState, UIStore} from "./UIState";
 import {ApplicationRef, Injectable} from "@angular/core";
 import {Organization, OrganizationStore} from "../scheduling/organization";
-import {Logger, LoggingService} from "ionic-logging-service";
+import {Logger} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
 import {share} from "rxjs/operators";
 import {SafeJSON} from "../common/json/safe-stringify";
@@ -13,8 +13,9 @@ import {NPBCStoreConstruction} from "../providers/store/test.store";
 import {Team} from "../scheduling/teams";
 import {TeamsStore} from "../scheduling/teams-store";
 import {csd} from "../scheduling/common/date-utils";
-import {Person} from "../scheduling/people";
 import {ObjectWithUUID} from "../scheduling/common/base_model";
+import {LoggingWrapper} from "../common/logging-wrapper";
+import {Person} from "../scheduling/people";
 
 @Injectable()
 class RootStore {
@@ -28,10 +29,9 @@ class RootStore {
     private logger: Logger;
 
     constructor(public db: SchedulerDatabase,
-                private loggingService: LoggingService,
                 private appRef: ApplicationRef) {
 
-        this.logger = this.loggingService.getLogger("store");
+        this.logger = LoggingWrapper.getLogger("store");
 
         this.organization_store = new OrganizationStore(this.appRef);
         this.ui_store = new UIStore();
@@ -47,7 +47,7 @@ class RootStore {
     initialize() {
         this.ready_event = Observable.create(obs => {
             // Wait for the DB to be ready, then load data
-            this.db.ready_event.subscribe(r => {
+            this.db.ready_event.subscribe(() => {
                 this.load().then(r => {
                     this.setup_fake_data();
                     this.setupSaving();
@@ -66,7 +66,7 @@ class RootStore {
             let saved_state = await this.db.load_object_with_id('saved-state');
             this.logger.info(`Retrieved state: ${SafeJSON.stringify(saved_state)}`);
             this.ui_store.saved_state = saved_state as SavedState;
-            if(!this.ui_store.saved_state) {
+            if (!this.ui_store.saved_state) {
                 this.logger.warn(`Oh oh, saved state wasn't restored. The returned object was a ${saved_state.constructor.name}... Maybe that's != SavedState?  Have reset it to a NEW SavedState instance.`);
                 this.ui_store.saved_state = new SavedState('saved-state');
             }
@@ -78,7 +78,7 @@ class RootStore {
         await this.db.load_into_store<Person>(this.people_store, 'Person');
     }
 
-    get teams_store():TeamsStore {
+    get teams_store(): TeamsStore {
         return this.organization_store.teams_store;
     }
 
@@ -140,7 +140,7 @@ class RootStore {
     }
 
     remove_object(object: ObjectWithUUID) {
-        this.logger.info(`Deleting object of type ${object.type}, id: ${object.uuid}`)
+        this.logger.info(`Deleting object of type ${object.type}, id: ${object.uuid}`);
         return this.db.delete_object(object);
     }
 }

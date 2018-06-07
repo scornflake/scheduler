@@ -1,5 +1,6 @@
 import {PersistenceType, PersistenceTypeNames} from "./db-types";
 import {ObjectWithUUID, PersistableObject} from "../../scheduling/common/base_model";
+import {isObservableArray, isObservableMap, isObservableObject} from "mobx";
 
 const propsMetadataKey = Symbol('persisted');
 const classesMetadataKey = Symbol('classes');
@@ -8,11 +9,12 @@ const REF_PREFIX: string = 'rrr';
 type PersistenceProperty = { type: PersistenceType, name: string };
 type ClassFactory = { class_name: string, factory: () => any };
 
-function NameOfPersistenceProp(prop: PersistenceProperty) {
+
+function NameForPersistenceProp(prop: PersistenceProperty) {
     return PersistenceTypeNames[prop.type];
 }
 
-function NameOfPersistencePropType(type: PersistenceType) {
+function NameForPersistencePropType(type: PersistenceType) {
     return PersistenceTypeNames[type];
 }
 
@@ -20,12 +22,31 @@ class Us {
 
 }
 
+/*
+    - All people in the people store
+    - know when modified, so I can save, at some pt.
+ */
+
+function getTheTypeNameOfTheObject(object: any): string {
+    if (typeof object !== "object" || !object || !object.constructor) return "";
+    if (object.constructor.name === "ObservableMap") return isObservableMap(object) ? "map" : "";
+    else if (object.constructor.name === "ObservableArray") return isObservableArray(object) ? "array" : "";
+    else return isObservableObject(object) ? "object" : "";
+}
+
 function persisted(type: PersistenceType = PersistenceType.Property): PropertyDecorator {
     function _persisted(target: object, propertyKey: string) {
         let class_name = target.constructor.name;
         if (target.hasOwnProperty('constructor')) {
-            console.debug(`Register property ${propertyKey}, type [${NameOfPersistencePropType(type)}], on class: ${class_name}`);
+            console.debug(`Register property ${propertyKey}, type [${NameForPersistencePropType(type)}], on class: ${class_name}`);
         }
+
+        // Can't have _ properties in persisted pouchdb.
+        // Strip underscores and assume there's a get/setter
+        if (propertyKey.startsWith("_")) {
+            propertyKey = propertyKey.substr(1);
+        }
+
         let properties: PersistenceProperty[] = Reflect.getMetadata(propsMetadataKey, target);
         if (properties) {
             properties.push({type: type, name: propertyKey});
@@ -58,9 +79,9 @@ function persisted(type: PersistenceType = PersistenceType.Property): PropertyDe
     return _persisted;
 }
 
-function create_new_object_of_type(type: string): PersistableObject {
+function CreateNewObjectOfType(type: string): PersistableObject {
     const factories: ClassFactory[] = Reflect.getMetadata(classesMetadataKey, Us);
-    if(!factories) {
+    if (!factories) {
         throw new Error(`Cannot create new ${type}, no factories registered (1)`);
     }
     if (factories.length == 0) {
@@ -68,7 +89,7 @@ function create_new_object_of_type(type: string): PersistableObject {
     }
     let factory = factories.find(cf => cf.class_name == type);
     let instance = factory.factory();
-    if(instance instanceof ObjectWithUUID) {
+    if (instance instanceof ObjectWithUUID) {
         // clear out the _id and _rev, we don't want the defaults
         instance._id = undefined;
         instance._rev = undefined;
@@ -81,6 +102,7 @@ export {
     persisted,
     REF_PREFIX,
     propsMetadataKey,
-    NameOfPersistenceProp,
-    create_new_object_of_type
+    NameForPersistenceProp,
+    CreateNewObjectOfType,
+    getTheTypeNameOfTheObject
 }

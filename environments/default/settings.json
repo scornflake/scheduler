@@ -36,7 +36,11 @@
         "logLevel": "INFO"
       },
       {
-        "loggerName": "store.db",
+        "loggerName": "db",
+        "logLevel": "DEBUG"
+      },
+      {
+        "loggerName": "db.tracking",
         "logLevel": "DEBUG"
       }
     ],

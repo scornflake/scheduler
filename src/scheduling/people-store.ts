@@ -1,5 +1,5 @@
 import {BaseStore, find_object_with_name} from "./common/base_model";
-import {action} from "mobx";
+import {action, computed} from "mobx";
 import {Person} from "./people";
 
 export class PeopleStore extends BaseStore<Person> {
@@ -17,6 +17,7 @@ export class PeopleStore extends BaseStore<Person> {
         this.remove_object_from_array(p);
     }
 
+    @computed
     get people(): Array<Person> {
         return this.items;
     }

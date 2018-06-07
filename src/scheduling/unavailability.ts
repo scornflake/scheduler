@@ -2,15 +2,13 @@ import {PersistableObject} from "./common/base_model";
 import {dayAndHourForDate} from "./common/date-utils";
 import * as moment from "moment";
 import {persisted} from "../providers/server/db-decorators";
+import {observable} from "mobx";
 
 
 class Unavailablity extends PersistableObject {
-    @persisted()
-    from_date: Date = null;
-    @persisted()
-    to_date: Date = null;
-    @persisted()
-    reason: string = null;
+    @persisted() @observable from_date: Date = null;
+    @persisted() @observable to_date: Date = null;
+    @persisted() @observable reason: string = null;
 
     constructor(from: Date = null, to: Date = null, reason = null) {
         super();
@@ -48,6 +46,17 @@ class Unavailablity extends PersistableObject {
         let date_as_moment = moment(date);
         // console.log("Test for " + date_as_moment + " being between " + start + " and " + the_end_date);
         return date_as_moment.isBetween(start, the_end_date, null, "[]");
+    }
+
+    isEqual(obj: object): boolean {
+        if (!super.isEqual(obj)) {
+            return false;
+        }
+        if (obj instanceof Unavailablity) {
+            return this.from_date == obj.from_date &&
+                this.to_date == obj.to_date &&
+                this.reason == obj.reason;
+        }
     }
 }
 

@@ -1,6 +1,8 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../../scheduling/availability";
 import {clamp} from "ionic-angular/util/util";
+import {LoggingWrapper} from "../../common/logging-wrapper";
+import {Logger} from "ionic-logging-service";
 
 @Component({
     selector: 'availability-options',
@@ -10,6 +12,7 @@ export class AvailabilityOptionsComponent {
     _availability: Availability;
     _state = {};
     type: string;
+    private logger: Logger;
 
     get availability(): Availability {
         return this._availability;
@@ -32,6 +35,7 @@ export class AvailabilityOptionsComponent {
     @Output() availabilityChange = new EventEmitter<Availability>();
 
     constructor() {
+        this.logger = LoggingWrapper.getLogger('component.availability');
     }
 
     get state_key(): string {
@@ -108,6 +112,7 @@ export class AvailabilityOptionsComponent {
         } else {
             this.availability = new Availability(days_number, this.state['unit'])
         }
+        // this.logger.info(`Changed avail to ${this.availability}`);
         this.availabilityChange.emit(this.availability);
     }
 }

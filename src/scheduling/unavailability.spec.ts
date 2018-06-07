@@ -1,6 +1,5 @@
 import {dayAndHourForDate, parseDateFromSpreadsheetDate} from "./common/date-utils";
-import {Unavailablity} from        "./unavailability";
-import {SafeJSON} from "../common/json/safe-stringify";
+import {Unavailablity} from "./unavailability";
 
 describe('unavailability', () => {
     it('can parse dates', () => {
@@ -14,6 +13,11 @@ describe('unavailability', () => {
 
     it('can parse null date and get null', function () {
         expect(parseDateFromSpreadsheetDate(null)).toBeNull();
+    });
+
+    it('equality sanity', function () {
+        let unavil = new Unavailablity(new Date(2010, 10, 1));
+        expect(unavil.isEqual(unavil)).toBeTruthy();
     });
 
     it('can model single date', () => {

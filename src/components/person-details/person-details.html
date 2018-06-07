@@ -1,5 +1,5 @@
-<div>
-    <ion-list *ngIf="person != null" no-padding no-margin>
+<div *ngIf="person">
+    <ion-list no-padding no-margin>
         <ion-item>
             <ion-label>Name</ion-label>
             <ion-input placeholder="Joe" [(ngModel)]="person.name"></ion-input>
@@ -16,6 +16,6 @@
 
     <ion-list-header color="light">Availability</ion-list-header>
     <ion-item-group>
-        <availability-options [availability]="person?.availability"></availability-options>
+        <availability-options [(availability)]="person.availability"></availability-options>
     </ion-item-group>
 </div>

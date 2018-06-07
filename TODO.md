@@ -2,6 +2,14 @@ TODO
 ----
 - Make it so scheduler tells you if a required role isn't filled
 
+Storing Data - Probably a good idea!
+----
+- Scenaios
+    - Data is changed by user. Can we detect that and save the owning object?
+    - Data is changed by the outside (e.g: pouch notification updating an object), can we update the object and also UI?
+- At this stage I am going to make the UI manually add/remove objects from the DB. I'm not going to try to make the observed arrays smart.
+
+
 Big Refactor 3 - Is Plan the new Service?
 -----
 - A Service isn't really, because it doesn't define a single time on a day. It defines a **plan** for a whole bunch of services.
