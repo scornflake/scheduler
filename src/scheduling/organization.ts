@@ -5,9 +5,10 @@ import {ScheduleWithRules} from "./rule_based/scheduler";
 import {ApplicationRef} from "@angular/core";
 import {Plan, PlansStore} from "./plan";
 import {TeamsStore} from "./teams-store";
+import {persisted} from "../providers/server/db-decorators";
 
 class Organization extends ObjectWithUUID {
-    @observable name: string;
+    @persisted() @observable name: string;
 
     constructor(name: string) {
         super();
@@ -33,6 +34,10 @@ class OrganizationStore extends BaseStore<Organization> {
         this.teams_store = new TeamsStore();
     }
 
+    get organizations(): Array<Organization> {
+        return this.items;
+    }
+
     @action add_organisation(org: Organization) {
         this.add_object_to_array(org);
     }
@@ -53,6 +58,10 @@ class OrganizationStore extends BaseStore<Organization> {
         this.previous_schedule = schedule;
         this.schedule = null;
         // this.generate_schedule();
+    }
+
+    find_by_name(name: string): Organization {
+        return this.items.find(o => o.name.toLowerCase() == name.toLowerCase());
     }
 }
 

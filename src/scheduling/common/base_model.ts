@@ -77,9 +77,48 @@ class ObjectWithUUID extends PersistableObject {
     }
 }
 
+
+
+/*
+What if I throw away the DB entirely?
+- I loose the 'change detection' thing (maybe I can keep it just for that)
+    - could be replaced with watch.js, keeping the @persisted markers.
+    - I need the @persisted markers to work out what to save.
+    - So no, not reaaaaly easy to kill the DB off, since it arose mainly out of needing to know what to persist an object.
+- I loose the ability to auto persist references / lists of references
+
+ok. so a cache.
+
+Want:
+- DB reads go through the cache.
+- DB writes hit DB then the cache.
+- DB reference lookups use the cache first. If they have to construct, they add to the cache.
+- Pouch updates the cache upon seeing changes.
+
+Um, isn't that what the 'stores' are? Yes, sort of, but there are many.
+
+So, stores:
+- Is it possible to reduce all to a single store, keyed by type?
+- So lookups CAN be by UUID, but there is lookup by type as well (easy enough if
+the store can only track PersistableObjects, as these have a type).
+- This way, we can use a single find_by_uuid.
+- Can still have people(), teams(), etc getters, since we can query by type.
+
+Downsides:
+- All custom methods 'find-by-name, by-xxxx' are harder, cos not all objects have those.
+Maybe remove them? Put them ... elsewhere? Perhaps have store.person.find_by_name, where person is a inner class, exposed... like a Manager in Django.
+- Probably only scales to a few hundred thousand objects, perhaps less.  That's more a memory thing, wouldn't matter if you had many stores / one store.
+
+ */
+
+
+
 class BaseStore<T extends ObjectWithUUID> extends ObjectWithUUID {
-    // @persisted(PersistenceType.ReferenceList) items: Array<T>;
-    items: Array<T>;
+    // organization DOESNT need persisted.
+    // People DOES (but... it's not really managed by the DB directly)
+    // So, Teams shouldn't be managed directly either?
+    @persisted(PersistenceType.ReferenceList) items: Array<T>;
+    // items: Array<T>;
 
     constructor() {
         super();

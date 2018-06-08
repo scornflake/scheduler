@@ -19,10 +19,21 @@ import {
 import {Plan} from "../../scheduling/plan";
 import {PeopleStore} from "../../scheduling/people-store";
 import {Team} from "../../scheduling/teams";
+import {Organization, OrganizationStore} from "../../scheduling/organization";
 
 
 export class NPBCStoreConstruction {
     constructor() {
+    }
+
+    static SetupOrganization(org_store: OrganizationStore, name:string) {
+        let org = org_store.find_by_name(name);
+        if (!org) {
+            let organization = new Organization(name);
+            org_store.add_organisation(organization);
+            return organization;
+        }
+        return null;
     }
 
     static SetupService(service: Plan, team: Team) {

@@ -12,7 +12,7 @@ class TeamsStore extends BaseStore<Team> {
     }
 
 
-    find_team_with_name(name: string, fuzzy_match: boolean = false) {
+    find_by_name(name: string, fuzzy_match: boolean = false) {
         return find_object_with_name(this.items, name, fuzzy_match);
     }
 

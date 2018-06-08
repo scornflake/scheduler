@@ -12,12 +12,12 @@ import {SchedulerDatabase} from "../providers/server/db";
 import {NPBCStoreConstruction} from "../providers/store/test.store";
 import {Team} from "../scheduling/teams";
 import {TeamsStore} from "../scheduling/teams-store";
-import {csd} from "../scheduling/common/date-utils";
 import {ObjectWithUUID} from "../scheduling/common/base_model";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {Person} from "../scheduling/people";
 import {PageUtils} from "../pages/page-utils";
 import {ObjectValidation} from "../scheduling/shared";
+import {csd} from "../scheduling/common/date-utils";
 
 @Injectable()
 class RootStore {
@@ -79,6 +79,11 @@ class RootStore {
         }
 
 
+        /*
+        Can only load stuff when we have our organization (everything depends on that, since it names our shared DB, thus connection to the outside)
+         */
+
+        await this.db.load_into_store<Organization>(this.organization_store, 'Organization');
         await this.db.load_into_store<Person>(this.people_store, 'Person');
         await this.db.load_into_store<Team>(this.teams_store, 'Team');
     }
@@ -114,30 +119,26 @@ class RootStore {
     }
 
     private setup_fake_data() {
-        let organization = new Organization("North Porirua Baptist Church");
-        let org_store = this.organization_store;
-        org_store.add_organisation(organization);
-
-        // Peoples!
-        // this.setup_fake_people();
-
         // make up a default team
-        let team = new Team("Default", this.people_store.people);
-        this.teams_store.add_team(team);
+        let team = this.teams_store.find_by_name("Default");
+        if(team) {
+            // for testing, create some fake
+            let org_store = this.organization_store;
+            org_store.draft_service = org_store.plans_store.add_plan_named("Sunday Morning Service", team);
+            org_store.draft_service.start_date = csd(2018, 6, 3);
+            org_store.draft_service.end_date = csd(2018, 9, 30);
 
-        // for testing, create some fake
-        org_store.draft_service = org_store.plans_store.add_plan_named("Sunday Morning Service", team);
-        org_store.draft_service.start_date = csd(2018, 6, 3);
-        org_store.draft_service.end_date = csd(2018, 9, 30);
+            NPBCStoreConstruction.SetupServiceRoles(org_store.draft_service);
 
-        NPBCStoreConstruction.SetupServiceRoles(org_store.draft_service);
-
-        try {
-            NPBCStoreConstruction.SetupService(org_store.draft_service, team);
-        } catch (e) {
-            // oh oh.
-            let ve = ObjectValidation.simple("Cannot setup store. Is the DB OK? " + e.toString().substr(0, 100));
-            this.pageUtils.show_validation_error(ve, true);
+            try {
+                // NPBCStoreConstruction.SetupService(org_store.draft_service, team);
+            } catch (e) {
+                // oh oh.
+                let ve = ObjectValidation.simple("Cannot setup store. Is the DB OK? " + e.toString().substr(0, 100));
+                this.pageUtils.show_validation_error(ve, true);
+            }
+        } else {
+            this.pageUtils.show_validation_error(ObjectValidation.simple("Cant do schedule cos no team"));
         }
         // ThamesTest.SetupStore(this);
 

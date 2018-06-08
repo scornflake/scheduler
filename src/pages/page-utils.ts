@@ -27,7 +27,7 @@ class PageUtils {
             Object.assign(options, more_options);
         }
         if (!stay_open) {
-            options['delay'] = 3000;
+            options['duration'] = 3000;
         }
         let t = this.toastController.create(options);
         t.present();
