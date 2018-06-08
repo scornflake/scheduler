@@ -20,9 +20,9 @@ class ObjectValidation {
         this.warnings.push(e);
     }
 
-    static simple(personIsRequired: string) {
+    static simple(message: string) {
         let validation = new ObjectValidation();
-        validation.add_error(personIsRequired);
+        validation.add_error(message);
         return validation;
     }
 }

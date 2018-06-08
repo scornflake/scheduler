@@ -64,13 +64,21 @@ class ObjectChangeTracker {
 
     constructor() {
         this.logger = LoggingWrapper.getLogger("db.tracking");
-        this.changes = new Subject<ObjectChange>();
 
-        this.changed_objects = new Map<string, object>();
+        this.clearAll();
+
         this.notification_listener = (change: ObjectChange) => {
             defaultLoggingChangeListener(change);
             this.changes.next(change);
         };
+    }
+
+    clearAll() {
+        this.changes = new Subject<ObjectChange>();
+        this.changed_objects = new Map<string, object>();
+        this.tracked_objects = new Map<string, object>();
+        this.tracking_disabled = new Map<string, boolean>();
+        this.nesting = 0;
     }
 
     /*
@@ -174,11 +182,11 @@ class ObjectChangeTracker {
             /*
             Ignore changes to '_rev'
              */
-            if(change.name == '_rev') {
+            if (change.name == '_rev') {
                 return;
             }
 
-            if(this.tracking_disabled.get(owner.uuid)) {
+            if (this.tracking_disabled.get(owner.uuid)) {
                 this.tracking_debug(`ignore change for ${owner.uuid}, tracking disabled`);
                 return;
             }
@@ -186,7 +194,7 @@ class ObjectChangeTracker {
             // Record that this object has changed (doesn't record the ACTUAL change, but the root owner)
             // Intention is that if you wanted, you can get all changed objects and save them. You'd be saving each ROOT object, which would save it's nested objects
             // thus picking up all changes
-            if(owner) {
+            if (owner) {
                 this.changed_objects.set(owner.uuid, owner);
             }
 
@@ -200,16 +208,20 @@ class ObjectChangeTracker {
     }
 
     disable_tracking_for(object: ObjectWithUUID) {
-        if(object) {
+        if (object) {
             this.tracking_disabled.set(object.uuid, true);
         }
     }
 
     enable_tracking_for(object: ObjectWithUUID) {
-        if(object) {
+        if (object) {
             this.tracking_disabled.delete(object.uuid);
+
+            // try to track it. If we already are, the call will return without doing anything.
+            this.track(object);
         }
     }
+
 }
 
 export {

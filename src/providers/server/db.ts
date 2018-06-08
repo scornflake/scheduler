@@ -130,8 +130,13 @@ class SchedulerDatabase {
     }
 
     async delete_all() {
+        this.tracker.clearAll();
         await this.db.destroy();
-        await this.initialize();
+
+        /*
+        Must reload the page / app, to get a new DB.
+         */
+        location.reload();
     }
 
     private index_exists(name: string): boolean {

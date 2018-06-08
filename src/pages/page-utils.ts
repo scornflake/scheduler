@@ -10,12 +10,16 @@ class PageUtils {
 
     }
 
-    public show_validation_error(validation: ObjectValidation) {
-        let t = this.toastController.create({
+    public show_validation_error(validation: ObjectValidation, stay_open: boolean = false) {
+        let options = {
             message: validation.errors.join(", "),
-            duration: 3000,
-            cssClass: 'validation'
-        });
+            cssClass: 'validation',
+            showCloseButton: stay_open
+        };
+        if (!stay_open) {
+            options['delay'] = 3000;
+        }
+        let t = this.toastController.create(options);
         t.present();
     }
 }

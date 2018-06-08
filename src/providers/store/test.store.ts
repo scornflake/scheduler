@@ -53,6 +53,7 @@ export class NPBCStoreConstruction {
         let jeremy_w = team.find_person_with_name("Jeremy Watson");
         let john_sutherland = team.find_person_with_name("John Sutherland");
 
+
         /*
         Add unavailability here
          */

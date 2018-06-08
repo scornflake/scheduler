@@ -16,6 +16,8 @@ import {csd} from "../scheduling/common/date-utils";
 import {ObjectWithUUID} from "../scheduling/common/base_model";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {Person} from "../scheduling/people";
+import {PageUtils} from "../pages/page-utils";
+import {ObjectValidation} from "../scheduling/shared";
 
 @Injectable()
 class RootStore {
@@ -29,6 +31,7 @@ class RootStore {
     private logger: Logger;
 
     constructor(public db: SchedulerDatabase,
+                public pageUtils: PageUtils,
                 private appRef: ApplicationRef) {
 
         this.logger = LoggingWrapper.getLogger("store");
@@ -127,7 +130,14 @@ class RootStore {
         org_store.draft_service.end_date = csd(2018, 9, 30);
 
         NPBCStoreConstruction.SetupServiceRoles(org_store.draft_service);
-        NPBCStoreConstruction.SetupService(org_store.draft_service, team);
+
+        try {
+            NPBCStoreConstruction.SetupService(org_store.draft_service, team);
+        } catch (e) {
+            // oh oh.
+            let ve = ObjectValidation.simple("Cannot setup store. Is the DB OK? " + e);
+            this.pageUtils.show_validation_error(ve, true);
+        }
         // ThamesTest.SetupStore(this);
 
     }
