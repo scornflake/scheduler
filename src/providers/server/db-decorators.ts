@@ -22,11 +22,6 @@ class Us {
 
 }
 
-/*
-    - All people in the people store
-    - know when modified, so I can save, at some pt.
- */
-
 function getTheTypeNameOfTheObject(object: any): string {
     if (typeof object !== "object" || !object || !object.constructor) return "";
     if (object.constructor.name === "ObservableMap") return isObservableMap(object) ? "map" : "";

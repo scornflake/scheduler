@@ -1,0 +1,18 @@
+saving-state {
+  div#saveline {
+    height: 1px !important;
+    display: block;
+
+    &.done {
+      background: map-get($colors, 'secondary');
+    }
+
+    &.saving, &.changed {
+      background: map-get($colors, 'warning');
+    }
+
+    &.idle {
+      background: #b2b2b2;
+    }
+  }
+}

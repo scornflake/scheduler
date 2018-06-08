@@ -1,8 +1,8 @@
 import {Component, ViewChild} from '@angular/core';
 import {IonicPage, NavController} from 'ionic-angular';
-import {RootStore} from "../../store/root";
 import {Person} from "../../scheduling/people";
 import {Logger, LoggingService} from "ionic-logging-service";
+import {RootStore} from "../../store/root";
 
 @IonicPage({
     name: 'page-people',
@@ -18,8 +18,9 @@ export class PeoplePage {
     private logger: Logger;
 
     constructor(public navCtrl: NavController,
-                public logService: LoggingService,
-                public rootStore: RootStore) {
+                public rootStore: RootStore,
+                public logService: LoggingService
+    ) {
         this.logger = logService.getLogger('page.people');
     }
 

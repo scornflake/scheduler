@@ -24,9 +24,16 @@ import {ReplaySubject} from "rxjs/ReplaySubject";
 import {debounceTime} from "rxjs/operators";
 import Database = PouchDB.Database;
 
+enum SavingState {
+    Idle = 0,  // No changes
+    ChangeDetected = 1, // changes were begun
+    StartedSaving = 2, // changes were begun
+    FinishedSaving = 3, // changes completed ok!
+}
 
 @Injectable()
 class SchedulerDatabase {
+    save_notifications = new Subject<SavingState>();
     ready_event: Subject<boolean>;
 
     private db: Database<{}>;
@@ -67,6 +74,12 @@ class SchedulerDatabase {
 
         this.initialize();
 
+        // This is so we can output a single stream of 'idle, change waiting, saving/done'
+        this.tracker.changes.subscribe(() => {
+            this.save_notifications.next(SavingState.ChangeDetected);
+        });
+
+        // This is so we can kick off a save some time after the change occurs
         let changes = this.tracker.changes.pipe(
             debounceTime(1500)
         );
@@ -79,6 +92,10 @@ class SchedulerDatabase {
                 this.logger.info("DB is NOT ready");
             }
         });
+    }
+
+    get is_saving(): boolean {
+        return false;
     }
 
     async initialize(destroy_first: boolean = false) {
@@ -195,6 +212,7 @@ class SchedulerDatabase {
         }
 
         this.tracker.disable_tracking_for(object);
+        this.save_notifications.next(SavingState.StartedSaving);
         try {
             let object_state = object.is_new ? "new" : "existing";
             if (object.is_new == false || force_rev_check) {
@@ -234,6 +252,7 @@ class SchedulerDatabase {
             }
         } finally {
             this.tracker.enable_tracking_for(object);
+            this.save_notifications.next(SavingState.FinishedSaving);
         }
     }
 
@@ -446,7 +465,7 @@ class SchedulerDatabase {
         // Don't worry about the changes per-say, since we're using debounce.
         // Just go ask the tracker what objects we should save
         this.tracker.getChangedObjects().forEach((owner) => {
-            if(owner instanceof  ObjectWithUUID) {
+            if (owner instanceof ObjectWithUUID) {
                 this.store_or_update_object(owner).then(() => {
                     this.logger.info(`Save object: ${owner.uuid}`);
                     this.tracker.clear_changes_for(owner);
@@ -455,35 +474,10 @@ class SchedulerDatabase {
             // console.log(`XXXXXXXXX: ${SafeJSON.stringify(owner['uuid'])}`);
         });
     }
-
-    bufferedTrackerNotification(bunch_of_changes) {
-        if (bunch_of_changes.length > 0) {
-
-            let objects_by_id = new Map<string, ObjectWithUUID>();
-            bunch_of_changes.forEach((change: ObjectChange) => {
-                let key = change.owner.uuid;
-                let obj = objects_by_id.get(key);
-                if (!obj) {
-                    objects_by_id.set(key, change.owner);
-                } else {
-                    // already got it, skip
-                }
-            });
-
-            console.log(`Got ${bunch_of_changes.length} changes, reduced to ${objects_by_id.size}`);
-            objects_by_id.forEach(owner => {
-                this.logger.info(`Save object: ${owner.uuid}`);
-                // this.store_or_update_object(owner).then(() => {
-                //     this.logger.info(`Save object: ${owner.uuid}`);
-                //     this.tracker.clear_changes_for(owner);
-                // });
-            });
-
-        }
-    }
 }
 
 
 export {
-    SchedulerDatabase
+    SchedulerDatabase,
+    SavingState
 }

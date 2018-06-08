@@ -21,7 +21,6 @@ export class PlansPage {
     }
 
     ionViewDidLoad() {
-
         // for debugging
         // this.show_plan_detail(this.plans[0])
     }

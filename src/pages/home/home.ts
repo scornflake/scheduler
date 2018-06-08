@@ -28,7 +28,7 @@ export class HomePage {
                 private loggingService: LoggingService,
                 private sheetAPI: GAPIS,
                 private server: ServerProvider,
-                private rootStore: RootStore) {
+                public rootStore: RootStore) {
         this.logger = this.loggingService.getLogger("home");
     }
 

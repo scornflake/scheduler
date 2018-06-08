@@ -105,7 +105,7 @@ class RootStore {
         });
         this.regenerator = autorun(() => {
             this.logger.info("Generate schedule...");
-            this.organization_store.generate_schedule();
+            // this.organization_store.generate_schedule();
         });
     }
 
