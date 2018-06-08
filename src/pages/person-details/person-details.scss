@@ -6,3 +6,8 @@ page-person-details {
     background: red !important;
   }
 }
+.success {
+  > div {
+    background: green !important;
+  }
+}

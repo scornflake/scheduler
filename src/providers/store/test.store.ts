@@ -209,33 +209,44 @@ export class NPBCStoreConstruction {
             .add_role(defaultComputerRole, 2)
     }
 
-    static SetupPeople(people_store: PeopleStore) {
-        people_store.add_person(new Person("Neil Clayton"));
-        people_store.add_person(new Person("Cherilyn Clayton"));
-        people_store.add_person(new Person("Kylie Welch-Herekiuha"));
-        people_store.add_person(new Person("Christine Edlin"));
-        people_store.add_person(new Person("Stuart Campbell"));
-        people_store.add_person(new Person("Jeremy Selfe"));
+    static SetupPeople(people_store: PeopleStore): Array<Person> {
+        let people_added = [];
 
-        people_store.add_person(new Person("Daniel Gibbs"));
-        people_store.add_person(new Person("Ben Watson"));
-        people_store.add_person(new Person("Courtney Anderson"));
-        people_store.add_person(new Person("Rob Sweeney"));
-        people_store.add_person(new Person("Rob Penhey"));
-        people_store.add_person(new Person("Dave Humphries"));
-        people_store.add_person(new Person("Ralph Lambert"));
-        people_store.add_person(new Person("Anita Lambert"));
-        people_store.add_person(new Person("Annie McMullen"));
-        people_store.add_person(new Person("Jo Marquet"));
-        people_store.add_person(new Person("Allie Pope"));
-        people_store.add_person(new Person("Craig Campbell"));
+        function aint(name: string) {
+            if (people_store.find_person_with_name(name) == null) {
+                let p = people_store.add_person(new Person(name));
+                people_added.push(p);
+            }
+        }
 
-        people_store.add_person(new Person("Chris Evans"));
-        people_store.add_person(new Person("Jeremy Legg"));
-        people_store.add_person(new Person("Andre Legg"));
-        people_store.add_person(new Person("Suzie Legg"));
-        people_store.add_person(new Person("Jeremy Watson"));
-        people_store.add_person(new Person("John Sutherland"));
+        aint("Neil Clayton");
+        aint("Cherilyn Clayton");
+        aint("Kylie Welch-Herekiuha");
+        aint("Christine Edlin");
+        aint("Stuart Campbell");
+        aint("Jeremy Selfe");
+
+        aint("Daniel Gibbs");
+        aint("Ben Watson");
+        aint("Courtney Anderson");
+        aint("Rob Sweeney");
+        aint("Rob Penhey");
+        aint("Dave Humphries");
+        aint("Ralph Lambert");
+        aint("Anita Lambert");
+        aint("Annie McMullen");
+        aint("Jo Marquet");
+        aint("Allie Pope");
+        aint("Craig Campbell");
+
+        aint("Chris Evans");
+        aint("Jeremy Legg");
+        aint("Andre Legg");
+        aint("Suzie Legg");
+        aint("Jeremy Watson");
+        aint("John Sutherland");
+
+        return people_added;
     }
 
     static SetupServiceRoles(service: Plan) {

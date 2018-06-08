@@ -80,6 +80,7 @@ class RootStore {
 
 
         await this.db.load_into_store<Person>(this.people_store, 'Person');
+        await this.db.load_into_store<Team>(this.teams_store, 'Team');
     }
 
     get teams_store(): TeamsStore {
@@ -135,7 +136,7 @@ class RootStore {
             NPBCStoreConstruction.SetupService(org_store.draft_service, team);
         } catch (e) {
             // oh oh.
-            let ve = ObjectValidation.simple("Cannot setup store. Is the DB OK? " + e);
+            let ve = ObjectValidation.simple("Cannot setup store. Is the DB OK? " + e.toString().substr(0, 100));
             this.pageUtils.show_validation_error(ve, true);
         }
         // ThamesTest.SetupStore(this);

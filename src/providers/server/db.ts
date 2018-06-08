@@ -98,14 +98,8 @@ class SchedulerDatabase {
         return false;
     }
 
-    async initialize(destroy_first: boolean = false) {
+    async initialize() {
         this.db = await new PouchDB(this.db_name);
-
-        if (destroy_first) {
-            console.log("Destroying DB...");
-            await this.delete_all();
-            this.db = await new PouchDB(this.db_name);
-        }
 
         this.logger.info("Getting DB information");
         let info = await this.db.info();

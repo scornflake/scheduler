@@ -2,6 +2,8 @@ import {action, observable} from "mobx-angular";
 import * as _ from 'lodash';
 import {isUndefined} from "util";
 import {SafeJSON} from "../../common/json/safe-stringify";
+import {persisted} from "../../providers/server/db-decorators";
+import {PersistenceType} from "../../providers/server/db-types";
 
 abstract class PersistableObject {
     @observable type: string;
@@ -76,6 +78,7 @@ class ObjectWithUUID extends PersistableObject {
 }
 
 class BaseStore<T extends ObjectWithUUID> extends ObjectWithUUID {
+    // @persisted(PersistenceType.ReferenceList) items: Array<T>;
     items: Array<T>;
 
     constructor() {
@@ -133,7 +136,7 @@ function check_if_undefined(thing, message) {
     }
 }
 
-function try_find_single_person_with(list, callback) {
+function try_find_single_person_with(list, name: string, callback) {
     let results = list.filter(callback);
     if (results.length) {
         if (results.length > 1) {
@@ -145,19 +148,19 @@ function try_find_single_person_with(list, callback) {
 }
 
 function find_object_with_name(list: Array<any>, name: string, fuzzy_match: boolean = false) {
-    if (isUndefined(name)) {
+    if (isUndefined(name) || name == null || name == "") {
         return null;
     }
-    let person = try_find_single_person_with(list, obj => obj.name.toLocaleLowerCase() == name.toLocaleLowerCase());
+    let person = try_find_single_person_with(list, name, obj => obj.name.toLocaleLowerCase() == name.toLocaleLowerCase());
     if (!person && fuzzy_match) {
-        person = try_find_single_person_with(list, obj => obj.name.toLocaleLowerCase().startsWith(name.toLocaleLowerCase()));
+        person = try_find_single_person_with(list, name, obj => obj.name.toLocaleLowerCase().startsWith(name.toLocaleLowerCase()));
         if (!person) {
             // Try first word and first char of 2nd word
             let terms = name.split(' ');
             if (terms.length > 1) {
                 let search = `${terms[0]} ${terms[1][0]}`.toLocaleLowerCase();
                 // console.log(`Try ${search} for ${name}`);
-                person = try_find_single_person_with(list, obj => obj.name.toLocaleLowerCase().startsWith(search));
+                person = try_find_single_person_with(list, name, obj => obj.name.toLocaleLowerCase().startsWith(search));
             }
         }
     }

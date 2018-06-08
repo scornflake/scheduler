@@ -1,9 +1,10 @@
 import {BaseStore, find_object_with_name} from "./common/base_model";
 import {observable} from "mobx-angular";
 import {Person} from "./people";
+import {persisted} from "../providers/server/db-decorators";
 
 class Team extends BaseStore<Person> {
-    @observable name: string;
+    @persisted() @observable name: string;
 
     constructor(name: string, people: Array<Person> = []) {
         super();

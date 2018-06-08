@@ -6,6 +6,7 @@ import {PersistenceType} from "../../providers/server/db-types";
 import {MockConfigurationService} from "../../app/logging-configuration";
 import {observable} from "mobx";
 import {SafeJSON} from "../../common/json/safe-stringify";
+import {TeamsStore} from "../../scheduling/teams-store";
 
 class SomeEntity extends ObjectWithUUID {
     @persisted() some_field: string = "a value";
@@ -175,7 +176,7 @@ describe('db', () => {
         let nested_one = instance.my_list[0];
         let nested_two = instance.my_list[1];
         let nested_three = instance.my_list[2];
-        db.store_or_update_object(instance).then(stored_instance => {
+        db.store_or_update_object(instance).then(() => {
             // load it and check we get it back
             db.load_object_with_id(instance.uuid).then(loaded_instance => {
                 console.log(`Got back a loaded object: ${SafeJSON.stringify(loaded_instance)}`);
@@ -204,6 +205,17 @@ describe('db', () => {
         })
     });
 
+    it('items of a BaseStore should still be observable after "remove" is called', function () {
+        /*
+        remove assigns a NEW list to this.items.
+        want to make sure it's still observable
+         */
+        function test_is_observable(list) {
+
+        }
+        let team_store = new TeamsStore();
+    });
+
     it('should store a person with nested availability', function (done) {
         let me = new Person("Neil");
         expect(me.availability).not.toBeNull();
@@ -211,13 +223,16 @@ describe('db', () => {
 
         let dict_obj = db.create_json_from_object(me);
         console.log(`I made: ${SafeJSON.stringify(dict_obj)}`);
-        expect(false).toBeTruthy();
 
         db.store_or_update_object(me).then(() => {
             db.load_object_with_id(me.uuid).then((loaded_obj) => {
                 let reconstructed_dict = db.create_json_from_object(loaded_obj);
+
+                // need to make this the same this for the equal to work
+                reconstructed_dict['_rev'] = undefined;
+
                 console.log(`I loaded: ${SafeJSON.stringify(dict_obj)}`);
-                expect(loaded_obj).toEqual(dict_obj);
+                expect(reconstructed_dict).toEqual(dict_obj);
                 done();
             })
         })

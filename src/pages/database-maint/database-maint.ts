@@ -3,6 +3,7 @@ import {AlertController, IonicPage, NavController, NavParams} from 'ionic-angula
 import {SchedulerDatabase} from "../../providers/server/db";
 import {RootStore} from "../../store/root";
 import {NPBCStoreConstruction} from "../../providers/store/test.store";
+import {PageUtils} from "../page-utils";
 
 @IonicPage({
     name: 'page-db',
@@ -17,6 +18,7 @@ export class DatabaseMaintPage {
     constructor(public navCtrl: NavController,
                 public alertCtrl: AlertController,
                 public rootStore: RootStore,
+                public pageUtils: PageUtils,
                 public navParams: NavParams,
                 public db: SchedulerDatabase) {
     }
@@ -34,8 +36,9 @@ export class DatabaseMaintPage {
         alert.addButton({
             text: "Yes",
             handler: () => {
-                this.db.initialize(true);
-                this.rootStore.load();
+                this.db.delete_all();
+
+                // does a reload, so no need to take action after
             }
         });
         alert.present();
@@ -49,11 +52,12 @@ export class DatabaseMaintPage {
     }
 
     store_fake_data() {
-        // Store unavailabilty for all people. Hmm. Do I want this as a ref?
-        NPBCStoreConstruction.SetupPeople(this.rootStore.people_store);
-
-        for (let person of this.rootStore.people_store.people) {
+        let people_added = NPBCStoreConstruction.SetupPeople(this.rootStore.people_store);
+        for (let person of people_added) {
             this.db.store_or_update_object(person);
+        }
+        if (people_added.length > 0) {
+            this.pageUtils.show_message(`${people_added.length} people added`);
         }
     }
 }

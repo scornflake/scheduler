@@ -1,6 +1,7 @@
 import {PersistenceType, PersistenceTypeNames} from "./db-types";
 import {ObjectWithUUID, PersistableObject} from "../../scheduling/common/base_model";
 import {isObservableArray, isObservableMap, isObservableObject} from "mobx";
+import {isArray} from "util";
 
 const propsMetadataKey = Symbol('persisted');
 const classesMetadataKey = Symbol('classes');
@@ -26,6 +27,7 @@ function getTheTypeNameOfTheObject(object: any): string {
     if (typeof object !== "object" || !object || !object.constructor) return "";
     if (object.constructor.name === "ObservableMap") return isObservableMap(object) ? "map" : "";
     else if (object.constructor.name === "ObservableArray") return isObservableArray(object) ? "array" : "";
+    else if (isArray(object)) return "array";
     else return isObservableObject(object) ? "object" : "";
 }
 
