@@ -5,7 +5,6 @@ import {Assignment} from "./assignment";
 import {isUndefined} from "util";
 import {delete_from_array} from "./common/base_model";
 import {Role} from "./role";
-import {SafeJSON} from "../common/json/safe-stringify";
 
 class ObjectValidation {
     errors: string[] = new Array<string>();

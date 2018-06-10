@@ -59,6 +59,7 @@ class SchedulerDatabase {
 
     constructor(configService: ConfigurationService, mapper: OrmMapper) {
         let db_config = configService.getValue("database");
+
         this.mapper = mapper;
         this.db_name = db_config['name'];
         this.logger = LoggingWrapper.getLogger("db");

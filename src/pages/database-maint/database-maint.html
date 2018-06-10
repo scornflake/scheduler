@@ -21,7 +21,7 @@
     <ion-list>
         <ion-list-header>Reflection</ion-list-header>
         <ion-item *ngFor="let i of classFactories">
-            <h2 col-3>Class {{i.class_name}}</h2>
+            <h2 col-3>Class {{i.name}}</h2>
             <p text-right *ngFor="let p of propertiesFor(i)">{{p}}</p>
         </ion-item>
     </ion-list>

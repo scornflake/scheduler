@@ -29,6 +29,8 @@ import {DatabaseMaintPageModule} from "../pages/database-maint/database-maint.mo
 import {TabsPage} from "../pages/tabs/tabs";
 import {OrmMapper} from "../providers/mapping/orm-mapper";
 import {scheduler_db_map} from "../assets/db.mapping";
+import {SchedulerObjectStore} from "../scheduling/common/scheduler-store";
+import {SchedulerDatabase} from "../providers/server/db";
 
 export function setupMapper(): OrmMapper {
     let mapper = new OrmMapper();
@@ -65,23 +67,23 @@ export function setupMapper(): OrmMapper {
         TabsPage,
     ],
     providers: [
-        StatusBar,
-        SplashScreen,
-        RootStore,
         {
             provide: OrmMapper,
             useFactory: setupMapper,
             deps: [],
-            multi: true
         },
-        PageUtils,
-        ConfigurationService,
         {
             provide: APP_INITIALIZER,
             useFactory: loadConfiguration,
             deps: [ConfigurationService],
             multi: true
         },
+        StatusBar,
+        SplashScreen,
+        RootStore,
+        PageUtils,
+        SchedulerDatabase,
+        ConfigurationService,
         {provide: ErrorHandler, useClass: IonicErrorHandler},
         LoggingService,
         GAPIS,
