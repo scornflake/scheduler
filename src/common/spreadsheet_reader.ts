@@ -4,23 +4,23 @@ import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import * as moment from "moment";
 import {Moment} from "moment";
 import {Logger} from "ionic-logging-service";
-import {OrganizationStore} from "../scheduling/organization";
 import {LoggingWrapper} from "./logging-wrapper";
 import {SafeJSON} from "./json/safe-stringify";
 import {Plan} from "../scheduling/plan";
 import {Team} from "../scheduling/teams";
 import {NPBCStoreConstruction} from "../providers/store/test.store";
+import {PeopleManager} from "../scheduling/common/scheduler-store";
 
 export class SpreadsheetReader {
     problems: Map<string, Set<string>>;
     schedule: ScheduleWithRules;
     private logger: Logger;
-    private organization_store: OrganizationStore;
+    private people: PeopleManager;
 
-    constructor(org_store: OrganizationStore) {
+    constructor(ppl_manager: PeopleManager) {
         this.problems = new Map<string, Set<string>>();
         this.logger = LoggingWrapper.getLogger("spreadsheet.reader");
-        this.organization_store = org_store;
+        this.people = ppl_manager;
     }
 
     parse_schedule_from_spreadsheet(rowData: Array<any>) {
@@ -55,8 +55,6 @@ export class SpreadsheetReader {
         this.schedule = new ScheduleWithRules(plan);
 
         // Now we read each row and add people into various roles/positions
-        let people_store = this.organization_store.people_store;
-
         for (let row of dataRows) {
             // Iterate all the roles that we know of
             let current_date = null;
@@ -103,12 +101,12 @@ export class SpreadsheetReader {
                                     continue;
                                 }
 
-                                let person = people_store.find_person_with_name(persons_name, true);
+                                let person = this.people.findByNameFuzzy(persons_name);
                                 if (person == null) {
                                     this.add_problem("person", `cannot find ${persons_name}`);
                                 } else {
                                     // Make sure they are part of the team
-                                    team.get_or_add_person(person);
+                                    team.getOrAddPerson(person);
 
                                     let assignment = plan.assignment_for(person).add_role(role);
                                     this.schedule.facts.place_person_in_role(assignment, role, current_date, true, false);

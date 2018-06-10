@@ -3,8 +3,8 @@ import {throwOnInvalidDate} from "./common/date-utils";
 import {RuleFacts} from "./rule_based/rule-facts";
 import {Logger} from "ionic-logging-service";
 import {LoggingWrapper} from "../common/logging-wrapper";
-import {PersistableObject} from "./common/base_model";
-import {persisted} from "../providers/server/db-decorators";
+import {TypedObject} from "./common/base_model";
+import {registerFactory} from "../providers/server/db-decorators";
 import {observable} from "mobx-angular";
 
 export enum AvailabilityUnit {
@@ -19,9 +19,10 @@ export enum AvailabilityUnit {
     EVERY_N_OF_M_WEEKS = 'every_n_of_m',
 }
 
-export class Availability extends PersistableObject {
-    @persisted() @observable period: number;
-    @persisted() @observable unit: AvailabilityUnit;
+@registerFactory
+export class Availability extends TypedObject {
+    @observable period: number;
+    @observable unit: AvailabilityUnit;
 
     protected logger: Logger;
 
@@ -108,8 +109,9 @@ export class Availability extends PersistableObject {
 
 }
 
+@registerFactory
 export class AvailabilityEveryNOfM extends Availability {
-    @persisted() @observable period_to_look_at: number;
+    @observable period_to_look_at: number;
 
     constructor(every: number = 1, of_weeks: number = 1) {
         super(every, AvailabilityUnit.EVERY_N_OF_M_WEEKS);

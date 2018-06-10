@@ -1,15 +1,12 @@
-import {PersistenceType, PersistenceTypeNames} from "./db-types";
-import {ObjectWithUUID, PersistableObject} from "../../scheduling/common/base_model";
+import {PersistenceProperty, PersistenceType, PersistenceTypeNames} from "./db-types";
+import {ObjectWithUUID, TypedObject} from "../../scheduling/common/base_model";
 import {isObservableArray, isObservableMap, isObservableObject} from "mobx";
-import {isArray} from "util";
+import {isArray, isUndefined} from "util";
 
-const propsMetadataKey = Symbol('persisted');
 const classesMetadataKey = Symbol('classes');
 const REF_PREFIX: string = 'rrr';
 
-type PersistenceProperty = { type: PersistenceType, name: string };
 type ClassFactory = { class_name: string, factory: () => any };
-
 
 function NameForPersistenceProp(prop: PersistenceProperty) {
     return PersistenceTypeNames[prop.type];
@@ -23,7 +20,7 @@ class Us {
 
 }
 
-function getTheTypeNameOfTheObject(object: any): string {
+function GetTheTypeNameOfTheObject(object: any): string {
     if (typeof object !== "object" || !object || !object.constructor) return "";
     if (object.constructor.name === "ObservableMap") return isObservableMap(object) ? "map" : "";
     else if (object.constructor.name === "ObservableArray") return isObservableArray(object) ? "array" : "";
@@ -31,52 +28,66 @@ function getTheTypeNameOfTheObject(object: any): string {
     else return isObservableObject(object) ? "object" : "";
 }
 
-function persisted(type: PersistenceType = PersistenceType.Property): PropertyDecorator {
-    function _persisted(target: object, propertyKey: string) {
-        let class_name = target.constructor.name;
-        if (target.hasOwnProperty('constructor')) {
-            console.debug(`Register property ${propertyKey}, type [${NameForPersistencePropType(type)}], on class: ${class_name}`);
-        }
+function registerFactory(target: any) {
+    if (isUndefined(target)) {
+        throw new Error("Huh? Trying to decorate undefined?");
+    }
+    // save a reference to the original constructor
+    let original = target;
 
-        // Can't have _ properties in persisted pouchdb.
-        // Strip underscores and assume there's a get/setter
-        if (propertyKey.startsWith("_")) {
-            propertyKey = propertyKey.substr(1);
-        }
-
-        let properties: PersistenceProperty[] = Reflect.getMetadata(propsMetadataKey, target);
-        if (properties) {
-            properties.push({type: type, name: propertyKey});
-        } else {
-            properties = [{type: type, name: propertyKey}];
-            Reflect.defineMetadata(propsMetadataKey, properties, target);
-        }
-
-        let class_names: ClassFactory[] = Reflect.getMetadata(classesMetadataKey, Us);
-        let factory = () => {
-            let instance = Object.create(target);
-            instance.constructor.apply(instance);
-            return instance;
+    // a utility function to generate instances of a class
+    function construct(constructor, args) {
+        let c: any = function () {
+            return constructor.apply(this, args);
         };
-        let new_factory = {class_name: class_name, factory: factory};
-        if (class_names) {
-            let existing = class_names.find(cf => cf.class_name == class_name);
-            if (!existing) {
-                console.debug(`Register persisted class: ${class_name}`);
-                class_names.push(new_factory);
-            }
-        } else {
-            // Nothing at all. Register the first.
-            class_names = [new_factory];
-            console.debug(`Register persisted class: ${class_name}`);
-            Reflect.defineMetadata(classesMetadataKey, class_names, Us);
-        }
+        c.prototype = constructor.prototype;
+        return new c();
     }
 
-    return _persisted;
+    // the new constructor behaviour
+    let f: any = function (...args) {
+        return construct(original, args);
+    };
+
+    // copy prototype so intanceof operator still works
+    f.prototype = original.prototype;
+    registerActualFactory(original.name, f);
+
+    return f;
 }
 
-function CreateNewObjectOfType(type: string): PersistableObject {
+
+function registerActualFactory(class_name: string, factory) {
+    let new_factory = {class_name: class_name, factory: factory};
+    let class_names: ClassFactory[] = Reflect.getMetadata(classesMetadataKey, Us);
+    if (class_names) {
+        let existing = class_names.find(cf => cf.class_name == class_name);
+        if (!existing) {
+            console.debug(`Register persisted class: ${class_name}`);
+            class_names.push(new_factory);
+        }
+    } else {
+        // Nothing at all. Register the first.
+        class_names = [new_factory];
+        console.debug(`Register persisted class: ${class_name}`);
+        Reflect.defineMetadata(classesMetadataKey, class_names, Us);
+    }
+}
+
+function registerClassFactory(prototype, class_name: string) {
+    let factory = () => {
+        let instance = Object.create(prototype);
+        instance.constructor.apply(instance);
+        return instance;
+    };
+    registerActualFactory(class_name, factory);
+}
+
+function RegisteredClassFactories(): ClassFactory[] {
+    return Reflect.getMetadata(classesMetadataKey, Us);
+}
+
+function CreateNewObjectOfType(type: string): TypedObject {
     const factories: ClassFactory[] = Reflect.getMetadata(classesMetadataKey, Us);
     if (!factories) {
         throw new Error(`Cannot create new ${type}, no factories registered (1)`);
@@ -85,6 +96,9 @@ function CreateNewObjectOfType(type: string): PersistableObject {
         throw new Error(`Cannot create new ${type}, no factories registered (2)`);
     }
     let factory = factories.find(cf => cf.class_name == type);
+    if (!factory) {
+        throw new Error(`Cannot create new ${type}, no factory registered for this type`);
+    }
     let instance = factory.factory();
     if (instance instanceof ObjectWithUUID) {
         // clear out the _id and _rev, we don't want the defaults
@@ -95,11 +109,16 @@ function CreateNewObjectOfType(type: string): PersistableObject {
 }
 
 export {
-    PersistenceProperty,
-    persisted,
     REF_PREFIX,
-    propsMetadataKey,
+
+    ClassFactory,
+
+    RegisteredClassFactories,
     NameForPersistenceProp,
+    NameForPersistencePropType,
     CreateNewObjectOfType,
-    getTheTypeNameOfTheObject
+
+    GetTheTypeNameOfTheObject,
+
+    registerFactory,
 }

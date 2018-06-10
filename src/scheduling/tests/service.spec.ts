@@ -23,9 +23,9 @@ describe('service', () => {
 
     beforeEach(() => {
         team = new Team("test team");
-        cherilyn = team.add_person(new Person("Cherilyn"));
-        neil = team.add_person(new Person("neil"));
-        tim = team.add_person(new Person("Tim"));
+        cherilyn = team.add(new Person("Cherilyn"));
+        neil = team.add(new Person("neil"));
+        tim = team.add(new Person("Tim"));
 
         plan = new Plan("test", team);
 
@@ -55,8 +55,8 @@ describe('service', () => {
         keys.layout_priority = 5;
         let gopher = plan.add_role(new Role("Gopher"));
 
-        let tim = team.add_person(new Person("Tim"));
-        let janice = team.add_person(new Person("Janice"));
+        let tim = team.add(new Person("Tim"));
+        let janice = team.add(new Person("Janice"));
 
         // Tim = Keys
         let p2 = plan.assignment_for(tim).add_role(keys);
@@ -78,6 +78,7 @@ describe('service', () => {
         let sr2 = plan.add_role(defaultSaxRole);
         let sr1 = plan.add_role(defaultLeaderRole);
         sr1.layout_priority = 3;
+        sr2.layout_priority = 1;
         console.log(`Plan has roles: ${plan.roles}`);
 
         // Highest first
@@ -123,7 +124,7 @@ describe('service', () => {
 
             neil_assignment = plan.assignment_for(neil).add_role(defaultSaxRole, 3).add_role(defaultSoundRole, 1);
 
-            rob = team.add_person(new Person("rob"));
+            rob = team.add(new Person("rob"));
             rob_assignment = plan.assignment_for(rob).add_role(defaultBass).add_role(defaultSoundRole);
 
             state = new RuleFacts(plan);

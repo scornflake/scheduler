@@ -6,7 +6,7 @@ import {SafeJSON} from "../../common/json/safe-stringify";
 import {Person} from "../people";
 import {
     defaultAcousticGuitar,
-    defaultComputerRole,
+    defaultComputerRole, defaultElectricGuitar,
     defaultSaxRole,
     defaultSoundRole,
     defaultSpeakerRole,
@@ -37,8 +37,8 @@ describe('role scheduler', () => {
         neil = new Person("Neil");
 
         team = new Team("Foo Scud");
-        team.add_person(neil);
-        team.add_person(daniel);
+        team.add(neil);
+        team.add(daniel);
 
         plan = new Plan("role schedule test plan", team);
         plan.start_date = start_date;
@@ -47,6 +47,7 @@ describe('role scheduler', () => {
         plan.add_role(defaultSoundRole);
         plan.add_role(defaultComputerRole);
         plan.add_role(defaultAcousticGuitar);
+        plan.add_role(defaultElectricGuitar);
         plan.assignment_for(neil).add_role(defaultSoundRole);
 
         // Roles on a plan are derived from the people in the plan
@@ -126,7 +127,7 @@ describe('role scheduler', () => {
         console.log("Schedule: " + new CSVExporter(schedule));
     });
 
-    it('should be test for 2 out of 3 weeks availability', function () {
+    it('can do 2 out of 3 weeks availability', function () {
         /*
         This builds a schedule where neil is on every week.
         We can then test the schedule.is_person_available method
@@ -135,16 +136,18 @@ describe('role scheduler', () => {
         expect(schedule).not.toBeNull();
         schedule.create_schedule();
         let facts = schedule.facts;
+        console.log(`Before: ${new CSVExporter(schedule)}`);
 
         /*
         Only change neil AFTER the schedule is built. Since we don't want
         the availability to affect the building of the schedule in this test
          */
+        expect(neil).not.toBeNull();
         neil.availability = new AvailabilityEveryNOfM(2, 3);
+        expect(neil.availability.constructor.name).toEqual('AvailabilityEveryNOfM');
 
         console.log("Schedule: " + new CSVExporter(schedule));
-
-        console.log(`Test1: ${start_date.toDateString()}`);
+        console.log(`Test1: ${start_date.toDateString()} start: ${facts.is_person_available(neil, start_date)}`);
         expect(facts.is_person_available(neil, start_date)).toBeTruthy();
 
         /*
@@ -153,11 +156,11 @@ describe('role scheduler', () => {
         been added to the role for the date in question. However; in this test, they already have.
          */
         let next_date = addDaysToDate(start_date, 7);
-        console.log(`Test2: ${next_date.toDateString()}`);
+        console.log(`Test2: ${next_date.toDateString()}, 7: ${facts.is_person_available(neil, next_date)}`);
         expect(facts.is_person_available(neil, next_date)).toBeFalsy();
 
         next_date = addDaysToDate(start_date, 14);
-        console.log(`Test3: ${next_date.toDateString()}`);
+        console.log(`Test3: ${next_date.toDateString()}, 14: ${facts.is_person_available(neil, next_date)}`);
         expect(facts.is_person_available(neil, next_date)).toBeFalsy();
 
     });
@@ -195,10 +198,12 @@ describe('role scheduler', () => {
 
         // Put neil on Guitar, and daniel on guitar as well
         // Should see that the maximum number of placements in 'guitar' is one, not two.
-        plan.assignment_for(neil).remove_role(sound).add_role(defaultAcousticGuitar);
+        let roleToTestWith = defaultElectricGuitar;
+        expect(roleToTestWith.maximum_wanted).toBe(1);
+        plan.assignment_for(neil).remove_role(sound).add_role(roleToTestWith);
         neil.availability = new Availability(1, AvailabilityUnit.AVAIL_ANYTIME);
 
-        plan.assignment_for(daniel).add_role(defaultAcousticGuitar);
+        plan.assignment_for(daniel).add_role(roleToTestWith);
 
         // Do a schedule. For one week.
         // We should see just ONE person on guitar.
@@ -208,7 +213,7 @@ describe('role scheduler', () => {
         let firstSchedule = Array.from(schedule.dates.values())[0];
         console.log(`First Schedule is: ${firstSchedule}`);
         expect(firstSchedule).not.toBeNull("expected to get a firstSchedule");
-        expect(firstSchedule.people_in_role(defaultAcousticGuitar).length).toBe(1, "expected one person to be in role 'accoustic guitar'");
+        expect(firstSchedule.people_in_role(roleToTestWith).length).toBe(1, "expected one person to be in role 'accoustic guitar'");
         console.log(schedule.jsonResult());
     });
 
@@ -220,7 +225,7 @@ describe('role scheduler', () => {
         plan.days_per_period = 1;
 
         let ben = new Person("Ben");
-        team.add_person(ben);
+        team.add(ben);
 
         plan.assignment_for(daniel).add_role(defaultSoundRole);
         plan.assignment_for(ben).add_role(defaultSoundRole);

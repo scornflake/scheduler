@@ -1,54 +1,57 @@
-import {BaseStore, find_object_with_name} from "./common/base_model";
-import {observable} from "mobx-angular";
+import {find_object_with_name, GenericObjectStore} from "./common/base_model";
 import {Person} from "./people";
-import {persisted} from "../providers/server/db-decorators";
+import {NamedObject} from "./common/scheduler-store";
+import {registerFactory} from "../providers/server/db-decorators";
 
-class Team extends BaseStore<Person> {
-    @persisted() @observable name: string;
+@registerFactory
+class Team extends NamedObject {
+    private _people: GenericObjectStore<Person>;
 
     constructor(name: string, people: Array<Person> = []) {
-        super();
-        this.name = name;
+        super(name);
+
+        this._people = new GenericObjectStore<Person>();
 
         if (people) {
-            this.add_objects_to_array(people);
+            this._people.add_objects_to_array(people);
         }
     }
 
-    valueOf() {
-        return this.name;
-    }
-
-    toString() {
-        return this.valueOf();
-    }
-
     get people(): Array<Person> {
-        return Person.sort_by_name(this.items);
+        return NamedObject.sortByName(this._people.items);
     }
 
-    find_person_with_name(name: string, fuzzy_match: boolean = false) {
-        return find_object_with_name(this.items, name, fuzzy_match);
+    set people(new_people: Array<Person>) {
+        this._people.clear();
+        this._people.add_objects_to_array(new_people);
     }
 
-    find_person_in_team(person: Person): Person {
-        return this.find_by_uuid(person.uuid);
+    findPersonWithName(name: string, fuzzy_match: boolean = false) {
+        return find_object_with_name(this.people, name, fuzzy_match);
     }
 
-    get_or_add_person(person: Person): Person {
-        let found_person = this.find_person_in_team(person);
+    findPersonInTeam(person: Person): Person {
+        return this._people.findByUUID(person.uuid);
+    }
+
+    findPersonByUUID(uuid: string): Person {
+        return this._people.findByUUID(uuid);
+    }
+
+    getOrAddPerson(person: Person): Person {
+        let found_person = this.findPersonInTeam(person);
         if (!found_person) {
-            return this.add_object_to_array(person);
+            return this._people.add_object_to_array(person);
         }
         return found_person;
     }
 
-    add_person(person: Person): Person {
-        return this.add_object_to_array(person);
+    add(person: Person): Person {
+        return this._people.add_object_to_array(person);
     }
 
-    remove_person(person: Person) {
-        this.remove_object_from_array(person);
+    remove(person: Person) {
+        this._people.remove_object_from_array(person);
     }
 }
 

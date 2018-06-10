@@ -5,6 +5,7 @@ import {dateForISODateString} from "../../scheduling/common/date-utils";
 import {Person} from "../../scheduling/people";
 import {ObjectValidation} from "../../scheduling/shared";
 import {PageUtils} from "../page-utils";
+import {NamedObject} from "../../scheduling/common/scheduler-store";
 
 @IonicPage({
     name: 'page-plan-details',
@@ -25,7 +26,7 @@ export class PlanDetailsPage {
     }
 
     get sorted_people(): Array<Person> {
-        return Person.sort_by_name(this.plan.people);
+        return NamedObject.sortByName(this.plan.people);
     }
 
     ionViewDidLoad() {
@@ -58,7 +59,7 @@ export class PlanDetailsPage {
             this.pageUtils.show_validation_error(ObjectValidation.simple("All people are already in the list"));
             return;
         }
-        for (let p of Person.sort_by_name(people_not_in_plan)) {
+        for (let p of NamedObject.sortByName(people_not_in_plan)) {
             alert.addInput({
                 type: 'radio',
                 value: p.uuid,
@@ -75,7 +76,7 @@ export class PlanDetailsPage {
         alert.addButton({
             text: 'Add',
             handler: (uuid) => {
-                let person = team.find_by_uuid(uuid);
+                let person = team.findPersonByUUID(uuid);
                 // Kick off UI with this
                 this.show_assignment(person);
             }

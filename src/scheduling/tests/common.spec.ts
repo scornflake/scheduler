@@ -1,16 +1,21 @@
-import {BaseStore, ObjectWithUUID} from "../common/base_model";
+import {GenericManager, NamedObject, SchedulerObjectStore} from "../common/scheduler-store";
 
 describe('base', () => {
-    let store;
+    let store, manager;
+
+    class TestManager extends GenericManager<NamedObject> {
+
+    }
 
     beforeEach(() => {
-        store = new BaseStore<ObjectWithUUID>();
+        store = new SchedulerObjectStore();
+        manager = new TestManager(store, 'foo');
     });
 
     it('should add object and prevent duplicates', function () {
         expect(store.items.length).toEqual(0);
 
-        let new_object = new ObjectWithUUID();
+        let new_object = new NamedObject("ra!");
         store.add_object_to_array(new_object);
         expect(store.items.length).toEqual(1);
         store.add_object_to_array(new_object);
@@ -18,7 +23,7 @@ describe('base', () => {
     });
 
     it('can remove objects', () => {
-        let new_object = new ObjectWithUUID();
+        let new_object = new NamedObject("raaaaa");
         store.add_object_to_array(new_object);
         expect(store.items.length).toEqual(1);
 

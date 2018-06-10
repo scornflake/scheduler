@@ -30,7 +30,7 @@ export class TeamsPage {
         let team = new Team("");
         this.show_team_detail(team, (add: boolean) => {
             if (add) {
-                this.rootStore.organization_store.teams_store.add_team(team)
+                this.rootStore.teams.add(team)
             }
         });
     }
@@ -40,10 +40,10 @@ export class TeamsPage {
     }
 
     teams() {
-        return this.rootStore.organization_store.teams_store.teams;
+        return this.rootStore.teams.all;
     }
 
     delete_team(team: Team) {
-        this.rootStore.organization_store.teams_store.delete_team(team);
+        this.rootStore.teams.remove(team);
     }
 }

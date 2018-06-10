@@ -17,16 +17,16 @@ import {
     SetupDefaultRoles
 } from "../../scheduling/tests/sample-data";
 import {Plan} from "../../scheduling/plan";
-import {PeopleStore} from "../../scheduling/people-store";
 import {Team} from "../../scheduling/teams";
-import {Organization, OrganizationStore} from "../../scheduling/organization";
+import {Organization} from "../../scheduling/organization";
+import {PeopleManager} from "../../scheduling/common/scheduler-store";
 
 
 export class NPBCStoreConstruction {
     constructor() {
     }
 
-    static SetupOrganization(org_store: OrganizationStore, name:string) {
+    static SetupOrganization(org_store, name:string) {
         let org = org_store.find_by_name(name);
         if (!org) {
             let organization = new Organization(name);
@@ -37,32 +37,32 @@ export class NPBCStoreConstruction {
     }
 
     static SetupService(service: Plan, team: Team) {
-        let neil = team.find_person_with_name("Neil Clayton");
-        let cherilyn = team.find_person_with_name("Cherilyn Clayton");
-        let kylie = team.find_person_with_name("Kylie Welch-Herekiuha");
-        let christine = team.find_person_with_name("Christine Edlin");
-        let stuart = team.find_person_with_name("Stuart Campbell");
-        let jeremy_selfe = team.find_person_with_name("Jeremy Selfe");
+        let neil = team.findPersonWithName("Neil Clayton");
+        let cherilyn = team.findPersonWithName("Cherilyn Clayton");
+        let kylie = team.findPersonWithName("Kylie Welch-Herekiuha");
+        let christine = team.findPersonWithName("Christine Edlin");
+        let stuart = team.findPersonWithName("Stuart Campbell");
+        let jeremy_selfe = team.findPersonWithName("Jeremy Selfe");
 
-        let daniel = team.find_person_with_name("Daniel Gibbs");
-        let ben = team.find_person_with_name("Ben Watson");
-        let courtney = team.find_person_with_name("Courtney Anderson");
-        let robs = team.find_person_with_name("Rob Sweeney");
-        let robp = team.find_person_with_name("Rob Penhey");
-        let dave = team.find_person_with_name("Dave Humphries");
-        let ralph = team.find_person_with_name("Ralph Lambert");
-        let anita = team.find_person_with_name("Anita Lambert");
-        let annie = team.find_person_with_name("Annie McMullen");
-        let jo = team.find_person_with_name("Jo Marquet");
-        let allie = team.find_person_with_name("Allie Pope");
-        let craig = team.find_person_with_name("Craig Campbell");
+        let daniel = team.findPersonWithName("Daniel Gibbs");
+        let ben = team.findPersonWithName("Ben Watson");
+        let courtney = team.findPersonWithName("Courtney Anderson");
+        let robs = team.findPersonWithName("Rob Sweeney");
+        let robp = team.findPersonWithName("Rob Penhey");
+        let dave = team.findPersonWithName("Dave Humphries");
+        let ralph = team.findPersonWithName("Ralph Lambert");
+        let anita = team.findPersonWithName("Anita Lambert");
+        let annie = team.findPersonWithName("Annie McMullen");
+        let jo = team.findPersonWithName("Jo Marquet");
+        let allie = team.findPersonWithName("Allie Pope");
+        let craig = team.findPersonWithName("Craig Campbell");
 
-        let chris = team.find_person_with_name("Chris Evans");
-        let jeremy_l = team.find_person_with_name("Jeremy Legg");
-        let andre_l = team.find_person_with_name("Andre Legg");
-        let suzie_l = team.find_person_with_name("Suzie Legg");
-        let jeremy_w = team.find_person_with_name("Jeremy Watson");
-        let john_sutherland = team.find_person_with_name("John Sutherland");
+        let chris = team.findPersonWithName("Chris Evans");
+        let jeremy_l = team.findPersonWithName("Jeremy Legg");
+        let andre_l = team.findPersonWithName("Andre Legg");
+        let suzie_l = team.findPersonWithName("Suzie Legg");
+        let jeremy_w = team.findPersonWithName("Jeremy Watson");
+        let john_sutherland = team.findPersonWithName("John Sutherland");
 
 
         /*
@@ -220,12 +220,12 @@ export class NPBCStoreConstruction {
             .add_role(defaultComputerRole, 2)
     }
 
-    static SetupPeople(people_store: PeopleStore): Array<Person> {
+    static SetupPeople(people_store: PeopleManager): Array<Person> {
         let people_added = [];
 
         function aint(name: string) {
-            if (people_store.find_person_with_name(name) == null) {
-                let p = people_store.add_person(new Person(name));
+            if (people_store.firstThisTypeByName(name) == null) {
+                let p = people_store.add(new Person(name));
                 people_added.push(p);
             }
         }

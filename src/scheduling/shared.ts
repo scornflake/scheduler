@@ -5,6 +5,7 @@ import {Assignment} from "./assignment";
 import {isUndefined} from "util";
 import {delete_from_array} from "./common/base_model";
 import {Role} from "./role";
+import {SafeJSON} from "../common/json/safe-stringify";
 
 class ObjectValidation {
     errors: string[] = new Array<string>();
@@ -155,17 +156,25 @@ class ScheduleAtDate {
     }
 
     people_in_role(role: Role): Array<Person> {
+        if (role == null || isUndefined(role)) {
+            throw new Error("Eh? Role is null. Can't ask if people are in a 'null' role");
+        }
+        // console.log(`checking role: ${role}`);
         // Return all people that have some score that records this role
         let assigns = this.assignments;
-        let filterer = assigns.filter(a => {
+        let filtered = assigns.filter(a => {
             // let datekey = dayAndHourForDate(this.date);
             let score = this.assignment_by_score.get(a);
+            // console.log(`assignment for ${a}, role: ${role}`);
             if (score) {
-                return score.has_role(role);
+                let hasRole = score.has_role(role);
+                // console.log(`assignment for ${a}, says has role: ${role} == ${hasRole}`);
+                return hasRole;
             }
             return false;
         });
-        return filterer.map((a) => {
+        // console.log(`filtered peoples ${SafeJSON.stringify(filtered)}`);
+        return filtered.map((a) => {
             if (isUndefined(a)) {
                 console.log("panic");
             }

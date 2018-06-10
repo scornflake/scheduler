@@ -2,15 +2,15 @@ import {FixedRoleOnDate, OnThisDate, UsageWeightedSequential, WeightedRoles} fro
 import {Person} from "../people";
 import {RuleFacts} from "./rule-facts";
 import {SafeJSON} from "../../common/json/safe-stringify";
-import {defaultSoundRole} from "../tests/sample-data";
+import {defaultSoundRole, SetupDefaultRoles} from "../tests/sample-data";
 import {Plan} from "../plan";
 import {Assignment} from "../assignment";
-import {PeopleStore} from "../people-store";
 import {Team} from "../teams";
 import {Role} from "../role";
+import {PeopleManager, SchedulerObjectStore} from "../common/scheduler-store";
 
 describe('rules', () => {
-    let people_store: PeopleStore;
+    let people_store: PeopleManager;
     let state, service;
     let neil: Person, bob: Person, tim: Person;
     let neil_assign: Assignment, bob_assign: Assignment, tim_assign: Assignment;
@@ -19,19 +19,21 @@ describe('rules', () => {
 
 
     beforeEach(() => {
-        people_store = new PeopleStore();
+        SetupDefaultRoles();
+
+        people_store = new SchedulerObjectStore().people;
         team = new Team("Foo Bar");
         service = new Plan("rules tests", team);
         state = new RuleFacts(service);
 
         // If we have people in order, it just returns sequentially
-        neil = team.get_or_add_person(new Person("Neil"));
+        neil = team.getOrAddPerson(new Person("Neil"));
         neil_assign = service.assignment_for(neil).add_role(defaultSoundRole);
 
-        bob = team.add_person(new Person("Bob"));
+        bob = team.add(new Person("Bob"));
         bob_assign = service.assignment_for(bob).add_role(defaultSoundRole);
 
-        tim = team.add_person(new Person("Tim"));
+        tim = team.add(new Person("Tim"));
         tim_assign = service.assignment_for(tim).add_role(defaultSoundRole);
 
         date = new Date(2010, 10, 0);

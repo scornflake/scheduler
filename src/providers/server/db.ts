@@ -2,17 +2,16 @@ import {Injectable} from "@angular/core";
 import PouchDB from 'pouchdb';
 import PouchDBFind from 'pouchdb-find';
 import {Logger} from "ionic-logging-service";
-import {BaseStore, ObjectWithUUID, PersistableObject} from "../../scheduling/common/base_model";
+import {ObjectWithUUID, TypedObject} from "../../scheduling/common/base_model";
 import 'reflect-metadata';
 import {SafeJSON} from "../../common/json/safe-stringify";
-import {PersistenceType} from "./db-types";
+import {PersistenceProperty, PersistenceType} from "./db-types";
 import {
     CreateNewObjectOfType,
-    getTheTypeNameOfTheObject,
+    GetTheTypeNameOfTheObject,
     NameForPersistenceProp,
-    PersistenceProperty,
-    propsMetadataKey,
-    REF_PREFIX
+    NameForPersistencePropType,
+    REF_PREFIX,
 } from "./db-decorators";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {ConfigurationService} from "ionic-configuration-service";
@@ -22,6 +21,8 @@ import {Subject} from "rxjs/Subject";
 import {Observable} from "rxjs/Rx";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {debounceTime} from "rxjs/operators";
+import {GenericManager, NamedObject} from "../../scheduling/common/scheduler-store";
+import {Mapper} from "../mapping/mapper";
 import Database = PouchDB.Database;
 
 enum SavingState {
@@ -42,27 +43,21 @@ class SchedulerDatabase {
     private current_indexes: PouchDB.Find.GetIndexesResponse<{}>;
     private db_name: string;
     private tracker: ObjectChangeTracker;
+    private mapper: Mapper;
 
-    static ConstructAndWait(configService: ConfigurationService, delete_first: boolean = false): Promise<SchedulerDatabase> {
+    static ConstructAndWait(configService: ConfigurationService, mapper: Mapper): Promise<SchedulerDatabase> {
         return new Promise<SchedulerDatabase>((resolve) => {
-            let instance = new SchedulerDatabase(configService);
+            let instance = new SchedulerDatabase(configService, mapper);
             instance.logger.info("Starting DB setup for TEST");
-
             instance.ready_event.subscribe(() => {
-                if (delete_first) {
-                    instance.logger.info("Making sure DB is dead...");
-                    instance.delete_all().then(() => {
-                        resolve(instance);
-                    });
-                } else {
-                    resolve(instance);
-                }
+                resolve(instance);
             })
         });
     }
 
-    constructor(configService: ConfigurationService) {
+    constructor(configService: ConfigurationService, mapper: Mapper) {
         let db_config = configService.getValue("database");
+        this.mapper = mapper;
         this.db_name = db_config['name'];
         this.logger = LoggingWrapper.getLogger("db");
         PouchDB.plugin(PouchDBFind);
@@ -70,7 +65,7 @@ class SchedulerDatabase {
         this.logger.info(`Setting up database: ${this.db_name} ...`);
 
         this.ready_event = new ReplaySubject();
-        this.tracker = new ObjectChangeTracker();
+        this.tracker = new ObjectChangeTracker(this.mapper);
 
         this.initialize();
 
@@ -137,7 +132,7 @@ class SchedulerDatabase {
         return this.current_indexes.indexes.find(idx => idx.name == name) != null;
     }
 
-    async load_object_with_id(id: string, nesting: number = 0): Promise<PersistableObject> {
+    async load_object_with_id(id: string, nesting: number = 0): Promise<TypedObject> {
         if (isUndefined(id)) {
             throw new Error("load_object_with_id failed. You must pass in an id (you passed in 'undefined')");
         }
@@ -161,7 +156,7 @@ class SchedulerDatabase {
         this.logger.debug(`${this.gap(nesting)}${message}`);
     }
 
-    create_json_from_object(object: PersistableObject, nesting: number = 0) {
+    create_json_from_object(object: TypedObject, nesting: number = 0) {
         this.persistence_debug(`Persisting object: ${object.type}, ${SafeJSON.stringify(object)}`, nesting);
         // At this level, if we're given an ObjectWithUUID, we don't want a reference.
         // So we tell the converter it's a nested object (it'll output id/rev/type)
@@ -173,16 +168,17 @@ class SchedulerDatabase {
     }
 
     private _convert_by_iterating_persistable_properties(origin: object, nesting: number = 0): object {
-        const properties: PersistenceProperty[] = Reflect.getMetadata(propsMetadataKey, origin);
+        let className = origin.constructor.name;
+        const props = this.mapper.propertiesFor(origin.constructor.name);
         const result = {};
-        if (properties) {
-            this.persistence_debug(`Iterating ${properties.length} properties of ${origin.constructor.name}`, nesting);
-            properties.forEach(prop => {
-                    this.persistence_debug(`${NameForPersistenceProp(prop)} - ${prop.name}`, nesting);
-                    let value = origin[prop.name];
-                    result[prop.name] = this._convert_object_value_to_dict(prop, value, nesting + 1);
-                }
-            );
+        if (props) {
+            this.persistence_debug(`Iterating ${props.size} properties of ${className}`, nesting);
+            props.forEach((type, propertyName) => {
+                let value = origin[propertyName];
+                let prop = {name: propertyName, type: type};
+                this.persistence_debug(`${NameForPersistencePropType(type)} - ${propertyName} (value: ${value})`, nesting);
+                result[propertyName] = this._convert_object_value_to_dict(prop, value, nesting + 1);
+            });
         } else {
             this.persistence_debug(`Object has no properties`, nesting);
         }
@@ -255,12 +251,12 @@ class SchedulerDatabase {
         }
     }
 
-    private convert_from_json_to_object(json_obj: PouchDB.Core.Document<{}>, new_object: PersistableObject, nesting: number = 0) {
+    private convert_from_json_to_object(json_obj: PouchDB.Core.Document<{}>, new_object: TypedObject, nesting: number = 0) {
         /*
         Assumption is that we begin with an object that has an ID and a type.
          */
-        const target_properties: PersistenceProperty[] = Reflect.getMetadata(propsMetadataKey, new_object);
-        if (target_properties.length == 0) {
+        const target_props = this.mapper.propertiesFor(new_object.constructor.name);
+        if (target_props.size == 0) {
             throw new Error(`Cannot hydrate ${json_obj['type']} because we don't know what it's persistable properties are`)
         }
 
@@ -272,24 +268,24 @@ class SchedulerDatabase {
         }
 
         // Now we need to go through the properties, and hydrate each and assign
-        target_properties.forEach(prop => {
-            let value = json_obj[prop.name];
+        target_props.forEach((type, propertyName) => {
+            let value = json_obj[propertyName];
 
-            if (prop.name == 'type') {
+            if (propertyName == 'type') {
                 // No reason why this shouldn't be the case, but you know, paranoia
                 if (new_object.type != json_obj['type']) {
                     throw new Error(`Unable to hydrate ${json_obj} into object. Type ${new_object.type} != ${json_obj['type']}`);
                 }
             } else {
                 if (value == null) {
-                    this.persistence_debug(`Skipping ${prop.name}, its null`, nesting);
+                    this.persistence_debug(`Skipping ${propertyName}, its null`, nesting);
                     return;
                 }
 
-                switch (prop.type) {
+                switch (type) {
                     case PersistenceType.Property: {
-                        this.persistence_debug(`${prop.name} = ${value}`, nesting);
-                        new_object[prop.name] = json_obj[prop.name];
+                        this.persistence_debug(`${propertyName} = ${value}`, nesting);
+                        new_object[propertyName] = json_obj[propertyName];
                         break;
                     }
 
@@ -298,40 +294,40 @@ class SchedulerDatabase {
                      */
                     case PersistenceType.NestedObject: {
                         let new_type = value['type'];
-                        this.persistence_debug(`${prop.name} = new instance of ${new_type}`, nesting);
+                        this.persistence_debug(`${propertyName} = new instance of ${new_type}`, nesting);
                         let new_instance = CreateNewObjectOfType(new_type);
-                        new_object[prop.name] = this.convert_from_json_to_object(value, new_instance, nesting + 1);
+                        new_object[propertyName] = this.convert_from_json_to_object(value, new_instance, nesting + 1);
                         break;
                     }
 
                     case PersistenceType.NestedObjectList: {
                         let new_objects = [];
-                        this.persistence_debug(`${prop.name} = list of ${value.length} objects ...`, nesting);
+                        this.persistence_debug(`${propertyName} = list of ${value.length} objects ...`, nesting);
                         value.forEach(v => {
                             let new_type = v['type'];
                             this.persistence_debug(`creating new instance of ${new_type}`, nesting + 1);
                             let new_instance = CreateNewObjectOfType(new_type);
                             new_objects.push(this.convert_from_json_to_object(v, new_instance, nesting + 2));
                         });
-                        new_object[prop.name] = new_objects;
+                        new_object[propertyName] = new_objects;
                         break;
                     }
 
                     case PersistenceType.Reference: {
-                        this.persistence_debug(`${prop.name} = reference: ${value}`, nesting);
-                        new_object[prop.name] = this.lookup_object_reference(value, nesting + 1);
+                        this.persistence_debug(`${propertyName} = reference: ${value}`, nesting);
+                        new_object[propertyName] = this.lookup_object_reference(value, nesting + 1);
                         break;
                     }
 
                     case PersistenceType.ReferenceList: {
                         // Assume 'value' is a list of object references
-                        this.persistence_debug(`${prop.name} = list of ${value.length} references`, nesting);
-                        new_object[prop.name] = value.map(ref => this.lookup_object_reference(ref, nesting + 1));
+                        this.persistence_debug(`${propertyName} = list of ${value.length} references`, nesting);
+                        new_object[propertyName] = value.map(ref => this.lookup_object_reference(ref, nesting + 1));
                         break;
                     }
 
                     default: {
-                        throw new Error(`Fail. Dunno how to handle PersistenceType: ${prop.type}`);
+                        throw new Error(`Fail. Dunno how to handle PersistenceType: ${type}`);
                     }
                 }
             }
@@ -353,12 +349,12 @@ class SchedulerDatabase {
         })
     }
 
-    async load_into_store<T extends ObjectWithUUID>(object_store: BaseStore<T>, type: string) {
+    async load_into_store<T extends NamedObject>(manager: GenericManager<T>, type: string) {
         let loaded_objects = await this._load_all_of_type(type);
         loaded_objects.forEach(o => {
             let ooo = o as T;
             if (ooo) {
-                object_store.add_object_to_array(ooo, true);
+                manager.add(ooo);
                 this.trackChanges(ooo);
             } else {
                 this.logger.warn(`Skipped ${o} because its not of the expected type: ${type}`);
@@ -366,7 +362,8 @@ class SchedulerDatabase {
         });
 
         // Also track changes to the store itself
-        this.trackChanges(object_store);
+        // TODO: Remove this, should be tracking changes to the RootStore.items I think.
+        // this.trackChanges(object_store);
     }
 
     private lookup_object_reference(reference: string, nesting: number = 0) {
@@ -386,7 +383,7 @@ class SchedulerDatabase {
     }
 
     private _convert_to_reference(prop: PersistenceProperty, value: any, nesting: number = 0) {
-        if (getTheTypeNameOfTheObject(value) == "array") {
+        if (GetTheTypeNameOfTheObject(value) == "array") {
             throw new Error(`REF: Cannot convert ${prop.name} to ${NameForPersistenceProp(prop)}, it is an array`)
         }
         if (!(value instanceof ObjectWithUUID)) {
@@ -397,7 +394,7 @@ class SchedulerDatabase {
     }
 
     private _convert_to_nested_object_dict(prop: PersistenceProperty, value: any, nesting: number = 0) {
-        if (!(value instanceof PersistableObject)) {
+        if (!(value instanceof TypedObject)) {
             throw new Error(`NESTED OBJ: Cannot convert ${prop.name} to ${NameForPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a PersistableObject`);
         }
         this.persistence_debug(`Converting ${value.constructor.name} by iterating its properties...`, nesting);
@@ -406,25 +403,34 @@ class SchedulerDatabase {
 
     private _convert_add_type_id_and_rev(dict, value, include_id_and_rev: boolean = false, nesting: number = 0) {
         let messages = [];
-        if (value instanceof PersistableObject) {
-            messages.push(`set type to be ${value.type}`);
-            dict.type = value.type;
+        if (value instanceof TypedObject) {
+            if (dict.type != value.type) {
+                messages.push(`set type to be ${value.type}`);
+                dict.type = value.type;
+            }
             if (value instanceof ObjectWithUUID && include_id_and_rev) {
                 messages.push(`set _id=${value._id} and _rev=${value._rev}`);
                 dict._id = value._id;
                 dict._rev = value._rev;
             }
-            this.persistence_debug(messages.join(", "), nesting);
+            if (messages.length) {
+                this.persistence_debug(messages.join(", "), nesting);
+            }
         }
         return dict;
     }
 
     private _convert_to_nested_object_list_of_dict(prop: any, value: any, nesting: number = 0) {
-        if (getTheTypeNameOfTheObject(value) == "array") {
+        /*
+        Fix: return [] if undefined or null. But why happen?
+         */
+        this.persistence_debug(`_convert_to_nested_object_list_of_dict: Nested object list: ${SafeJSON.stringify(value)}`, nesting);
+        if (GetTheTypeNameOfTheObject(value) == "array") {
             let type_names = Array.from(new Set(value.map(v => v.constructor.name))).join(",");
             this.persistence_debug(`convert nested list of ${value.length} items, types: ${type_names}`, nesting);
-            return value.map(v => {
-                return this._convert_by_iterating_persistable_properties(v, nesting + 1);
+            return value.map((v, index) => {
+                this.persistence_debug(`${prop.name}[${index}]`, nesting + 1);
+                return this._convert_by_iterating_persistable_properties(v, nesting + 2);
             });
         } else {
             throw new Error(`NESTEDLIST: Cannot convert ${prop.name} to ${NameForPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a list or mbox list`);
@@ -432,11 +438,14 @@ class SchedulerDatabase {
     }
 
     private _convert_to_reference_list(prop: any, value: any, nesting: number = 0) {
-        if (getTheTypeNameOfTheObject(value) == "array") {
-            let type_names = Array.from(new Set(value.map(v => v.constructor.name))).join(",");
+        if (GetTheTypeNameOfTheObject(value) == "array") {
+            let type_names = Array.from(new Set(value.map(v => {
+                return v.constructor.name;
+            }))).join(",");
+
             this.persistence_debug(`convert list of ${value.length} items, types: ${type_names}`, nesting);
             return value.map((v, index) => {
-                this.persistence_debug(`converting a ${v.constructor.name}`, nesting);
+                this.persistence_debug(`converting ${prop.name}[${index}], ${v.constructor.name}`, nesting);
                 let indexes_prop = {type: PersistenceType.Reference, name: `${prop.name}[${index}}`};
                 return this._convert_to_reference(indexes_prop, v, nesting + 1);
             });

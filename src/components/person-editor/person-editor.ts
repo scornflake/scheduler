@@ -16,7 +16,7 @@ export class PersonEditorComponent {
 
     @computed
     get schedule(): ScheduleWithRules {
-        return this.store.organization_store.schedule;
+        return this.store.schedule;
     }
 
     @computed

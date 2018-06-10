@@ -1,20 +1,18 @@
-import {PersistableObject} from "./common/base_model";
+import {TypedObject} from "./common/base_model";
 import {dayAndHourForDate} from "./common/date-utils";
 import * as moment from "moment";
-import {persisted} from "../providers/server/db-decorators";
+import {registerFactory} from "../providers/server/db-decorators";
 import {observable} from "mobx-angular";
 
 
-class Unavailablity extends PersistableObject {
-    @persisted() @observable from_date: Date = null;
-    @persisted() @observable to_date: Date = null;
-    @persisted() @observable reason: string = null;
+@registerFactory
+class Unavailability extends TypedObject {
+    @observable from_date: Date = null;
+    @observable to_date: Date = null;
+    @observable reason: string = null;
 
     constructor(from: Date = null, to: Date = null, reason = null) {
         super();
-        // if (from == null) {
-        //     throw new Error("From date cannot be null");
-        // }
         this.from_date = from;
         this.to_date = to;
         this.reason = reason;
@@ -48,16 +46,42 @@ class Unavailablity extends PersistableObject {
         return date_as_moment.isBetween(start, the_end_date, null, "[]");
     }
 
-    isEqual(obj: object): boolean {
-        if (!super.isEqual(obj)) {
+    isDateEqual(date_one: Date, date_two: Date) {
+        if (date_two == date_one) {
+            return true;
+        }
+        if (date_one == null && date_two != null) {
             return false;
         }
-        if (obj instanceof Unavailablity) {
-            return this.from_date == obj.from_date &&
-                this.to_date == obj.to_date &&
-                this.reason == obj.reason;
+        if (date_one != null && date_two == null) {
+            return false;
         }
+        return date_one.getTime() == date_two.getTime();
+    }
+
+    isEqual(other_obj: object): boolean {
+        if (!super.isEqual(other_obj)) {
+            console.log("cos super !=");
+            return false;
+        }
+        if (other_obj instanceof Unavailability) {
+            if (!this.isDateEqual(this.from_date, other_obj.from_date)) {
+                console.log("cos d1 !=");
+                return false;
+            }
+
+            if (!this.isDateEqual(this.to_date, other_obj.to_date)) {
+                console.log("cos d2 !=");
+                return false;
+            }
+            let reasonEqual = this.reason == other_obj.reason;
+            if (!reasonEqual) {
+                console.log("cos reason !=");
+            }
+            return reasonEqual;
+        }
+        return false;
     }
 }
 
-export {Unavailablity};
+export {Unavailability};

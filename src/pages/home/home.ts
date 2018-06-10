@@ -60,7 +60,7 @@ export class HomePage {
     }
 
     get selected_plan(): Plan {
-        return this.rootStore.organization_store.plans_store.find_by_uuid(this.saved_state.selected_plan_uuid);
+        return this.rootStore.findByUUID(this.saved_state.selected_plan_uuid) as Plan;
     }
 
     get selected_plan_uuid(): string {
@@ -74,7 +74,7 @@ export class HomePage {
 
     get plans_by_date_latest_first(): Array<Plan> {
         // Sort by date, latest first
-        return this.rootStore.organization_store.plans_store.plans_by_date_latest_first;
+        return this.rootStore.plans.plans_by_date_latest_first;
     }
 
     plan_title(p: Plan): string {
@@ -100,7 +100,7 @@ export class HomePage {
                 let sheet = spreadsheet.sheets.find(s => s.properties.sheetId == this.rootStore.state.previous_sheet_tab_id);
                 this.sheetAPI.read_spreadsheet_data(spreadsheet, sheet).subscribe(rows => {
 
-                    let reader = new SpreadsheetReader(this.rootStore.organization_store);
+                    let reader = new SpreadsheetReader(this.rootStore.people);
                     reader.parse_schedule_from_spreadsheet(rows);
 
                     if (reader.has_problems) {
@@ -113,7 +113,7 @@ export class HomePage {
                         this.logger.info(`Had problems: ${s}`);
                     }
                     this.logger.info("Made schedule!");
-                    this.rootStore.organization_store.set_previous_schedule(reader.schedule);
+                    this.rootStore.set_previous_schedule(reader.schedule);
                 });
             });
         }
@@ -126,7 +126,7 @@ export class HomePage {
             this.sheetAPI.load_sheet_with_id(sheet_id).subscribe((spreadsheet) => {
                 console.log("Loaded the sheet!");
                 let sheet = spreadsheet.sheets.find(s => s.properties.sheetId == this.rootStore.state.google_sheet_tab_id);
-                this.sheetAPI.clear_and_write_schedule(spreadsheet, sheet, this.rootStore.organization_store.schedule);
+                this.sheetAPI.clear_and_write_schedule(spreadsheet, sheet, this.rootStore.schedule);
             }, (error) => {
                 console.log("Error loading sheet: " + error);
             });
@@ -154,7 +154,7 @@ export class HomePage {
     }
 
     export_as_csv() {
-        let exporter = new CSVExporter(this.rootStore.organization_store.schedule);
+        let exporter = new CSVExporter(this.rootStore.schedule);
         exporter.write_to_file("schedule.csv");
     }
 

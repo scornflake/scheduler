@@ -3,29 +3,16 @@ import {action, computed, observable} from "mobx";
 import {Role} from "../scheduling/role";
 import {Plan} from "../scheduling/plan";
 import {ObjectWithUUID} from "../scheduling/common/base_model";
-import {persisted} from "../providers/server/db-decorators";
+import {registerFactory} from "../providers/server/db-decorators";
 
+@registerFactory
 class SavedState extends ObjectWithUUID {
-    @observable
-    @persisted()
-    previous_sheet_id: string;
-
-    @persisted()
+    @observable previous_sheet_id: string;
     @observable previous_sheet_tab_id: number;
-
-    @persisted()
     @observable google_sheet_id: string;
-
-    @persisted()
     @observable google_sheet_tab_id: number;
-
-    @persisted()
     @observable google_sheet_id_retrieved: boolean;
-
-    @persisted()
     @observable login_token: string;
-
-    @persisted()
     @observable selected_plan_uuid: string;
 
     @computed

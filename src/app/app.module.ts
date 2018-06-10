@@ -25,9 +25,16 @@ import {TeamsPageModule} from "../pages/teams/teams.module";
 import {TeamPageModule} from "../pages/team/team.module";
 import {PersonAssignmentPageModule} from "../pages/person-assignment/person-assignment.module";
 import {PageUtils} from "../pages/page-utils";
-import {SchedulerDatabase} from "../providers/server/db";
 import {DatabaseMaintPageModule} from "../pages/database-maint/database-maint.module";
 import {TabsPage} from "../pages/tabs/tabs";
+import {Mapper} from "../providers/mapping/mapper";
+import {scheduler_db_map} from "../assets/db.mapping";
+
+export function setupMapper(): Mapper {
+    let mapper = new Mapper();
+    mapper.add_configuration(scheduler_db_map);
+    return mapper;
+}
 
 @NgModule({
     declarations: [
@@ -61,7 +68,12 @@ import {TabsPage} from "../pages/tabs/tabs";
         StatusBar,
         SplashScreen,
         RootStore,
-        SchedulerDatabase,
+        {
+            provide: Mapper,
+            useFactory: setupMapper,
+            deps: [],
+            multi: true
+        },
         PageUtils,
         ConfigurationService,
         {

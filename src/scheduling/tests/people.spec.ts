@@ -1,20 +1,24 @@
 import {Person} from "../people";
 import {csd} from "../common/date-utils";
 import {Plan} from "../plan";
-import {PeopleStore} from "../people-store";
 import {Team} from "../teams";
+import {PeopleManager, SchedulerObjectStore} from "../common/scheduler-store";
+import {AvailabilityEveryNOfM} from "../availability";
 
 describe('people', () => {
+    let schedulerObjectStore: SchedulerObjectStore;
     let firstPerson: Person;
-    let person_store: PeopleStore;
+    let person_store: PeopleManager;
     let plan: Plan;
     let someDate: Date = new Date(2010, 10, 3);
 
     beforeEach(() => {
         firstPerson = new Person('neilos');
         plan = new Plan("test", new Team("Bar Scud"));
-        person_store = new PeopleStore();
-        person_store.add_person(firstPerson);
+
+        schedulerObjectStore = new SchedulerObjectStore();
+        person_store = schedulerObjectStore.people;
+        person_store.add(firstPerson);
     });
 
     it('can add unavailable date', () => {
@@ -30,11 +34,18 @@ describe('people', () => {
         expect(firstPerson.unavailable.length).toBe(1);
     });
 
+    it('can set alternate avail', () => {
+        expect(firstPerson).not.toBeNull();
+        firstPerson.availability = new AvailabilityEveryNOfM(2, 3);
+        console.log(`avail is now: ${firstPerson.availability}`);
+        expect(firstPerson.availability.constructor.name).toEqual('AvailabilityEveryNOfM');
+    });
+
     it('should not add same unavailability ranges twice', function () {
-        firstPerson.add_unavailable_range(new Date(2010, 5, 1), new Date(2010, 11, 1));
-        expect(firstPerson.unavailable.length).toBe(1);
-        firstPerson.add_unavailable_range(new Date(2010, 5, 1), new Date(2010, 11, 1));
-        expect(firstPerson.unavailable.length).toBe(1);
+        firstPerson.add_unavailable_range(csd(2010, 5, 1), csd(2010, 11, 1));
+        expect(firstPerson.unavailable.length).toBe(1, "expected first addition to give just one!!!");
+        firstPerson.add_unavailable_range(csd(2010, 5, 1), csd(2010, 11, 1));
+        expect(firstPerson.unavailable.length).toBe(1, `odd: got more than 1, ${firstPerson.unavailable}`);
     });
 
     it('can add unavailability range', () => {
@@ -71,7 +82,7 @@ describe('people', () => {
     it('can add to people', () => {
         let newPerson: Person = new Person('John');
 
-        person_store.add_person(newPerson);
+        person_store.add(newPerson);
         expect(person_store.people).toContain(newPerson);
         expect(person_store.people).toContain(firstPerson);
     });

@@ -1,12 +1,21 @@
-import {IArrayChange, IArraySplice, IMapDidChange, IObjectDidChange, IValueDidChange, observe} from "mobx";
+import {
+    IArrayChange,
+    IArraySplice,
+    IMapDidChange,
+    IObjectDidChange,
+    isBoxedObservable,
+    IValueDidChange,
+    observe
+} from "mobx";
 import {ObjectWithUUID} from "../../scheduling/common/base_model";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {isUndefined} from "util";
-import {PersistenceProperty, propsMetadataKey} from "./db-decorators";
+import {GetTheTypeNameOfTheObject, NameForPersistencePropType} from "./db-decorators";
 import {PersistenceType} from "./db-types";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {Subject} from "rxjs/Subject";
+import {Mapper} from "../mapping/mapper";
 
 type ObjectChange = { owner: ObjectWithUUID, change: IMapDidChange<any> | IArraySplice<any> | IArrayChange<any> | IObjectDidChange | IValueDidChange<any>, type: string, path: string };
 type ChangeListener = (change: ObjectChange) => void;
@@ -61,8 +70,10 @@ class ObjectChangeTracker {
     private logger: Logger;
     private nesting: number = 0;
     private notification_listener: ChangeListener;
+    private mapper: Mapper;
 
-    constructor() {
+    constructor(mapper: Mapper) {
+        this.mapper = mapper;
         this.logger = LoggingWrapper.getLogger("db.tracking");
 
         this.clearAll();
@@ -119,19 +130,22 @@ class ObjectChangeTracker {
     }
 
     private trackFieldsOfObject(owner: ObjectWithUUID, instance: any, parent_path: string, listener: ChangeListener) {
-        let properties: PersistenceProperty[] = Reflect.getMetadata(propsMetadataKey, instance);
-        if (!properties) {
+        let props = this.mapper.propertiesFor(instance.constructor.name);
+        if (!props) {
             this.tracking_debug(`no further properties to track on ${parent_path}`);
             return;
         }
 
-        properties.forEach(prop => {
-            let child_path = `${parent_path}.${prop.name}`;
-            let value = instance[prop.name];
-            this.tracking_debug(`consider ${child_path}`);
-            if (prop.type == PersistenceType.NestedObject) {
+        props.forEach((type, propertyName) => {
+            let child_path = `${parent_path}.${propertyName}`;
+            let value = instance[propertyName];
+            let typeName = NameForPersistencePropType(type);
+
+            if (type == PersistenceType.NestedObject) {
+                this.tracking_debug(`consider ${typeName}, ${child_path}`);
                 this.trackObject(owner, value, child_path, listener);
-            } else if (prop.type == PersistenceType.NestedObjectList) {
+            } else if (type == PersistenceType.NestedObjectList) {
+                this.tracking_debug(`consider ${typeName}, ${child_path}`);
                 // Track the members of the list
                 value.forEach((v, idx) => {
                     let element_path = `${child_path}[${idx}]`;
@@ -139,6 +153,7 @@ class ObjectChangeTracker {
                 });
 
                 // Track the list itself
+                this.tracking_debug(`consider list itself: ${child_path}`);
                 this.trackObject(owner, value, child_path, listener);
             }
         });
@@ -157,13 +172,16 @@ class ObjectChangeTracker {
     }
 
     private trackObject(owner: ObjectWithUUID, instance: any, path: string, listener: ChangeListener) {
-        if (instance instanceof ObjectWithUUID) {
+        if (instance instanceof ObjectWithUUID || GetTheTypeNameOfTheObject(instance) == "array") {
             if (this.tracked_objects.has(instance.uuid)) {
+                this.tracking_debug(`Stopping @ ${path}, with instance ${instance.constructor.name}. It's an ObjectWithUUID and is already tracked`);
                 return;
             }
             this.install_observer(owner, instance, path, listener);
         } else {
             // Can't check ... install regardless
+            // This is OK. It'll just mean that if this object changes, we notify with the owner (so, the owner 'owns' this instance).
+            // This is so an owner that is an ObjectWithUUID can own POJO's
             this.install_observer(owner, instance, path, listener);
         }
 
@@ -178,6 +196,10 @@ class ObjectChangeTracker {
 
     private install_observer(owner: ObjectWithUUID, instance: object, path: string, listener: ChangeListener) {
         this.tracking_debug(`Install change listener for: ${path} (${instance}/${instance.constructor.name})`);
+        // if(isBoxedObservable(instance)) {
+        //     this.tracking_debug(`Ignored, it's a boxed observable already (BUT TO US?)`);
+        //     return;
+        // }
         observe(instance, (change) => {
             /*
             Ignore changes to '_rev'
@@ -200,7 +222,7 @@ class ObjectChangeTracker {
 
             // Notify, side effect is that we emit from our subject
             listener({owner: owner, change: change, type: "object", path: path});
-        });
+        }, false);
     }
 
     clear_changes_for(owner: ObjectWithUUID) {

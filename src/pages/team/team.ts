@@ -5,6 +5,7 @@ import {Person} from "../../scheduling/people";
 import {RootStore} from "../../store/root";
 import {ObjectValidation} from "../../scheduling/shared";
 import {PageUtils} from "../page-utils";
+import {NamedObject} from "../../scheduling/common/scheduler-store";
 
 @IonicPage({
     name: 'page-team',
@@ -54,13 +55,13 @@ export class TeamPage {
     }
 
     add_person_to_team(person: Person) {
-        this.team.add_person(person);
+        this.team.add(person);
 
         // TODO: Add to all people?
     }
 
     delete_from_team(person: Person) {
-        this.team.remove_person(person);
+        this.team.remove(person);
     }
 
     add_from_existing() {
@@ -68,13 +69,13 @@ export class TeamPage {
         let alert = this.alertCtrl.create({
             title: "Select people to add"
         });
-        let people_not_in_list = this.rootStore.people_store.people.filter(p => this.team.find_person_in_team(p) == null);
+        let people_not_in_list = this.rootStore.people.all.filter(p => this.team.findPersonInTeam(p) == null);
         if (people_not_in_list.length == 0) {
             let validation = ObjectValidation.simple("All people are already in the list");
             this.pageUtils.show_validation_error(validation);
             return;
         }
-        for (let p of Person.sort_by_name(people_not_in_list)) {
+        for (let p of NamedObject.sortByName(people_not_in_list)) {
             alert.addInput({
                 type: 'checkbox',
                 value: p.uuid,
@@ -85,8 +86,8 @@ export class TeamPage {
             text: 'Add',
             handler: (uuids) => {
                 for (let uuid of uuids) {
-                    let person = this.rootStore.people_store.find_by_uuid(uuid);
-                    this.team.add_person(person);
+                    let person = this.rootStore.findByUUID(uuid) as Person;
+                    this.team.add(person);
                 }
             }
         });

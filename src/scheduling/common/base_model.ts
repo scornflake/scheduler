@@ -1,11 +1,9 @@
-import {action, observable} from "mobx-angular";
+import {observable} from "mobx-angular";
 import * as _ from 'lodash';
 import {isUndefined} from "util";
 import {SafeJSON} from "../../common/json/safe-stringify";
-import {persisted} from "../../providers/server/db-decorators";
-import {PersistenceType} from "../../providers/server/db-types";
 
-abstract class PersistableObject {
+abstract class TypedObject {
     @observable type: string;
 
     constructor() {
@@ -16,14 +14,14 @@ abstract class PersistableObject {
         if (obj == null) {
             return false;
         }
-        if (!(obj instanceof PersistableObject)) {
+        if (!(obj instanceof TypedObject)) {
             return false;
         }
         return this.type == obj.type;
     }
 }
 
-class ObjectWithUUID extends PersistableObject {
+abstract class ObjectWithUUID extends TypedObject {
     @observable _id: string;
     @observable _rev: string;
     is_new: boolean;
@@ -78,7 +76,6 @@ class ObjectWithUUID extends PersistableObject {
 }
 
 
-
 /*
 What if I throw away the DB entirely?
 - I loose the 'change detection' thing (maybe I can keep it just for that)
@@ -95,37 +92,20 @@ Want:
 - DB reference lookups use the cache first. If they have to construct, they add to the cache.
 - Pouch updates the cache upon seeing changes.
 
-Um, isn't that what the 'stores' are? Yes, sort of, but there are many.
 
-So, stores:
-- Is it possible to reduce all to a single store, keyed by type?
-- So lookups CAN be by UUID, but there is lookup by type as well (easy enough if
-the store can only track PersistableObjects, as these have a type).
-- This way, we can use a single find_by_uuid.
-- Can still have people(), teams(), etc getters, since we can query by type.
-
-Downsides:
-- All custom methods 'find-by-name, by-xxxx' are harder, cos not all objects have those.
-Maybe remove them? Put them ... elsewhere? Perhaps have store.person.find_by_name, where person is a inner class, exposed... like a Manager in Django.
-- Probably only scales to a few hundred thousand objects, perhaps less.  That's more a memory thing, wouldn't matter if you had many stores / one store.
+TODO:
+- Remove @persisted and replace with an explicit map.
+- Add this map to the DB / store / somewhere, such that a test can modify it as well.
 
  */
 
-
-
-class BaseStore<T extends ObjectWithUUID> extends ObjectWithUUID {
-    // organization DOESNT need persisted.
-    // People DOES (but... it's not really managed by the DB directly)
-    // So, Teams shouldn't be managed directly either?
-    @persisted(PersistenceType.ReferenceList) items: Array<T>;
-    // items: Array<T>;
+class GenericObjectStore<T extends ObjectWithUUID> {
+    items: Array<T>;
 
     constructor() {
-        super();
         this.items = [];
     }
 
-    @action
     add_object_to_array(instance: T, overwrite_existing = false): T {
         if (!instance) {
             throw new Error(`Cannot add 'null' to this list. We are: ${this.constructor.name}s`)
@@ -141,22 +121,19 @@ class BaseStore<T extends ObjectWithUUID> extends ObjectWithUUID {
         return instance;
     }
 
-    @action
     add_objects_to_array(many_items: T[]) {
         many_items.forEach(i => this.add_object_to_array(i));
     }
 
-    @action
     remove_object_from_array(instance: T) {
         this.items = this.items.filter(o => o.uuid != instance.uuid);
     }
 
-    @action
     protected clear_all_objects_from_array() {
         this.items = []
     }
 
-    find_by_uuid(uuid: string): T {
+    findByUUID(uuid: string): T {
         return this.items.find(v => v.uuid == uuid);
     }
 
@@ -166,6 +143,14 @@ class BaseStore<T extends ObjectWithUUID> extends ObjectWithUUID {
 
     findIndex(predicate, fromIndex = 0) {
         return _.findIndex(this.items, predicate, fromIndex);
+    }
+
+    find(predicate) {
+        return this.items.find(predicate);
+    }
+
+    clear() {
+        this.items = [];
     }
 }
 
@@ -216,8 +201,8 @@ function delete_from_array<T>(array: Array<T>, object: T) {
 
 export {
     ObjectWithUUID,
-    PersistableObject,
-    BaseStore,
+    TypedObject,
+    GenericObjectStore,
     check_if_undefined,
     delete_from_array,
     find_object_with_name

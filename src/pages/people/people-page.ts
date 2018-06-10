@@ -3,6 +3,7 @@ import {IonicPage, NavController} from 'ionic-angular';
 import {Person} from "../../scheduling/people";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {RootStore} from "../../store/root";
+import {NamedObject} from "../../scheduling/common/scheduler-store";
 
 @IonicPage({
     name: 'page-people',
@@ -25,7 +26,7 @@ export class PeoplePage {
     }
 
     public people(): Array<Person> {
-        let people = Person.sort_by_name(this.rootStore.people_store.people);
+        let people = NamedObject.sortByName(this.rootStore.people.all);
         if (this.name_filter.length > 0) {
             people = people.filter(p => p.name.toLowerCase().indexOf(this.name_filter.toLowerCase()) >= 0);
         }
@@ -43,12 +44,12 @@ export class PeoplePage {
     }
 
     private add_person(new_person: Person) {
-        this.rootStore.people_store.add_person(new_person);
+        this.rootStore.people.add(new_person);
         this.rootStore.save_or_update(new_person);
     }
 
     delete_person(person: Person) {
-        this.rootStore.people_store.remove_person(person);
+        this.rootStore.people.remove(person);
         this.rootStore.remove_object(person);
     }
 }

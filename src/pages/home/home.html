@@ -34,7 +34,7 @@
     <ion-grid>
         <ion-row>
             <ion-col auto>
-                <schedule-viewer [schedule]="rootStore.organization_store.schedule"></schedule-viewer>
+                <schedule-viewer [schedule]="rootStore.schedule"></schedule-viewer>
             </ion-col>
             <ion-col *ngIf="rootStore.ui_store.have_selection" col-3>
                 <person-editor></person-editor>

@@ -1,5 +1,4 @@
-import {BaseStore, delete_from_array, ObjectWithUUID} from "./common/base_model";
-import {observable} from "mobx-angular";
+import {delete_from_array} from "./common/base_model";
 import {Assignment} from "./assignment";
 import {Person} from "./people";
 import {OnThisDate, Rule, UsageWeightedSequential} from "./rule_based/rules";
@@ -9,21 +8,21 @@ import {LoggingWrapper} from "../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {Team} from "./teams";
 import {Role} from "./role";
-import {persisted} from "../providers/server/db-decorators";
+import {registerFactory} from "../providers/server/db-decorators";
+import {NamedObject} from "./common/scheduler-store";
 
-class Plan extends ObjectWithUUID {
-    @persisted()
-    @observable name: string;
-
-    @persisted()
+@registerFactory
+class Plan extends NamedObject {
     start_date: Date;
-    @persisted()
+
     end_date: Date;
-    @persisted()
+
     days_per_period: number;
 
     manual_layouts: Map<Date, Role>;
+
     roles: Array<Role>;
+
     team: Team;
 
     // This is the people available for this service/event
@@ -35,10 +34,12 @@ class Plan extends ObjectWithUUID {
     private logger: Logger;
 
     constructor(name: string, team: Team) {
-        super();
+        super(name);
+        this.logger = LoggingWrapper.getLogger("model.plan");
 
+        this.start_date = null;
+        this.end_date = null;
         this.team = team;
-        this.name = name;
         this.roles = new Array<Role>();
 
         this._assignments = new Array<Assignment>();
@@ -46,8 +47,6 @@ class Plan extends ObjectWithUUID {
 
         this.manual_layouts = new Map<Date, Role>();
         this.days_per_period = 7;
-
-        this.logger = LoggingWrapper.getLogger("model.plan");
     }
 
     validate() {
@@ -132,7 +131,7 @@ class Plan extends ObjectWithUUID {
 
     assignment_for(person: Person): Assignment {
         // This person must exist in the team.
-        let p = this.team.find_person_in_team(person);
+        let p = this.team.findPersonInTeam(person);
         if (!p) {
             throw new Error(`Person ${person.name} not found in the team. Can't add them to this service`);
         }
@@ -252,33 +251,6 @@ class Plan extends ObjectWithUUID {
     }
 }
 
-class PlansStore extends BaseStore<Plan> {
-    plans: Array<Plan>;
-
-    constructor() {
-        super();
-        this.plans = new Array<Plan>();
-    }
-
-    get plans_by_date_latest_first(): Array<Plan> {
-        return this.plans.sort(((a, b) => {
-            if (a.start_date > b.start_date) {
-                return -1;
-            } else if (a.start_date < b.start_date) {
-                return 1;
-            }
-            return 0;
-        }))
-    }
-
-    add_plan_named(event_name: string, team: Team): Plan {
-        let plan = new Plan(event_name, team);
-        this.plans.push(plan);
-        return plan;
-    }
-}
-
 export {
     Plan,
-    PlansStore
 }

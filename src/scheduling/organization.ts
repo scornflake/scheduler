@@ -1,71 +1,13 @@
-import {BaseStore, ObjectWithUUID} from "./common/base_model";
-import {action, observable} from "mobx-angular";
-import {PeopleStore} from "./people-store";
-import {ScheduleWithRules} from "./rule_based/scheduler";
-import {ApplicationRef} from "@angular/core";
-import {Plan, PlansStore} from "./plan";
-import {TeamsStore} from "./teams-store";
-import {persisted} from "../providers/server/db-decorators";
+import {NamedObject} from "./common/scheduler-store";
+import {registerFactory} from "../providers/server/db-decorators";
 
-class Organization extends ObjectWithUUID {
-    @persisted() @observable name: string;
-
+@registerFactory
+class Organization extends NamedObject {
     constructor(name: string) {
-        super();
-        this.name = name;
-    }
-}
-
-class OrganizationStore extends BaseStore<Organization> {
-    @observable people_store: PeopleStore;
-    @observable plans_store: PlansStore;
-    @observable teams_store: TeamsStore;
-
-    @observable schedule: ScheduleWithRules;
-    @observable previous_schedule: ScheduleWithRules;
-
-    draft_service: Plan;
-
-    constructor(private appRef: ApplicationRef) {
-        super();
-
-        this.people_store = new PeopleStore();
-        this.plans_store = new PlansStore();
-        this.teams_store = new TeamsStore();
-    }
-
-    get organizations(): Array<Organization> {
-        return this.items;
-    }
-
-    @action add_organisation(org: Organization) {
-        this.add_object_to_array(org);
-    }
-
-    @action removeOrganization(org: Organization) {
-        this.remove_object_from_array(org);
-    }
-
-    @action
-    generate_schedule(): ScheduleWithRules {
-        this.schedule = new ScheduleWithRules(this.draft_service, this.previous_schedule);
-        this.schedule.create_schedule();
-        this.appRef.tick();
-        return this.schedule;
-    }
-
-    set_previous_schedule(schedule: ScheduleWithRules) {
-        this.previous_schedule = schedule;
-        this.schedule = null;
-        // this.generate_schedule();
-    }
-
-    find_by_name(name: string): Organization {
-        return this.items.find(o => o.name.toLowerCase() == name.toLowerCase());
+        super(name);
     }
 }
 
 export {
     Organization,
-    OrganizationStore
 }

@@ -1,5 +1,5 @@
 import {dayAndHourForDate, parseDateFromSpreadsheetDate} from "./common/date-utils";
-import {Unavailablity} from "./unavailability";
+import {Unavailability} from "./unavailability";
 
 describe('unavailability', () => {
     it('can parse dates', () => {
@@ -16,26 +16,26 @@ describe('unavailability', () => {
     });
 
     it('equality sanity', function () {
-        let unavil = new Unavailablity(new Date(2010, 10, 1));
+        let unavil = new Unavailability(new Date(2010, 10, 1));
         expect(unavil.isEqual(unavil)).toBeTruthy();
     });
 
     it('can model single date', () => {
-        let unavil = new Unavailablity(new Date(2010, 10, 1));
+        let unavil = new Unavailability(new Date(2010, 10, 1));
         expect(unavil.matches_single_date(new Date(2010, 10, 1))).toBeTruthy();
         expect(unavil.matches_single_date(new Date(2010, 11, 1))).toBeFalsy();
         expect(unavil.matches_single_date(new Date(2009, 10, 1))).toBeFalsy();
     });
 
     it('takes into account hours', () => {
-        let unavil = new Unavailablity(new Date(2010, 10, 1, 10));
+        let unavil = new Unavailability(new Date(2010, 10, 1, 10));
         expect(unavil.matches_single_date(new Date(2010, 10, 1, 10))).toBeTruthy();
         expect(unavil.matches_single_date(new Date(2010, 10, 1, 10, 20))).toBeTruthy();
         expect(unavil.matches_single_date(new Date(2010, 10, 1, 11, 20))).toBeFalsy();
     });
 
     it('can check for date being "in" a day', () => {
-        let unavil = new Unavailablity(new Date(2010, 10, 1));
+        let unavil = new Unavailability(new Date(2010, 10, 1));
         expect(unavil.contains_date(new Date(2010, 10, 1, 10))).toBeTruthy();
 
         expect(unavil.contains_date(new Date(2010, 10, 1))).toBeTruthy();
@@ -44,7 +44,7 @@ describe('unavailability', () => {
     });
 
     it('can model a date range', () => {
-        let unavil = new Unavailablity(new Date(2010, 10, 1), new Date(2010, 11, 2));
+        let unavil = new Unavailability(new Date(2010, 10, 1), new Date(2010, 11, 2));
         expect(unavil.contains_date(new Date(2010, 10, 1))).toBeTruthy();
         expect(unavil.contains_date(new Date(2010, 10, 1, 10))).toBeTruthy();
         expect(unavil.contains_date(new Date(2010, 11, 1))).toBeTruthy();

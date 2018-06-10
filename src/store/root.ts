@@ -1,30 +1,33 @@
 import {SavedState, UIStore} from "./UIState";
 import {ApplicationRef, Injectable} from "@angular/core";
-import {Organization, OrganizationStore} from "../scheduling/organization";
+import {Organization} from "../scheduling/organization";
 import {Logger} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
 import {share} from "rxjs/operators";
 import {SafeJSON} from "../common/json/safe-stringify";
-import {autorun, computed, IReactionDisposer, observable} from "mobx";
-import {PeopleStore} from "../scheduling/people-store";
+import {autorun, IReactionDisposer, observable} from "mobx";
 import {Plan} from "../scheduling/plan";
 import {SchedulerDatabase} from "../providers/server/db";
 import {NPBCStoreConstruction} from "../providers/store/test.store";
 import {Team} from "../scheduling/teams";
-import {TeamsStore} from "../scheduling/teams-store";
 import {ObjectWithUUID} from "../scheduling/common/base_model";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {Person} from "../scheduling/people";
 import {PageUtils} from "../pages/page-utils";
 import {ObjectValidation} from "../scheduling/shared";
 import {csd} from "../scheduling/common/date-utils";
+import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
+import {SchedulerObjectStore} from "../scheduling/common/scheduler-store";
 
 @Injectable()
-class RootStore {
-    @observable organization_store: OrganizationStore;
+class RootStore extends SchedulerObjectStore {
     @observable ui_store: UIStore;
 
     ready_event: Observable<boolean>;
+
+    @observable draft_service: Plan;
+    @observable schedule: ScheduleWithRules;
+    @observable previous_schedule: ScheduleWithRules;
 
     private regenerator: IReactionDisposer;
     private saving: IReactionDisposer;
@@ -33,19 +36,26 @@ class RootStore {
     constructor(public db: SchedulerDatabase,
                 public pageUtils: PageUtils,
                 private appRef: ApplicationRef) {
+        super();
 
         this.logger = LoggingWrapper.getLogger("store");
-
-        this.organization_store = new OrganizationStore(this.appRef);
         this.ui_store = new UIStore();
 
         this.initialize();
     }
 
-    get draft_service(): Plan {
-        return this.organization_store.draft_service;
+    generate_schedule(): ScheduleWithRules {
+        this.schedule = new ScheduleWithRules(this.draft_service, this.previous_schedule);
+        this.schedule.create_schedule();
+        this.appRef.tick();
+        return this.schedule;
     }
 
+    set_previous_schedule(schedule: ScheduleWithRules) {
+        this.previous_schedule = schedule;
+        this.schedule = null;
+        // this.generate_schedule();
+    }
 
     initialize() {
         this.ready_event = Observable.create(obs => {
@@ -83,20 +93,10 @@ class RootStore {
         Can only load stuff when we have our organization (everything depends on that, since it names our shared DB, thus connection to the outside)
          */
 
-        await this.db.load_into_store<Organization>(this.organization_store, 'Organization');
-        await this.db.load_into_store<Person>(this.people_store, 'Person');
-        await this.db.load_into_store<Team>(this.teams_store, 'Team');
+        await this.db.load_into_store<Person>(this.people, 'Person');
+        await this.db.load_into_store<Team>(this.teams, 'Team');
     }
 
-    get teams_store(): TeamsStore {
-        return this.organization_store.teams_store;
-    }
-
-    get people_store(): PeopleStore {
-        return this.organization_store.people_store;
-    }
-
-    @computed
     get state(): SavedState {
         return this.ui_store.saved_state;
     }
@@ -120,15 +120,14 @@ class RootStore {
 
     private setup_fake_data() {
         // make up a default team
-        let team = this.teams_store.find_by_name("Default");
-        if(team) {
+        let team = this.teams.firstThisTypeByName("Default");
+        if (team) {
             // for testing, create some fake
-            let org_store = this.organization_store;
-            org_store.draft_service = org_store.plans_store.add_plan_named("Sunday Morning Service", team);
-            org_store.draft_service.start_date = csd(2018, 6, 3);
-            org_store.draft_service.end_date = csd(2018, 9, 30);
+            this.draft_service = this.plans.add(new Plan("Sunday Morning Service", team));
+            this.draft_service.start_date = csd(2018, 6, 3);
+            this.draft_service.end_date = csd(2018, 9, 30);
 
-            NPBCStoreConstruction.SetupServiceRoles(org_store.draft_service);
+            NPBCStoreConstruction.SetupServiceRoles(this.draft_service);
 
             try {
                 // NPBCStoreConstruction.SetupService(org_store.draft_service, team);
@@ -145,7 +144,7 @@ class RootStore {
     }
 
     private setup_fake_people() {
-        NPBCStoreConstruction.SetupPeople(this.people_store);
+        NPBCStoreConstruction.SetupPeople(this.people);
     }
 
     save_or_update(object: ObjectWithUUID) {

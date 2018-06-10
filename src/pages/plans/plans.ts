@@ -17,7 +17,7 @@ export class PlansPage {
     constructor(public navCtrl: NavController,
                 public rootStore: RootStore,
                 public navParams: NavParams) {
-        this.plans = this.rootStore.organization_store.plans_store.plans;
+        this.plans = this.rootStore.plans.all;
     }
 
     ionViewDidLoad() {

@@ -41,7 +41,7 @@
       },
       {
         "loggerName": "db.tracking",
-        "logLevel": "INFO"
+        "logLevel": "DEBUG"
       }
     ],
     "browserConsoleAppender": {

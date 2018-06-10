@@ -14,7 +14,15 @@
     <ion-list>
         <ion-item *ngFor="let i of stats">
             <ion-label>{{i.label}}</ion-label>
-            <ion-label>{{i.value}}</ion-label>
+            <ion-label text-right>{{i.value}}</ion-label>
+        </ion-item>
+    </ion-list>
+
+    <ion-list>
+        <ion-list-header>Reflection</ion-list-header>
+        <ion-item *ngFor="let i of classFactories">
+            <h2 col-3>Class {{i.class_name}}</h2>
+            <p text-right *ngFor="let p of propertiesFor(i)">{{p}}</p>
         </ion-item>
     </ion-list>
 </ion-content>

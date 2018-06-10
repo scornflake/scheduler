@@ -1,32 +1,84 @@
 import {SchedulerDatabase} from "../../providers/server/db";
 import {Person} from "../../scheduling/people";
-import {ObjectWithUUID, PersistableObject} from "../../scheduling/common/base_model";
-import {persisted} from "../../providers/server/db-decorators";
+import {ObjectWithUUID, TypedObject} from "../../scheduling/common/base_model";
 import {PersistenceType} from "../../providers/server/db-types";
 import {MockConfigurationService} from "../../app/logging-configuration";
 import {observable} from "mobx";
 import {SafeJSON} from "../../common/json/safe-stringify";
-import {TeamsStore} from "../../scheduling/teams-store";
+import {Mapper, ClassFieldMapping} from "../../providers/mapping/mapper";
+import {scheduler_db_map} from "../../assets/db.mapping";
+import {registerFactory} from "../../providers/server/db-decorators";
 
+@registerFactory
 class SomeEntity extends ObjectWithUUID {
-    @persisted() some_field: string = "a value";
+    some_field: string = "a value";
 }
 
+@registerFactory
 class Empty extends ObjectWithUUID {
 }
 
+@registerFactory
 class ThingWithNestedObjects extends ObjectWithUUID {
-    @persisted(PersistenceType.NestedObjectList)
-    my_list = [new SomeEntity(), new SomeEntity(), new SomeEntity()]
+    my_list = new Array(new SomeEntity(), new SomeEntity(), new SomeEntity());
 }
 
+@registerFactory
+class ThingWithReference extends ObjectWithUUID {
+    name: string = "This is my name";
+    note: string = "This isn't persisted";
+    another_object: SomeEntity = new SomeEntity();
+}
 
 describe('db', () => {
     let db;
+    let mapper: Mapper;
+    let test_config: ClassFieldMapping = {
+        classes: [
+            {
+                name: 'SomeEntity',
+                fields: [
+                    {name: 'some_field'}
+                ],
+                inherit: 'ObjectWithUUID'
+            },
+            {
+                name: 'Empty',
+                inherit: 'ObjectWithUUID'
+            },
+            {
+                name: 'ThingWithNestedObjects',
+                fields: [
+                    {name: 'my_list', type: PersistenceType.NestedObjectList}
+                ],
+                inherit: 'ObjectWithUUID'
+            },
+            {
+                name: 'ThingWithReference',
+                fields: [
+                    {name: 'name'},
+                    {name: 'another_object', type: PersistenceType.Reference}
+                ]
+            }
+        ]
+    };
 
     beforeEach((done) => {
+        mapper = new Mapper();
+
+        /*
+        Add in mappings that we need, since we reference other models in this test
+         */
+        mapper.add_configuration(scheduler_db_map);
+
+        /*
+        Annnd... mappings for this test
+         */
+        mapper.add_configuration(test_config);
+
+
         let config = MockConfigurationService.ServiceForTests();
-        SchedulerDatabase.ConstructAndWait(config).then(new_db => {
+        SchedulerDatabase.ConstructAndWait(config, mapper).then(new_db => {
             db = new_db;
             done();
         });
@@ -39,22 +91,6 @@ describe('db', () => {
         expect(ref).toBe(`rrr:Person:${person.uuid}`);
     });
 
-    it('type is included in a nested object which is an PersistableObject', function () {
-        class VerySimple extends PersistableObject {
-            @persisted(PersistenceType.NestedObject) child = new SomeEntity();
-        }
-
-        /*
-        SomeEntity is actually a ObjectWithUUID. BUT: we're persisting it as a nested object, NOT A REFERENCE.
-        So, we don't actually EXPECT the _rev and _id to be returned back to us.
-         */
-
-        let value = new VerySimple();
-        let obj_dict = db.create_json_from_object(value);
-        console.log(`Resulting obj dict: ${SafeJSON.stringify(obj_dict)}`);
-        expect(value.child.type).not.toBeUndefined();
-    });
-
     it('creates minimal JSON from empty object', function () {
         let empty = new Empty();
         let json = db.create_json_from_object(empty);
@@ -64,23 +100,34 @@ describe('db', () => {
     });
 
     it('converts only persistable properties', function () {
-        class ContainedObject extends PersistableObject {
-            @persisted()
+        @registerFactory
+        class ContainedObject extends TypedObject {
             some_field: string = "a value";
-
             something_else: string = "not persisted";
         }
 
+        @registerFactory
         class ThingWithContainedObject extends ObjectWithUUID {
-            @persisted()
             name: string = "This is my name";
-
             note: string = "This isn't persisted";
-
-            @persisted(PersistenceType.NestedObject)
             another_object: ContainedObject = new ContainedObject();
         }
 
+        let more_map: ClassFieldMapping = {
+            classes: [{
+                name: 'ContainedObject',
+                fields: [{name: 'some_field'}],
+                inherit: 'TypedObject'
+            }, {
+                name: 'ThingWithContainedObject',
+                fields: [
+                    {name: 'name'},
+                    {name: 'another_object', type: PersistenceType.NestedObject}
+                ],
+                inherit: 'ObjectWithUUID'
+            }]
+        };
+        mapper.add_configuration(more_map);
 
         let simple = new ThingWithContainedObject();
         let json = db.create_json_from_object(simple);
@@ -95,12 +142,6 @@ describe('db', () => {
     });
 
     it('can convert object with UUID to a reference', function () {
-        class ThingWithReference extends ObjectWithUUID {
-            @persisted() name: string = "This is my name";
-            note: string = "This isn't persisted";
-            @persisted(PersistenceType.Reference) another_object: SomeEntity = new SomeEntity();
-        }
-
         let simple = new ThingWithReference();
 
         let json = db.create_json_from_object(simple);
@@ -109,10 +150,20 @@ describe('db', () => {
     });
 
     it('should convert a list of references', function () {
+        @registerFactory
         class ThingWithListOfReferences extends ObjectWithUUID {
-            @persisted(PersistenceType.ReferenceList)
             my_list = [new SomeEntity(), new SomeEntity(), new SomeEntity()]
         }
+
+        let more_map: ClassFieldMapping = {
+            classes: [{
+                name: 'ThingWithListOfReferences',
+                fields: [
+                    {name: 'my_list', type: PersistenceType.ReferenceList}
+                ]
+            }]
+        };
+        mapper.add_configuration(more_map);
 
         let instance = new ThingWithListOfReferences();
         let json = db.create_json_from_object(instance);
@@ -126,11 +177,20 @@ describe('db', () => {
     });
 
     it('should convert an observable mbox list', function () {
+        @registerFactory
         class ThingWithListOfReferences extends ObjectWithUUID {
-            @observable @persisted(PersistenceType.ReferenceList)
-            my_list = [new SomeEntity(), new SomeEntity(), new SomeEntity()]
+            @observable my_list = [new SomeEntity(), new SomeEntity(), new SomeEntity()]
         }
 
+        let more_map: ClassFieldMapping = {
+            classes: [{
+                name: 'ThingWithListOfReferences',
+                fields: [
+                    {name: 'my_list', type: PersistenceType.ReferenceList}
+                ]
+            }]
+        };
+        mapper.add_configuration(more_map);
         let instance = new ThingWithListOfReferences();
         let json = db.create_json_from_object(instance);
         let expected_items = [
@@ -145,20 +205,17 @@ describe('db', () => {
     it('able to convert list of nested objects', function () {
         let instance = new ThingWithNestedObjects();
         let json = db.create_json_from_object(instance);
-        let expected_items = [
-            {type: 'SomeEntity', some_field: "a value"},
-            {type: 'SomeEntity', some_field: "a value"},
-            {type: 'SomeEntity', some_field: "a value"},
-        ];
-        // console.log(`JSON: ${JSON.stringify(json)}`);
-        expect(json.my_list).toEqual(expected_items);
+        console.log(`JSON: ${JSON.stringify(json)}`);
+        expect(json.my_list.length).toEqual(3);
+        expect(json.my_list[0].some_field).toEqual('a value');
+        expect(json.my_list[1].some_field).toEqual('a value');
+        expect(json.my_list[2].some_field).toEqual('a value');
 
     });
 
     it('can load a simple single object with uuid', (done) => {
         let an_entity = new SomeEntity();
         db.store_or_update_object(an_entity).then((saved_object) => {
-
             console.log(`Response from store: ${SafeJSON.stringify(saved_object)}`);
             let obj_id = saved_object._id;
             console.log(`ID should be: ${obj_id}, with returned type: ${saved_object.constructor.name}`);
@@ -213,13 +270,16 @@ describe('db', () => {
         function test_is_observable(list) {
 
         }
-        let team_store = new TeamsStore();
+
+        // let team_store = new TeamsStore();
     });
 
     it('should store a person with nested availability', function (done) {
         let me = new Person("Neil");
         expect(me.availability).not.toBeNull();
         expect(me.availability.unit).not.toBeNull();
+        expect(me.unavailable).not.toBeNull();
+        expect(me.unavailable).toEqual([]);
 
         let dict_obj = db.create_json_from_object(me);
         console.log(`I made: ${SafeJSON.stringify(dict_obj)}`);
