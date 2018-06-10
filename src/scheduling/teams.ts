@@ -1,9 +1,7 @@
 import {find_object_with_name, GenericObjectStore} from "./common/base_model";
 import {Person} from "./people";
 import {NamedObject} from "./common/scheduler-store";
-import {registerFactory} from "../providers/server/db-decorators";
 
-@registerFactory
 class Team extends NamedObject {
     private _people: GenericObjectStore<Person>;
 

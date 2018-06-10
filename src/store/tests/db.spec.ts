@@ -1,29 +1,24 @@
 import {SchedulerDatabase} from "../../providers/server/db";
 import {Person} from "../../scheduling/people";
 import {ObjectWithUUID, TypedObject} from "../../scheduling/common/base_model";
-import {PersistenceType} from "../../providers/server/db-types";
 import {MockConfigurationService} from "../../app/logging-configuration";
 import {observable} from "mobx";
 import {SafeJSON} from "../../common/json/safe-stringify";
-import {Mapper, ClassFieldMapping} from "../../providers/mapping/mapper";
+import {ClassFieldMapping, OrmMapper} from "../../providers/mapping/orm-mapper";
 import {scheduler_db_map} from "../../assets/db.mapping";
-import {registerFactory} from "../../providers/server/db-decorators";
+import {PersistenceType} from "../../providers/mapping/orm-mapper-type";
 
-@registerFactory
 class SomeEntity extends ObjectWithUUID {
     some_field: string = "a value";
 }
 
-@registerFactory
 class Empty extends ObjectWithUUID {
 }
 
-@registerFactory
 class ThingWithNestedObjects extends ObjectWithUUID {
     my_list = new Array(new SomeEntity(), new SomeEntity(), new SomeEntity());
 }
 
-@registerFactory
 class ThingWithReference extends ObjectWithUUID {
     name: string = "This is my name";
     note: string = "This isn't persisted";
@@ -32,7 +27,7 @@ class ThingWithReference extends ObjectWithUUID {
 
 describe('db', () => {
     let db;
-    let mapper: Mapper;
+    let mapper: OrmMapper;
     let test_config: ClassFieldMapping = {
         classes: [
             {
@@ -40,41 +35,46 @@ describe('db', () => {
                 fields: [
                     {name: 'some_field'}
                 ],
-                inherit: 'ObjectWithUUID'
+                inherit: 'ObjectWithUUID',
+                factory: () => new SomeEntity()
             },
             {
                 name: 'Empty',
-                inherit: 'ObjectWithUUID'
+                inherit: 'ObjectWithUUID',
+                factory: () => new Empty()
             },
             {
                 name: 'ThingWithNestedObjects',
                 fields: [
                     {name: 'my_list', type: PersistenceType.NestedObjectList}
                 ],
-                inherit: 'ObjectWithUUID'
+                inherit: 'ObjectWithUUID',
+                factory: () => new ThingWithNestedObjects()
             },
             {
                 name: 'ThingWithReference',
                 fields: [
                     {name: 'name'},
                     {name: 'another_object', type: PersistenceType.Reference}
-                ]
+                ],
+                inherit: 'ObjectWithUUID',
+                factory: () => new ThingWithReference()
             }
         ]
     };
 
     beforeEach((done) => {
-        mapper = new Mapper();
+        mapper = new OrmMapper();
 
         /*
         Add in mappings that we need, since we reference other models in this test
          */
-        mapper.add_configuration(scheduler_db_map);
+        mapper.addConfiguration(scheduler_db_map);
 
         /*
         Annnd... mappings for this test
          */
-        mapper.add_configuration(test_config);
+        mapper.addConfiguration(test_config);
 
 
         let config = MockConfigurationService.ServiceForTests();
@@ -100,13 +100,11 @@ describe('db', () => {
     });
 
     it('converts only persistable properties', function () {
-        @registerFactory
         class ContainedObject extends TypedObject {
             some_field: string = "a value";
             something_else: string = "not persisted";
         }
 
-        @registerFactory
         class ThingWithContainedObject extends ObjectWithUUID {
             name: string = "This is my name";
             note: string = "This isn't persisted";
@@ -117,17 +115,19 @@ describe('db', () => {
             classes: [{
                 name: 'ContainedObject',
                 fields: [{name: 'some_field'}],
-                inherit: 'TypedObject'
+                inherit: 'TypedObject',
+                factory: () => new ContainedObject()
             }, {
                 name: 'ThingWithContainedObject',
                 fields: [
                     {name: 'name'},
                     {name: 'another_object', type: PersistenceType.NestedObject}
                 ],
-                inherit: 'ObjectWithUUID'
+                inherit: 'ObjectWithUUID',
+                factory: () => new ThingWithContainedObject()
             }]
         };
-        mapper.add_configuration(more_map);
+        mapper.addConfiguration(more_map);
 
         let simple = new ThingWithContainedObject();
         let json = db.create_json_from_object(simple);
@@ -150,7 +150,6 @@ describe('db', () => {
     });
 
     it('should convert a list of references', function () {
-        @registerFactory
         class ThingWithListOfReferences extends ObjectWithUUID {
             my_list = [new SomeEntity(), new SomeEntity(), new SomeEntity()]
         }
@@ -160,10 +159,12 @@ describe('db', () => {
                 name: 'ThingWithListOfReferences',
                 fields: [
                     {name: 'my_list', type: PersistenceType.ReferenceList}
-                ]
+                ],
+                inherit: 'ObjectWithUUID',
+                factory: () => new ThingWithListOfReferences()
             }]
         };
-        mapper.add_configuration(more_map);
+        mapper.addConfiguration(more_map);
 
         let instance = new ThingWithListOfReferences();
         let json = db.create_json_from_object(instance);
@@ -177,7 +178,6 @@ describe('db', () => {
     });
 
     it('should convert an observable mbox list', function () {
-        @registerFactory
         class ThingWithListOfReferences extends ObjectWithUUID {
             @observable my_list = [new SomeEntity(), new SomeEntity(), new SomeEntity()]
         }
@@ -187,10 +187,12 @@ describe('db', () => {
                 name: 'ThingWithListOfReferences',
                 fields: [
                     {name: 'my_list', type: PersistenceType.ReferenceList}
-                ]
+                ],
+                inherit: 'ObjectWithUUID',
+                factory: () => new ThingWithListOfReferences()
             }]
         };
-        mapper.add_configuration(more_map);
+        mapper.addConfiguration(more_map);
         let instance = new ThingWithListOfReferences();
         let json = db.create_json_from_object(instance);
         let expected_items = [

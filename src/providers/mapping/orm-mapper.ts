@@ -1,9 +1,18 @@
-import {PersistenceType} from "../server/db-types";
-import {isUndefined} from "util";
+import {isArray, isUndefined} from "util";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
-import {CreateNewObjectOfType, RegisteredClassFactories} from "../server/db-decorators";
 import {SafeJSON} from "../../common/json/safe-stringify";
+import {ObjectWithUUID} from "../../scheduling/common/base_model";
+import {isObservableArray, isObservableMap, isObservableObject} from "mobx";
+import {PersistenceType} from "./orm-mapper-type";
+
+function GetTheTypeNameOfTheObject(object: any): string {
+    if (typeof object !== "object" || !object || !object.constructor) return "";
+    if (object.constructor.name === "ObservableMap") return isObservableMap(object) ? "map" : "";
+    else if (object.constructor.name === "ObservableArray") return isObservableArray(object) ? "array" : "";
+    else if (isArray(object)) return "array";
+    else return isObservableObject(object) ? "object" : "";
+}
 
 type PropertyMapping = {
     name: string,
@@ -14,6 +23,7 @@ type ClassMapping = {
     name: string;
     fields?: PropertyMapping[],
     inherit?: string,
+    factory?
 }
 
 type ClassFieldMapping = {
@@ -47,17 +57,17 @@ let internal_mappings: ClassFieldMapping = {
     ]
 };
 
-class Mapper {
+class OrmMapper {
     definitions: Map<string, ClassMapping>;
     private logger: Logger;
 
     constructor() {
         this.logger = LoggingWrapper.getLogger('db.mapping');
         this.definitions = new Map<string, ClassMapping>();
-        this.add_configuration(internal_mappings, false);
+        this.addConfiguration(internal_mappings, false);
     }
 
-    add_configuration(map: ClassFieldMapping, verify_property_names: boolean = true) {
+    addConfiguration(map: ClassFieldMapping, verify_property_names: boolean = true) {
         if (!map) {
             throw new Error("No map provided - wot yo do?");
         }
@@ -67,9 +77,16 @@ class Mapper {
             let actual_properties = [];
             if (verify_property_names) {
                 try {
-                    actual_instance = CreateNewObjectOfType(cm.name);
-                } catch(e) {
+                    actual_instance = this.createNewInstanceOfType(cm.name, cm);
+                } catch (e) {
                     throw new Error(`${e}. Is the class spelt correctly in the mapping configuration? Does it exist?`);
+                }
+                if (!actual_instance) {
+                    let message = `Tried to create instance of ${cm.name} but got nothing back. Bad factory for ${cm.name}?`;
+                    if (!(isUndefined(cm.factory))) {
+                        message += `  Factory is: ${JSON.stringify(cm.factory)}`;
+                    }
+                    throw new Error(message);
                 }
             }
             if (actual_instance) {
@@ -141,10 +158,30 @@ class Mapper {
         this.logger.debug(`${this.gap(nesting)} ${class_name} returning props ${JSON.stringify(theKeys)}`);
         return all;
     }
+
+    createNewInstanceOfType(className: string, cm: ClassMapping = null) {
+        if (cm == null) {
+            cm = this.definitions.get(className);
+            if (cm == null) {
+                throw new Error(`Cannot create new ${className}, no factory registered for this type`);
+            }
+        }
+        if (!(isUndefined(cm.factory))) {
+            this.logger.debug(`Using factory to create instance of ${className}`);
+            let instance = cm.factory();
+            if (instance instanceof ObjectWithUUID) {
+                // clear out the _id and _rev, we don't want the defaults
+                instance._id = undefined;
+                instance._rev = undefined;
+            }
+            return instance;
+        }
+    }
 }
 
 export {
-    Mapper,
+    OrmMapper,
     ClassFieldMapping,
-    ClassMapping
+    ClassMapping,
+    GetTheTypeNameOfTheObject,
 }

@@ -5,25 +5,27 @@ import {Logger} from "ionic-logging-service";
 import {ObjectWithUUID, TypedObject} from "../../scheduling/common/base_model";
 import 'reflect-metadata';
 import {SafeJSON} from "../../common/json/safe-stringify";
-import {PersistenceProperty, PersistenceType} from "./db-types";
-import {
-    CreateNewObjectOfType,
-    GetTheTypeNameOfTheObject,
-    NameForPersistenceProp,
-    NameForPersistencePropType,
-    REF_PREFIX,
-} from "./db-decorators";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {ConfigurationService} from "ionic-configuration-service";
 import {isUndefined} from "util";
-import {ObjectChange, ObjectChangeTracker} from "./db-change-detection";
+import {ObjectChange, ObjectChangeTracker} from "../mapping/orm-change-detection";
 import {Subject} from "rxjs/Subject";
 import {Observable} from "rxjs/Rx";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {debounceTime} from "rxjs/operators";
 import {GenericManager, NamedObject} from "../../scheduling/common/scheduler-store";
-import {Mapper} from "../mapping/mapper";
+import {
+    GetTheTypeNameOfTheObject,
+    OrmMapper,
+} from "../mapping/orm-mapper";
 import Database = PouchDB.Database;
+import {
+    NameForPersistenceProp,
+    NameForPersistencePropType,
+    PersistenceProperty,
+    PersistenceType,
+    REF_PREFIX
+} from "../mapping/orm-mapper-type";
 
 enum SavingState {
     Idle = 0,  // No changes
@@ -43,9 +45,9 @@ class SchedulerDatabase {
     private current_indexes: PouchDB.Find.GetIndexesResponse<{}>;
     private db_name: string;
     private tracker: ObjectChangeTracker;
-    private mapper: Mapper;
+    private mapper: OrmMapper;
 
-    static ConstructAndWait(configService: ConfigurationService, mapper: Mapper): Promise<SchedulerDatabase> {
+    static ConstructAndWait(configService: ConfigurationService, mapper: OrmMapper): Promise<SchedulerDatabase> {
         return new Promise<SchedulerDatabase>((resolve) => {
             let instance = new SchedulerDatabase(configService, mapper);
             instance.logger.info("Starting DB setup for TEST");
@@ -55,7 +57,7 @@ class SchedulerDatabase {
         });
     }
 
-    constructor(configService: ConfigurationService, mapper: Mapper) {
+    constructor(configService: ConfigurationService, mapper: OrmMapper) {
         let db_config = configService.getValue("database");
         this.mapper = mapper;
         this.db_name = db_config['name'];
@@ -141,7 +143,7 @@ class SchedulerDatabase {
         if (doc['type']) {
             let object_type = doc['type'];
             this.persistence_debug(`load object ${id}, type: ${object_type}`, nesting);
-            let instance = CreateNewObjectOfType(object_type);
+            let instance = this.mapper.createNewInstanceOfType(object_type);
             this.convert_from_json_to_object(doc, instance, nesting + 1);
             return this.trackChanges(instance);
         }
@@ -295,7 +297,7 @@ class SchedulerDatabase {
                     case PersistenceType.NestedObject: {
                         let new_type = value['type'];
                         this.persistence_debug(`${propertyName} = new instance of ${new_type}`, nesting);
-                        let new_instance = CreateNewObjectOfType(new_type);
+                        let new_instance = this.mapper.createNewInstanceOfType(new_type);
                         new_object[propertyName] = this.convert_from_json_to_object(value, new_instance, nesting + 1);
                         break;
                     }
@@ -306,7 +308,7 @@ class SchedulerDatabase {
                         value.forEach(v => {
                             let new_type = v['type'];
                             this.persistence_debug(`creating new instance of ${new_type}`, nesting + 1);
-                            let new_instance = CreateNewObjectOfType(new_type);
+                            let new_instance = this.mapper.createNewInstanceOfType(new_type);
                             new_objects.push(this.convert_from_json_to_object(v, new_instance, nesting + 2));
                         });
                         new_object[propertyName] = new_objects;
@@ -337,12 +339,12 @@ class SchedulerDatabase {
     }
 
     private async _load_all_of_type(type: string) {
-        let new_object = CreateNewObjectOfType(type);
+        let new_object = this.mapper.createNewInstanceOfType(type);
         let type_name = new_object.constructor.name;
         let all_objects_of_type = await this.db.find({selector: {type: type_name}});
         this.persistence_debug(`Loading all ${all_objects_of_type.docs.length} objects of type ${type} into object store...`, 0);
         return all_objects_of_type.docs.map(doc => {
-            new_object = CreateNewObjectOfType(type);
+            new_object = this.mapper.createNewInstanceOfType(type);
             let new_type = new_object.constructor.name;
             this.persistence_debug(`Creating new object of type ${type} (check ${type} == ${new_type} ... ${type == new_type ? "Yay!" : "Oh. Darn."})...`, 0);
             return this.convert_from_json_to_object(doc, new_object, 1);

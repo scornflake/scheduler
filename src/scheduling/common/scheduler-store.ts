@@ -4,12 +4,11 @@ import {observable} from "mobx-angular";
 import {Team} from "../teams";
 import {Person} from "../people";
 import {Plan} from "../plan";
-import {registerFactory} from "../../providers/server/db-decorators";
 
 class NamedObject extends ObjectWithUUID {
-     @observable name: string;
+    @observable name: string;
 
-    constructor(name: string) {
+    constructor(name: string = "") {
         super();
         this.name = name;
     }

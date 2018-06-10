@@ -94,7 +94,7 @@ class AbstractLoginPage {
             subTitle: text,
             buttons: ['OK']
         });
-        alert.present(prompt);
+        alert.present(text);
     }
 
     // setupTestUser(users: IPersonStore, deleteUser = false): any {

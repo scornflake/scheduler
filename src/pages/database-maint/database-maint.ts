@@ -6,12 +6,8 @@ import {NPBCStoreConstruction} from "../../providers/store/test.store";
 import {PageUtils} from "../page-utils";
 import {Team} from "../../scheduling/teams";
 import {Organization} from "../../scheduling/organization";
-import {
-    ClassFactory,
-    RegisteredClassFactories,
-} from "../../providers/server/db-decorators";
-import {Mapper} from "../../providers/mapping/mapper";
-import {PersistenceType} from "../../providers/server/db-types";
+import {ClassMapping, OrmMapper} from "../../providers/mapping/orm-mapper";
+import {PersistenceType} from "../../providers/mapping/orm-mapper-type";
 
 @IonicPage({
     name: 'page-db',
@@ -26,7 +22,7 @@ export class DatabaseMaintPage {
     constructor(public navCtrl: NavController,
                 public alertCtrl: AlertController,
                 public rootStore: RootStore,
-                public mapper: Mapper,
+                public mapper: OrmMapper,
                 public pageUtils: PageUtils,
                 public navParams: NavParams,
                 public db: SchedulerDatabase) {
@@ -53,12 +49,13 @@ export class DatabaseMaintPage {
         alert.present();
     }
 
-    get classFactories(): ClassFactory[] {
-        return RegisteredClassFactories();
+    get classFactories(): ClassMapping[] {
+        let defs = this.mapper.definitions;
+        return Array.from(defs.values());
     }
 
-    propertiesFor(cf: ClassFactory): string[] {
-        let props: Map<string, PersistenceType> = this.mapper.propertiesFor(cf.class_name);
+    propertiesFor(cf: ClassMapping): string[] {
+        let props: Map<string, PersistenceType> = this.mapper.propertiesFor(cf.name);
         return Array.from(props.keys());
     }
 

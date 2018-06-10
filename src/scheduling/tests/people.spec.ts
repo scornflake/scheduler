@@ -36,8 +36,9 @@ describe('people', () => {
 
     it('can set alternate avail', () => {
         expect(firstPerson).not.toBeNull();
-        firstPerson.availability = new AvailabilityEveryNOfM(2, 3);
-        console.log(`avail is now: ${firstPerson.availability}`);
+        let new_one = new AvailabilityEveryNOfM(2, 3);
+        expect(new_one.constructor.name).toEqual('AvailabilityEveryNOfM');
+        firstPerson.availability = new_one;
         expect(firstPerson.availability.constructor.name).toEqual('AvailabilityEveryNOfM');
     });
 

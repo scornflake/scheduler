@@ -4,7 +4,6 @@ import {RuleFacts} from "./rule_based/rule-facts";
 import {Logger} from "ionic-logging-service";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {TypedObject} from "./common/base_model";
-import {registerFactory} from "../providers/server/db-decorators";
 import {observable} from "mobx-angular";
 
 export enum AvailabilityUnit {
@@ -19,7 +18,6 @@ export enum AvailabilityUnit {
     EVERY_N_OF_M_WEEKS = 'every_n_of_m',
 }
 
-@registerFactory
 export class Availability extends TypedObject {
     @observable period: number;
     @observable unit: AvailabilityUnit;
@@ -109,7 +107,6 @@ export class Availability extends TypedObject {
 
 }
 
-@registerFactory
 export class AvailabilityEveryNOfM extends Availability {
     @observable period_to_look_at: number;
 

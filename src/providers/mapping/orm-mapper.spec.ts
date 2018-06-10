@@ -1,7 +1,7 @@
-import {Mapper} from "./mapper";
-import {PersistenceProperty, PersistenceType} from "../server/db-types";
+import {OrmMapper} from "./orm-mapper";
 import {getTestBed, TestBed} from "@angular/core/testing";
 import {scheduler_db_map} from "../../assets/db.mapping";
+import {PersistenceType} from "./orm-mapper-type";
 
 describe('mapper', () => {
     let mapper;
@@ -9,11 +9,11 @@ describe('mapper', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             imports: [],
-            providers: [Mapper]
+            providers: [OrmMapper]
         });
 
         let injector = getTestBed();
-        mapper = injector.get(Mapper);
+        mapper = injector.get(OrmMapper);
         expect(mapper).not.toBeNull("eh? the mapped didn't get instantiated");
     });
 
@@ -43,7 +43,7 @@ describe('mapper', () => {
 
     describe('configured', () => {
         beforeEach(() => {
-            mapper.add_configuration(scheduler_db_map);
+            mapper.addConfiguration(scheduler_db_map);
         });
 
         it('putting * in fields means all fields', () => {

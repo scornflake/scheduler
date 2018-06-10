@@ -3,7 +3,6 @@ import {
     IArraySplice,
     IMapDidChange,
     IObjectDidChange,
-    isBoxedObservable,
     IValueDidChange,
     observe
 } from "mobx";
@@ -11,11 +10,10 @@ import {ObjectWithUUID} from "../../scheduling/common/base_model";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {isUndefined} from "util";
-import {GetTheTypeNameOfTheObject, NameForPersistencePropType} from "./db-decorators";
-import {PersistenceType} from "./db-types";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {Subject} from "rxjs/Subject";
-import {Mapper} from "../mapping/mapper";
+import {GetTheTypeNameOfTheObject, OrmMapper} from "./orm-mapper";
+import {NameForPersistencePropType, PersistenceType} from "./orm-mapper-type";
 
 type ObjectChange = { owner: ObjectWithUUID, change: IMapDidChange<any> | IArraySplice<any> | IArrayChange<any> | IObjectDidChange | IValueDidChange<any>, type: string, path: string };
 type ChangeListener = (change: ObjectChange) => void;
@@ -70,9 +68,9 @@ class ObjectChangeTracker {
     private logger: Logger;
     private nesting: number = 0;
     private notification_listener: ChangeListener;
-    private mapper: Mapper;
+    private mapper: OrmMapper;
 
-    constructor(mapper: Mapper) {
+    constructor(mapper: OrmMapper) {
         this.mapper = mapper;
         this.logger = LoggingWrapper.getLogger("db.tracking");
 

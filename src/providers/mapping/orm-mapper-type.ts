@@ -8,6 +8,7 @@ enum PersistenceType {
 }
 
 type PersistenceProperty = { name: string, type: PersistenceType };
+const REF_PREFIX = 'rrr';
 
 const PersistenceTypeNames = {};
 PersistenceTypeNames[PersistenceType.Property] = "Property";
@@ -17,8 +18,19 @@ PersistenceTypeNames[PersistenceType.ReferenceList] = "ReferenceList";
 PersistenceTypeNames[PersistenceType.NestedObject] = "NestedObject";
 PersistenceTypeNames[PersistenceType.NestedObjectList] = "NestedObjectList";
 
+function NameForPersistenceProp(prop: PersistenceProperty) {
+    return PersistenceTypeNames[prop.type];
+}
+
+function NameForPersistencePropType(type: PersistenceType) {
+    return PersistenceTypeNames[type];
+}
+
+
 export {
     PersistenceType,
     PersistenceProperty,
-    PersistenceTypeNames
+    NameForPersistenceProp,
+    NameForPersistencePropType,
+    REF_PREFIX
 };

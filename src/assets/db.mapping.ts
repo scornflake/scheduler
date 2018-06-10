@@ -1,6 +1,13 @@
-import {ClassFieldMapping} from "../providers/mapping/mapper";
-import {PersistenceType} from "../providers/server/db-types";
+import {ClassFieldMapping} from "../providers/mapping/orm-mapper";
 import {Availability, AvailabilityEveryNOfM} from "../scheduling/availability";
+import {SavedState} from "../store/UIState";
+import {NamedObject} from "../scheduling/common/scheduler-store";
+import {Team} from "../scheduling/teams";
+import {Person} from "../scheduling/people";
+import {Plan} from "../scheduling/plan";
+import {Organization} from "../scheduling/organization";
+import {Unavailability} from "../scheduling/unavailability";
+import {PersistenceType} from "../providers/mapping/orm-mapper-type";
 
 let scheduler_db_map: ClassFieldMapping = {
     classes: [
@@ -9,6 +16,7 @@ let scheduler_db_map: ClassFieldMapping = {
             fields: [
                 {name: '*'} // means: discover the properties by yourself, everything
             ],
+            factory: () => new SavedState()
         },
         {
             name: 'Person',
@@ -18,14 +26,16 @@ let scheduler_db_map: ClassFieldMapping = {
                 {name: 'availability', type: PersistenceType.NestedObject},
                 {name: 'unavailable', type: PersistenceType.NestedObjectList}
             ],
-            inherit: 'NamedObject'
+            inherit: 'NamedObject',
+            factory: () => new Person()
         },
         {
             name: 'Team',
             fields: [
                 {name: 'people', type: PersistenceType.ReferenceList}
             ],
-            inherit: 'NamedObject'
+            inherit: 'NamedObject',
+            factory: () => new Team("New Team")
         },
         {
             name: 'Plan',
@@ -36,11 +46,13 @@ let scheduler_db_map: ClassFieldMapping = {
                 {name: 'manual_layouts', type: PersistenceType.ReferenceList},
                 {name: 'team', type: PersistenceType.Reference}
             ],
-            inherit: 'NamedObject'
+            inherit: 'NamedObject',
+            factory: () => new Plan("New Plan", null)
         },
         {
             name: 'Organization',
-            inherit: 'NamedObject'
+            inherit: 'NamedObject',
+            factory: () => new Organization("New Org")
         },
         {
             name: 'Availability',
@@ -48,14 +60,16 @@ let scheduler_db_map: ClassFieldMapping = {
                 {name: 'period'},
                 {name: 'unit'},
             ],
-            inherit: 'TypeObject'
+            inherit: 'TypeObject',
+            factory: () => new Availability()
         },
         {
             name: 'AvailabilityEveryNOfM',
             fields: [
                 {name: 'period_to_look_at'},
             ],
-            inherit: 'Availability'
+            inherit: 'Availability',
+            factory: () => new AvailabilityEveryNOfM()
         },
         {
             name: 'Unavailability',
@@ -64,7 +78,8 @@ let scheduler_db_map: ClassFieldMapping = {
                 {name: 'to_date'},
                 {name: 'reason'},
             ],
-            inherit: 'TypeObject'
+            inherit: 'TypeObject',
+            factory: () => new Unavailability()
         },
 
     ]

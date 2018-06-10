@@ -1,11 +1,9 @@
 import {TypedObject} from "./common/base_model";
 import {dayAndHourForDate} from "./common/date-utils";
 import * as moment from "moment";
-import {registerFactory} from "../providers/server/db-decorators";
 import {observable} from "mobx-angular";
 
 
-@registerFactory
 class Unavailability extends TypedObject {
     @observable from_date: Date = null;
     @observable to_date: Date = null;

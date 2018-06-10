@@ -27,12 +27,12 @@ import {PersonAssignmentPageModule} from "../pages/person-assignment/person-assi
 import {PageUtils} from "../pages/page-utils";
 import {DatabaseMaintPageModule} from "../pages/database-maint/database-maint.module";
 import {TabsPage} from "../pages/tabs/tabs";
-import {Mapper} from "../providers/mapping/mapper";
+import {OrmMapper} from "../providers/mapping/orm-mapper";
 import {scheduler_db_map} from "../assets/db.mapping";
 
-export function setupMapper(): Mapper {
-    let mapper = new Mapper();
-    mapper.add_configuration(scheduler_db_map);
+export function setupMapper(): OrmMapper {
+    let mapper = new OrmMapper();
+    mapper.addConfiguration(scheduler_db_map);
     return mapper;
 }
 
@@ -69,7 +69,7 @@ export function setupMapper(): Mapper {
         SplashScreen,
         RootStore,
         {
-            provide: Mapper,
+            provide: OrmMapper,
             useFactory: setupMapper,
             deps: [],
             multi: true

@@ -6,11 +6,9 @@ import {Unavailability} from "./unavailability";
 import * as _ from "lodash";
 import {observable} from "mobx-angular";
 import {ObjectValidation} from "./shared";
-import {registerFactory} from "../providers/server/db-decorators";
 import {ObjectUtils} from "../pages/page-utils";
 import {NamedObject} from "./common/scheduler-store";
 
-@registerFactory
 export class Person extends NamedObject {
     @observable email: string;
     @observable phone: string;
@@ -71,7 +69,7 @@ export class Person extends NamedObject {
     }
 
     is_available(date: Date, facts: RuleFacts, record_unavailability: boolean = false) {
-        console.log("Testing availability with: " + this.availability.constructor.name);
+        // console.log("Testing availability with: " + this.availability.constructor.name);
         throwOnInvalidDate(date);
         return this.availability.is_available(this, date, facts, record_unavailability);
     }

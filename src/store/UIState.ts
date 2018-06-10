@@ -3,9 +3,7 @@ import {action, computed, observable} from "mobx";
 import {Role} from "../scheduling/role";
 import {Plan} from "../scheduling/plan";
 import {ObjectWithUUID} from "../scheduling/common/base_model";
-import {registerFactory} from "../providers/server/db-decorators";
 
-@registerFactory
 class SavedState extends ObjectWithUUID {
     @observable previous_sheet_id: string;
     @observable previous_sheet_tab_id: number;

@@ -8,10 +8,8 @@ import {LoggingWrapper} from "../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {Team} from "./teams";
 import {Role} from "./role";
-import {registerFactory} from "../providers/server/db-decorators";
 import {NamedObject} from "./common/scheduler-store";
 
-@registerFactory
 class Plan extends NamedObject {
     start_date: Date;
 
