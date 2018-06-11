@@ -7,6 +7,7 @@ import {SafeJSON} from "../../common/json/safe-stringify";
 import {ClassFieldMapping, OrmMapper} from "../../providers/mapping/orm-mapper";
 import {scheduler_db_map} from "../../assets/db.mapping";
 import {PersistenceType} from "../../providers/mapping/orm-mapper-type";
+import {Team} from "../../scheduling/teams";
 
 class SomeEntity extends ObjectWithUUID {
     some_field: string = "a value";
@@ -262,6 +263,40 @@ describe('db', () => {
                 done();
             });
         })
+    });
+
+    it('when storing a team, stores a bunch of refs', () => {
+        let neil = new Person("neil");
+        let bob = new Person("bob");
+        let team = new Team("My team", [neil, bob]);
+        let dict = db.create_json_from_object(team);
+        // console.log(`I created: ${JSON.stringify(dict)}`);
+
+        let refs = dict['people'];
+        expect(refs.length).toEqual(2);
+        expect(refs[1]).toEqual(db.reference_for_object(neil))
+    });
+
+    it('should be able to reconstruct a team from refs, given those refs are stored', function (done) {
+        let neil = new Person("neil");
+        let bob = new Person("bob");
+        db.store_or_update_object(neil).then(() => [
+            db.store_or_update_object(bob).then(() => {
+
+                // Save the team, and refs, and try to reload
+                let team = new Team("My team", [neil, bob]);
+                db.store_or_update_object(team).then(() => {
+
+                    db.load_object_with_id(team.uuid).then((loaded_team: Team) => {
+                        console.log(`Got back team: ${SafeJSON.stringify(loaded_team)}`);
+                        expect(loaded_team.people.length).toEqual(2);
+                        expect(['neil', 'bob']).toContain(loaded_team.people[0].name);
+                        expect(['neil', 'bob']).toContain(loaded_team.people[1].name);
+                        done();
+                    })
+                });
+            })
+        ]);
     });
 
     it('items of a BaseStore should still be observable after "remove" is called', function () {

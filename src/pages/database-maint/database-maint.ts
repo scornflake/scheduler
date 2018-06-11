@@ -60,15 +60,16 @@ export class DatabaseMaintPage {
     }
 
     get stats() {
+        let teams = this.rootStore.teams;
         let st = [
             {label: 'Num orgs', value: this.rootStore.organization ? 1 : 0},
             {label: 'Num people', value: this.rootStore.people.length},
-            {label: 'Num teams', value: this.rootStore.teams.length}
+            {label: 'Num teams', value: teams.length},
         ];
-        this.rootStore.teams.forEach(t => {
-            st.push({label: ` - ${t.name}`, value: t.people.length});
+        teams.forEach(t => {
+            st.push({label: `Team: ${t.name}`, value: t.people.length});
             t.people.forEach(p => {
-                st.push({label: ` -- ${p.name}`, value: 0})
+                st.push({label: ` --  ${t.name}.${p.name}, av: ${p.availability}`, value: 0})
             })
         });
         return st;
@@ -83,26 +84,33 @@ export class DatabaseMaintPage {
             this.db.store_or_update_object(this.rootStore.organization);
             this.pageUtils.show_message("Added default org");
         }
+
+        // This gets us the people.
+        // NOTE: This sets up default availability. No 'unavailable' tho.
         let people_added = NPBCStoreConstruction.SetupPeople(this.rootStore.people);
+
+        /*
+        Teams need people!
+        This sets unavailability
+         */
+        let teamManager = this.rootStore.teams;
+        let defaultTeam = teamManager.firstThisTypeByName("Default");
+        if (!defaultTeam) {
+            defaultTeam = new Team("Default", this.rootStore.people.all);
+            teamManager.add(defaultTeam);
+            this.pageUtils.show_message("Added default team");
+        }
+
+        NPBCStoreConstruction.SetupTeamUnavailability(defaultTeam);
+
         for (let person of people_added) {
             this.db.store_or_update_object(person);
         }
+
         if (people_added.length > 0) {
             this.pageUtils.show_message(`${people_added.length} people added`);
         }
 
-
-        /*
-        Teams need people!
-         */
-        // make up a default team
-        let teamManager = this.rootStore.teams;
-        let defaultTeam = teamManager.firstThisTypeByName("Default");
-        if (!defaultTeam) {
-            let team = new Team("Default", this.rootStore.people.all);
-            teamManager.add(team);
-            this.db.store_or_update_object(team);
-            this.pageUtils.show_message("Added default team");
-        }
+        this.db.store_or_update_object(defaultTeam);
     }
 }

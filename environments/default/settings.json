@@ -40,8 +40,12 @@
         "logLevel": "INFO"
       },
       {
+        "loggerName": "db.mapping",
+        "logLevel": "INFO"
+      },
+      {
         "loggerName": "db.tracking",
-        "logLevel": "DEBUG"
+        "logLevel": "INFO"
       }
     ],
     "browserConsoleAppender": {

@@ -44,16 +44,12 @@ abstract class GenericManager<T extends NamedObject> {
         this.type = type;
     }
 
-    // [Symbol.iterator](): Iterator<T> {
-    //     return this.all[Symbol.iterator]();
-    // }
-
     get all(): T[] {
         return this.findAllThisType();
     }
 
     get length(): number {
-        return this.store.items.length;
+        return this.all.length;
     }
 
     forEach(callbackfn) {

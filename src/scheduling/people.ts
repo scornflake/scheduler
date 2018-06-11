@@ -36,7 +36,7 @@ export class Person extends NamedObject {
             console.log(`Not setting availability for ${this.name} to ${new_value}. It's the same as existing value: ${this._availability}`);
             return;
         }
-        console.log(`Setting availability for ${this.name} to ${new_value}`);
+        // console.debug(`Setting availability for ${this.name} to ${new_value}`);
         this._availability = new_value;
     }
 

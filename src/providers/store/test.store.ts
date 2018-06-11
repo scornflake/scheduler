@@ -26,7 +26,7 @@ export class NPBCStoreConstruction {
     constructor() {
     }
 
-    static SetupOrganization(org_store, name:string) {
+    static SetupOrganization(org_store, name: string) {
         let org = org_store.find_by_name(name);
         if (!org) {
             let organization = new Organization(name);
@@ -36,7 +36,7 @@ export class NPBCStoreConstruction {
         return null;
     }
 
-    static SetupService(service: Plan, team: Team) {
+    static SetupTeamUnavailability(team: Team) {
         let neil = team.findPersonWithName("Neil Clayton");
         let cherilyn = team.findPersonWithName("Cherilyn Clayton");
         let kylie = team.findPersonWithName("Kylie Welch-Herekiuha");
@@ -101,29 +101,35 @@ export class NPBCStoreConstruction {
         // daniel.put_on_specific_role_for_date(defaultComputerRole, csd(2018, 6, 17));
 
 
-        neil.avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
-        cherilyn.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
-        christine.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
-        stuart.avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
-        kylie.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
-        jeremy_selfe.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
-        ralph.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
-        craig.availability = new AvailabilityEveryNOfM(1, 3);
-        ben.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
-        courtney.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
-        robp.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
-        robs.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
-        dave.avail_every(2.2, AvailabilityUnit.EVERY_N_WEEKS);
-        annie.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
-        anita.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
-        jo.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
-        allie.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
-        chris.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
-        jeremy_l.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
-        andre_l.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
-        suzie_l.avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
-        jeremy_w.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
-        john_sutherland.avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
+    }
+
+    static SetupPlan(service: Plan, team: Team) {
+        let neil = team.findPersonWithName("Neil Clayton");
+        let cherilyn = team.findPersonWithName("Cherilyn Clayton");
+        let kylie = team.findPersonWithName("Kylie Welch-Herekiuha");
+        let christine = team.findPersonWithName("Christine Edlin");
+        let stuart = team.findPersonWithName("Stuart Campbell");
+        let jeremy_selfe = team.findPersonWithName("Jeremy Selfe");
+
+        let daniel = team.findPersonWithName("Daniel Gibbs");
+        let ben = team.findPersonWithName("Ben Watson");
+        let courtney = team.findPersonWithName("Courtney Anderson");
+        let robs = team.findPersonWithName("Rob Sweeney");
+        let robp = team.findPersonWithName("Rob Penhey");
+        let dave = team.findPersonWithName("Dave Humphries");
+        let ralph = team.findPersonWithName("Ralph Lambert");
+        let anita = team.findPersonWithName("Anita Lambert");
+        let annie = team.findPersonWithName("Annie McMullen");
+        let jo = team.findPersonWithName("Jo Marquet");
+        let allie = team.findPersonWithName("Allie Pope");
+        let craig = team.findPersonWithName("Craig Campbell");
+
+        let chris = team.findPersonWithName("Chris Evans");
+        let jeremy_l = team.findPersonWithName("Jeremy Legg");
+        let andre_l = team.findPersonWithName("Andre Legg");
+        let suzie_l = team.findPersonWithName("Suzie Legg");
+        let jeremy_w = team.findPersonWithName("Jeremy Watson");
+        let john_sutherland = team.findPersonWithName("John Sutherland");
 
 
         service.assignment_for(neil)
@@ -224,38 +230,65 @@ export class NPBCStoreConstruction {
         let people_added = [];
 
         function aint(name: string) {
-            if (people_store.firstThisTypeByName(name) == null) {
+            let person = people_store.firstThisTypeByName(name);
+            if (person == null) {
                 let p = people_store.add(new Person(name));
                 people_added.push(p);
+                return p;
             }
+            return person;
         }
 
-        aint("Neil Clayton");
-        aint("Cherilyn Clayton");
-        aint("Kylie Welch-Herekiuha");
-        aint("Christine Edlin");
-        aint("Stuart Campbell");
-        aint("Jeremy Selfe");
+        let neil = aint("Neil Clayton");
+        let cherilyn = aint("Cherilyn Clayton");
+        let kylie = aint("Kylie Welch-Herekiuha");
+        let christine = aint("Christine Edlin");
+        let stuart = aint("Stuart Campbell");
+        let jeremy_selfe = aint("Jeremy Selfe");
 
-        aint("Daniel Gibbs");
-        aint("Ben Watson");
-        aint("Courtney Anderson");
-        aint("Rob Sweeney");
-        aint("Rob Penhey");
-        aint("Dave Humphries");
-        aint("Ralph Lambert");
-        aint("Anita Lambert");
-        aint("Annie McMullen");
-        aint("Jo Marquet");
-        aint("Allie Pope");
-        aint("Craig Campbell");
+        let daniel = aint("Daniel Gibbs");
+        let ben = aint("Ben Watson");
+        let courtney = aint("Courtney Anderson");
+        let robs = aint("Rob Sweeney");
+        let robp = aint("Rob Penhey");
+        let dave = aint("Dave Humphries");
+        let ralph = aint("Ralph Lambert");
+        let anita = aint("Anita Lambert");
+        let annie = aint("Annie McMullen");
+        let jo = aint("Jo Marquet");
+        let allie = aint("Allie Pope");
+        let craig = aint("Craig Campbell");
 
-        aint("Chris Evans");
-        aint("Jeremy Legg");
-        aint("Andre Legg");
-        aint("Suzie Legg");
-        aint("Jeremy Watson");
-        aint("John Sutherland");
+        let chris = aint("Chris Evans");
+        let jeremy_l = aint("Jeremy Legg");
+        let andre_l = aint("Andre Legg");
+        let suzie_l = aint("Suzie Legg");
+        let jeremy_w = aint("Jeremy Watson");
+        let john_sutherland = aint("John Sutherland");
+
+        neil.avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
+        cherilyn.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+        christine.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+        stuart.avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
+        kylie.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+        jeremy_selfe.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+        ralph.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
+        craig.availability = new AvailabilityEveryNOfM(1, 3);
+        ben.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+        courtney.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+        robp.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
+        robs.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+        dave.avail_every(2.2, AvailabilityUnit.EVERY_N_WEEKS);
+        annie.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
+        anita.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+        jo.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
+        allie.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
+        chris.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
+        jeremy_l.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+        andre_l.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+        suzie_l.avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
+        jeremy_w.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+        john_sutherland.avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
 
         return people_added;
     }

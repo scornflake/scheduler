@@ -122,7 +122,9 @@ class GenericObjectStore<T extends ObjectWithUUID> {
     }
 
     add_objects_to_array(many_items: T[]) {
-        many_items.forEach(i => this.add_object_to_array(i));
+        if (many_items) {
+            many_items.forEach(i => this.add_object_to_array(i));
+        }
     }
 
     remove_object_from_array(instance: T) {
