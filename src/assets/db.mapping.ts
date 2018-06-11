@@ -7,7 +7,7 @@ import {Person} from "../scheduling/people";
 import {Plan} from "../scheduling/plan";
 import {Organization} from "../scheduling/organization";
 import {Unavailability} from "../scheduling/unavailability";
-import {PersistenceType} from "../providers/mapping/orm-mapper-type";
+import {MappingType} from "../providers/mapping/orm-mapper-type";
 
 let scheduler_db_map: ClassFieldMapping = {
     classes: [
@@ -23,8 +23,8 @@ let scheduler_db_map: ClassFieldMapping = {
             fields: [
                 {name: 'phone'},
                 {name: 'email'},
-                {name: 'availability', type: PersistenceType.NestedObject},
-                {name: 'unavailable', type: PersistenceType.NestedObjectList}
+                {name: 'availability', type: MappingType.NestedObject},
+                {name: 'unavailable', type: MappingType.NestedObjectList}
             ],
             inherit: 'NamedObject',
             factory: () => new Person()
@@ -32,7 +32,7 @@ let scheduler_db_map: ClassFieldMapping = {
         {
             name: 'Team',
             fields: [
-                {name: 'people', type: PersistenceType.ReferenceList}
+                {name: 'people', type: MappingType.ReferenceList}
             ],
             inherit: 'NamedObject',
             factory: () => new Team("New Team")
@@ -43,8 +43,8 @@ let scheduler_db_map: ClassFieldMapping = {
                 {name: 'start_date'},
                 {name: 'end_date'},
                 {name: 'days_per_period'},
-                {name: 'manual_layouts', type: PersistenceType.ReferenceList},
-                {name: 'team', type: PersistenceType.Reference}
+                {name: 'manual_layouts', type: MappingType.ReferenceList},
+                {name: 'team', type: MappingType.Reference}
             ],
             inherit: 'NamedObject',
             factory: () => new Plan("New Plan", null)

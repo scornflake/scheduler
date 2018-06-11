@@ -20,10 +20,10 @@ import {
 } from "../mapping/orm-mapper";
 import Database = PouchDB.Database;
 import {
-    NameForPersistenceProp,
-    NameForPersistencePropType,
-    PersistenceProperty,
-    PersistenceType,
+    NameForMappingProp,
+    NameForMappingPropType,
+    MappingProperty,
+    MappingType,
     REF_PREFIX
 } from "../mapping/orm-mapper-type";
 
@@ -38,6 +38,7 @@ enum SavingState {
 class SchedulerDatabase {
     save_notifications = new Subject<SavingState>();
     ready_event: Subject<boolean>;
+    info: PouchDB.Core.DatabaseInfo;
 
     private db: Database<{}>;
     private is_ready: boolean = false;
@@ -100,8 +101,8 @@ class SchedulerDatabase {
         this.db = await new PouchDB(this.db_name);
 
         this.logger.info("Getting DB information");
-        let info = await this.db.info();
-        this.logger.info(`DB: ${info.db_name} using backend: ${info.backend_adapter}. ${info.doc_count} docs.`);
+        this.info = await this.db.info();
+        this.logger.info(`DB: ${this.info.db_name}. ${this.info.doc_count} docs.`);
         await this.setup_indexes();
 
         this.is_ready = true;
@@ -164,7 +165,7 @@ class SchedulerDatabase {
         // At this level, if we're given an ObjectWithUUID, we don't want a reference.
         // So we tell the converter it's a nested object (it'll output id/rev/type)
         let result = this._convert_object_value_to_dict({
-            type: PersistenceType.NestedObject,
+            type: MappingType.NestedObject,
             name: 'root'
         }, object, nesting);
         return this._convert_add_type_id_and_rev(result, object, true, nesting);
@@ -179,7 +180,7 @@ class SchedulerDatabase {
             props.forEach((type, propertyName) => {
                 let value = origin[propertyName];
                 let prop = {name: propertyName, type: type};
-                this.persistence_debug(`${NameForPersistencePropType(type)} - ${propertyName} (value: ${value})`, nesting);
+                this.persistence_debug(`${NameForMappingPropType(type)} - ${propertyName} (value: ${value})`, nesting);
                 result[propertyName] = this._convert_object_value_to_dict(prop, value, nesting + 1);
             });
         } else {
@@ -190,15 +191,15 @@ class SchedulerDatabase {
 
     private _convert_object_value_to_dict(prop, value, nesting: number = 0) {
         switch (prop.type) {
-            case PersistenceType.Reference:
+            case MappingType.Reference:
                 return this._convert_to_reference(prop, value, nesting + 1);
-            case PersistenceType.ReferenceList:
+            case MappingType.ReferenceList:
                 return this._convert_to_reference_list(prop, value, nesting + 1);
-            case PersistenceType.Property:
+            case MappingType.Property:
                 return value;
-            case PersistenceType.NestedObject:
+            case MappingType.NestedObject:
                 return this._convert_to_nested_object_dict(prop, value, nesting + 1);
-            case PersistenceType.NestedObjectList:
+            case MappingType.NestedObjectList:
                 return this._convert_to_nested_object_list_of_dict(prop, value, nesting + 1);
         }
     }
@@ -287,7 +288,7 @@ class SchedulerDatabase {
                 }
 
                 switch (type) {
-                    case PersistenceType.Property: {
+                    case MappingType.Property: {
                         this.persistence_debug(`${propertyName} = ${value}`, nesting);
                         new_object[propertyName] = json_obj[propertyName];
                         break;
@@ -296,7 +297,7 @@ class SchedulerDatabase {
                     /*
                     Expect the value to be a blob representing the new object.  Create it, then set it as the property
                      */
-                    case PersistenceType.NestedObject: {
+                    case MappingType.NestedObject: {
                         let new_type = value['type'];
                         this.persistence_debug(`${propertyName} = new instance of ${new_type}`, nesting);
                         let new_instance = this.mapper.createNewInstanceOfType(new_type);
@@ -304,7 +305,7 @@ class SchedulerDatabase {
                         break;
                     }
 
-                    case PersistenceType.NestedObjectList: {
+                    case MappingType.NestedObjectList: {
                         let new_objects = [];
                         this.persistence_debug(`${propertyName} = list of ${value.length} objects ...`, nesting);
                         for (let v of value) {
@@ -321,13 +322,13 @@ class SchedulerDatabase {
                         break;
                     }
 
-                    case PersistenceType.Reference: {
+                    case MappingType.Reference: {
                         this.persistence_debug(`${propertyName} = reference: ${value}`, nesting);
                         new_object[propertyName] = await this.lookup_object_reference(value, nesting + 1);
                         break;
                     }
 
-                    case PersistenceType.ReferenceList: {
+                    case MappingType.ReferenceList: {
                         // Assume 'value' is a list of object references
                         this.persistence_debug(`${propertyName} = list of ${value.length} references`, nesting);
                         new_object[propertyName] = await this._lookup_list_of_references(value, nesting + 1);
@@ -414,20 +415,20 @@ class SchedulerDatabase {
         return `${REF_PREFIX}:${obj.type}:${obj._id}`;
     }
 
-    private _convert_to_reference(prop: PersistenceProperty, value: any, nesting: number = 0) {
+    private _convert_to_reference(prop: MappingProperty, value: any, nesting: number = 0) {
         if (GetTheTypeNameOfTheObject(value) == "array") {
-            throw new Error(`REF: Cannot convert ${prop.name} to ${NameForPersistenceProp(prop)}, it is an array`)
+            throw new Error(`REF: Cannot convert ${prop.name} to ${NameForMappingProp(prop)}, it is an array`)
         }
         if (!(value instanceof ObjectWithUUID)) {
-            throw new Error(`REF: Cannot convert ${prop.name} to ${NameForPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a ObjectWithUUID`);
+            throw new Error(`REF: Cannot convert ${prop.name} to ${NameForMappingProp(prop)}, it is an ${value.constructor.name}. Needs to be a ObjectWithUUID`);
         }
         this.persistence_debug(`Convert ${value} to reference`, nesting);
         return this.reference_for_object(value);
     }
 
-    private _convert_to_nested_object_dict(prop: PersistenceProperty, value: any, nesting: number = 0) {
+    private _convert_to_nested_object_dict(prop: MappingProperty, value: any, nesting: number = 0) {
         if (!(value instanceof TypedObject)) {
-            throw new Error(`NESTED OBJ: Cannot convert ${prop.name} to ${NameForPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a PersistableObject`);
+            throw new Error(`NESTED OBJ: Cannot convert ${prop.name} to ${NameForMappingProp(prop)}, it is an ${value.constructor.name}. Needs to be a PersistableObject`);
         }
         this.persistence_debug(`Converting ${value.constructor.name} by iterating its properties...`, nesting);
         return this._convert_add_type_id_and_rev(this._convert_by_iterating_persistable_properties(value, nesting + 1), value, false, nesting);
@@ -465,7 +466,7 @@ class SchedulerDatabase {
                 return this._convert_by_iterating_persistable_properties(v, nesting + 2);
             });
         } else {
-            throw new Error(`NESTEDLIST: Cannot convert ${prop.name} to ${NameForPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a list or mbox list`);
+            throw new Error(`NESTEDLIST: Cannot convert ${prop.name} to ${NameForMappingProp(prop)}, it is an ${value.constructor.name}. Needs to be a list or mbox list`);
         }
     }
 
@@ -478,11 +479,11 @@ class SchedulerDatabase {
             this.persistence_debug(`convert list of ${value.length} items, types: ${type_names}`, nesting);
             return value.map((v, index) => {
                 this.persistence_debug(`converting ${prop.name}[${index}], ${v.constructor.name}`, nesting);
-                let indexes_prop = {type: PersistenceType.Reference, name: `${prop.name}[${index}}`};
+                let indexes_prop = {type: MappingType.Reference, name: `${prop.name}[${index}}`};
                 return this._convert_to_reference(indexes_prop, v, nesting + 1);
             });
         } else {
-            throw new Error(`REF: Cannot convert ${prop.name} to ${NameForPersistenceProp(prop)}, it is an ${value.constructor.name}. Needs to be a list or mbox list`);
+            throw new Error(`REF: Cannot convert ${prop.name} to ${NameForMappingProp(prop)}, it is an ${value.constructor.name}. Needs to be a list or mbox list`);
         }
     }
 

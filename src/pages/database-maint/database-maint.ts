@@ -7,7 +7,7 @@ import {PageUtils} from "../page-utils";
 import {Team} from "../../scheduling/teams";
 import {Organization} from "../../scheduling/organization";
 import {ClassMapping, OrmMapper} from "../../providers/mapping/orm-mapper";
-import {PersistenceType} from "../../providers/mapping/orm-mapper-type";
+import {MappingType} from "../../providers/mapping/orm-mapper-type";
 
 @IonicPage({
     name: 'page-db',
@@ -19,6 +19,8 @@ import {PersistenceType} from "../../providers/mapping/orm-mapper-type";
 })
 export class DatabaseMaintPage {
 
+    database_type: string = "";
+
     constructor(public navCtrl: NavController,
                 public alertCtrl: AlertController,
                 public rootStore: RootStore,
@@ -29,8 +31,30 @@ export class DatabaseMaintPage {
     }
 
     ionViewDidLoad() {
-        console.log('ionViewDidLoad DatabaseMaintPage');
+        this.db.ready_event.subscribe(() => {
+            if (this.db.info.backend_adapter) {
+                let type = this.db.info.backend_adapter.toString();
+                if (this.db.info['sqlite_plugin']) {
+                    type += ", sqllite";
+                }
+                this.database_type = type;
+            } else {
+                this.database_type = `Unknown`;
+            }
+        })
     }
+
+    get database_info() {
+        let info = [];
+        if (this.db.info) {
+            for (let key of Object.keys(this.db.info)) {
+                let value = this.db.info[key];
+                info.push({label: key, value: value})
+            }
+        }
+        return info;
+    }
+
 
     delete_db() {
         let alert = this.alertCtrl.create({title: "Sure? This is .... destructive!!!"});
@@ -55,24 +79,35 @@ export class DatabaseMaintPage {
     }
 
     propertiesFor(cf: ClassMapping): string[] {
-        let props: Map<string, PersistenceType> = this.mapper.propertiesFor(cf.name);
+        let props: Map<string, MappingType> = this.mapper.propertiesFor(cf.name);
         return Array.from(props.keys());
+    }
+
+    stats_for_team_people(team: Team) {
+        return team.people.map(t => {
+            return {label: t.name, value: t.availability}
+        })
+    }
+
+    stats_for_teams(teams: Team[]) {
+        return teams.map(t => {
+            let one_item = {
+                next: () => this.stats_for_team_people(t),
+                label: t.name,
+                value: t.people.length,
+            };
+            console.log(`team item: ${t.name}: ${JSON.stringify(one_item)}`);
+            return one_item
+        });
     }
 
     get stats() {
         let teams = this.rootStore.teams;
-        let st = [
+        return [
             {label: 'Num orgs', value: this.rootStore.organization ? 1 : 0},
             {label: 'Num people', value: this.rootStore.people.length},
-            {label: 'Num teams', value: teams.length},
+            {label: 'Num teams', value: teams.length, next: () => this.stats_for_teams(teams.teams)}
         ];
-        teams.forEach(t => {
-            st.push({label: `Team: ${t.name}`, value: t.people.length});
-            t.people.forEach(p => {
-                st.push({label: ` --  ${t.name}.${p.name}, av: ${p.availability}`, value: 0})
-            })
-        });
-        return st;
     }
 
     store_fake_data() {

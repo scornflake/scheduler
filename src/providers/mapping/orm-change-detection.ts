@@ -13,7 +13,7 @@ import {isUndefined} from "util";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {Subject} from "rxjs/Subject";
 import {GetTheTypeNameOfTheObject, OrmMapper} from "./orm-mapper";
-import {NameForPersistencePropType, PersistenceType} from "./orm-mapper-type";
+import {NameForMappingPropType, MappingType} from "./orm-mapper-type";
 
 type ObjectChange = { owner: ObjectWithUUID, change: IMapDidChange<any> | IArraySplice<any> | IArrayChange<any> | IObjectDidChange | IValueDidChange<any>, type: string, path: string };
 type ChangeListener = (change: ObjectChange) => void;
@@ -137,12 +137,12 @@ class ObjectChangeTracker {
         props.forEach((type, propertyName) => {
             let child_path = `${parent_path}.${propertyName}`;
             let value = instance[propertyName];
-            let typeName = NameForPersistencePropType(type);
+            let typeName = NameForMappingPropType(type);
 
-            if (type == PersistenceType.NestedObject) {
+            if (type == MappingType.NestedObject) {
                 this.tracking_debug(`consider ${typeName}, ${child_path}`);
                 this.trackObject(owner, value, child_path, listener);
-            } else if (type == PersistenceType.NestedObjectList) {
+            } else if (type == MappingType.NestedObjectList) {
                 this.tracking_debug(`consider ${typeName}, ${child_path}`);
                 // Track the members of the list
                 value.forEach((v, idx) => {

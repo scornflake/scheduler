@@ -1,7 +1,7 @@
 import {OrmMapper} from "./orm-mapper";
 import {getTestBed, TestBed} from "@angular/core/testing";
 import {scheduler_db_map} from "../../assets/db.mapping";
-import {PersistenceType} from "./orm-mapper-type";
+import {MappingType} from "./orm-mapper-type";
 
 describe('mapper', () => {
     let mapper;
@@ -19,15 +19,15 @@ describe('mapper', () => {
 
     it('if not configured, maps base types', () => {
         let props = mapper.propertiesFor('TypedObject');
-        expect(props.get('type')).toEqual(PersistenceType.Property);
+        expect(props.get('type')).toEqual(MappingType.Property);
     });
 
     it('finds properties first level of inherit', () => {
         let properties = mapper.propertiesFor('ObjectWithUUID');
         expect(properties.size).toEqual(3);
-        expect(properties.get('type')).toEqual(PersistenceType.Property);
-        expect(properties.get('_id')).toEqual(PersistenceType.Property);
-        expect(properties.get('_rev')).toEqual(PersistenceType.Property);
+        expect(properties.get('type')).toEqual(MappingType.Property);
+        expect(properties.get('_id')).toEqual(MappingType.Property);
+        expect(properties.get('_rev')).toEqual(MappingType.Property);
     });
 
     it('NamedObject inherits from TypedObject', () => {
@@ -37,8 +37,8 @@ describe('mapper', () => {
             console.log(`key: ${key} = ${properties.get(key)}`);
         }
 
-        expect(properties.get('type')).toEqual(PersistenceType.Property);
-        expect(properties.get('name')).toEqual(PersistenceType.Property);
+        expect(properties.get('type')).toEqual(MappingType.Property);
+        expect(properties.get('name')).toEqual(MappingType.Property);
     });
 
     describe('configured', () => {
@@ -57,7 +57,7 @@ describe('mapper', () => {
 
         it('returns [] if no properties', () => {
             let properties = mapper.propertiesFor('AnObjectThatDoesntExist');
-            expect(properties).toEqual(new Map<string, PersistenceType>());
+            expect(properties).toEqual(new Map<string, MappingType>());
         });
     });
 });

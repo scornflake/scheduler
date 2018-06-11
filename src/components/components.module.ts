@@ -11,7 +11,7 @@ import {RoleSummaryComponent} from './role-summary/role-summary';
 import {RoleDetailComponent} from './role-detail/role-detail';
 import {RuleDetailsComponent} from './rule-details/rule-details';
 import {PeopleComponent} from './people/people';
-import { SavingStateComponent } from './saving-state/saving-state';
+import {SavingStateComponent} from './saving-state/saving-state';
 
 @NgModule({
     declarations: [
@@ -25,7 +25,7 @@ import { SavingStateComponent } from './saving-state/saving-state';
         RoleDetailComponent,
         RuleDetailsComponent,
         PeopleComponent,
-    SavingStateComponent,
+        SavingStateComponent,
     ],
     imports: [
         IonicModule,
@@ -42,7 +42,7 @@ import { SavingStateComponent } from './saving-state/saving-state';
         RoleDetailComponent,
         RuleDetailsComponent,
         PeopleComponent,
-    SavingStateComponent,
+        SavingStateComponent,
     ]
 })
 export class ComponentsModule {

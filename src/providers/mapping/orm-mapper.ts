@@ -4,7 +4,7 @@ import {Logger} from "ionic-logging-service";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {ObjectWithUUID} from "../../scheduling/common/base_model";
 import {isObservableArray, isObservableMap, isObservableObject} from "mobx";
-import {PersistenceType} from "./orm-mapper-type";
+import {MappingType} from "./orm-mapper-type";
 
 function GetTheTypeNameOfTheObject(object: any): string {
     if (typeof object !== "object" || !object || !object.constructor) return "";
@@ -16,7 +16,7 @@ function GetTheTypeNameOfTheObject(object: any): string {
 
 type PropertyMapping = {
     name: string,
-    type?: PersistenceType, // if not specified == PersistenceType.Property
+    type?: MappingType, // if not specified == PersistenceType.Property
 }
 
 type ClassMapping = {
@@ -95,19 +95,19 @@ class OrmMapper {
 
             if (cm.fields) {
                 cm.fields.forEach(field => {
-                    this.logger.info(`examine ${cm.name}.${field.name}`);
+                    this.logger.debug(`examine ${cm.name}.${field.name}`);
                     if (field.name == '*') {
                         // Get the factory and instantiate one of these, to find out its fields
                         let fields = [];
                         actual_properties.forEach(key => {
-                            fields.push({name: key, type: PersistenceType.Property});
+                            fields.push({name: key, type: MappingType.Property});
                         });
-                        this.logger.info(`Fields = '*', discovered: ${SafeJSON.stringify(field)}`);
+                        this.logger.debug(`Fields = '*', discovered: ${SafeJSON.stringify(field)}`);
                         cm.fields = fields;
                     } else {
                         if (isUndefined(field.type) || !field.type) {
                             this.logger.debug(`Default field ${cm.name}.${field.name} to as a Property`);
-                            field.type = PersistenceType.Property;
+                            field.type = MappingType.Property;
                         }
 
                         // Verify the field name
@@ -134,10 +134,10 @@ class OrmMapper {
         return " ".repeat(width * 2);
     }
 
-    propertiesFor(class_name: string, nesting: number = 0): Map<string, PersistenceType> {
+    propertiesFor(class_name: string, nesting: number = 0): Map<string, MappingType> {
         this.logger.debug(`${this.gap(nesting)}Lookup class: ${class_name}`);
         let cm = this.definitions.get(class_name);
-        let all = new Map<string, PersistenceType>();
+        let all = new Map<string, MappingType>();
         if (cm) {
             // Add inherited first
             if (cm.inherit) {

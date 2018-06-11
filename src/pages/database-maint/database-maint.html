@@ -1,7 +1,7 @@
 <ion-header>
 
     <ion-navbar>
-        <ion-title>Database</ion-title>
+        <ion-title>Database. Type: {{database_type}}</ion-title>
     </ion-navbar>
     <saving-state></saving-state>
 </ion-header>
@@ -11,15 +11,24 @@
     <button ion-button (tap)="store_fake_data()">Store Fake -> DB</button>
     <button ion-button color="danger" (tap)="delete_db()">Delete DB</button>
 
+    <ion-list-header>DB Info</ion-list-header>
     <ion-list>
-        <ion-item *ngFor="let i of stats">
+        <ion-item *ngFor="let i of database_info">
             <ion-label>{{i.label}}</ion-label>
             <ion-label text-right>{{i.value}}</ion-label>
         </ion-item>
     </ion-list>
 
+    <ion-list-header>Stats</ion-list-header>
     <ion-list>
-        <ion-list-header>Reflection</ion-list-header>
+        <ion-item *ngFor="let i of stats">
+            <ion-label (tap)="toggleGroup(i.label)">{{i.label}}</ion-label>
+            <ion-label text-right (tap)="toggleGroup(i.label)">{{i.value}}</ion-label>
+        </ion-item>
+    </ion-list>
+
+    <ion-list-header>Reflection</ion-list-header>
+    <ion-list>
         <ion-item *ngFor="let i of classFactories">
             <h2 col-3>Class {{i.name}}</h2>
             <p text-right *ngFor="let p of propertiesFor(i)">{{p}}</p>

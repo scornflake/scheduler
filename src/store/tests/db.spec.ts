@@ -6,7 +6,7 @@ import {observable} from "mobx";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {ClassFieldMapping, OrmMapper} from "../../providers/mapping/orm-mapper";
 import {scheduler_db_map} from "../../assets/db.mapping";
-import {PersistenceType} from "../../providers/mapping/orm-mapper-type";
+import {MappingType} from "../../providers/mapping/orm-mapper-type";
 import {Team} from "../../scheduling/teams";
 
 class SomeEntity extends ObjectWithUUID {
@@ -47,7 +47,7 @@ describe('db', () => {
             {
                 name: 'ThingWithNestedObjects',
                 fields: [
-                    {name: 'my_list', type: PersistenceType.NestedObjectList}
+                    {name: 'my_list', type: MappingType.NestedObjectList}
                 ],
                 inherit: 'ObjectWithUUID',
                 factory: () => new ThingWithNestedObjects()
@@ -56,7 +56,7 @@ describe('db', () => {
                 name: 'ThingWithReference',
                 fields: [
                     {name: 'name'},
-                    {name: 'another_object', type: PersistenceType.Reference}
+                    {name: 'another_object', type: MappingType.Reference}
                 ],
                 inherit: 'ObjectWithUUID',
                 factory: () => new ThingWithReference()
@@ -122,7 +122,7 @@ describe('db', () => {
                 name: 'ThingWithContainedObject',
                 fields: [
                     {name: 'name'},
-                    {name: 'another_object', type: PersistenceType.NestedObject}
+                    {name: 'another_object', type: MappingType.NestedObject}
                 ],
                 inherit: 'ObjectWithUUID',
                 factory: () => new ThingWithContainedObject()
@@ -159,7 +159,7 @@ describe('db', () => {
             classes: [{
                 name: 'ThingWithListOfReferences',
                 fields: [
-                    {name: 'my_list', type: PersistenceType.ReferenceList}
+                    {name: 'my_list', type: MappingType.ReferenceList}
                 ],
                 inherit: 'ObjectWithUUID',
                 factory: () => new ThingWithListOfReferences()
@@ -187,7 +187,7 @@ describe('db', () => {
             classes: [{
                 name: 'ThingWithListOfReferences',
                 fields: [
-                    {name: 'my_list', type: PersistenceType.ReferenceList}
+                    {name: 'my_list', type: MappingType.ReferenceList}
                 ],
                 inherit: 'ObjectWithUUID',
                 factory: () => new ThingWithListOfReferences()
