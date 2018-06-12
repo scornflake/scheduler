@@ -39,13 +39,16 @@ class OrmConverter {
         /*
         Assumption is that we begin with an object that has an ID and a type.
          */
+        if (!new_object_type) {
+            throw new Error('new_object_type not specified. This is required so we know what to instantiate');
+        }
         let new_object = this.mapper.createNewInstanceOfType(new_object_type);
         if (new_object == null) {
             throw new Error(`Failed to instantiate new object of type ${new_object_type}. Is the mapper configured with the right factories?`);
         }
         const targetProperties = this.mapper.propertiesFor(new_object.constructor.name);
         if (targetProperties.size == 0) {
-            throw new Error(`Cannot hydrate ${json_obj['type']} because we don't know what it's persistable properties are`)
+            throw new Error(`Cannot hydrate ${json_obj['type']} because we don't know what it's mapped properties are`)
         }
 
         if (new_object instanceof ObjectWithUUID) {
@@ -106,7 +109,7 @@ class OrmConverter {
 
                     case MappingType.Reference: {
                         this.persistence_debug(`${propertyName} = reference: ${value}`, nesting);
-                        new_object[propertyName] = await this._lookup_object_reference(value, nesting + 1);
+                        new_object[propertyName] = await this._async_lookup_object_reference(value, nesting + 1);
                         break;
                     }
 
@@ -118,9 +121,16 @@ class OrmConverter {
                         break;
                     }
 
-                    case MappingType.ReferenceMap: {
-                        this.persistence_debug(`${propertyName} = map of ${value.size} references`, nesting);
-                        new_object[propertyName] = await this._lookup_map_of_references(mapping, value, nesting + 1);
+                    case MappingType.MapWithReferenceValues: {
+                        this.persistence_debug(`${propertyName} = map of ${value.size} reference (values)`, nesting);
+                        new_object[propertyName] = await this._lookup_map_of_reference_values(mapping, value, nesting + 1);
+                        this.persistence_debug(`    ... got ${new_object[propertyName]}`, nesting);
+                        break;
+                    }
+
+                    case MappingType.MapWithReferenceKeys: {
+                        this.persistence_debug(`${propertyName} = map of ${value.size} reference (keys)`, nesting);
+                        new_object[propertyName] = await this._lookup_map_of_reference_keys(mapping, value, nesting + 1);
                         this.persistence_debug(`    ... got ${new_object[propertyName]}`, nesting);
                         break;
                     }
@@ -134,7 +144,23 @@ class OrmConverter {
         return new_object;
     }
 
-    private async _lookup_map_of_references(mapping: PropertyMapping, value: any, nesting: number) {
+    private async _lookup_map_of_reference_keys(mapping: PropertyMapping, value: any, nesting: number) {
+        // So. The keys will be references.
+        // For now, the values are presumed to be primitives.
+        let result_map = new Map<TypedObject, any>();
+        let reference_keys = Object.keys(value);
+        for (let key of reference_keys) {
+            let reference = key.toString();
+            this.logger.debug(`_lookup_map_of_reference_keys going to try lookup on: ${reference}`);
+
+            let reference_obj = await this._async_lookup_object_reference(reference);
+            let js_value = this.convert_from_db_value_to_js_type(value[key], mapping);
+            result_map.set(reference_obj, js_value);
+        }
+        return result_map;
+    }
+
+    private async _lookup_map_of_reference_values(mapping: PropertyMapping, value: any, nesting: number) {
         // Rrrr-um: now do we type the map?
         let result_map = new Map<any, any>();
         this.logger.debug(`_lookup_map_of_references received a value of ${SafeJSON.stringify(value)}`);
@@ -144,7 +170,7 @@ class OrmConverter {
             let reference = value["" + key];
             this.logger.debug(`_lookup_map_of_references going to try lookup on: ${reference}`);
             let js_key = this.convert_from_db_value_to_js_type(key, mapping);
-            result_map.set(js_key, await this._lookup_object_reference(reference, nesting + 1));
+            result_map.set(js_key, await this._async_lookup_object_reference(reference, nesting + 1));
         }
         return result_map;
     }
@@ -176,13 +202,13 @@ class OrmConverter {
     private async _lookup_list_of_references(value, nesting: number = 0) {
         let new_list = [];
         for (let item of value) {
-            new_list.push(await this._lookup_object_reference(item, nesting + 1));
+            new_list.push(await this._async_lookup_object_reference(item, nesting + 1));
         }
         return new_list;
     }
 
 
-    private async _lookup_object_reference(reference: string, nesting: number = 0) {
+    private async _async_lookup_object_reference(reference: string, nesting: number = 0) {
         let parts = reference.split(':');
         if (parts.length != 3) {
             throw new Error(`Invalid reference ${reference}. Expected 3 parts`);
@@ -198,8 +224,10 @@ class OrmConverter {
         switch (mapping.type) {
             case MappingType.Reference:
                 return await this._convert_to_reference(mapping, value, nesting + 1);
-            case MappingType.ReferenceMap:
-                return this._async_convert_to_reference_map(mapping, value, nesting + 1);
+            case MappingType.MapWithReferenceValues:
+                return this._async_convert_to_reference_map_values(mapping, value, nesting + 1);
+            case MappingType.MapWithReferenceKeys:
+                return this._async_convert_to_reference_map_keys(mapping, value, nesting + 1);
             case MappingType.ReferenceList:
                 return this._async_convert_to_reference_list(mapping, value, nesting + 1);
             case MappingType.Property:
@@ -211,7 +239,7 @@ class OrmConverter {
         }
     }
 
-    private async _convert_to_reference(mapping: PropertyMapping, value: any, nesting: number = 0) {
+    private async _convert_to_reference(mapping: PropertyMapping, value: any, nesting: number = 0): Promise<string> {
         if (GetTheTypeNameOfTheObject(value) == "array") {
             throw new Error(`REF: Cannot convert ${mapping.name} to ${NameForMappingPropType(mapping.type)}, it is an array`)
         }
@@ -222,7 +250,7 @@ class OrmConverter {
         return await this.async_reference_for_object_and_store_if_doesnt_exist(value, nesting);
     }
 
-    async async_reference_for_object_and_store_if_doesnt_exist(obj: ObjectWithUUID, nesting: number = 0) {
+    async async_reference_for_object_and_store_if_doesnt_exist(obj: ObjectWithUUID, nesting: number = 0): Promise<string> {
         let reference = this.reference_for_object(obj);
         let exists = await this.object_loader.async_does_object_with_id_exist(obj.uuid);
         if (!exists) {
@@ -291,7 +319,30 @@ class OrmConverter {
         }
     }
 
-    private async _async_convert_to_reference_map(mapping: any, jsMapObject: any, nesting: number = 0) {
+    private async _async_convert_to_reference_map_keys(mapping: any, jsMapObject: any, nesting: number = 0) {
+        let discovered_type_name = GetTheTypeNameOfTheObject(jsMapObject);
+        if (discovered_type_name == "map") {
+            // A list of {key, value} pairs, where the keys are to be serialized as references
+            let reference_map = {};
+            this.persistence_debug(`convert map(keys) of ${jsMapObject.size} items`, nesting);
+
+            for (let uuidKey of Array.from<ObjectWithUUID>(jsMapObject.keys())) {
+                let value = jsMapObject.get(uuidKey);
+                this.persistence_debug(`converting ${mapping.name}[${uuidKey.uuid}] -> ${value}`, nesting);
+                let key_as_reference = await this._convert_to_reference(mapping, uuidKey, nesting);
+
+                // what the heck is the value?
+                // at this point we only support primitives. We have no nice way to describe what they should be.
+                // so we're just gonna assume it's some JS object
+                reference_map[key_as_reference] = await this.convert_from_js_value_to_db_value(value, mapping);
+            }
+            return reference_map;
+        } else {
+            throw new Error(`REFKEYS: Cannot convert ${mapping.name} to ${NameForMappingPropType(mapping.type)}, it is an ${discovered_type_name} (actually, a '${jsMapObject.constructor.name}'). Needs to be a map`);
+        }
+    }
+
+    private async _async_convert_to_reference_map_values(mapping: any, jsMapObject: any, nesting: number = 0) {
         let discovered_type_name = GetTheTypeNameOfTheObject(jsMapObject);
         if (discovered_type_name == "map") {
             // A list of {key, value} pairs

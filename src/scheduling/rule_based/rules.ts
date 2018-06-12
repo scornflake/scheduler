@@ -61,10 +61,10 @@ class FixedRoleOnDate extends Rule {
     date: Date;
     role: Role;
 
-    constructor(date: Date, r: Role, priority = 0) {
+    constructor(date: Date, role: Role, priority = 0) {
         super(priority);
         this.date = date;
-        this.role = r;
+        this.role = role;
     }
 
     execute(state: RuleFacts): Role {
@@ -78,7 +78,7 @@ class FixedRoleOnDate extends Rule {
 class WeightedRoles extends Rule {
     weightedRoles: Map<Role, number>;
 
-    constructor(weightedRules: Map<Role, number>) {
+    constructor(weightedRules: Map<Role, number> = new Map<Role, number>()) {
         super();
         this.weightedRoles = new Map<Role, number>(weightedRules);
         this.normalize_weights();

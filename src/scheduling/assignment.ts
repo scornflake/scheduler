@@ -1,6 +1,6 @@
 import {Person} from "./people";
 import {AssignedToRoleCondition, ConditionalRule, Rule, SecondaryAction, WeightedRoles} from "./rule_based/rules";
-import {action, computed} from "mobx-angular";
+import {action, computed, observable} from "mobx-angular";
 import {check_if_undefined, delete_from_array} from "./common/base_model";
 import {dayAndHourForDate} from "./common/date-utils";
 import {Role} from "./role";
@@ -8,11 +8,11 @@ import {Role} from "./role";
 class Assignment {
     person: Person;
 
-    role_weightings: Map<Role, number>;
-    specific_roles: Map<string, Array<Role>>;
+    @observable role_weightings: Map<Role, number>;
+    @observable specific_roles: Map<string, Array<Role>>;
 
-    private condition_rules: Array<ConditionalRule>;
-    private secondary_action_list: Array<SecondaryAction>;
+    @observable private condition_rules: Array<ConditionalRule>;
+    @observable private secondary_action_list: Array<SecondaryAction>;
 
     constructor(person: Person = new Person()) {
         this.person = person;
@@ -30,6 +30,7 @@ class Assignment {
         return this;
     }
 
+    @action
     set_weight_for_role(r: Role, new_weight: number) {
         if (this.role_weightings.has(r)) {
             this.role_weightings.set(r, new_weight);

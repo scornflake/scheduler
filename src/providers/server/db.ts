@@ -19,6 +19,7 @@ import {IObjectLoader} from "../mapping/orm-mapper-type";
 
 import {OrmConverter} from "./orm";
 import Database = PouchDB.Database;
+import FindRequest = PouchDB.Find.FindRequest;
 
 enum SavingState {
     Idle = 0,  // No changes
@@ -248,11 +249,12 @@ class SchedulerDatabase implements IObjectLoader {
         }
     }
 
-    private async _load_all_of_type(type: string) {
-        let all_objects_of_type = await this.db.find({selector: {type: type}});
-        this.persistence_debug(`Loading all ${all_objects_of_type.docs.length} objects of type ${type} into object store...`, 0);
+    async async_load_and_create_objects_for_query(query) {
+        let all_objects_of_type = await this.db.find(query);
+        this.persistence_debug(`Hydrating ${all_objects_of_type.docs.length} objects, for query: ${query}`, 0);
         let list_of_new_things = [];
         for (let doc of all_objects_of_type.docs) {
+            let type = doc['type'];
             let new_object = await this.converter.async_create_js_object_from_dict(doc, type);
             if (new_object) {
                 list_of_new_things.push(new_object);
@@ -263,8 +265,13 @@ class SchedulerDatabase implements IObjectLoader {
         return list_of_new_things;
     }
 
+    async async_load_all_objects_of_type(type: string) {
+        let query = {selector: {type: type}};
+        return await this.async_load_and_create_objects_for_query(query);
+    }
+
     async load_into_store<T extends NamedObject>(manager: GenericManager<T>, type: string) {
-        let loaded_objects = await this._load_all_of_type(type);
+        let loaded_objects = await this.async_load_all_objects_of_type(type);
         loaded_objects.forEach(o => {
             let ooo = o as T;
             if (ooo) {
@@ -310,6 +317,11 @@ class SchedulerDatabase implements IObjectLoader {
             }
             // console.log(`XXXXXXXXX: ${SafeJSON.stringify(owner['uuid'])}`);
         }
+    }
+
+    async async_load_objects_with_query(query) {
+        let docs = await this.db.find(query);
+
     }
 }
 

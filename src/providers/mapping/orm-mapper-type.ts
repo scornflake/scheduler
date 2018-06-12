@@ -4,7 +4,8 @@ enum MappingType {
     Property = 'prop',
     Reference = 'ref',
     ReferenceList = 'reflist',
-    ReferenceMap = 'refmap',
+    MapWithReferenceValues = 'refmap',
+    MapWithReferenceKeys = 'refkeymap',
     NestedObject = 'obj',
     NestedObjectList = 'lst',
 }
@@ -12,6 +13,7 @@ enum MappingType {
 enum PropertyHint {
     String = 'string',
     Date = 'date',
+    Number = 'num',
 }
 
 type PropertyMapping = {
@@ -24,7 +26,8 @@ type ClassMapping = {
     name: string;
     fields?: PropertyMapping[],
     inherit?: string,
-    factory?
+    factory // always required, because the mapper instantiates objects to check properties
+
 }
 
 type ClassFieldMapping = {
@@ -47,7 +50,8 @@ const OrmMappingTypeNames = {};
 OrmMappingTypeNames[MappingType.Property] = "Property";
 OrmMappingTypeNames[MappingType.Reference] = "Reference";
 OrmMappingTypeNames[MappingType.ReferenceList] = "ReferenceList";
-OrmMappingTypeNames[MappingType.ReferenceMap] = "ReferenceMap";
+OrmMappingTypeNames[MappingType.MapWithReferenceValues] = "MapWithReferenceValues";
+OrmMappingTypeNames[MappingType.MapWithReferenceKeys] = "MapWithReferenceKeys";
 OrmMappingTypeNames[MappingType.NestedObject] = "NestedObject";
 OrmMappingTypeNames[MappingType.NestedObjectList] = "NestedObjectList";
 

@@ -3,7 +3,7 @@
     <ion-navbar>
         <ion-title>Person Assignment</ion-title>
     </ion-navbar>
-
+    <saving-state></saving-state>
 </ion-header>
 
 
@@ -16,7 +16,7 @@
 
     <ion-list-header color="light">Availability</ion-list-header>
     <ion-item-group>
-        <availability-options [availability]="person.availability"></availability-options>
+        <availability-options [(availability)]="person.availability"></availability-options>
     </ion-item-group>
 
     <ion-list-header color="light">

@@ -6,6 +6,8 @@ import {Plan} from "../scheduling/plan";
 import {Organization} from "../scheduling/organization";
 import {Unavailability} from "../scheduling/unavailability";
 import {ClassFieldMapping, MappingType, PropertyHint} from "../providers/mapping/orm-mapper-type";
+import {FixedRoleOnDate, Rule, WeightedRoles} from "../scheduling/rule_based/rules";
+import {csd} from "../scheduling/common/date-utils";
 
 let scheduler_db_map: ClassFieldMapping = {
     classes: [
@@ -41,11 +43,37 @@ let scheduler_db_map: ClassFieldMapping = {
                 {name: 'start_date', hint: PropertyHint.Date},
                 {name: 'end_date', hint: PropertyHint.Date},
                 {name: 'days_per_period'},
-                {name: 'manual_layouts', type: MappingType.ReferenceMap, hint: PropertyHint.Date},
-                {name: 'team', type: MappingType.Reference}
+                {name: 'manual_layouts', type: MappingType.MapWithReferenceValues, hint: PropertyHint.Date},
+                {name: 'team', type: MappingType.Reference},
+                {name: 'assignments', type: MappingType.NestedObjectList},
+                {name: 'specific_role_rules', type: MappingType.NestedObjectList}
             ],
             inherit: 'NamedObject',
             factory: () => new Plan("New Plan", null)
+        },
+        {
+            name: 'Rule',
+            fields: [
+                {name: 'priority'}
+            ],
+            factory: () => new Rule()
+        },
+        {
+            name: 'FixedRoleOnDate',
+            fields: [
+                {name: 'date', hint: PropertyHint.Date},
+                {name: 'role', type: MappingType.Reference}
+            ],
+            inherit: 'Rule',
+            factory: () => new FixedRoleOnDate(csd(2000, 1, 1), null)
+        },
+        {
+            name: 'WeightedRoles',
+            fields: [
+                {name: 'weightedRoles', type: MappingType.MapWithReferenceKeys, hint: PropertyHint.Number},
+            ],
+            inherit: 'Rule',
+            factory: () => new WeightedRoles()
         },
         {
             name: 'Organization',

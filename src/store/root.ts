@@ -17,6 +17,7 @@ import {ObjectValidation} from "../scheduling/shared";
 import {csd} from "../scheduling/common/date-utils";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import {SchedulerObjectStore} from "../scheduling/common/scheduler-store";
+import {Organization} from "../scheduling/organization";
 
 @Injectable()
 class RootStore extends SchedulerObjectStore {
@@ -73,6 +74,19 @@ class RootStore extends SchedulerObjectStore {
         })
     }
 
+    async singleOrgStoredInDB(): Promise<Organization> {
+        let orgs = await this.db.async_load_all_objects_of_type('Organization');
+        if (orgs) {
+            // we want only one. If there's more, I think we should barf
+            if (orgs.length > 1) {
+                throw new Error(`${orgs.length} organizations. Oh no! I expected only one!`);
+            } else if (orgs.length == 1) {
+                return orgs[0];
+            }
+        }
+        return null;
+    }
+
     async load() {
         try {
             let saved_state = await this.db.async_load_object_with_id('saved-state');
@@ -87,11 +101,19 @@ class RootStore extends SchedulerObjectStore {
             this.logger.info("No stored saved state. Starting from fresh.");
         }
 
+        this.logger.info(`Loading base data...`);
 
         /*
         Can only load stuff when we have our organization (everything depends on that, since it names our shared DB, thus connection to the outside)
          */
-        this.logger.info(`Loading base data...`);
+
+        // In our DB, we expect only ONE organization
+        try {
+            this.organization = await this.singleOrgStoredInDB();
+        } catch (e) {
+            this.pageUtils.show_message(`During load(): ${e}`);
+        }
+
         await this.db.load_into_store<Person>(this.people, 'Person');
         await this.db.load_into_store<Team>(this.teams, 'Team');
     }
@@ -122,7 +144,7 @@ class RootStore extends SchedulerObjectStore {
         let team = this.teams.firstThisTypeByName("Default");
         if (team) {
             // for testing, create some fake
-            if(!this.draft_service) {
+            if (!this.draft_service) {
                 this.draft_service = this.plans.add(new Plan("Sunday Morning Service", team));
                 this.draft_service.start_date = csd(2018, 6, 3);
                 this.draft_service.end_date = csd(2018, 9, 30);

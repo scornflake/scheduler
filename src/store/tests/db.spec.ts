@@ -5,11 +5,18 @@ import {MockConfigurationService} from "../../app/logging-configuration";
 import {observable} from "mobx";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {scheduler_db_map} from "../../assets/db.mapping";
-import {ClassFieldMapping, MappingType, PropertyHint, PropertyMapping} from "../../providers/mapping/orm-mapper-type";
+import {
+    ClassFieldMapping,
+    ClassMapping,
+    MappingType,
+    PropertyHint,
+    PropertyMapping
+} from "../../providers/mapping/orm-mapper-type";
 import {Team} from "../../scheduling/teams";
 import {csd} from "../../scheduling/common/date-utils";
 import {OrmMapper} from "../../providers/mapping/orm-mapper";
 import {OrmConverter} from "../../providers/server/orm";
+import {Role} from "../../scheduling/role";
 
 class SomeEntity extends ObjectWithUUID {
     some_field: string = "a value";
@@ -75,7 +82,7 @@ describe('db', () => {
             {
                 name: 'ThingWithMapOfReferences',
                 fields: [
-                    {name: 'some_things', type: MappingType.ReferenceMap, hint: PropertyHint.Date}
+                    {name: 'some_things', type: MappingType.MapWithReferenceValues, hint: PropertyHint.Date}
                 ],
                 inherit: 'ObjectWithUUID',
                 factory: () => new ThingWithMapOfReferences()
@@ -127,13 +134,57 @@ describe('db', () => {
             expect(converter.convert_from_js_value_to_db_value(undefined, mapping)).toBeUndefined();
         });
 
+        it('can convert map of {ref,any} to a dict', function (done) {
+            class MapAnyRefs extends ObjectWithUUID {
+                map_of_stuffs = new Map<SomeEntity, number>();
+            }
+
+            let ze_mapping: ClassMapping = {
+                name: 'MapAnyRefs',
+                fields: [
+                    {name: 'map_of_stuffs', type: MappingType.MapWithReferenceKeys},
+                ],
+                inherit: 'ObjectWithUUID',
+                factory: () => new MapAnyRefs()
+            };
+            mapper.addConfiguration({classes: [ze_mapping]});
+
+            let ze_object = new MapAnyRefs();
+            let entity_one = new SomeEntity();
+            let entity_two = new SomeEntity();
+            ze_object.map_of_stuffs.set(entity_one, 42);
+            ze_object.map_of_stuffs.set(entity_two, 5);
+            converter.async_create_dict_from_js_object(ze_object).then(dict => {
+                // expect a map where the keys are references
+                console.log(`we created: ${JSON.stringify(dict)}`);
+
+                let ref_1 = converter.reference_for_object(entity_one);
+                let ref_2 = converter.reference_for_object(entity_two);
+
+                expect(dict.map_of_stuffs[ref_1]).toEqual(42);
+                expect(dict.map_of_stuffs[ref_2]).toEqual(5);
+
+                // Now, if I convert that back into an object, do I get something sensible?
+                console.log(`time to see if we can go the other way...`);
+                converter.async_create_js_object_from_dict(dict, 'MapAnyRefs').then((js_object:MapAnyRefs) => {
+                    console.log(`we hydrated: ${JSON.stringify(js_object)}`);
+
+                    let all_keys = Array.from(js_object.map_of_stuffs.keys());
+                    expect(all_keys).toContain(entity_one);
+                    expect(all_keys).toContain(entity_two);
+
+                    done();
+                });
+            })
+        });
+
 
         it('creates minimal JSON from empty object', function (done) {
             let empty = new Empty();
-            converter.async_create_dict_from_js_object(empty).then(json => {
-                console.log(`Empty JSON: ${JSON.stringify(json)}`);
-                expect(json.type).toBe("Empty");
-                expect(json._id).toBe(empty.uuid);
+            converter.async_create_dict_from_js_object(empty).then(dict => {
+                console.log(`Empty JSON: ${JSON.stringify(dict)}`);
+                expect(dict.type).toBe("Empty");
+                expect(dict._id).toBe(empty.uuid);
                 done();
             });
         });
@@ -169,18 +220,18 @@ describe('db', () => {
             mapper.addConfiguration(more_map);
 
             let simple = new ThingWithContainedObject();
-            converter.async_create_dict_from_js_object(simple).then(json => {
-                console.log(`JSON: ${JSON.stringify(json)}`);
+            converter.async_create_dict_from_js_object(simple).then(dict => {
+                console.log(`JSON: ${JSON.stringify(dict)}`);
 
-                expect(json.type).toBe("ThingWithContainedObject", "space!");
-                expect(json.note).toBeUndefined("the final frontier");
+                expect(dict.type).toBe("ThingWithContainedObject", "space!");
+                expect(dict.note).toBeUndefined("the final frontier");
 
-                console.log(`Contained object = ${JSON.stringify(json.another_object)}`);
-                expect(json.another_object).toEqual({
+                console.log(`Contained object = ${JSON.stringify(dict.another_object)}`);
+                expect(dict.another_object).toEqual({
                     some_field: "a value",
                     type: "ContainedObject"
                 }, "aliens are upon us");
-                expect(json.another_object.something_else).toBeUndefined("but they come in peace");
+                expect(dict.another_object.something_else).toBeUndefined("but they come in peace");
                 done();
             });
         });
@@ -188,9 +239,9 @@ describe('db', () => {
         it('can convert object with UUID to a reference', function (done) {
             let simple = new ThingWithReference();
 
-            converter.async_create_dict_from_js_object(simple).then(json => {
-                expect(json.type).toBe("ThingWithReference");
-                expect(json.another_object).toBe(`rrr:SomeEntity:${simple.another_object.uuid}`, 'reference compare failed');
+            converter.async_create_dict_from_js_object(simple).then(dict => {
+                expect(dict.type).toBe("ThingWithReference");
+                expect(dict.another_object).toBe(`rrr:SomeEntity:${simple.another_object.uuid}`, 'reference compare failed');
                 done();
             });
         });
@@ -214,14 +265,14 @@ describe('db', () => {
             mapper.addConfiguration(more_map);
 
             let instance = new ThingWithListOfReferences();
-            converter.async_create_dict_from_js_object(instance).then(json => {
+            converter.async_create_dict_from_js_object(instance).then(dict => {
                 let expected_items = [
                     converter.reference_for_object(instance.my_list[0]),
                     converter.reference_for_object(instance.my_list[1]),
                     converter.reference_for_object(instance.my_list[2])
                 ];
-                // console.log(`JSON: ${JSON.stringify(json)}`);
-                expect(json.my_list).toEqual(expected_items);
+                // console.log(`JSON: ${JSON.stringify(dict)}`);
+                expect(dict.my_list).toEqual(expected_items);
                 done();
             });
         });
@@ -243,26 +294,26 @@ describe('db', () => {
             };
             mapper.addConfiguration(more_map);
             let instance = new ThingWithListOfReferences();
-            converter.async_create_dict_from_js_object(instance).then(json => {
+            converter.async_create_dict_from_js_object(instance).then(dict => {
                 let expected_items = [
                     converter.reference_for_object(instance.my_list[0]),
                     converter.reference_for_object(instance.my_list[1]),
                     converter.reference_for_object(instance.my_list[2])
                 ];
-                // console.log(`JSON: ${JSON.stringify(json)}`);
-                expect(json.my_list).toEqual(expected_items);
+                // console.log(`JSON: ${JSON.stringify(dict)}`);
+                expect(dict.my_list).toEqual(expected_items);
                 done();
             });
         });
 
         it('able to convert list of nested objects', function (done) {
             let instance = new ThingWithNestedObjects();
-            converter.async_create_dict_from_js_object(instance).then(json => {
-                console.log(`JSON: ${JSON.stringify(json)}`);
-                expect(json.my_list.length).toEqual(3);
-                expect(json.my_list[0].some_field).toEqual('a value');
-                expect(json.my_list[1].some_field).toEqual('a value');
-                expect(json.my_list[2].some_field).toEqual('a value');
+            converter.async_create_dict_from_js_object(instance).then(dict => {
+                console.log(`JSON: ${JSON.stringify(dict)}`);
+                expect(dict.my_list.length).toEqual(3);
+                expect(dict.my_list[0].some_field).toEqual('a value');
+                expect(dict.my_list[1].some_field).toEqual('a value');
+                expect(dict.my_list[2].some_field).toEqual('a value');
                 done();
             });
         });

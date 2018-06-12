@@ -23,7 +23,8 @@ let internal_mappings: ClassFieldMapping = {
             name: 'TypedObject',
             fields: [
                 {name: 'type'}
-            ]
+            ],
+            factory: null
         },
         {
             name: 'ObjectWithUUID',
@@ -31,6 +32,7 @@ let internal_mappings: ClassFieldMapping = {
                 {name: '_id'},
                 {name: '_rev'}
             ],
+            factory: null,
             inherit: 'TypedObject'
         },
         {
@@ -38,6 +40,7 @@ let internal_mappings: ClassFieldMapping = {
             fields: [
                 {name: 'name'}
             ],
+            factory: null,
             inherit: 'ObjectWithUUID'
         },
 
