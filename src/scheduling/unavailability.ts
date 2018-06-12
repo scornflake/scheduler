@@ -20,11 +20,11 @@ class Unavailability extends TypedObject {
     }
 
     get to_date() {
-        return this._from_date;
+        return this._to_date;
     }
 
     set to_date(new_value: any) {
-        if (typeof new_value == 'string') {
+        if (typeof new_value === 'string') {
             new_value = moment(new_value).toDate();
         }
         this._to_date = new_value;
@@ -35,7 +35,7 @@ class Unavailability extends TypedObject {
     }
 
     set from_date(new_value: any) {
-        if (typeof new_value == 'string') {
+        if (typeof new_value === 'string') {
             new_value = moment(new_value).toDate();
         }
         this._from_date = new_value;
@@ -51,6 +51,9 @@ class Unavailability extends TypedObject {
     }
 
     contains_date(date: Date) {
+        if (date == null) {
+            return false;
+        }
         let start = moment(this.from_date).startOf('day');
 
         // By default, be one day in length
@@ -100,6 +103,13 @@ class Unavailability extends TypedObject {
             return reasonEqual;
         }
         return false;
+    }
+
+    toString() {
+        if(this.is_date_range) {
+            return `from ${this.from_date} -> ${this.to_date}`;
+        }
+        return `on ${this.from_date}`;
     }
 }
 

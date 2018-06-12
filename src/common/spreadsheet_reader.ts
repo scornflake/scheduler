@@ -29,7 +29,7 @@ export class SpreadsheetReader {
         let team = new Team("Snapshot Team");
         let plan = new Plan(`A Snapshot`, team);
 
-        NPBCStoreConstruction.SetupServiceRoles(plan);
+        NPBCStoreConstruction.AttachRolesToPlan(plan);
 
         this.logger.info("Parsing schedule...");
         // First, we validate we have the expected column names

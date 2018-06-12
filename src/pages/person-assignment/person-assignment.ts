@@ -36,13 +36,13 @@ export class PersonAssignmentPage {
 
     get person(): Person {
         if (this.assignment) {
-            console.log(`PROVIDE PERSON ${this.assignment.person.name}`);
+            // console.log(`PROVIDE PERSON ${this.assignment.person.name}`);
             return this.assignment.person;
         }
         return null;
     }
 
-    get other_details(): string {
+    get person_name_details(): string {
         if (this.person) {
             let list = [];
             if(this.person.name) {

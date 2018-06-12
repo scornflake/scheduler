@@ -6,8 +6,11 @@ import {NPBCStoreConstruction} from "../../providers/store/test.store";
 import {PageUtils} from "../page-utils";
 import {Team} from "../../scheduling/teams";
 import {Organization} from "../../scheduling/organization";
-import {ClassMapping, OrmMapper} from "../../providers/mapping/orm-mapper";
-import {MappingType} from "../../providers/mapping/orm-mapper-type";
+import {OrmMapper} from "../../providers/mapping/orm-mapper";
+import {ClassMapping, PropertyMapping} from "../../providers/mapping/orm-mapper-type";
+import {ObjectValidation} from "../../scheduling/shared";
+import {Plan} from "../../scheduling/plan";
+import {csd} from "../../scheduling/common/date-utils";
 
 @IonicPage({
     name: 'page-db',
@@ -79,7 +82,7 @@ export class DatabaseMaintPage {
     }
 
     propertiesFor(cf: ClassMapping): string[] {
-        let props: Map<string, MappingType> = this.mapper.propertiesFor(cf.name);
+        let props: Map<string, PropertyMapping> = this.mapper.propertiesFor(cf.name);
         return Array.from(props.keys());
     }
 
@@ -106,17 +109,18 @@ export class DatabaseMaintPage {
         return [
             {label: 'Num orgs', value: this.rootStore.organization ? 1 : 0},
             {label: 'Num people', value: this.rootStore.people.length},
+            {label: 'Num plans', value: this.rootStore.plans.length},
             {label: 'Num teams', value: teams.length, next: () => this.stats_for_teams(teams.teams)}
         ];
     }
 
-    store_fake_data() {
+    async store_fake_data() {
         /*
         Need an organization
          */
         if (!this.rootStore.organization) {
             this.rootStore.organization = new Organization("North Porirua Baptist Church");
-            this.db.store_or_update_object(this.rootStore.organization);
+            await this.db.async_store_or_update_object(this.rootStore.organization);
             this.pageUtils.show_message("Added default org");
         }
 
@@ -139,13 +143,43 @@ export class DatabaseMaintPage {
         NPBCStoreConstruction.SetupTeamUnavailability(defaultTeam);
 
         for (let person of people_added) {
-            this.db.store_or_update_object(person);
+            await this.db.async_store_or_update_object(person);
         }
 
         if (people_added.length > 0) {
             this.pageUtils.show_message(`${people_added.length} people added`);
         }
 
-        this.db.store_or_update_object(defaultTeam);
+        await this.db.async_store_or_update_object(defaultTeam);
+        let plan = this.setup_fake_draft_plan(defaultTeam);
+        await this.db.async_store_or_update_object(plan);
+    }
+
+    private setup_fake_draft_plan(team: Team): Plan {
+        // make up a default team
+        // for testing, create some fake
+        let plan = this.rootStore.plans.firstThisTypeByName("Sunday Morning Service");
+        if (plan == null) {
+            plan = this.rootStore.plans.add(new Plan("Sunday Morning Service", team));
+            this.pageUtils.show_message('Adding new default plan')
+        }
+        plan.start_date = csd(2018, 6, 3);
+        plan.end_date = csd(2018, 9, 30);
+
+        NPBCStoreConstruction.AttachRolesToPlan(plan);
+
+        try {
+            NPBCStoreConstruction.AddPeopleToPlanWithRoles(plan, team);
+        } catch (e) {
+            // oh oh.
+            let ve = ObjectValidation.simple("Cannot setup default fake plan. Is the DB OK? " + e.toString().substr(0, 100));
+            this.pageUtils.show_validation_error(ve, true);
+        }
+
+        return plan;
+    }
+
+    toggleGroup(label: any) {
+
     }
 }

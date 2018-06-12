@@ -4,10 +4,12 @@ import {ObjectWithUUID, TypedObject} from "../../scheduling/common/base_model";
 import {MockConfigurationService} from "../../app/logging-configuration";
 import {observable} from "mobx";
 import {SafeJSON} from "../../common/json/safe-stringify";
-import {ClassFieldMapping, OrmMapper} from "../../providers/mapping/orm-mapper";
 import {scheduler_db_map} from "../../assets/db.mapping";
-import {MappingType} from "../../providers/mapping/orm-mapper-type";
+import {ClassFieldMapping, MappingType, PropertyHint, PropertyMapping} from "../../providers/mapping/orm-mapper-type";
 import {Team} from "../../scheduling/teams";
+import {csd} from "../../scheduling/common/date-utils";
+import {OrmMapper} from "../../providers/mapping/orm-mapper";
+import {OrmConverter} from "../../providers/server/orm";
 
 class SomeEntity extends ObjectWithUUID {
     some_field: string = "a value";
@@ -24,6 +26,15 @@ class ThingWithReference extends ObjectWithUUID {
     name: string = "This is my name";
     note: string = "This isn't persisted";
     another_object: SomeEntity = new SomeEntity();
+}
+
+class ThingWithMapOfReferences extends ObjectWithUUID {
+    some_things: Map<Date, SomeEntity>;
+
+    constructor() {
+        super();
+        this.some_things = new Map<Date, SomeEntity>();
+    }
 }
 
 describe('db', () => {
@@ -60,6 +71,14 @@ describe('db', () => {
                 ],
                 inherit: 'ObjectWithUUID',
                 factory: () => new ThingWithReference()
+            },
+            {
+                name: 'ThingWithMapOfReferences',
+                fields: [
+                    {name: 'some_things', type: MappingType.ReferenceMap, hint: PropertyHint.Date}
+                ],
+                inherit: 'ObjectWithUUID',
+                factory: () => new ThingWithMapOfReferences()
             }
         ]
     };
@@ -88,250 +107,385 @@ describe('db', () => {
     it('can create reference of person object', function () {
         let person = new Person("Me!");
         expect(person.type).toBe("Person");
-        let ref = db.reference_for_object(person);
+        let ref = db.converter.reference_for_object(person);
         expect(ref).toBe(`rrr:Person:${person.uuid}`);
     });
 
-    it('creates minimal JSON from empty object', function () {
-        let empty = new Empty();
-        let json = db.create_json_from_object(empty);
-        console.log(`Empty JSON: ${JSON.stringify(json)}`);
-        expect(json.type).toBe("Empty");
-        expect(json._id).toBe(empty.uuid);
-    });
+    describe('converter tests', () => {
+        let converter;
+        beforeEach(() => {
+            converter = new OrmConverter(mapper, db);
+        });
 
-    it('converts only persistable properties', function () {
-        class ContainedObject extends TypedObject {
-            some_field: string = "a value";
-            something_else: string = "not persisted";
-        }
+        it('should convert null dates to null', function () {
+            let mapping: PropertyMapping = {
+                name: 'foo',
+                type: MappingType.Property,
+                hint: PropertyHint.Date
+            };
+            expect(converter.convert_from_js_value_to_db_value(null, mapping)).toBeNull();
+            expect(converter.convert_from_js_value_to_db_value(undefined, mapping)).toBeUndefined();
+        });
 
-        class ThingWithContainedObject extends ObjectWithUUID {
-            name: string = "This is my name";
-            note: string = "This isn't persisted";
-            another_object: ContainedObject = new ContainedObject();
-        }
 
-        let more_map: ClassFieldMapping = {
-            classes: [{
-                name: 'ContainedObject',
-                fields: [{name: 'some_field'}],
-                inherit: 'TypedObject',
-                factory: () => new ContainedObject()
-            }, {
-                name: 'ThingWithContainedObject',
-                fields: [
-                    {name: 'name'},
-                    {name: 'another_object', type: MappingType.NestedObject}
-                ],
-                inherit: 'ObjectWithUUID',
-                factory: () => new ThingWithContainedObject()
-            }]
-        };
-        mapper.addConfiguration(more_map);
-
-        let simple = new ThingWithContainedObject();
-        let json = db.create_json_from_object(simple);
-        console.log(`JSON: ${JSON.stringify(json)}`);
-
-        expect(json.type).toBe("ThingWithContainedObject", "space!");
-        expect(json.note).toBeUndefined("the final frontier");
-
-        console.log(`Contained object = ${JSON.stringify(json.another_object)}`);
-        expect(json.another_object).toEqual({some_field: "a value", type: "ContainedObject"}, "aliens are upon us");
-        expect(json.another_object.something_else).toBeUndefined("but they come in peace");
-    });
-
-    it('can convert object with UUID to a reference', function () {
-        let simple = new ThingWithReference();
-
-        let json = db.create_json_from_object(simple);
-        expect(json.type).toBe("ThingWithReference");
-        expect(json.another_object).toBe(`rrr:SomeEntity:${simple.another_object.uuid}`, 'reference compare failed');
-    });
-
-    it('should convert a list of references', function () {
-        class ThingWithListOfReferences extends ObjectWithUUID {
-            my_list = [new SomeEntity(), new SomeEntity(), new SomeEntity()]
-        }
-
-        let more_map: ClassFieldMapping = {
-            classes: [{
-                name: 'ThingWithListOfReferences',
-                fields: [
-                    {name: 'my_list', type: MappingType.ReferenceList}
-                ],
-                inherit: 'ObjectWithUUID',
-                factory: () => new ThingWithListOfReferences()
-            }]
-        };
-        mapper.addConfiguration(more_map);
-
-        let instance = new ThingWithListOfReferences();
-        let json = db.create_json_from_object(instance);
-        let expected_items = [
-            db.reference_for_object(instance.my_list[0]),
-            db.reference_for_object(instance.my_list[1]),
-            db.reference_for_object(instance.my_list[2])
-        ];
-        // console.log(`JSON: ${JSON.stringify(json)}`);
-        expect(json.my_list).toEqual(expected_items);
-    });
-
-    it('should convert an observable mbox list', function () {
-        class ThingWithListOfReferences extends ObjectWithUUID {
-            @observable my_list = [new SomeEntity(), new SomeEntity(), new SomeEntity()]
-        }
-
-        let more_map: ClassFieldMapping = {
-            classes: [{
-                name: 'ThingWithListOfReferences',
-                fields: [
-                    {name: 'my_list', type: MappingType.ReferenceList}
-                ],
-                inherit: 'ObjectWithUUID',
-                factory: () => new ThingWithListOfReferences()
-            }]
-        };
-        mapper.addConfiguration(more_map);
-        let instance = new ThingWithListOfReferences();
-        let json = db.create_json_from_object(instance);
-        let expected_items = [
-            db.reference_for_object(instance.my_list[0]),
-            db.reference_for_object(instance.my_list[1]),
-            db.reference_for_object(instance.my_list[2])
-        ];
-        // console.log(`JSON: ${JSON.stringify(json)}`);
-        expect(json.my_list).toEqual(expected_items);
-    });
-
-    it('able to convert list of nested objects', function () {
-        let instance = new ThingWithNestedObjects();
-        let json = db.create_json_from_object(instance);
-        console.log(`JSON: ${JSON.stringify(json)}`);
-        expect(json.my_list.length).toEqual(3);
-        expect(json.my_list[0].some_field).toEqual('a value');
-        expect(json.my_list[1].some_field).toEqual('a value');
-        expect(json.my_list[2].some_field).toEqual('a value');
-
-    });
-
-    it('can load a simple single object with uuid', (done) => {
-        let an_entity = new SomeEntity();
-        db.store_or_update_object(an_entity).then((saved_object) => {
-            console.log(`Response from store: ${SafeJSON.stringify(saved_object)}`);
-            let obj_id = saved_object._id;
-            console.log(`ID should be: ${obj_id}, with returned type: ${saved_object.constructor.name}`);
-
-            db.load_object_with_id(obj_id).then(loaded_entity => {
-                console.log(`Response from load: ${SafeJSON.stringify(loaded_entity)}`);
-                expect(loaded_entity.uuid).toEqual(an_entity.uuid);
+        it('creates minimal JSON from empty object', function (done) {
+            let empty = new Empty();
+            converter.async_create_dict_from_js_object(empty).then(json => {
+                console.log(`Empty JSON: ${JSON.stringify(json)}`);
+                expect(json.type).toBe("Empty");
+                expect(json._id).toBe(empty.uuid);
                 done();
             });
         });
-    });
 
-    it('can load a list of nested objects', function (done) {
-        let instance = new ThingWithNestedObjects();
-        let nested_one = instance.my_list[0];
-        let nested_two = instance.my_list[1];
-        let nested_three = instance.my_list[2];
-        db.store_or_update_object(instance).then(() => {
-            // load it and check we get it back
-            db.load_object_with_id(instance.uuid).then(loaded_instance => {
-                console.log(`Got back a loaded object: ${SafeJSON.stringify(loaded_instance)}`);
-                expect(loaded_instance.uuid).toEqual(instance.uuid);
-                expect(loaded_instance.my_list.length).toEqual(3);
+        it('converts only persistable properties', function (done) {
+            class ContainedObject extends TypedObject {
+                some_field: string = "a value";
+                something_else: string = "not persisted";
+            }
 
-                let ld_nested_one = loaded_instance.my_list[0];
-                let ld_nested_two = loaded_instance.my_list[1];
-                let ld_nested_three = loaded_instance.my_list[2];
+            class ThingWithContainedObject extends ObjectWithUUID {
+                name: string = "This is my name";
+                note: string = "This isn't persisted";
+                another_object: ContainedObject = new ContainedObject();
+            }
 
-                expect(nested_one.some_field).toEqual(ld_nested_one.some_field);
-                expect(nested_two.some_field).toEqual(ld_nested_two.some_field);
-                expect(nested_three.some_field).toEqual(ld_nested_three.some_field);
+            let more_map: ClassFieldMapping = {
+                classes: [{
+                    name: 'ContainedObject',
+                    fields: [{name: 'some_field'}],
+                    inherit: 'TypedObject',
+                    factory: () => new ContainedObject()
+                }, {
+                    name: 'ThingWithContainedObject',
+                    fields: [
+                        {name: 'name'},
+                        {name: 'another_object', type: MappingType.NestedObject}
+                    ],
+                    inherit: 'ObjectWithUUID',
+                    factory: () => new ThingWithContainedObject()
+                }]
+            };
+            mapper.addConfiguration(more_map);
 
-                /*
-                    Note: ld_nested_* would normally have _id and _rev, based on ObjectWithUUID default constructor.
-                    However the db loader will check for this (in the factory). It 'undefines' _id and _rev so that new instances DO NOT automatically get _id and _rev.
-                 */
+            let simple = new ThingWithContainedObject();
+            converter.async_create_dict_from_js_object(simple).then(json => {
+                console.log(`JSON: ${JSON.stringify(json)}`);
 
-                // Because it was marked as a NestedObject and not a reference, no _id/_rev should be present
-                // console.log(`Nested #1: ${SafeJSON.stringify(ld_nested_one)}`);
-                expect(ld_nested_one._id).toBeUndefined();
-                expect(ld_nested_one._rev).toBeUndefined();
+                expect(json.type).toBe("ThingWithContainedObject", "space!");
+                expect(json.note).toBeUndefined("the final frontier");
+
+                console.log(`Contained object = ${JSON.stringify(json.another_object)}`);
+                expect(json.another_object).toEqual({
+                    some_field: "a value",
+                    type: "ContainedObject"
+                }, "aliens are upon us");
+                expect(json.another_object.something_else).toBeUndefined("but they come in peace");
                 done();
             });
-        })
-    });
+        });
 
-    it('when storing a team, stores a bunch of refs', () => {
-        let neil = new Person("neil");
-        let bob = new Person("bob");
-        let team = new Team("My team", [neil, bob]);
-        let dict = db.create_json_from_object(team);
-        // console.log(`I created: ${JSON.stringify(dict)}`);
+        it('can convert object with UUID to a reference', function (done) {
+            let simple = new ThingWithReference();
 
-        let refs = dict['people'];
-        expect(refs.length).toEqual(2);
-        expect(refs[1]).toEqual(db.reference_for_object(neil))
-    });
+            converter.async_create_dict_from_js_object(simple).then(json => {
+                expect(json.type).toBe("ThingWithReference");
+                expect(json.another_object).toBe(`rrr:SomeEntity:${simple.another_object.uuid}`, 'reference compare failed');
+                done();
+            });
+        });
 
-    it('should be able to reconstruct a team from refs, given those refs are stored', function (done) {
-        let neil = new Person("neil");
-        let bob = new Person("bob");
-        db.store_or_update_object(neil).then(() => [
-            db.store_or_update_object(bob).then(() => {
 
-                // Save the team, and refs, and try to reload
-                let team = new Team("My team", [neil, bob]);
-                db.store_or_update_object(team).then(() => {
+        it('should convert a list of references', function (done) {
+            class ThingWithListOfReferences extends ObjectWithUUID {
+                my_list = [new SomeEntity(), new SomeEntity(), new SomeEntity()]
+            }
 
-                    db.load_object_with_id(team.uuid).then((loaded_team: Team) => {
-                        console.log(`Got back team: ${SafeJSON.stringify(loaded_team)}`);
-                        expect(loaded_team.people.length).toEqual(2);
-                        expect(['neil', 'bob']).toContain(loaded_team.people[0].name);
-                        expect(['neil', 'bob']).toContain(loaded_team.people[1].name);
+            let more_map: ClassFieldMapping = {
+                classes: [{
+                    name: 'ThingWithListOfReferences',
+                    fields: [
+                        {name: 'my_list', type: MappingType.ReferenceList}
+                    ],
+                    inherit: 'ObjectWithUUID',
+                    factory: () => new ThingWithListOfReferences()
+                }]
+            };
+            mapper.addConfiguration(more_map);
+
+            let instance = new ThingWithListOfReferences();
+            converter.async_create_dict_from_js_object(instance).then(json => {
+                let expected_items = [
+                    converter.reference_for_object(instance.my_list[0]),
+                    converter.reference_for_object(instance.my_list[1]),
+                    converter.reference_for_object(instance.my_list[2])
+                ];
+                // console.log(`JSON: ${JSON.stringify(json)}`);
+                expect(json.my_list).toEqual(expected_items);
+                done();
+            });
+        });
+
+        it('should convert an observable mbox list', function (done) {
+            class ThingWithListOfReferences extends ObjectWithUUID {
+                @observable my_list = [new SomeEntity(), new SomeEntity(), new SomeEntity()]
+            }
+
+            let more_map: ClassFieldMapping = {
+                classes: [{
+                    name: 'ThingWithListOfReferences',
+                    fields: [
+                        {name: 'my_list', type: MappingType.ReferenceList}
+                    ],
+                    inherit: 'ObjectWithUUID',
+                    factory: () => new ThingWithListOfReferences()
+                }]
+            };
+            mapper.addConfiguration(more_map);
+            let instance = new ThingWithListOfReferences();
+            converter.async_create_dict_from_js_object(instance).then(json => {
+                let expected_items = [
+                    converter.reference_for_object(instance.my_list[0]),
+                    converter.reference_for_object(instance.my_list[1]),
+                    converter.reference_for_object(instance.my_list[2])
+                ];
+                // console.log(`JSON: ${JSON.stringify(json)}`);
+                expect(json.my_list).toEqual(expected_items);
+                done();
+            });
+        });
+
+        it('able to convert list of nested objects', function (done) {
+            let instance = new ThingWithNestedObjects();
+            converter.async_create_dict_from_js_object(instance).then(json => {
+                console.log(`JSON: ${JSON.stringify(json)}`);
+                expect(json.my_list.length).toEqual(3);
+                expect(json.my_list[0].some_field).toEqual('a value');
+                expect(json.my_list[1].some_field).toEqual('a value');
+                expect(json.my_list[2].some_field).toEqual('a value');
+                done();
+            });
+        });
+
+        describe('map tests', () => {
+            let a_mappy_thing;
+            let someEntityOne;
+            let someEntityTwo;
+            let date_one;
+            let date_two;
+
+            beforeEach(() => {
+                someEntityOne = new SomeEntity();
+                someEntityTwo = new SomeEntity();
+                date_one = csd(2010, 4, 5);
+                date_two = csd(2015, 8, 7);
+
+                // expect to have something in the map
+                a_mappy_thing = new ThingWithMapOfReferences();
+                a_mappy_thing.some_things.set(date_one, someEntityOne);
+                a_mappy_thing.some_things.set(date_two, someEntityTwo);
+
+                expect(a_mappy_thing.some_things.size).toEqual(2);
+            });
+
+            it('can convert an object with a reference map', (done) => {
+                converter.async_create_dict_from_js_object(a_mappy_thing).then(dict => {
+                    console.log(`GOT: ${JSON.stringify(dict)}`);
+
+                    // expect the keys on the map to be formatted to ISO date strings
+                    expect(dict['some_things'][date_one.toISOString()]).toEqual(converter.reference_for_object(someEntityOne));
+                    expect(dict['some_things'][date_two.toISOString()]).toEqual(converter.reference_for_object(someEntityTwo));
+                    done();
+                });
+            });
+
+            it('can save and reload object with reference map', function (done) {
+                db.async_store_or_update_object(a_mappy_thing).then(() => {
+                    db.async_load_object_with_id(a_mappy_thing.uuid).then((loaded_object: ThingWithMapOfReferences) => {
+                        expect(loaded_object).not.toBeNull();
+
+                        // should have a map, with dates
+                        console.log(`Got back loaded mappy thing: ${SafeJSON.stringify(loaded_object)}`);
+                        expect(loaded_object.some_things.size).toEqual(2);
+
+                        // expect the field to be a Map object instance
+                        expect(loaded_object.some_things instanceof Map).toBeTruthy();
+
+                        // Check that the keys are Dates!
+                        console.log(`Date One: ${date_one} = ${date_one.getTime()}`);
+                        console.log(`Date Two: ${date_two} = ${date_two.getTime()}`);
+
+                        // Seems I can't actually USE the same date keys to lookup into a map?
+                        // I checked the getTime() values were the same, yet lookups yield 'undefined'.
+                        //
+                        // So doing the check a somewhat roundabout way...
+                        for (let key of Array.from(loaded_object.some_things.keys())) {
+                            expect(key instanceof Date).toBeTruthy();
+                            console.log(`Key: '${key}' = ${key.getTime()}, is type ${typeof key} / ${key.constructor.name}`);
+
+                            let value = loaded_object.some_things.get(key);
+                            console.log(`   - value for that key: ${JSON.stringify(value)}`);
+                            expect(value instanceof SomeEntity).toBeTruthy();
+
+                            expect(value.some_field).toEqual("a value");
+                            expect(value.is_new).toBeFalsy();
+                            expect(value._id).not.toBeNull();
+                            expect(value._rev).not.toBeNull();
+                        }
+
+
                         done();
                     })
+                })
+            });
+        });
+
+
+        it('can load a simple single object with uuid', (done) => {
+            let an_entity = new SomeEntity();
+            db.async_store_or_update_object(an_entity).then((saved_object) => {
+                console.log(`Response from store: ${SafeJSON.stringify(saved_object)}`);
+                let obj_id = saved_object._id;
+                console.log(`ID should be: ${obj_id}, with returned type: ${saved_object.constructor.name}`);
+
+                db.async_load_object_with_id(obj_id).then(loaded_entity => {
+                    console.log(`Response from load: ${SafeJSON.stringify(loaded_entity)}`);
+                    expect(loaded_entity.uuid).toEqual(an_entity.uuid);
+                    done();
+                });
+            });
+        });
+
+        it('can load a list of nested objects', function (done) {
+            let instance = new ThingWithNestedObjects();
+            let nested_one = instance.my_list[0];
+            let nested_two = instance.my_list[1];
+            let nested_three = instance.my_list[2];
+            db.async_store_or_update_object(instance).then(() => {
+                // load it and check we get it back
+                db.async_load_object_with_id(instance.uuid).then(loaded_instance => {
+                    console.log(`Got back a loaded object: ${SafeJSON.stringify(loaded_instance)}`);
+                    expect(loaded_instance.uuid).toEqual(instance.uuid);
+                    expect(loaded_instance.my_list.length).toEqual(3);
+
+                    let ld_nested_one = loaded_instance.my_list[0];
+                    let ld_nested_two = loaded_instance.my_list[1];
+                    let ld_nested_three = loaded_instance.my_list[2];
+
+                    expect(nested_one.some_field).toEqual(ld_nested_one.some_field);
+                    expect(nested_two.some_field).toEqual(ld_nested_two.some_field);
+                    expect(nested_three.some_field).toEqual(ld_nested_three.some_field);
+
+                    /*
+                        Note: ld_nested_* would normally have _id and _rev, based on ObjectWithUUID default constructor.
+                        However the db loader will check for this (in the factory). It 'undefines' _id and _rev so that new instances DO NOT automatically get _id and _rev.
+                     */
+
+                    // Because it was marked as a NestedObject and not a reference, no _id/_rev should be present
+                    // console.log(`Nested #1: ${SafeJSON.stringify(ld_nested_one)}`);
+                    expect(ld_nested_one._id).toBeUndefined();
+                    expect(ld_nested_one._rev).toBeUndefined();
+                    done();
                 });
             })
-        ]);
-    });
+        });
 
-    it('items of a BaseStore should still be observable after "remove" is called', function () {
-        /*
-        remove assigns a NEW list to this.items.
-        want to make sure it's still observable
-         */
-        function test_is_observable(list) {
+        it('can store a property with hint of Date', (done) => {
+            class MyDateEntity extends ObjectWithUUID {
+                the_date: Date = new Date();
+            }
 
-        }
+            mapper.addConfiguration({
+                classes: [
+                    {
+                        name: 'MyDateEntity',
+                        fields: [{name: 'the_date', hint: PropertyHint.Date}],
+                        inherit: 'ObjectWithUUID',
+                        factory: () => new MyDateEntity()
+                    }
+                ]
+            });
 
-        // let team_store = new TeamsStore();
-    });
-
-    it('should store a person with nested availability', function (done) {
-        let me = new Person("Neil");
-        expect(me.availability).not.toBeNull();
-        expect(me.availability.unit).not.toBeNull();
-        expect(me.unavailable).not.toBeNull();
-        expect(me.unavailable).toEqual([]);
-
-        let dict_obj = db.create_json_from_object(me);
-        console.log(`I made: ${SafeJSON.stringify(dict_obj)}`);
-
-        db.store_or_update_object(me).then(() => {
-            db.load_object_with_id(me.uuid).then((loaded_obj) => {
-                let reconstructed_dict = db.create_json_from_object(loaded_obj);
-
-                // need to make this the same this for the equal to work
-                reconstructed_dict['_rev'] = undefined;
-
-                console.log(`I loaded: ${SafeJSON.stringify(dict_obj)}`);
-                expect(reconstructed_dict).toEqual(dict_obj);
+            let little_object = new MyDateEntity();
+            converter.async_create_dict_from_js_object(little_object).then((dict) => {
+                console.log(`The returned object that could: ${dict}`);
+                let iso_value = little_object.the_date.toISOString();
+                expect(dict['the_date']).toEqual(iso_value);
                 done();
-            })
-        })
-    });
+            });
+        });
+
+        it('when storing a team, stores a bunch of refs', (done) => {
+            let neil = new Person("neil");
+            let bob = new Person("bob");
+            let team = new Team("My team", [neil, bob]);
+            converter.async_create_dict_from_js_object(team).then(dict => {
+                // console.log(`I created: ${JSON.stringify(dict)}`);
+                let refs = dict['people'];
+                expect(refs.length).toEqual(2);
+                expect(refs[1]).toEqual(converter.reference_for_object(neil));
+                done();
+            });
+        });
+
+        it('should be able to reconstruct a team from refs, given those refs are stored', function (done) {
+            let neil = new Person("neil");
+            let bob = new Person("bob");
+            db.async_store_or_update_object(neil).then(() => [
+                db.async_store_or_update_object(bob).then(() => {
+
+                    // Save the team, and refs, and try to reload
+                    let team = new Team("My team", [neil, bob]);
+                    db.async_store_or_update_object(team).then(() => {
+
+                        db.async_load_object_with_id(team.uuid).then((loaded_team: Team) => {
+                            console.log(`Got back team: ${SafeJSON.stringify(loaded_team)}`);
+                            expect(loaded_team.people.length).toEqual(2);
+                            expect(['neil', 'bob']).toContain(loaded_team.people[0].name);
+                            expect(['neil', 'bob']).toContain(loaded_team.people[1].name);
+                            done();
+                        })
+                    });
+                })
+            ]);
+        });
+
+        it('items of a BaseStore should still be observable after "remove" is called', function () {
+            /*
+            remove assigns a NEW list to this.items.
+            want to make sure it's still observable
+             */
+            function test_is_observable(list) {
+
+            }
+
+            // let team_store = new TeamsStore();
+        });
+
+        it('should store a person with nested availability', function (done) {
+            let me = new Person("Neil");
+            expect(me.availability).not.toBeNull();
+            expect(me.availability.unit).not.toBeNull();
+            expect(me.unavailable).not.toBeNull();
+            expect(me.unavailable).toEqual([]);
+
+            converter.async_create_dict_from_js_object(me).then(dict_obj => {
+                console.log(`I made: ${SafeJSON.stringify(dict_obj)}`);
+
+                // TODO, now with converter split away from DB, probably don't need to do a store/load
+                db.async_store_or_update_object(me).then(() => {
+                    db.async_load_object_with_id(me.uuid).then((loaded_obj) => {
+                        converter.async_create_dict_from_js_object(loaded_obj).then(reconstructed_dict => {
+                            // need to make this the same this for the equal to work
+                            reconstructed_dict['_rev'] = undefined;
+
+                            console.log(`I loaded: ${SafeJSON.stringify(dict_obj)}`);
+                            expect(reconstructed_dict).toEqual(dict_obj);
+                            done();
+                        })
+                    })
+                })
+            });
+        });
+    })
 });

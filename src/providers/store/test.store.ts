@@ -103,7 +103,7 @@ export class NPBCStoreConstruction {
 
     }
 
-    static SetupPlan(service: Plan, team: Team) {
+    static AddPeopleToPlanWithRoles(service: Plan, team: Team) {
         let neil = team.findPersonWithName("Neil Clayton");
         let cherilyn = team.findPersonWithName("Cherilyn Clayton");
         let kylie = team.findPersonWithName("Kylie Welch-Herekiuha");
@@ -293,7 +293,7 @@ export class NPBCStoreConstruction {
         return people_added;
     }
 
-    static SetupServiceRoles(service: Plan) {
+    static AttachRolesToPlan(service: Plan) {
         SetupDefaultRoles();
         service.add_role(defaultLeaderRole);
         service.add_role(defaultSoundRole);

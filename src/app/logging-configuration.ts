@@ -5,7 +5,6 @@ export function loadConfiguration(configurationService: ConfigurationService): (
 }
 
 
-
 /*
 Note: had to completely override the class since it doesn't have a setter for the values, and it's private.
  */
@@ -57,7 +56,15 @@ class MockConfigurationService extends ConfigurationService {
                     {
                         "loggerName": "root",
                         "logLevel": "DEBUG"
-                    }
+                    },
+                    {
+                        "loggerName": "db",
+                        "logLevel": "DEBUG"
+                    },
+                    {
+                        "loggerName": "db.mapping",
+                        "logLevel": "DEBUG"
+                    },
                 ]
             }
         };

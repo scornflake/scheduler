@@ -4,30 +4,17 @@ import {Logger} from "ionic-logging-service";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {ObjectWithUUID} from "../../scheduling/common/base_model";
 import {isObservableArray, isObservableMap, isObservableObject} from "mobx";
-import {MappingType} from "./orm-mapper-type";
+import {ClassFieldMapping, ClassMapping, MappingType, PropertyMapping} from "./orm-mapper-type";
 
 function GetTheTypeNameOfTheObject(object: any): string {
+    if (object instanceof Map) {
+        return "map";
+    }
     if (typeof object !== "object" || !object || !object.constructor) return "";
-    if (object.constructor.name === "ObservableMap") return isObservableMap(object) ? "map" : "";
+    if (object.constructor.name === "ObservableMap" || isObservableMap(object)) return isObservableMap(object) ? "map" : "";
     else if (object.constructor.name === "ObservableArray") return isObservableArray(object) ? "array" : "";
     else if (isArray(object)) return "array";
     else return isObservableObject(object) ? "object" : "";
-}
-
-type PropertyMapping = {
-    name: string,
-    type?: MappingType, // if not specified == PersistenceType.Property
-}
-
-type ClassMapping = {
-    name: string;
-    fields?: PropertyMapping[],
-    inherit?: string,
-    factory?
-}
-
-type ClassFieldMapping = {
-    classes: Array<ClassMapping>
 }
 
 let internal_mappings: ClassFieldMapping = {
@@ -93,14 +80,23 @@ class OrmMapper {
                 actual_properties = Object.keys(actual_instance);
             }
 
+            // Check the inherit field
+            if(cm.inherit) {
+                if(this.definitions.get(cm.inherit) == null) {
+                    throw new Error(`Unable to inherit from ${cm.inherit}, no type with this name defined in the mapping.`);
+                }
+            }
+
             if (cm.fields) {
                 cm.fields.forEach(field => {
-                    this.logger.debug(`examine ${cm.name}.${field.name}`);
+                    this.logger.debug(` prop ${cm.name}.${field.name}`);
                     if (field.name == '*') {
                         // Get the factory and instantiate one of these, to find out its fields
                         let fields = [];
+                        this.logger.debug(`Got wildcard, finding all properties of ${cm.name}...`);
                         actual_properties.forEach(key => {
-                            fields.push({name: key, type: MappingType.Property});
+                            let field: PropertyMapping = {name: key, type: MappingType.Property};
+                            fields.push(this.sanitize_field(cm, field, actual_properties, verify_property_names));
                         });
                         this.logger.debug(`Fields = '*', discovered: ${SafeJSON.stringify(field)}`);
                         cm.fields = fields;
@@ -111,21 +107,11 @@ class OrmMapper {
                         }
 
                         // Verify the field name
-                        if (verify_property_names) {
-                            if (actual_properties.find(name => name == field.name) == null) {
-                                // Could start with _ with assumed 'getter/setter'.
-                                let private_name = `_${field.name}`;
-                                if (actual_properties.find(name => name == private_name) == null) {
-                                    throw new Error(`Cannot find field '${field.name}' or ${private_name} on type ${cm.name}. Spelt right??  All fields are: ${JSON.stringify(actual_properties)}`);
-                                }
-
-                                // TODO: Is there a get/set with this name? How would I find out, JS is sooooo shit.
-                            }
-                        }
+                        this.sanitize_field(cm, field, actual_properties, verify_property_names);
                     }
                 });
             }
-            this.logger.info(`Add mapping for ${cm.name}`);
+            this.logger.info(`Add mapping for ${cm.name} (${verify_property_names ? "verified" : "non-verified"})`);
             this.definitions.set(cm.name, cm);
         })
     }
@@ -134,10 +120,10 @@ class OrmMapper {
         return " ".repeat(width * 2);
     }
 
-    propertiesFor(class_name: string, nesting: number = 0): Map<string, MappingType> {
-        this.logger.debug(`${this.gap(nesting)}Lookup class: ${class_name}`);
+    propertiesFor(class_name: string, nesting: number = 0): Map<string, PropertyMapping> {
+        this.logger.debug(`${this.gap(nesting)}Getting properties for class: ${class_name}`);
         let cm = this.definitions.get(class_name);
-        let all = new Map<string, MappingType>();
+        let all = new Map<string, PropertyMapping>();
         if (cm) {
             // Add inherited first
             if (cm.inherit) {
@@ -150,7 +136,7 @@ class OrmMapper {
                     if (all.get(pm.name)) {
                         throw new Error(`Cannot add field ${pm.name} to map, for class ${class_name}. It's already there. DUPLICATE FIELD.`);
                     }
-                    all.set(pm.name, pm.type);
+                    all.set(pm.name, pm);
                 })
             }
         }
@@ -177,11 +163,47 @@ class OrmMapper {
             return instance;
         }
     }
+
+    private sanitize_field(cm: ClassMapping, field: PropertyMapping, actual_properties: Array<string>, validate_prop_name: boolean = false): PropertyMapping {
+        if (field.name == '_id' || field.name == '_rev') {
+            return field;
+        }
+
+        // let isPrivate = field.name.startsWith('_');
+        // if (isPrivate) {
+        //     this.logger.debug(`Field ${field.name} starts with _, assuming it's private and removing leading _`);
+        //     field.name = field.name.substr(1)
+        // }
+
+        // Does it exist?
+        if (validate_prop_name) {
+            if (actual_properties.find(name => name == field.name) == null) {
+                let privateName = `_${field.name}`;
+                if (actual_properties.find(name => name == privateName) == null) {
+                    throw new Error(`Cannot find field '${field.name}' or '${privateName} on type ${cm.name}. Spelt right?  All fields are: ${JSON.stringify(actual_properties)}`);
+                }
+
+
+                // OK. Are there 'get' / 'set' functions that match?
+                let actual_instance = this.createNewInstanceOfType(cm.name, cm);
+                if(!actual_instance) {
+                    throw new Error(`Cannot create a ${cm.name} while checking for getter/setter for field ${field.name}`);
+                }
+
+                this.logger.debug(`Property ${field.name} not found... trying for ${privateName}. Success.`);
+
+                // Was trying to verify that setters/getters existed.
+                // Failed :-(
+                // let getter = Object.getOwnPropertyDescriptor(actual_instance, field.name);
+                // console.log(`the getter is: ${getter}`);
+                // above comes back with 'undefined'
+            }
+        }
+        return field;
+    }
 }
 
 export {
     OrmMapper,
-    ClassFieldMapping,
-    ClassMapping,
     GetTheTypeNameOfTheObject,
 }

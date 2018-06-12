@@ -14,18 +14,11 @@ import {Observable} from "rxjs/Rx";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {debounceTime} from "rxjs/operators";
 import {GenericManager, NamedObject} from "../../scheduling/common/scheduler-store";
-import {
-    GetTheTypeNameOfTheObject,
-    OrmMapper,
-} from "../mapping/orm-mapper";
+import {OrmMapper,} from "../mapping/orm-mapper";
+import {IObjectLoader} from "../mapping/orm-mapper-type";
+
+import {OrmConverter} from "./orm";
 import Database = PouchDB.Database;
-import {
-    NameForMappingProp,
-    NameForMappingPropType,
-    MappingProperty,
-    MappingType,
-    REF_PREFIX
-} from "../mapping/orm-mapper-type";
 
 enum SavingState {
     Idle = 0,  // No changes
@@ -35,7 +28,7 @@ enum SavingState {
 }
 
 @Injectable()
-class SchedulerDatabase {
+class SchedulerDatabase implements IObjectLoader {
     save_notifications = new Subject<SavingState>();
     ready_event: Subject<boolean>;
     info: PouchDB.Core.DatabaseInfo;
@@ -47,6 +40,7 @@ class SchedulerDatabase {
     private db_name: string;
     private tracker: ObjectChangeTracker;
     private mapper: OrmMapper;
+    private converter: OrmConverter;
 
     static ConstructAndWait(configService: ConfigurationService, mapper: OrmMapper): Promise<SchedulerDatabase> {
         return new Promise<SchedulerDatabase>((resolve) => {
@@ -62,6 +56,7 @@ class SchedulerDatabase {
         let db_config = configService.getValue("database");
 
         this.mapper = mapper;
+        this.converter = new OrmConverter(this.mapper, this);
         this.db_name = db_config['name'];
         this.logger = LoggingWrapper.getLogger("db");
         PouchDB.plugin(PouchDBFind);
@@ -91,10 +86,6 @@ class SchedulerDatabase {
                 this.logger.info("DB is NOT ready");
             }
         });
-    }
-
-    get is_saving(): boolean {
-        return false;
     }
 
     async initialize() {
@@ -136,7 +127,7 @@ class SchedulerDatabase {
         return this.current_indexes.indexes.find(idx => idx.name == name) != null;
     }
 
-    async load_object_with_id(id: string, nesting: number = 0): Promise<TypedObject> {
+    async async_load_object_with_id(id: string, nesting: number = 0): Promise<TypedObject> {
         if (isUndefined(id)) {
             throw new Error("load_object_with_id failed. You must pass in an id (you passed in 'undefined')");
         }
@@ -145,8 +136,7 @@ class SchedulerDatabase {
         if (doc['type']) {
             let object_type = doc['type'];
             this.persistence_debug(`load object ${id}, type: ${object_type}`, nesting);
-            let instance = this.mapper.createNewInstanceOfType(object_type);
-            await this.convert_from_json_to_object(doc, instance, nesting + 1);
+            let instance = await this.converter.async_create_js_object_from_dict(doc, object_type, nesting);
             return this.trackChanges(instance);
         }
         throw new Error(`Loaded doc from store with id ${id}, but it doesn't have a 'type' field. Don't know how to turn it into an object!`);
@@ -160,51 +150,52 @@ class SchedulerDatabase {
         this.logger.debug(`${this.gap(nesting)}${message}`);
     }
 
-    create_json_from_object(object: TypedObject, nesting: number = 0) {
-        this.persistence_debug(`Persisting object: ${object.type}, ${SafeJSON.stringify(object)}`, nesting);
-        // At this level, if we're given an ObjectWithUUID, we don't want a reference.
-        // So we tell the converter it's a nested object (it'll output id/rev/type)
-        let result = this._convert_object_value_to_dict({
-            type: MappingType.NestedObject,
-            name: 'root'
-        }, object, nesting);
-        return this._convert_add_type_id_and_rev(result, object, true, nesting);
+    add_db_specific_properties_to_dict(dict: object, obj: any, nesting: number) {
+        return this._convert_add_type_id_and_rev(dict, obj, false, nesting);
     }
 
-    private _convert_by_iterating_persistable_properties(origin: object, nesting: number = 0): object {
-        let className = origin.constructor.name;
-        const props = this.mapper.propertiesFor(origin.constructor.name);
-        const result = {};
-        if (props) {
-            this.persistence_debug(`Iterating ${props.size} properties of ${className}`, nesting);
-            props.forEach((type, propertyName) => {
-                let value = origin[propertyName];
-                let prop = {name: propertyName, type: type};
-                this.persistence_debug(`${NameForMappingPropType(type)} - ${propertyName} (value: ${value})`, nesting);
-                result[propertyName] = this._convert_object_value_to_dict(prop, value, nesting + 1);
-            });
-        } else {
-            this.persistence_debug(`Object has no properties`, nesting);
+    private _convert_add_type_id_and_rev(dict, value, include_id_and_rev: boolean = false, nesting: number = 0) {
+        let messages = [];
+        if (value instanceof TypedObject) {
+            if (dict.type != value.type) {
+                messages.push(`set type to be ${value.type}`);
+                dict.type = value.type;
+            }
+            if (value instanceof ObjectWithUUID && include_id_and_rev) {
+                messages.push(`set _id=${value._id} and _rev=${value._rev}`);
+                dict._id = value._id;
+                dict._rev = value._rev;
+            }
+            if (messages.length) {
+                this.persistence_debug(messages.join(", "), nesting);
+            }
         }
-        return this._convert_add_type_id_and_rev(result, origin, false, nesting);
+        return dict;
     }
 
-    private _convert_object_value_to_dict(prop, value, nesting: number = 0) {
-        switch (prop.type) {
-            case MappingType.Reference:
-                return this._convert_to_reference(prop, value, nesting + 1);
-            case MappingType.ReferenceList:
-                return this._convert_to_reference_list(prop, value, nesting + 1);
-            case MappingType.Property:
-                return value;
-            case MappingType.NestedObject:
-                return this._convert_to_nested_object_dict(prop, value, nesting + 1);
-            case MappingType.NestedObjectList:
-                return this._convert_to_nested_object_list_of_dict(prop, value, nesting + 1);
+
+    async async_does_object_with_id_exist(id: string): Promise<boolean> {
+        try {
+            await this.db.get(id);
+            return true;
+        } catch (ex) {
+            if (ex.hasOwnProperty('status')) {
+                /*
+                Check for a known 404. If we understand and succeed, then swallow this exception, otherwise propagate it.
+                 */
+                let status = ex['status'];
+                if (status == 404) {
+                    // We know for certain it doesn't exist.
+                    return false;
+                }
+            } else {
+                console.error(`Exception while testing if object exists: ${JSON.stringify(ex)}`);
+            }
+            throw ex;
         }
     }
 
-    async store_or_update_object(object: ObjectWithUUID, force_rev_check: boolean = false, ignore_not_found: boolean = false): Promise<ObjectWithUUID> {
+    async async_store_or_update_object(object: ObjectWithUUID, force_rev_check: boolean = false, ignore_not_found: boolean = false): Promise<ObjectWithUUID> {
         // Get the latest rev
         if (object == null || isUndefined(object)) {
             throw new Error("Trying to save nothing / undefined?");
@@ -230,7 +221,9 @@ class SchedulerDatabase {
                 }
             }
 
-            let dict_of_object = this.create_json_from_object(object);
+            let dict_of_object = await this.converter.async_create_dict_from_js_object(object);
+            dict_of_object = this._convert_add_type_id_and_rev(dict_of_object, object, true);
+            this.logger.debug(`About to 'put' dict '${dict_of_object}' from type ${object.type}`);
             try {
                 let response = await this.db.put(dict_of_object);
 
@@ -255,126 +248,16 @@ class SchedulerDatabase {
         }
     }
 
-    private async convert_from_json_to_object(json_obj: PouchDB.Core.Document<{}>, new_object: TypedObject, nesting: number = 0) {
-        /*
-        Assumption is that we begin with an object that has an ID and a type.
-         */
-        const target_props = this.mapper.propertiesFor(new_object.constructor.name);
-        if (target_props.size == 0) {
-            throw new Error(`Cannot hydrate ${json_obj['type']} because we don't know what it's persistable properties are`)
-        }
-
-        if (new_object instanceof ObjectWithUUID) {
-            let fields = new_object.update_from_server(json_obj);
-            if (fields.length) {
-                this.persistence_debug(`Set ${fields.join("/")} from doc`, nesting);
-            }
-        }
-
-        // Now we need to go through the properties, and hydrate each and assign
-        for (let propertyName of Array.from(target_props.keys())) {
-            let type = target_props.get(propertyName);
-            let value = json_obj[propertyName];
-
-            if (propertyName == 'type') {
-                // No reason why this shouldn't be the case, but you know, paranoia
-                if (new_object.type != json_obj['type']) {
-                    throw new Error(`Unable to hydrate ${json_obj} into object. Type ${new_object.type} != ${json_obj['type']}`);
-                }
-            } else {
-                if (value == null) {
-                    this.persistence_debug(`Skipping ${propertyName}, its null`, nesting);
-                    continue;
-                }
-
-                switch (type) {
-                    case MappingType.Property: {
-                        this.persistence_debug(`${propertyName} = ${value}`, nesting);
-                        new_object[propertyName] = json_obj[propertyName];
-                        break;
-                    }
-
-                    /*
-                    Expect the value to be a blob representing the new object.  Create it, then set it as the property
-                     */
-                    case MappingType.NestedObject: {
-                        let new_type = value['type'];
-                        this.persistence_debug(`${propertyName} = new instance of ${new_type}`, nesting);
-                        let new_instance = this.mapper.createNewInstanceOfType(new_type);
-                        new_object[propertyName] = await this.convert_from_json_to_object(value, new_instance, nesting + 1);
-                        break;
-                    }
-
-                    case MappingType.NestedObjectList: {
-                        let new_objects = [];
-                        this.persistence_debug(`${propertyName} = list of ${value.length} objects ...`, nesting);
-                        for (let v of value) {
-                            let new_type = v['type'];
-                            this.persistence_debug(`creating new instance of ${new_type}`, nesting + 1);
-                            let new_instance = this.mapper.createNewInstanceOfType(new_type);
-                            let the_item = await this.convert_from_json_to_object(v, new_instance, nesting + 2);
-                            if (the_item == null) {
-                                throw new Error(`Odd. Converting an instance of ${v} to object, but got 'nothing' back`);
-                            }
-                            new_objects.push(the_item);
-                        }
-                        new_object[propertyName] = new_objects;
-                        break;
-                    }
-
-                    case MappingType.Reference: {
-                        this.persistence_debug(`${propertyName} = reference: ${value}`, nesting);
-                        new_object[propertyName] = await this.lookup_object_reference(value, nesting + 1);
-                        break;
-                    }
-
-                    case MappingType.ReferenceList: {
-                        // Assume 'value' is a list of object references
-                        this.persistence_debug(`${propertyName} = list of ${value.length} references`, nesting);
-                        new_object[propertyName] = await this._lookup_list_of_references(value, nesting + 1);
-                        this.persistence_debug(`    ... got ${new_object[propertyName]}`, nesting);
-                        break;
-                    }
-
-                    default: {
-                        throw new Error(`Fail. Dunno how to handle PersistenceType: ${type}`);
-                    }
-                }
-            }
-        }
-
-        return new_object;
-    }
-
-    private async _lookup_list_of_references(value, nesting: number = 0) {
-        let new_list = [];
-        for (let item of value) {
-            new_list.push(await this.lookup_object_reference(item, nesting + 1));
-        }
-        return new_list;
-    }
-
     private async _load_all_of_type(type: string) {
         let all_objects_of_type = await this.db.find({selector: {type: type}});
         this.persistence_debug(`Loading all ${all_objects_of_type.docs.length} objects of type ${type} into object store...`, 0);
         let list_of_new_things = [];
         for (let doc of all_objects_of_type.docs) {
-            let new_object = this.mapper.createNewInstanceOfType(type);
-            if (!new_object) {
-                throw new Error(`Failed to instantiate new object of type ${type}. Is the mapper configured with the right factories?`);
-            }
-            let new_type = new_object.constructor.name;
-            this.persistence_debug(`Creating new object of type ${type} (check ${type} == ${new_type} ... ${type == new_type ? "Yay!" : "Oh. Darn."})...`, 0);
-            let the_thing = null;
-            try {
-                the_thing = await this.convert_from_json_to_object(doc, new_object, 1);
-            } catch (err) {
-                throw new Error(`Error converting the doc to an object, ${err}`);
-            }
-            if (the_thing) {
-                list_of_new_things.push(the_thing);
+            let new_object = await this.converter.async_create_js_object_from_dict(doc, type);
+            if (new_object) {
+                list_of_new_things.push(new_object);
             } else {
-                throw new Error(`Eh? Tried to load a doc ${doc._id}, but got nothing back... Result: '${SafeJSON.stringify(the_thing)}'`);
+                throw new Error(`Eh? Tried to load a doc ${doc._id}, but got nothing back... Result: '${SafeJSON.stringify(new_object)}'`);
             }
         }
         return list_of_new_things;
@@ -399,94 +282,6 @@ class SchedulerDatabase {
         return loaded_objects;
     }
 
-    private async lookup_object_reference(reference: string, nesting: number = 0) {
-        let parts = reference.split(':');
-        if (parts.length != 3) {
-            throw new Error(`Invalid reference ${reference}. Expected 3 parts`);
-        }
-        if (parts[0] != REF_PREFIX) {
-            throw new Error(`Invalid reference ${reference}. Expected part[0] to be 'ref'`);
-        }
-        let object_id = parts[2];
-        return await this.load_object_with_id(object_id, nesting);
-    }
-
-    reference_for_object(obj: ObjectWithUUID) {
-        return `${REF_PREFIX}:${obj.type}:${obj._id}`;
-    }
-
-    private _convert_to_reference(prop: MappingProperty, value: any, nesting: number = 0) {
-        if (GetTheTypeNameOfTheObject(value) == "array") {
-            throw new Error(`REF: Cannot convert ${prop.name} to ${NameForMappingProp(prop)}, it is an array`)
-        }
-        if (!(value instanceof ObjectWithUUID)) {
-            throw new Error(`REF: Cannot convert ${prop.name} to ${NameForMappingProp(prop)}, it is an ${value.constructor.name}. Needs to be a ObjectWithUUID`);
-        }
-        this.persistence_debug(`Convert ${value} to reference`, nesting);
-        return this.reference_for_object(value);
-    }
-
-    private _convert_to_nested_object_dict(prop: MappingProperty, value: any, nesting: number = 0) {
-        if (!(value instanceof TypedObject)) {
-            throw new Error(`NESTED OBJ: Cannot convert ${prop.name} to ${NameForMappingProp(prop)}, it is an ${value.constructor.name}. Needs to be a PersistableObject`);
-        }
-        this.persistence_debug(`Converting ${value.constructor.name} by iterating its properties...`, nesting);
-        return this._convert_add_type_id_and_rev(this._convert_by_iterating_persistable_properties(value, nesting + 1), value, false, nesting);
-    }
-
-    private _convert_add_type_id_and_rev(dict, value, include_id_and_rev: boolean = false, nesting: number = 0) {
-        let messages = [];
-        if (value instanceof TypedObject) {
-            if (dict.type != value.type) {
-                messages.push(`set type to be ${value.type}`);
-                dict.type = value.type;
-            }
-            if (value instanceof ObjectWithUUID && include_id_and_rev) {
-                messages.push(`set _id=${value._id} and _rev=${value._rev}`);
-                dict._id = value._id;
-                dict._rev = value._rev;
-            }
-            if (messages.length) {
-                this.persistence_debug(messages.join(", "), nesting);
-            }
-        }
-        return dict;
-    }
-
-    private _convert_to_nested_object_list_of_dict(prop: any, value: any, nesting: number = 0) {
-        /*
-        Fix: return [] if undefined or null. But why happen?
-         */
-        this.persistence_debug(`_convert_to_nested_object_list_of_dict: Nested object list: ${SafeJSON.stringify(value)}`, nesting);
-        if (GetTheTypeNameOfTheObject(value) == "array") {
-            let type_names = Array.from(new Set(value.map(v => v.constructor.name))).join(",");
-            this.persistence_debug(`convert nested list of ${value.length} items, types: ${type_names}`, nesting);
-            return value.map((v, index) => {
-                this.persistence_debug(`${prop.name}[${index}]`, nesting + 1);
-                return this._convert_by_iterating_persistable_properties(v, nesting + 2);
-            });
-        } else {
-            throw new Error(`NESTEDLIST: Cannot convert ${prop.name} to ${NameForMappingProp(prop)}, it is an ${value.constructor.name}. Needs to be a list or mbox list`);
-        }
-    }
-
-    private _convert_to_reference_list(prop: any, value: any, nesting: number = 0) {
-        if (GetTheTypeNameOfTheObject(value) == "array") {
-            let type_names = Array.from(new Set(value.map(v => {
-                return v.constructor.name;
-            }))).join(",");
-
-            this.persistence_debug(`convert list of ${value.length} items, types: ${type_names}`, nesting);
-            return value.map((v, index) => {
-                this.persistence_debug(`converting ${prop.name}[${index}], ${v.constructor.name}`, nesting);
-                let indexes_prop = {type: MappingType.Reference, name: `${prop.name}[${index}}`};
-                return this._convert_to_reference(indexes_prop, v, nesting + 1);
-            });
-        } else {
-            throw new Error(`REF: Cannot convert ${prop.name} to ${NameForMappingProp(prop)}, it is an ${value.constructor.name}. Needs to be a list or mbox list`);
-        }
-    }
-
     async delete_object(object: ObjectWithUUID) {
         if (object.is_new) {
             throw new Error("Cannot remove object that is 'new' and hasn't been saved yet");
@@ -502,18 +297,19 @@ class SchedulerDatabase {
         return object;
     }
 
-    trackerNotification(thing: ObjectChange) {
+    async trackerNotification(thing: ObjectChange) {
         // Don't worry about the changes per-say, since we're using debounce.
         // Just go ask the tracker what objects we should save
-        this.tracker.getChangedObjects().forEach((owner) => {
+        for (let owner of Array.from(this.tracker.getChangedObjects().values())) {
             if (owner instanceof ObjectWithUUID) {
-                this.store_or_update_object(owner).then(() => {
-                    this.logger.info(`Save object: ${owner.uuid}`);
-                    this.tracker.clear_changes_for(owner);
+                let owuid = owner as ObjectWithUUID;
+                await this.async_store_or_update_object(owuid).then(() => {
+                    this.logger.info(`Save object: ${owuid.uuid}`);
+                    this.tracker.clear_changes_for(owuid);
                 });
             }
             // console.log(`XXXXXXXXX: ${SafeJSON.stringify(owner['uuid'])}`);
-        });
+        }
     }
 }
 

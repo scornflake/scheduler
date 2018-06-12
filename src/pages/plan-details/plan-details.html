@@ -2,8 +2,14 @@
 
     <ion-navbar>
         <ion-title>Plan Detail</ion-title>
-    </ion-navbar>
 
+        <ion-buttons end>
+            <button item-end ion-button icon-only (tap)="add_assignment()">
+                <ion-icon name="add-circle"></ion-icon>
+            </button>
+        </ion-buttons>
+    </ion-navbar>
+    <saving-state></saving-state>
 </ion-header>
 
 
@@ -26,11 +32,6 @@
     </ion-list>
     <ion-list-header color="primary">
         Role Assignment
-        <!--<ion-buttons item-end>-->
-        <button item-end ion-button icon-only (tap)="add_assignment()">
-            <ion-icon name="add-circle"></ion-icon>
-        </button>
-        <!--</ion-buttons>-->
     </ion-list-header>
     <ion-list>
         <ion-item-sliding *ngFor="let p of sorted_people">

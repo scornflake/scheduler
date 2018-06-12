@@ -33,7 +33,7 @@ export class Person extends NamedObject {
 
     set availability(new_value: Availability) {
         if (ObjectUtils.deep_equal(this._availability, new_value)) {
-            console.log(`Not setting availability for ${this.name} to ${new_value}. It's the same as existing value: ${this._availability}`);
+            // console.log(`Not setting availability for ${this.name} to ${new_value}. It's the same as existing value: ${this._availability}`);
             return;
         }
         // console.debug(`Setting availability for ${this.name} to ${new_value}`);
@@ -76,8 +76,11 @@ export class Person extends NamedObject {
 
     is_unavailable_on(date: Date) {
         // See if this date is inside the unavailable date ranges
+        console.log(`unavail on : ${date} ?`);
         for (let unavail of this.unavailable) {
+            console.log(`  - check: ${unavail}`);
             if (unavail.contains_date(date)) {
+                console.log(` - date ${date} is contained in ${unavail}, returning TRUE`);
                 return true;
             }
         }

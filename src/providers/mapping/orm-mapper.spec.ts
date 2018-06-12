@@ -1,7 +1,8 @@
 import {OrmMapper} from "./orm-mapper";
 import {getTestBed, TestBed} from "@angular/core/testing";
 import {scheduler_db_map} from "../../assets/db.mapping";
-import {MappingType} from "./orm-mapper-type";
+import {MappingType, PropertyHint, PropertyMapping} from "./orm-mapper-type";
+import {TypedObject} from "../../scheduling/common/base_model";
 
 describe('mapper', () => {
     let mapper;
@@ -19,15 +20,15 @@ describe('mapper', () => {
 
     it('if not configured, maps base types', () => {
         let props = mapper.propertiesFor('TypedObject');
-        expect(props.get('type')).toEqual(MappingType.Property);
+        expect(props.get('type').type).toEqual(MappingType.Property);
     });
 
     it('finds properties first level of inherit', () => {
         let properties = mapper.propertiesFor('ObjectWithUUID');
         expect(properties.size).toEqual(3);
-        expect(properties.get('type')).toEqual(MappingType.Property);
-        expect(properties.get('_id')).toEqual(MappingType.Property);
-        expect(properties.get('_rev')).toEqual(MappingType.Property);
+        expect(properties.get('type').type).toEqual(MappingType.Property);
+        expect(properties.get('_id').type).toEqual(MappingType.Property);
+        expect(properties.get('_rev').type).toEqual(MappingType.Property);
     });
 
     it('NamedObject inherits from TypedObject', () => {
@@ -37,13 +38,42 @@ describe('mapper', () => {
             console.log(`key: ${key} = ${properties.get(key)}`);
         }
 
-        expect(properties.get('type')).toEqual(MappingType.Property);
-        expect(properties.get('name')).toEqual(MappingType.Property);
+        expect(properties.get('type').type).toEqual(MappingType.Property);
+        expect(properties.get('name').type).toEqual(MappingType.Property);
+    });
+
+    it('should throw exception if inherited class isnt in the map', function () {
+        class SomeNewObject extends TypedObject {
+            my_new_field: string = "foo";
+        }
+
+        // this is an incorrect mapping for an Object
+        expect(() => {
+            mapper.addConfiguration({
+                classes: [
+                    {
+                        name: 'SomeNewObject',
+                        fields: [{name: '*'}],
+                        inherit: 'ThisCertainlyIsntTypedObject!', // mispelt!
+                        factory: () => new SomeNewObject()
+                    }
+                ]
+            })
+        }).toThrowError(/Unable to inherit from ThisCertainlyIsntTypedObject!/);
     });
 
     describe('configured', () => {
         beforeEach(() => {
             mapper.addConfiguration(scheduler_db_map);
+        });
+
+        it('uses _ leading fields if property name doesnt exist', function () {
+            let properties = mapper.propertiesFor('Person');
+
+            // Person has 'availability', as a getter/setter. Want to specify 'availability' in the mapping, but it should use '_availability' for actual access.
+
+            expect(properties.get('availability')).toBeDefined();
+            expect(properties.get('_availability')).toBeUndefined();
         });
 
         it('putting * in fields means all fields', () => {
@@ -57,7 +87,7 @@ describe('mapper', () => {
 
         it('returns [] if no properties', () => {
             let properties = mapper.propertiesFor('AnObjectThatDoesntExist');
-            expect(properties).toEqual(new Map<string, MappingType>());
+            expect(properties).toEqual(new Map<string, PropertyMapping>());
         });
     });
 });

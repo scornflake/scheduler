@@ -1,6 +1,5 @@
 import {SavedState, UIStore} from "./UIState";
 import {ApplicationRef, Injectable} from "@angular/core";
-import {Organization} from "../scheduling/organization";
 import {Logger} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
 import {share} from "rxjs/operators";
@@ -76,7 +75,7 @@ class RootStore extends SchedulerObjectStore {
 
     async load() {
         try {
-            let saved_state = await this.db.load_object_with_id('saved-state');
+            let saved_state = await this.db.async_load_object_with_id('saved-state');
             this.logger.info(`Retrieved state: ${SafeJSON.stringify(saved_state)}`);
             this.ui_store.saved_state = saved_state as SavedState;
             if (!this.ui_store.saved_state) {
@@ -92,7 +91,7 @@ class RootStore extends SchedulerObjectStore {
         /*
         Can only load stuff when we have our organization (everything depends on that, since it names our shared DB, thus connection to the outside)
          */
-
+        this.logger.info(`Loading base data...`);
         await this.db.load_into_store<Person>(this.people, 'Person');
         await this.db.load_into_store<Team>(this.teams, 'Team');
     }
@@ -106,7 +105,7 @@ class RootStore extends SchedulerObjectStore {
         this.saving = autorun(() => {
             // toJS creates a deep clone, thus accesses all of the properties of this.state
             // so: we SHOULD respond to state changes.
-            this.db.store_or_update_object(this.state, true, true).then(() => {
+            this.db.async_store_or_update_object(this.state, true, true).then(() => {
                 this.logger.info(`Saved state: ${SafeJSON.stringify(this.state)}`);
             }, rej => {
                 this.logger.error(`Could not save state: ${rej}`);
@@ -118,37 +117,37 @@ class RootStore extends SchedulerObjectStore {
         });
     }
 
-    private setup_fake_data() {
+    private setup_fake_draft_plan() {
         // make up a default team
         let team = this.teams.firstThisTypeByName("Default");
         if (team) {
             // for testing, create some fake
-            this.draft_service = this.plans.add(new Plan("Sunday Morning Service", team));
-            this.draft_service.start_date = csd(2018, 6, 3);
-            this.draft_service.end_date = csd(2018, 9, 30);
+            if(!this.draft_service) {
+                this.draft_service = this.plans.add(new Plan("Sunday Morning Service", team));
+                this.draft_service.start_date = csd(2018, 6, 3);
+                this.draft_service.end_date = csd(2018, 9, 30);
 
-            NPBCStoreConstruction.SetupServiceRoles(this.draft_service);
+                NPBCStoreConstruction.AttachRolesToPlan(this.draft_service);
 
-            try {
-                // NPBCStoreConstruction.SetupService(org_store.draft_service, team);
-            } catch (e) {
-                // oh oh.
-                let ve = ObjectValidation.simple("Cannot setup store. Is the DB OK? " + e.toString().substr(0, 100));
-                this.pageUtils.show_validation_error(ve, true);
+                try {
+                    NPBCStoreConstruction.AddPeopleToPlanWithRoles(this.draft_service, team);
+                } catch (e) {
+                    // oh oh.
+                    let ve = ObjectValidation.simple("Cannot setup default fake plan. Is the DB OK? " + e.toString().substr(0, 100));
+                    this.pageUtils.show_validation_error(ve, true);
+                }
             }
         } else {
-            this.pageUtils.show_validation_error(ObjectValidation.simple("Cant do schedule cos no team"));
+            this.pageUtils.show_validation_error(ObjectValidation.simple("Cant do schedule cos no team!"));
         }
-        // ThamesTest.SetupStore(this);
-
     }
 
-    private setup_fake_people() {
-        NPBCStoreConstruction.SetupPeople(this.people);
+    private setup_fake_data() {
+        this.setup_fake_draft_plan();
     }
 
-    save_or_update(object: ObjectWithUUID) {
-        this.db.store_or_update_object(object);
+    async async_save_or_update(object: ObjectWithUUID) {
+        return this.db.async_store_or_update_object(object);
     }
 
     remove_object(object: ObjectWithUUID) {

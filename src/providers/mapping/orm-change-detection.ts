@@ -134,9 +134,10 @@ class ObjectChangeTracker {
             return;
         }
 
-        props.forEach((type, propertyName) => {
+        props.forEach((mapping, propertyName) => {
             let child_path = `${parent_path}.${propertyName}`;
             let value = instance[propertyName];
+            let type = mapping.type;
             let typeName = NameForMappingPropType(type);
 
             if (type == MappingType.NestedObject) {
@@ -239,6 +240,7 @@ class ObjectChangeTracker {
 
             // try to track it. If we already are, the call will return without doing anything.
             this.track(object);
+            this.logger.info(`Done installing change listener for ${object.type}`);
         }
     }
 

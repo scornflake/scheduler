@@ -22,7 +22,11 @@ export class PlansPage {
 
     ionViewDidLoad() {
         // for debugging
-        // this.show_plan_detail(this.plans[0])
+        if(this.plans.length == 0) {
+            this.navCtrl.pop();
+        } else {
+            this.show_plan_detail(this.plans[0])
+        }
     }
 
     add_plan() {

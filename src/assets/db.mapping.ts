@@ -1,13 +1,11 @@
-import {ClassFieldMapping} from "../providers/mapping/orm-mapper";
 import {Availability, AvailabilityEveryNOfM} from "../scheduling/availability";
 import {SavedState} from "../store/UIState";
-import {NamedObject} from "../scheduling/common/scheduler-store";
 import {Team} from "../scheduling/teams";
 import {Person} from "../scheduling/people";
 import {Plan} from "../scheduling/plan";
 import {Organization} from "../scheduling/organization";
 import {Unavailability} from "../scheduling/unavailability";
-import {MappingType} from "../providers/mapping/orm-mapper-type";
+import {ClassFieldMapping, MappingType, PropertyHint} from "../providers/mapping/orm-mapper-type";
 
 let scheduler_db_map: ClassFieldMapping = {
     classes: [
@@ -40,10 +38,10 @@ let scheduler_db_map: ClassFieldMapping = {
         {
             name: 'Plan',
             fields: [
-                {name: 'start_date'},
-                {name: 'end_date'},
+                {name: 'start_date', hint: PropertyHint.Date},
+                {name: 'end_date', hint: PropertyHint.Date},
                 {name: 'days_per_period'},
-                {name: 'manual_layouts', type: MappingType.ReferenceList},
+                {name: 'manual_layouts', type: MappingType.ReferenceMap, hint: PropertyHint.Date},
                 {name: 'team', type: MappingType.Reference}
             ],
             inherit: 'NamedObject',
@@ -60,7 +58,7 @@ let scheduler_db_map: ClassFieldMapping = {
                 {name: 'period'},
                 {name: 'unit'},
             ],
-            inherit: 'TypeObject',
+            inherit: 'TypedObject',
             factory: () => new Availability()
         },
         {
@@ -74,11 +72,11 @@ let scheduler_db_map: ClassFieldMapping = {
         {
             name: 'Unavailability',
             fields: [
-                {name: 'from_date'},
-                {name: 'to_date'},
+                {name: 'from_date', hint: PropertyHint.Date},
+                {name: 'to_date', hint: PropertyHint.Date},
                 {name: 'reason'},
             ],
-            inherit: 'TypeObject',
+            inherit: 'TypedObject',
             factory: () => new Unavailability()
         },
 

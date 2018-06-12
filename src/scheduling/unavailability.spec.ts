@@ -44,7 +44,13 @@ describe('unavailability', () => {
     });
 
     it('can model a date range', () => {
-        let unavil = new Unavailability(new Date(2010, 10, 1), new Date(2010, 11, 2));
+        let from_date = new Date(2010, 10, 1);
+        let to_date = new Date(2010, 11, 2);
+        let unavil = new Unavailability(from_date, to_date);
+
+        expect(unavil.from_date).toEqual(from_date);
+        expect(unavil.to_date).toEqual(to_date);
+
         expect(unavil.contains_date(new Date(2010, 10, 1))).toBeTruthy();
         expect(unavil.contains_date(new Date(2010, 10, 1, 10))).toBeTruthy();
         expect(unavil.contains_date(new Date(2010, 11, 1))).toBeTruthy();
