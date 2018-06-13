@@ -45,11 +45,15 @@ export class PeoplePage {
 
     private add_person(new_person: Person) {
         this.rootStore.people.add(new_person);
-        this.rootStore.async_save_or_update(new_person);
+        this.rootStore.async_save_or_update_to_db(new_person).then(() => {
+            console.log("Added to DB");
+        });
     }
 
     delete_person(person: Person) {
         this.rootStore.people.remove(person);
-        this.rootStore.remove_object(person);
+        this.rootStore.async_remove_object_from_db(person).then(() => {
+            console.log("Removed from DB");
+        })
     }
 }

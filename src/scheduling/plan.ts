@@ -9,25 +9,26 @@ import {Logger} from "ionic-logging-service";
 import {Team} from "./teams";
 import {Role} from "./role";
 import {NamedObject} from "./common/scheduler-store";
+import {observable} from "mobx-angular";
 
 class Plan extends NamedObject {
-    start_date: Date;
+    @observable start_date: Date;
 
-    end_date: Date;
+    @observable end_date: Date;
 
-    days_per_period: number;
+    @observable days_per_period: number;
 
-    manual_layouts: Map<Date, Role>;
+    @observable manual_layouts: Map<Date, Role>;
 
-    roles: Array<Role>;
+    @observable roles: Array<Role>;
 
-    team: Team;
+    @observable team: Team;
 
     // This is the people available for this service/event
-    private _assignments: Array<Assignment>;
+    @observable private _assignments: Array<Assignment>;
 
     // These are the rules applied to the people doing this service/event
-    private specific_role_rules: Array<Rule>;
+    @observable private specific_role_rules: Array<Rule>;
 
     private logger: Logger;
 

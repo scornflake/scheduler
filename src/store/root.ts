@@ -18,9 +18,10 @@ import {csd} from "../scheduling/common/date-utils";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import {SchedulerObjectStore} from "../scheduling/common/scheduler-store";
 import {Organization} from "../scheduling/organization";
+import {IObjectCache} from "../providers/mapping/orm-mapper-type";
 
 @Injectable()
-class RootStore extends SchedulerObjectStore {
+class RootStore extends SchedulerObjectStore implements IObjectCache {
     @observable ui_store: UIStore;
 
     ready_event: Observable<boolean>;
@@ -42,6 +43,7 @@ class RootStore extends SchedulerObjectStore {
         this.ui_store = new UIStore();
 
         this.initialize();
+        this.db.setCache(this);
     }
 
     generate_schedule(): ScheduleWithRules {
@@ -114,8 +116,8 @@ class RootStore extends SchedulerObjectStore {
             this.pageUtils.show_message(`During load(): ${e}`);
         }
 
-        await this.db.load_into_store<Person>(this.people, 'Person');
-        await this.db.load_into_store<Team>(this.teams, 'Team');
+        await this.db.async_load_into_store<Person>(this.people, 'Person');
+        await this.db.async_load_into_store<Team>(this.teams, 'Team');
     }
 
     get state(): SavedState {
@@ -151,13 +153,13 @@ class RootStore extends SchedulerObjectStore {
 
                 NPBCStoreConstruction.AttachRolesToPlan(this.draft_service);
 
-                try {
+                // try {
                     NPBCStoreConstruction.AddPeopleToPlanWithRoles(this.draft_service, team);
-                } catch (e) {
-                    // oh oh.
-                    let ve = ObjectValidation.simple("Cannot setup default fake plan. Is the DB OK? " + e.toString().substr(0, 100));
-                    this.pageUtils.show_validation_error(ve, true);
-                }
+                // } catch (e) {
+                //     oh oh.
+                    // let ve = ObjectValidation.simple("Cannot setup default fake plan. Is the DB OK? " + e.toString().substr(0, 100));
+                    // this.pageUtils.show_validation_error(ve, true);
+                // }
             }
         } else {
             this.pageUtils.show_validation_error(ObjectValidation.simple("Cant do schedule cos no team!"));
@@ -168,13 +170,25 @@ class RootStore extends SchedulerObjectStore {
         this.setup_fake_draft_plan();
     }
 
-    async async_save_or_update(object: ObjectWithUUID) {
-        return this.db.async_store_or_update_object(object);
+    async async_save_or_update_to_db(object: ObjectWithUUID) {
+        return await this.db.async_store_or_update_object(object);
     }
 
-    remove_object(object: ObjectWithUUID) {
+    async async_remove_object_from_db(object: ObjectWithUUID) {
         this.logger.info(`Deleting object of type ${object.type}, id: ${object.uuid}`);
-        return this.db.delete_object(object);
+        return await this.db.async_delete_object(object);
+    }
+
+    getFromCache(uuid: string): ObjectWithUUID {
+        return this.findByUUID(uuid);
+    }
+
+    saveInCache(object: ObjectWithUUID): void {
+        this.add_object_to_array(object, true);
+    }
+
+    evict(object: ObjectWithUUID): void {
+        this.remove_object_from_array(object);
     }
 }
 

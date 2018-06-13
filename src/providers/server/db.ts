@@ -15,11 +15,10 @@ import {ReplaySubject} from "rxjs/ReplaySubject";
 import {debounceTime} from "rxjs/operators";
 import {GenericManager, NamedObject} from "../../scheduling/common/scheduler-store";
 import {OrmMapper,} from "../mapping/orm-mapper";
-import {IObjectLoader} from "../mapping/orm-mapper-type";
+import {IObjectCache, IObjectLoader} from "../mapping/orm-mapper-type";
 
 import {OrmConverter} from "./orm";
 import Database = PouchDB.Database;
-import FindRequest = PouchDB.Find.FindRequest;
 
 enum SavingState {
     Idle = 0,  // No changes
@@ -34,14 +33,16 @@ class SchedulerDatabase implements IObjectLoader {
     ready_event: Subject<boolean>;
     info: PouchDB.Core.DatabaseInfo;
 
+    logger: Logger;
+
     private db: Database<{}>;
     private is_ready: boolean = false;
-    logger: Logger;
     private current_indexes: PouchDB.Find.GetIndexesResponse<{}>;
     private db_name: string;
     private tracker: ObjectChangeTracker;
     private mapper: OrmMapper;
     private converter: OrmConverter;
+    private cache: IObjectCache;
 
     static ConstructAndWait(configService: ConfigurationService, mapper: OrmMapper): Promise<SchedulerDatabase> {
         return new Promise<SchedulerDatabase>((resolve) => {
@@ -128,10 +129,18 @@ class SchedulerDatabase implements IObjectLoader {
         return this.current_indexes.indexes.find(idx => idx.name == name) != null;
     }
 
-    async async_load_object_with_id(id: string, nesting: number = 0): Promise<TypedObject> {
+    async async_load_object_with_id(id: string, useCache: boolean = true, nesting: number = 0): Promise<TypedObject> {
         if (isUndefined(id)) {
             throw new Error("load_object_with_id failed. You must pass in an id (you passed in 'undefined')");
         }
+
+        if (useCache && this.cache) {
+            let fromCache = this.cache.getFromCache(id);
+            if (fromCache) {
+                return fromCache;
+            }
+        }
+
         let doc = await this.db.get(id);
         this.logger.debug(`Doc for loaded object: ${SafeJSON.stringify(doc)}`);
         if (doc['type']) {
@@ -238,6 +247,7 @@ class SchedulerDatabase implements IObjectLoader {
                 if (object.is_new) {
                     object.is_new = false;
                 }
+                this.trackChanges(object);
                 return object;
             } catch (err) {
                 this.logger.debug(`Failed to store entity. Err: ${err}. Data: ${SafeJSON.stringify(dict_of_object)}`);
@@ -270,7 +280,7 @@ class SchedulerDatabase implements IObjectLoader {
         return await this.async_load_and_create_objects_for_query(query);
     }
 
-    async load_into_store<T extends NamedObject>(manager: GenericManager<T>, type: string) {
+    async async_load_into_store<T extends NamedObject>(manager: GenericManager<T>, type: string) {
         let loaded_objects = await this.async_load_all_objects_of_type(type);
         loaded_objects.forEach(o => {
             let ooo = o as T;
@@ -282,26 +292,32 @@ class SchedulerDatabase implements IObjectLoader {
             }
         });
 
-        // Also track changes to the store itself
-        // TODO: Remove this, should be tracking changes to the RootStore.items I think.
-        // this.trackChanges(object_store);
-
         return loaded_objects;
     }
 
-    async delete_object(object: ObjectWithUUID) {
+    async async_delete_object(object: ObjectWithUUID) {
         if (object.is_new) {
             throw new Error("Cannot remove object that is 'new' and hasn't been saved yet");
         }
+        if(this.cache) {
+            this.cache.evict(object);
+        }
         this.tracker.untrack(object);
-        return this.db.remove({_id: object.uuid, _rev: object._rev});
+        return await this.db.remove({_id: object.uuid, _rev: object._rev});
     }
 
     trackChanges(object: any): ObjectWithUUID {
         if (object instanceof ObjectWithUUID) {
+            this.storeInCache(object);
             this.tracker.track(object);
         }
         return object;
+    }
+
+    storeInCache(object: ObjectWithUUID) {
+        if (this.cache && object) {
+            this.cache.saveInCache(object);
+        }
     }
 
     async trackerNotification(thing: ObjectChange) {
@@ -322,6 +338,10 @@ class SchedulerDatabase implements IObjectLoader {
     async async_load_objects_with_query(query) {
         let docs = await this.db.find(query);
 
+    }
+
+    setCache(cache: IObjectCache) {
+        this.cache = cache;
     }
 }
 

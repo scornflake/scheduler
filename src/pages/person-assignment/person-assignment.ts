@@ -51,7 +51,7 @@ export class PersonAssignmentPage {
             if(this.person.email) {
                 list.push(this.person.email)
             }
-            return list.join(",")
+            return list.join(", ")
         }
         return "";
     }

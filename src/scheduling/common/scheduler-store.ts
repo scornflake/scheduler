@@ -22,15 +22,15 @@ class NamedObject extends ObjectWithUUID {
     }
 
     static sortByName<T extends NamedObject>(list: Array<T>): Array<T> {
-        return list.sort(((a, b) => {
-            if (a.name > b.name) {
+        return list.sort((a, b) => {
+            if (a.name.toLowerCase() > b.name.toLowerCase()) {
                 return 1;
             }
-            if (a.name < b.name) {
+            if (a.name.toLowerCase() < b.name.toLowerCase()) {
                 return -1;
             }
             return 0;
-        }));
+        });
     }
 }
 
@@ -82,8 +82,7 @@ abstract class GenericManager<T extends NamedObject> {
     }
 
     add(item: T): T {
-        this.store.add_object_to_array(item);
-        return item;
+        return this.store.add_object_to_array(item);
     }
 }
 

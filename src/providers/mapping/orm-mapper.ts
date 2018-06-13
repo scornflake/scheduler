@@ -3,8 +3,9 @@ import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {ObjectWithUUID} from "../../scheduling/common/base_model";
-import {isObservableArray, isObservableMap, isObservableObject} from "mobx";
+import {extendObservable, isObservableArray, isObservableMap, isObservableObject} from "mobx";
 import {ClassFieldMapping, ClassMapping, MappingType, PropertyMapping} from "./orm-mapper-type";
+import {observable} from "mobx-angular";
 
 function GetTheTypeNameOfTheObject(object: any): string {
     if (object instanceof Map) {
@@ -194,6 +195,7 @@ class OrmMapper {
                 }
 
                 this.logger.debug(`Property ${field.name} not found... trying for ${privateName}. Success.`);
+                field.privateName = privateName;
 
                 // Was trying to verify that setters/getters existed.
                 // Failed :-(

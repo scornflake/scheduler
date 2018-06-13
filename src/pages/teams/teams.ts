@@ -30,7 +30,10 @@ export class TeamsPage {
         let team = new Team("");
         this.show_team_detail(team, (add: boolean) => {
             if (add) {
-                this.rootStore.teams.add(team)
+                this.rootStore.teams.add(team);
+                this.rootStore.async_save_or_update_to_db(team).then(() => {
+                    console.log("Added to DB")
+                })
             }
         });
     }
@@ -45,5 +48,8 @@ export class TeamsPage {
 
     delete_team(team: Team) {
         this.rootStore.teams.remove(team);
+        this.rootStore.async_remove_object_from_db(team).then(() => {
+            console.log("Removed from DB");
+        });
     }
 }

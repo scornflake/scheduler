@@ -15,17 +15,15 @@ module.exports = function (config) {
                 watched: true
             }
             // {
-            //     pattern: './**/*.spec.js',
+            //     pattern: '../**/*.spec.js',
             //     watched: false,
-            //     included: true,
-            //     served: true
             // }
         ],
 
         preprocessors: {
             // './karma-test-shim.js': ['webpack', 'sourcemap']
             './karma-test-shim.js': ['webpack']
-            // './**/*.spec.js': ['webpack']
+            // '../**/*.spec.js': ['webpack']
         },
 
         phantomJsLauncher: {

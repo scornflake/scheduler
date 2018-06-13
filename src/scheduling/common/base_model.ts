@@ -100,19 +100,20 @@ TODO:
  */
 
 class GenericObjectStore<T extends ObjectWithUUID> {
-    items: Array<T>;
+    @observable items: Array<T>;
 
     constructor() {
         this.items = [];
     }
 
-    add_object_to_array(instance: T, overwrite_existing = false): T {
+    add_object_to_array(instance: T, overwrite_existing = true): T {
         if (!instance) {
             throw new Error(`Cannot add 'null' to this list. We are: ${this.constructor.name}s`)
         }
-        if (_.findIndex(this.items, o => o.uuid == instance.uuid) >= 0) {
+        let index = this.items.findIndex(o => o.uuid == instance.uuid);
+        if (index != -1) {
             if (overwrite_existing) {
-                this.remove_object_from_array(instance);
+                this.items.splice(index, 1);
             } else {
                 return null;
             }
@@ -128,7 +129,10 @@ class GenericObjectStore<T extends ObjectWithUUID> {
     }
 
     remove_object_from_array(instance: T) {
-        this.items = this.items.filter(o => o.uuid != instance.uuid);
+        let index = this.findIndexOfObject(instance);
+        if (index != -1) {
+            this.items.splice(index, 1);
+        }
     }
 
     protected clear_all_objects_from_array() {
@@ -140,7 +144,7 @@ class GenericObjectStore<T extends ObjectWithUUID> {
     }
 
     findIndexOfObject(obj: T): number {
-        return _.findIndex(this.items, o => obj.uuid == o.uuid);
+        return this.items.findIndex(o => o.uuid == obj.uuid);
     }
 
     findIndex(predicate, fromIndex = 0) {

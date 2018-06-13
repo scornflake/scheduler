@@ -13,6 +13,7 @@ import {Logger} from "ionic-logging-service";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import * as moment from "moment";
 import {isUndefined} from "util";
+import {observable} from "mobx-angular";
 
 class OrmConverter {
     private mapper: OrmMapper;
@@ -35,7 +36,7 @@ class OrmConverter {
         }, object, nesting);
     }
 
-    async async_create_js_object_from_dict(json_obj: object, new_object_type: string, nesting: number = 0) {
+    async async_create_js_object_from_dict(json_obj: object, new_object_type: string, nesting: number = 0): Promise<ObjectWithUUID> {
         /*
         Assumption is that we begin with an object that has an ID and a type.
          */
@@ -92,7 +93,7 @@ class OrmConverter {
                     }
 
                     case MappingType.NestedObjectList: {
-                        let new_objects = [];
+                        let new_objects = observable([]);
                         this.persistence_debug(`${propertyName} = list of ${value.length} objects ...`, nesting);
                         for (let v of value) {
                             let new_type = v['type'];
@@ -200,7 +201,7 @@ class OrmConverter {
     }
 
     private async _lookup_list_of_references(value, nesting: number = 0) {
-        let new_list = [];
+        let new_list = observable([]);
         for (let item of value) {
             new_list.push(await this._async_lookup_object_reference(item, nesting + 1));
         }
@@ -217,7 +218,7 @@ class OrmConverter {
             throw new Error(`Invalid reference ${reference}. Expected part[0] to be 'ref'`);
         }
         let object_id = parts[2];
-        return await this.object_loader.async_load_object_with_id(object_id, nesting);
+        return await this.object_loader.async_load_object_with_id(object_id, true, nesting);
     }
 
     async _convert_object_value_to_dict(mapping, value, nesting: number = 0) {
@@ -225,17 +226,17 @@ class OrmConverter {
             case MappingType.Reference:
                 return await this._convert_to_reference(mapping, value, nesting + 1);
             case MappingType.MapWithReferenceValues:
-                return this._async_convert_to_reference_map_values(mapping, value, nesting + 1);
+                return await this._async_convert_to_reference_map_values(mapping, value, nesting + 1);
             case MappingType.MapWithReferenceKeys:
-                return this._async_convert_to_reference_map_keys(mapping, value, nesting + 1);
+                return await this._async_convert_to_reference_map_keys(mapping, value, nesting + 1);
             case MappingType.ReferenceList:
-                return this._async_convert_to_reference_list(mapping, value, nesting + 1);
+                return await this._async_convert_to_reference_list(mapping, value, nesting + 1);
             case MappingType.Property:
                 return this.convert_from_js_value_to_db_value(value, mapping);
             case MappingType.NestedObject:
-                return this._async_convert_to_nested_object_dict(mapping, value, nesting + 1);
+                return await this._async_convert_to_nested_object_dict(mapping, value, nesting + 1);
             case MappingType.NestedObjectList:
-                return this._async_convert_to_nested_object_list_of_dict(mapping, value, nesting + 1);
+                return await this._async_convert_to_nested_object_list_of_dict(mapping, value, nesting + 1);
         }
     }
 

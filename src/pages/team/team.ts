@@ -50,14 +50,19 @@ export class TeamPage {
     }
 
     send_ok() {
-        this.callback(true);
+        try {
+            this.callback(true);
+        } catch (err) {
+            this.pageUtils.show_validation_error(ObjectValidation.simple(err));
+        }
         this.navCtrl.pop();
     }
 
     add_person_to_team(person: Person) {
-        this.team.add(person);
-
-        // TODO: Add to all people?
+        this.rootStore.async_save_or_update_to_db(person).then((new_person) => {
+            this.rootStore.people.add(person);
+            this.team.add(person);
+        });
     }
 
     delete_from_team(person: Person) {

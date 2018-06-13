@@ -3,6 +3,7 @@ var path = require('path');
 
 module.exports = {
     devtool: 'eval',
+    // devtool: 'inline-source-map',
     // target: 'node',
     resolve: {
         extensions: ['.ts', '.js']

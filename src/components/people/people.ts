@@ -1,6 +1,8 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {Person} from "../../scheduling/people";
 import {AlertController, NavController} from "ionic-angular";
+import {PageUtils} from "../../pages/page-utils";
+import {ObjectValidation} from "../../scheduling/shared";
 
 @Component({
     selector: 'people',
@@ -12,7 +14,9 @@ export class PeopleComponent {
     @Output() delete = new EventEmitter<Person>();
     @Output() person_added = new EventEmitter<Person>();
 
-    constructor(private navCtrl: NavController, private alertCtrl: AlertController) {
+    constructor(private navCtrl: NavController,
+                private pageUtils: PageUtils,
+                private alertCtrl: AlertController) {
     }
 
     public show_person_detail(person: Person) {
@@ -26,7 +30,11 @@ export class PeopleComponent {
             person: new_object,
             is_create: true,
             callback: (p: Person) => {
-                this.person_added.emit(p)
+                try {
+                    this.person_added.emit(p)
+                } catch (err) {
+                    this.pageUtils.show_validation_error(ObjectValidation.simple(err));
+                }
             }
         })
     }

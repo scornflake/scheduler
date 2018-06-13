@@ -16,7 +16,6 @@ import {Team} from "../../scheduling/teams";
 import {csd} from "../../scheduling/common/date-utils";
 import {OrmMapper} from "../../providers/mapping/orm-mapper";
 import {OrmConverter} from "../../providers/server/orm";
-import {Role} from "../../scheduling/role";
 
 class SomeEntity extends ObjectWithUUID {
     some_field: string = "a value";
@@ -136,7 +135,7 @@ describe('db', () => {
 
         it('can convert map of {ref,any} to a dict', function (done) {
             class MapAnyRefs extends ObjectWithUUID {
-                map_of_stuffs = new Map<SomeEntity, number>();
+                @observable map_of_stuffs = new Map<SomeEntity, number>();
             }
 
             let ze_mapping: ClassMapping = {
@@ -166,7 +165,7 @@ describe('db', () => {
 
                 // Now, if I convert that back into an object, do I get something sensible?
                 console.log(`time to see if we can go the other way...`);
-                converter.async_create_js_object_from_dict(dict, 'MapAnyRefs').then((js_object:MapAnyRefs) => {
+                converter.async_create_js_object_from_dict(dict, 'MapAnyRefs').then((js_object: MapAnyRefs) => {
                     console.log(`we hydrated: ${JSON.stringify(js_object)}`);
 
                     let all_keys = Array.from(js_object.map_of_stuffs.keys());
@@ -177,7 +176,6 @@ describe('db', () => {
                 });
             })
         });
-
 
         it('creates minimal JSON from empty object', function (done) {
             let empty = new Empty();
@@ -249,7 +247,7 @@ describe('db', () => {
 
         it('should convert a list of references', function (done) {
             class ThingWithListOfReferences extends ObjectWithUUID {
-                my_list = [new SomeEntity(), new SomeEntity(), new SomeEntity()]
+                @observable my_list = [new SomeEntity(), new SomeEntity(), new SomeEntity()]
             }
 
             let more_map: ClassFieldMapping = {
@@ -523,18 +521,15 @@ describe('db', () => {
             converter.async_create_dict_from_js_object(me).then(dict_obj => {
                 console.log(`I made: ${SafeJSON.stringify(dict_obj)}`);
 
-                // TODO, now with converter split away from DB, probably don't need to do a store/load
-                db.async_store_or_update_object(me).then(() => {
-                    db.async_load_object_with_id(me.uuid).then((loaded_obj) => {
-                        converter.async_create_dict_from_js_object(loaded_obj).then(reconstructed_dict => {
-                            // need to make this the same this for the equal to work
-                            reconstructed_dict['_rev'] = undefined;
+                converter.async_create_js_object_from_dict(dict_obj, 'Person').then((reconstructed_js_obj: Person) => {
+                    // need to make this the same this for the equal to work
+                    reconstructed_js_obj['_rev'] = undefined;
 
-                            console.log(`I loaded: ${SafeJSON.stringify(dict_obj)}`);
-                            expect(reconstructed_dict).toEqual(dict_obj);
-                            done();
-                        })
-                    })
+                    console.log(`I loaded: ${SafeJSON.stringify(reconstructed_js_obj)}`);
+                    expect(reconstructed_js_obj instanceof Person).toBeTruthy();
+                    expect(reconstructed_js_obj.name).toEqual(me.name);
+                    expect(reconstructed_js_obj.availability).toEqual(me.availability);
+                    done();
                 })
             });
         });

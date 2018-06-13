@@ -18,6 +18,7 @@ enum PropertyHint {
 
 type PropertyMapping = {
     name: string,
+    privateName?: string,
     type?: MappingType, // if not specified == PersistenceType.Property
     hint?: PropertyHint
 }
@@ -34,10 +35,18 @@ type ClassFieldMapping = {
     classes: Array<ClassMapping>
 }
 
+interface IObjectCache {
+    getFromCache(uuid: string): ObjectWithUUID;
+
+    saveInCache(object: ObjectWithUUID): void;
+
+    evict(object: ObjectWithUUID): void;
+}
+
 interface IObjectLoader {
     async_store_or_update_object(object: ObjectWithUUID, force_rev_check: boolean, ignore_not_found: boolean): Promise<ObjectWithUUID>;
 
-    async_load_object_with_id(id: string, nesting: number): Promise<TypedObject>;
+    async_load_object_with_id(id: string, useCache: boolean, nesting: number): Promise<TypedObject>;
 
     async_does_object_with_id_exist(id: string): Promise<boolean>;
 
@@ -68,5 +77,6 @@ export {
     PropertyMapping,
     PropertyHint,
     NameForMappingPropType,
+    IObjectCache,
     REF_PREFIX
 };
