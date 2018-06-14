@@ -91,7 +91,7 @@ describe('mapper', () => {
             expect(names).not.toContain('*');
         });
 
-        it('throws for unknwon object', () => {
+        it('throws for unknown object', () => {
             expect(() => {
                 mapper.propertiesFor('AnObjectThatDoesntExist');
             }).toThrowError(/is the mapping complete?/);

@@ -8,29 +8,15 @@ import {daysBetween, ScheduleAtDate} from "../shared";
 import {ScheduleWithRules} from "./scheduler";
 import {Assignment} from "../assignment";
 import {Role} from "../role";
+import {TypedObject} from "../common/base_model";
+import {observable} from "mobx-angular";
 
-class RuleExecution {
-    object: any;
-    trigger: Rule;
 
-    constructor(obj, trigger: Rule) {
-        this.object = obj;
-        this.trigger = trigger;
-    }
-
-    get empty(): boolean {
-        return this.object == null && this.trigger == null;
-    }
-
-    public static EMPTY() {
-        return new RuleExecution(null, null);
-    }
-}
-
-class Rule {
-    priority: number;
+class Rule extends TypedObject {
+    @observable priority: number;
 
     constructor(priority: number = 0) {
+        super();
         this.priority = priority;
     }
 
@@ -55,8 +41,8 @@ class Rule {
 }
 
 class FixedRoleOnDate extends Rule {
-    date: Date;
-    role: Role;
+    @observable date: Date;
+    @observable role: Role;
 
     constructor(date: Date, role: Role, priority = 0) {
         super(priority);
@@ -73,7 +59,7 @@ class FixedRoleOnDate extends Rule {
 }
 
 class WeightedRoles extends Rule {
-    weightedRoles: Map<Role, number>;
+    @observable weightedRoles: Map<Role, number>;
 
     constructor(weightedRules: Map<Role, number> = new Map<Role, number>()) {
         super();
@@ -124,9 +110,9 @@ class WeightedRoles extends Rule {
 }
 
 class OnThisDate extends Rule {
-    role: Role;
-    date: Date;
-    assignment: Assignment;
+    @observable role: Role;
+    @observable date: Date;
+    @observable assignment: Assignment;
 
     constructor(date: Date, assignment: Assignment, role: Role, priority: number = 0) {
         super(priority);
@@ -184,7 +170,7 @@ class UsageWeightedSequential extends Rule {
 }
 
 class ConditionalRule extends Rule {
-    actions: Array<ConditionAction>;
+    @observable actions: Array<ConditionAction>;
 
     constructor() {
         super();
@@ -209,7 +195,7 @@ class ConditionalRule extends Rule {
 }
 
 class AssignedToRoleCondition extends ConditionalRule {
-    private role: Role;
+    @observable private role: Role;
 
     constructor(role: Role) {
         super();
@@ -235,8 +221,8 @@ class ConditionAction extends Rule {
 }
 
 class ScheduleOn extends ConditionAction {
-    private person: Person;
-    private role: Role;
+    @observable private person: Person;
+    @observable private role: Role;
 
     constructor(person: Person, role: Role) {
         super();
@@ -263,7 +249,7 @@ class ScheduleOn extends ConditionAction {
 }
 
 class SecondaryAction extends Rule {
-    owner: Person;
+    @observable owner: Person;
 
     execute(schedule_at_date: ScheduleAtDate, schedule: ScheduleWithRules) {
 
@@ -271,10 +257,10 @@ class SecondaryAction extends Rule {
 }
 
 class TryToScheduleWith extends SecondaryAction {
-    private readonly other_person: Person;
-    private readonly max_number_of_times: number;
+    @observable private readonly other_person: Person;
+    @observable private readonly max_number_of_times: number;
+    @observable private reach: Availability;
 
-    private reach: Availability;
     private success_executions: number = 0;
     private logger: Logger;
 

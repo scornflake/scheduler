@@ -3,7 +3,7 @@ import {throwOnInvalidDate} from "./common/date-utils";
 import {RuleFacts} from "./rule_based/rule-facts";
 import {Logger} from "ionic-logging-service";
 import {LoggingWrapper} from "../common/logging-wrapper";
-import {TypedObject} from "./common/base_model";
+import {ObjectWithUUID, TypedObject} from "./common/base_model";
 import {observable} from "mobx-angular";
 
 export enum AvailabilityUnit {
@@ -18,7 +18,7 @@ export enum AvailabilityUnit {
     EVERY_N_OF_M_WEEKS = 'every_n_of_m',
 }
 
-export class Availability extends TypedObject {
+export class Availability extends ObjectWithUUID {
     @observable period: number;
     @observable unit: AvailabilityUnit;
 

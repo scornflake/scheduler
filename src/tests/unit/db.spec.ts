@@ -145,6 +145,33 @@ describe('db', () => {
             expect(converter.convert_from_js_value_to_db_value(undefined, mapping)).toBeUndefined();
         });
 
+        it('should convert date fields to/from ISO strings at root level', function (done) {
+            class SimpleWithDate extends ObjectWithUUID {
+                some_date: Date = csd(1992, 11, 9);
+            }
+
+            let mapping: ClassFieldMapping = {
+                classes: [
+                    {
+                        name: 'SimpleWithDate',
+                        fields: [{name: "some_date", hint: PropertyHint.Date}],
+                        inherit: 'ObjectWithUUID',
+                        factory: () => new SimpleWithDate()
+                    }
+                ]
+            };
+            mapper.addConfiguration(mapping);
+
+            let simpleObj = new SimpleWithDate();
+            converter.async_create_dict_from_js_object(simpleObj).then(dict => {
+                expect(dict.some_date).toEqual(simpleObj.some_date.toISOString());
+                converter.async_create_js_object_from_dict(dict, 'SimpleWithDate').then((newObj: SimpleWithDate) => {
+                    expect(newObj.some_date).toEqual(simpleObj.some_date);
+                    done();
+                });
+            })
+        });
+
         it('should use the cache when creating from a dict', function (done) {
             // convert a role to a dict, then convert it back. You should get back EXACTLY the same instance
             // since the converter should return the object from the cache
