@@ -196,14 +196,22 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
             // check condtional
             p.assignments.forEach(a => {
                 a.conditional_rules.forEach(cr => {
-                    if (cr instanceof AssignedToRoleCondition) {
-                        if (cr.role.uuid == role.uuid) {
+                    if (cr['role']) {
+                        if (cr['role'].uuid == role.uuid) {
                             throw new Error(`${msg}it is used in plan ${p.name} AssignedToRoleCondition condition`);
                         }
-                        if (cr['actions']) {
-                            // check for actions containing the role
-
-                        }
+                    }
+                    if (cr['actions']) {
+                        // check for actions containing the role
+                        let actions = cr['actions'];
+                        actions.forEach(a => {
+                            console.log(`check action: ${a}`);
+                            if (a['role']) {
+                                if (a['role'].uuid == role.uuid) {
+                                    throw new Error(`${msg}it is used in plan ${p.name} condition action`);
+                                }
+                            }
+                        })
                     }
                 })
             })

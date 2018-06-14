@@ -4,8 +4,8 @@ import {Role} from "../../scheduling/role";
 import {Plan} from "../../scheduling/plan";
 import {csd} from "../../scheduling/common/date-utils";
 import {Team} from "../../scheduling/teams";
-import {OnThisDate} from "../../scheduling/rule_based/rules";
-import {defaultSoundRole} from "../sample-data";
+import {OnThisDate, ScheduleOn} from "../../scheduling/rule_based/rules";
+import {defaultKeysRole, defaultSoundRole} from "../sample-data";
 
 describe('object store', () => {
     let store;
@@ -91,7 +91,7 @@ describe('object store', () => {
 
         it('cannot be removed if used in ScheduleOn', () => {
             let neil_assign = plan.assignment_for(neil);
-            neil_assign.if_assigned_to(defaultSoundRole).then(role);
+            neil_assign.if_assigned_to(defaultSoundRole).then(new ScheduleOn(neil, role));
 
             // so that this test doesn't pass because the role is part of other
             // role based integrity tests

@@ -220,8 +220,8 @@ class ConditionAction extends Rule {
 }
 
 class ScheduleOn extends ConditionAction {
-    @observable private person: Person;
-    @observable private role: Role;
+    @observable person: Person;
+    @observable role: Role;
 
     constructor(person: Person, role: Role) {
         super();
