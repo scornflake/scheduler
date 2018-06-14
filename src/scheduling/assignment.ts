@@ -1,11 +1,13 @@
 import {Person} from "./people";
 import {AssignedToRoleCondition, ConditionalRule, Rule, SecondaryAction, WeightedRoles} from "./rule_based/rules";
 import {action, computed, observable} from "mobx-angular";
-import {check_if_undefined, delete_from_array, TypedObject} from "./common/base_model";
+import {check_if_undefined, delete_from_array} from "./common/base_model";
 import {dayAndHourForDate} from "./common/date-utils";
 import {Role} from "./role";
+import {IAssignment} from "./shared";
+import {TypedObject} from "./base-types";
 
-class Assignment extends TypedObject {
+class Assignment extends TypedObject implements IAssignment {
     @observable person: Person;
 
     @observable role_weightings: Map<Role, number>;

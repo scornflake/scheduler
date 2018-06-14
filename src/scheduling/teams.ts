@@ -1,6 +1,6 @@
 import {find_object_with_name} from "./common/base_model";
 import {Person} from "./people";
-import {NamedObject} from "./common/scheduler-store";
+import {NamedObject} from "./base-types";
 import {action, observable} from "mobx-angular";
 
 class Team extends NamedObject {

@@ -5,7 +5,7 @@ import {Person} from "../../scheduling/people";
 import {RootStore} from "../../store/root";
 import {ObjectValidation} from "../../scheduling/shared";
 import {PageUtils} from "../page-utils";
-import {NamedObject} from "../../scheduling/common/scheduler-store";
+import {NamedObject} from "../../scheduling/base-types";
 
 @IonicPage({
     name: 'page-team',

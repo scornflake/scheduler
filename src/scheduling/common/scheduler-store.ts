@@ -1,40 +1,12 @@
-import {find_object_with_name, GenericObjectStore, ObjectWithUUID} from "./base_model";
+import {find_object_with_name, GenericObjectStore} from "./base_model";
 import {Organization} from "../organization";
-import {observable} from "mobx-angular";
 import {Team} from "../teams";
 import {Person} from "../people";
 import {Plan} from "../plan";
+import {Role} from "../role";
+import {AssignedToRoleCondition} from "../rule_based/rules";
+import {NamedObject, ObjectWithUUID} from "../base-types";
 
-class NamedObject extends ObjectWithUUID {
-    @observable name: string;
-
-    constructor(name: string = "") {
-        super();
-        this.name = name;
-    }
-
-    valueOf() {
-        return this.name;
-    }
-
-    toString() {
-        return this.valueOf();
-    }
-
-    static sortByName<T extends NamedObject>(list: Array<T>): Array<T> {
-        return list.sort((a, b) => {
-            if (a.name.toLowerCase() > b.name.toLowerCase()) {
-                return 1;
-            }
-            if (a.name.toLowerCase() < b.name.toLowerCase()) {
-                return -1;
-            }
-            return 0;
-        });
-    }
-}
-
-// class GenericManager<T extends NamedObject> implements Iterable<T> {
 abstract class GenericManager<T extends NamedObject> {
     protected store: GenericObjectStore<T>;
     private type: string;
@@ -83,6 +55,25 @@ abstract class GenericManager<T extends NamedObject> {
 
     add(item: T): T {
         return this.store.add_object_to_array(item);
+    }
+}
+
+class RoleManager extends GenericManager<Role> {
+    constructor(store) {
+        super(store, 'Role');
+    }
+
+    get roles(): Array<Role> {
+        return this.findAllThisType();
+    }
+
+    remove(role: Role) {
+        // noinspection SuspiciousInstanceOfGuard
+        if (this.store instanceof SchedulerObjectStore) {
+            this.store.removeRoleFromStoreWithRefcheck(role);
+            return;
+        }
+        throw new Error(`cannot call, the store isnt a SchedulerObjectStore`);
     }
 }
 
@@ -153,6 +144,7 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
     private peopleManager: PeopleManager;
     private teamManager: TeamManager;
     private plansManager: PlansManager;
+    private rolesManager: RoleManager;
 
     organization: Organization;
 
@@ -160,11 +152,16 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
         super();
         this.peopleManager = new PeopleManager(this);
         this.teamManager = new TeamManager(this);
+        this.rolesManager = new RoleManager(this);
         this.plansManager = new PlansManager(this);
     }
 
     get people(): PeopleManager {
         return this.peopleManager;
+    }
+
+    get roles(): RoleManager {
+        return this.rolesManager;
     }
 
     get teams(): TeamManager {
@@ -174,6 +171,46 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
     get plans(): PlansManager {
         return this.plansManager;
     }
+
+    removeRoleFromStoreWithRefcheck(role: Role) {
+        let msg = `Cannot delete role ${role.name}, `;
+
+        // can't be used in role
+        this.plans.forEach(p => {
+            // Roles
+            if (p.roles.indexOf(role) != -1) {
+                throw new Error(`${msg}it is used in plan ${p.name}`);
+            }
+
+            // Weighted roles per assignment
+            let assignmentsWithRole = p.assignments_with_role(role);
+            if (assignmentsWithRole.length > 0) {
+                throw new Error(`${msg}it is used in plan ${p.name} assignments`);
+            }
+
+            // Pick rules (OnThisDate)
+            if (p.rules_for_role(role).length > 0) {
+                throw new Error(`${msg}it is used in plan ${p.name} pick rules`);
+            }
+
+            // check condtional
+            p.assignments.forEach(a => {
+                a.conditional_rules.forEach(cr => {
+                    if (cr instanceof AssignedToRoleCondition) {
+                        if (cr.role.uuid == role.uuid) {
+                            throw new Error(`${msg}it is used in plan ${p.name} AssignedToRoleCondition condition`);
+                        }
+                        if (cr['actions']) {
+                            // check for actions containing the role
+
+                        }
+                    }
+                })
+            })
+        });
+
+        this.remove_object_from_array(role);
+    }
 }
 
 export {
@@ -181,6 +218,5 @@ export {
     PeopleManager,
     GenericManager,
     OrganizationManager,
-    TeamManager,
-    NamedObject
+    TeamManager
 }

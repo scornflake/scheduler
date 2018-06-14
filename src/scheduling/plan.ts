@@ -8,7 +8,7 @@ import {LoggingWrapper} from "../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {Team} from "./teams";
 import {Role} from "./role";
-import {NamedObject} from "./common/scheduler-store";
+import {NamedObject} from "./base-types";
 import {observable} from "mobx-angular";
 
 class Plan extends NamedObject {
@@ -17,8 +17,6 @@ class Plan extends NamedObject {
     @observable end_date: Date;
 
     @observable days_per_period: number;
-
-    // @observable manual_layouts: Map<Date, Role>;
 
     @observable roles: Array<Role>;
 
@@ -98,8 +96,8 @@ class Plan extends NamedObject {
 
     assignments_with_role(role: Role): Array<Assignment> {
         return this._assignments.filter(assignment => {
-            for (let person_role of assignment.roles) {
-                if (role.uuid == person_role.uuid) {
+            for (let assignmentRole of assignment.roles) {
+                if (role.uuid == assignmentRole.uuid) {
                     return true;
                 }
             }
@@ -247,8 +245,8 @@ class Plan extends NamedObject {
         return sr;
     }
 
-    remove_role(r: Role) {
-        let existingIndex = this.roles.findIndex(r => r.uuid == r.uuid);
+    remove_role(role: Role) {
+        let existingIndex = this.roles.findIndex(r => r.uuid == role.uuid);
         if (existingIndex != -1) {
             this.roles.splice(existingIndex, 1);
         }

@@ -1,4 +1,5 @@
-import {GenericManager, NamedObject, SchedulerObjectStore} from "../../scheduling/common/scheduler-store";
+import {GenericManager, SchedulerObjectStore} from "../../scheduling/common/scheduler-store";
+import {NamedObject} from "../../scheduling/base-types";
 
 describe('base', () => {
     let store, manager;

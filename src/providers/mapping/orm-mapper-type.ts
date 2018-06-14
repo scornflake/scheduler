@@ -1,4 +1,5 @@
-import {ObjectWithUUID, TypedObject} from "../../scheduling/common/base_model";
+import {ObjectWithUUID} from "../../scheduling/base-types";
+import {TypedObject} from "../../scheduling/base-types";
 
 enum MappingType {
     Property = 'prop',

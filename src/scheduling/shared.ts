@@ -1,10 +1,20 @@
 import {Person} from "./people";
 import * as _ from 'lodash';
 import {dayAndHourForDate} from "./common/date-utils";
-import {Assignment} from "./assignment";
 import {isUndefined} from "util";
 import {delete_from_array} from "./common/base_model";
 import {Role} from "./role";
+import {ConditionalRule} from "./rule_based/rules";
+
+interface IAssignment {
+    person: Person;
+    name: string;
+    conditional_rules: Array<ConditionalRule>;
+    roles: Array<Role>;
+    highest_role_layout_priority: number;
+
+    has_primary_role(role: Role): boolean;
+}
 
 class ObjectValidation {
     errors: string[] = new Array<string>();
@@ -104,11 +114,11 @@ class Exclusion {
  */
 class ScheduleAtDate {
     date: Date;
-    assignment_by_score: Map<Assignment, ScheduleScore>;
+    assignment_by_score: Map<IAssignment, ScheduleScore>;
 
     constructor(date: Date) {
         this.date = date;
-        this.assignment_by_score = new Map<Assignment, ScheduleScore>();
+        this.assignment_by_score = new Map<IAssignment, ScheduleScore>();
     }
 
     get date_key(): string {
@@ -119,12 +129,12 @@ class ScheduleAtDate {
         return Array.from(this.assignment_by_score.keys()).map(a => a.person);
     }
 
-    get assignments(): Array<Assignment> {
-        return Array.from<Assignment>(this.assignment_by_score.keys());
+    get assignments(): Array<IAssignment> {
+        return Array.from<IAssignment>(this.assignment_by_score.keys());
     }
 
     get people_sorted_by_role_priority(): Array<Person> {
-        return this.assignments.sort((a: Assignment, b: Assignment) => {
+        return this.assignments.sort((a: IAssignment, b: IAssignment) => {
             if (a.highest_role_layout_priority > b.highest_role_layout_priority) {
                 return 1;
             } else if (a.highest_role_layout_priority < b.highest_role_layout_priority) {
@@ -142,7 +152,7 @@ class ScheduleAtDate {
         return null;
     }
 
-    add_person(assignment: Assignment, role: Role) {
+    add_person(assignment: IAssignment, role: Role) {
         if (assignment == null) {
             throw new Error("Cannot add a 'null' assignment");
         }
@@ -166,9 +176,7 @@ class ScheduleAtDate {
             let score = this.assignment_by_score.get(a);
             // console.log(`assignment for ${a}, role: ${role}`);
             if (score) {
-                let hasRole = score.has_role(role);
-                // console.log(`assignment for ${a}, says has role: ${role} == ${hasRole}`);
-                return hasRole;
+                return score.has_role(role);
             }
             return false;
         });
@@ -193,7 +201,7 @@ class ScheduleAtDate {
         return [];
     }
 
-    assignment_for_person(person: Person): Assignment {
+    assignment_for_person(person: Person): IAssignment {
         return this.assignments.find(a => a.person.uuid == person.uuid);
     }
 
@@ -212,7 +220,7 @@ class ScheduleAtDate {
         return this.date.toDateString() + " - " + _.join(names_with_tasks, ',');
     }
 
-    set_decisions(assignment: Assignment, role: Role, decisions: Array<string>) {
+    set_decisions(assignment: IAssignment, role: Role, decisions: Array<string>) {
         let score = this.assignment_by_score.get(assignment);
         if (!score) {
             throw Error("Cant set facts, no person/assignment in this date");
@@ -262,5 +270,6 @@ export {
     ScheduleScore,
     ScheduleAtDate,
     daysBetween,
-    ObjectValidation
+    ObjectValidation,
+    IAssignment
 }

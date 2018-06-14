@@ -2,7 +2,7 @@ import {OrmMapper} from "../../providers/mapping/orm-mapper";
 import {getTestBed, TestBed} from "@angular/core/testing";
 import {scheduler_db_map} from "../../assets/db.mapping";
 import {MappingType, PropertyHint, PropertyMapping} from "../../providers/mapping/orm-mapper-type";
-import {TypedObject} from "../../scheduling/common/base_model";
+import {TypedObject} from "../../scheduling/base-types";
 
 describe('mapper', () => {
     let mapper;

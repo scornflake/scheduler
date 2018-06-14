@@ -131,8 +131,14 @@ describe('service', () => {
             state.current_date = date;
         });
 
-        it('creates role rules given people', () => {
+        it('should be able to remove a role from a plan', function () {
+            // OK. doesn't make SENSE, but the method should work
+            expect(plan.roles.indexOf(defaultSaxRole)).not.toBe(-1);
+            plan.remove_role(defaultSaxRole);
+            expect(plan.roles.indexOf(defaultSaxRole)).toBe(-1, 'role still there?');
+        });
 
+        it('creates role rules given people', () => {
             let pick_roles = plan.pick_rules();
             expect(pick_roles.size).toEqual(3);
 

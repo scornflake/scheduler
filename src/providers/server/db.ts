@@ -2,7 +2,7 @@ import {Injectable} from "@angular/core";
 import PouchDB from 'pouchdb';
 import PouchDBFind from 'pouchdb-find';
 import {Logger} from "ionic-logging-service";
-import {ObjectWithUUID, TypedObject} from "../../scheduling/common/base_model";
+import {TypedObject, NamedObject, ObjectWithUUID} from "../../scheduling/base-types";
 import 'reflect-metadata';
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {LoggingWrapper} from "../../common/logging-wrapper";
@@ -13,13 +13,13 @@ import {Subject} from "rxjs/Subject";
 import {Observable} from "rxjs/Rx";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {debounceTime} from "rxjs/operators";
-import {GenericManager, NamedObject} from "../../scheduling/common/scheduler-store";
+import {GenericManager} from "../../scheduling/common/scheduler-store";
 import {OrmMapper,} from "../mapping/orm-mapper";
 import {IObjectLoader} from "../mapping/orm-mapper-type";
 
 import {OrmConverter} from "./orm-converter";
+import {IObjectCache} from "../mapping/cache";
 import Database = PouchDB.Database;
-import {IObjectCache, SimpleCache} from "../mapping/cache";
 
 enum SavingState {
     Idle = 0,  // No changes

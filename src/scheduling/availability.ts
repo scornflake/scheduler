@@ -3,8 +3,9 @@ import {throwOnInvalidDate} from "./common/date-utils";
 import {RuleFacts} from "./rule_based/rule-facts";
 import {Logger} from "ionic-logging-service";
 import {LoggingWrapper} from "../common/logging-wrapper";
-import {ObjectWithUUID, TypedObject} from "./common/base_model";
+import {ObjectWithUUID} from "./base-types";
 import {observable} from "mobx-angular";
+import {TypedObject} from "./base-types";
 
 export enum AvailabilityUnit {
     // Models availability such as "every 4 weeks".

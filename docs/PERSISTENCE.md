@@ -1,3 +1,47 @@
+After implementing my own DB/conversion/ORM thing
+===
+
+Where we at?
+--
+- Can model object composition, references, lists of references, maps, maps with references keys
+- Object change tracking
+- Very simple in memory cache
+
+What's missing?
+--
+- Deleting orphaned reference objects (I prob don't care atm)
+    - Lets ponder a simple impl:
+        - Or, not reinvent the wheel: https://en.wikipedia.org/wiki/Tracing_garbage_collection
+- Preventing borkation of the model. referential integrity. e.g: you can delete a role, but there's zero ref integrity.
+    - Main concern: can delete things like Roles, and truly break the model.
+    - How to fix:
+        - All OWUID's are stored in the cache.  Turn this into a poor-mans weak-ref
+        - 'set' increments the counter
+        - 'unset' decrements the counter
+        - when counter == 0, the object may be removed (perhaps as part of some other operation)
+        - Some types of object could be marked as 'not weak?'
+    - How does this work in practice?
+        - In JS, you assign to a member. We don't know that the old is going away (can't call 'unset' on cache).
+        - Does that obj happen to have 'not being observed' called on it?
+        - blah blah blah (is this solving ref. integrity?!)
+
+
+Ref Integrity:
+----
+- Manual?  Don't delete roles?
+    - Possible. I *could* put in the manager (or root store) code to check various lists, objects etc before allowing
+        - Simple
+        - Would work
+        - Not very scalable, but who cares?
+
+
+
+
+
+
+-------------------------------------------
+
+
 Goals
 =====
 1. Server side persistence of data

@@ -1,4 +1,4 @@
-import {NamedObject} from "./common/scheduler-store";
+import {NamedObject} from "./base-types";
 
 class Organization extends NamedObject {
     constructor(name: string) {

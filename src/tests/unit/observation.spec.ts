@@ -1,4 +1,4 @@
-import {ObjectWithUUID} from "../../scheduling/common/base_model";
+import {ObjectWithUUID} from "../../scheduling/base-types";
 import {observe} from "mobx";
 import {observable} from "mobx-angular";
 

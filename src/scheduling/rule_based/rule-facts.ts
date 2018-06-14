@@ -2,11 +2,10 @@ import {FixedRoleOnDate, OnThisDate, Rule, UsageWeightedSequential, WeightedRole
 import {Logger} from "ionic-logging-service";
 import {dayAndHourForDate, throwOnInvalidDate} from "../common/date-utils";
 import {Person} from "../people";
-import {Exclusion, ScheduleAtDate} from "../shared";
+import {Exclusion, IAssignment, ScheduleAtDate} from "../shared";
 import {isUndefined} from "ionic-angular/util/util";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Plan} from "../plan";
-import {Assignment} from "../assignment";
 import {Role} from "../role";
 
 export class RuleFacts {
@@ -15,11 +14,11 @@ export class RuleFacts {
     service: Plan;
 
     private all_pick_rules: Map<Role, Array<Rule>>;
-    private all_role_rules: Map<Assignment, Array<Rule>>;
+    private all_role_rules: Map<IAssignment, Array<Rule>>;
 
     private exclusion_zones: Map<Person, Array<Exclusion>>;
 
-    private usage_counts: Map<Role, Map<Assignment, number>>;
+    private usage_counts: Map<Role, Map<IAssignment, number>>;
 
     // This is the schedule, as it's being built
     private dates: Map<string, ScheduleAtDate>;
@@ -34,13 +33,13 @@ export class RuleFacts {
         this.begin();
 
         this.exclusion_zones = new Map<Person, Array<Exclusion>>();
-        this.usage_counts = new Map<Role, Map<Assignment, number>>();
+        this.usage_counts = new Map<Role, Map<IAssignment, number>>();
 
         this.logger = LoggingWrapper.getLogger("scheduler.rules.facts");
     }
 
     copyUsageDataFrom(previous_facts: RuleFacts) {
-        this.usage_counts = new Map<Role, Map<Assignment, number>>();
+        this.usage_counts = new Map<Role, Map<IAssignment, number>>();
         for (let person of Array.from(previous_facts.exclusion_zones.keys())) {
             let zones = previous_facts.exclusion_zones.get(person);
             this.exclusion_zones.set(person, zones);
@@ -150,7 +149,7 @@ export class RuleFacts {
         return [false, "clear!"];
     }
 
-    get_next_suitable_assignment_for(role: Role): Assignment {
+    get_next_suitable_assignment_for(role: Role): IAssignment {
         // runs the pick rules for this role
         let pick_rules = this.all_pick_rules.get(role);
         if (!pick_rules) {
@@ -187,7 +186,7 @@ export class RuleFacts {
         }
     }
 
-    get_next_suitable_role_for_assignment(assignment: Assignment) {
+    get_next_suitable_role_for_assignment(assignment: IAssignment) {
         let role_rules = this.all_role_rules.get(assignment);
         if (!role_rules) {
             return null;
@@ -205,7 +204,7 @@ export class RuleFacts {
         return null;
     }
 
-    private get_person_count_for_role(role: Role, assignment: Assignment): Map<Assignment, number> {
+    private get_person_count_for_role(role: Role, assignment: IAssignment): Map<IAssignment, number> {
         if (role == null) {
             throw new Error("Role cannot be null here");
         }
@@ -214,7 +213,7 @@ export class RuleFacts {
         }
         if (!this.usage_counts.has(role)) {
             this.logger.debug("Creating new role counter for " + role.name);
-            let new_count = new Map<Assignment, number>();
+            let new_count = new Map<IAssignment, number>();
             this.usage_counts.set(role, new_count);
         }
 
@@ -226,7 +225,7 @@ export class RuleFacts {
         return by_person;
     }
 
-    number_of_times_role_used_by_person(role: Role, assignment: Assignment): number {
+    number_of_times_role_used_by_person(role: Role, assignment: IAssignment): number {
         if (role == null) {
             throw new Error("Role cannot be null here");
         }
@@ -236,7 +235,7 @@ export class RuleFacts {
         return this.get_person_count_for_role(role, assignment).get(assignment);
     }
 
-    total_number_of_times_person_placed_in_roles(assignment: Assignment, roles: Array<Role>): number {
+    total_number_of_times_person_placed_in_roles(assignment: IAssignment, roles: Array<Role>): number {
         let total = 0;
         for (let role of roles) {
             let person_counter_for_role = this.get_person_count_for_role(role, assignment);
@@ -265,7 +264,7 @@ export class RuleFacts {
         return 0;
     }
 
-    use_this_person_in_role(assignment: Assignment, role: Role) {
+    use_this_person_in_role(assignment: IAssignment, role: Role) {
         let person_counter = this.get_person_count_for_role(role, assignment);
         let current_count = person_counter.get(assignment);
         person_counter.set(assignment, (current_count + 1));
@@ -304,7 +303,7 @@ export class RuleFacts {
         return containining_this_date.length > 0;
     }
 
-    place_person_in_role(assignment: Assignment,
+    place_person_in_role(assignment: IAssignment,
                          role: Role,
                          date: Date,
                          record_usage_stats = true,
@@ -336,7 +335,7 @@ export class RuleFacts {
         return true;
     }
 
-    set_decisions_for(assignment: Assignment, role: Role, date: Date, clear_decisions: boolean = true) {
+    set_decisions_for(assignment: IAssignment, role: Role, date: Date, clear_decisions: boolean = true) {
         let specific_day = this.get_schedule_for_date(date);
         specific_day.set_decisions(assignment, role, this.decisions_for_date);
         if (clear_decisions) {

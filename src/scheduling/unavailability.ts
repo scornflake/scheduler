@@ -1,4 +1,4 @@
-import {TypedObject} from "./common/base_model";
+import {TypedObject} from "./base-types";
 import {dayAndHourForDate} from "./common/date-utils";
 import * as moment from "moment";
 import {observable} from "mobx-angular";

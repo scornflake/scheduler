@@ -2,7 +2,7 @@ import {Person} from "../scheduling/people";
 import {action, computed, observable} from "mobx";
 import {Role} from "../scheduling/role";
 import {Plan} from "../scheduling/plan";
-import {ObjectWithUUID} from "../scheduling/common/base_model";
+import {ObjectWithUUID} from "../scheduling/base-types";
 
 class SavedState extends ObjectWithUUID {
     @observable previous_sheet_id: string;

@@ -8,7 +8,7 @@ import {autorun, IReactionDisposer, observable} from "mobx";
 import {Plan} from "../scheduling/plan";
 import {SchedulerDatabase} from "../providers/server/db";
 import {Team} from "../scheduling/teams";
-import {ObjectWithUUID} from "../scheduling/common/base_model";
+import {ObjectWithUUID} from "../scheduling/base-types";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {Person} from "../scheduling/people";
 import {PageUtils} from "../pages/page-utils";

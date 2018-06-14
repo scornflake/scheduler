@@ -1,6 +1,6 @@
 import {SchedulerDatabase} from "../../providers/server/db";
 import {Person} from "../../scheduling/people";
-import {ObjectWithUUID, TypedObject} from "../../scheduling/common/base_model";
+import {ObjectWithUUID} from "../../scheduling/base-types";
 import {MockConfigurationService} from "../../app/logging-configuration";
 import {observable} from "mobx";
 import {SafeJSON} from "../../common/json/safe-stringify";
@@ -22,6 +22,7 @@ import {Assignment} from "../../scheduling/assignment";
 import {IObjectCache, SimpleCache} from "../../providers/mapping/cache";
 import {Role} from "../../scheduling/role";
 import {Availability, AvailabilityUnit} from "../../scheduling/availability";
+import {TypedObject} from "../../scheduling/base-types";
 
 class SomeEntity extends ObjectWithUUID {
     @observable some_field: string = "a value";

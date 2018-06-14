@@ -3,7 +3,7 @@ import {IonicPage, NavController} from 'ionic-angular';
 import {Person} from "../../scheduling/people";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {RootStore} from "../../store/root";
-import {NamedObject} from "../../scheduling/common/scheduler-store";
+import {NamedObject} from "../../scheduling/base-types";
 
 @IonicPage({
     name: 'page-people',

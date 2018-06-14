@@ -4,11 +4,10 @@ import {Logger} from "ionic-logging-service";
 import {RuleFacts} from "./rule-facts";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Availability} from "../availability";
-import {daysBetween, ScheduleAtDate} from "../shared";
+import {daysBetween, IAssignment, ScheduleAtDate} from "../shared";
 import {ScheduleWithRules} from "./scheduler";
-import {Assignment} from "../assignment";
 import {Role} from "../role";
-import {TypedObject} from "../common/base_model";
+import {TypedObject} from "../base-types";
 import {observable} from "mobx-angular";
 
 
@@ -73,7 +72,7 @@ class WeightedRoles extends Rule {
         });
     }
 
-    execute(state: RuleFacts, assignment: Assignment): Array<Role> {
+    execute(state: RuleFacts, assignment: IAssignment): Array<Role> {
         // sort by current score, highest first.
         let roles_in_weight_order = this.roles_sorted_by_weight;
 
@@ -112,16 +111,16 @@ class WeightedRoles extends Rule {
 class OnThisDate extends Rule {
     @observable role: Role;
     @observable date: Date;
-    @observable assignment: Assignment;
+    @observable assignment: IAssignment;
 
-    constructor(date: Date, assignment: Assignment, role: Role, priority: number = 0) {
+    constructor(date: Date, assignment: IAssignment, role: Role, priority: number = 0) {
         super(priority);
         this.date = date;
         this.role = role;
         this.assignment = assignment;
     }
 
-    execute(state: RuleFacts): Assignment {
+    execute(state: RuleFacts): IAssignment {
         let hasPrimaryRole = this.assignment.has_primary_role(this.role);
         if (state.current_date == this.date && hasPrimaryRole) {
             return this.assignment;
@@ -131,13 +130,13 @@ class OnThisDate extends Rule {
 }
 
 class UsageWeightedSequential extends Rule {
-    private usages: Map<Assignment, number>;
-    private original_index: Map<Assignment, number>;
+    private usages: Map<IAssignment, number>;
+    private original_index: Map<IAssignment, number>;
 
-    constructor(assignments: Array<Assignment>, priority: number = 0) {
+    constructor(assignments: Array<IAssignment>, priority: number = 0) {
         super(priority);
-        this.usages = new Map<Assignment, number>();
-        this.original_index = new Map<Assignment, number>();
+        this.usages = new Map<IAssignment, number>();
+        this.original_index = new Map<IAssignment, number>();
 
         assignments.forEach((p, index) => {
             this.usages.set(p, 0);
@@ -145,7 +144,7 @@ class UsageWeightedSequential extends Rule {
         });
     }
 
-    execute(state: RuleFacts, role: Role): Array<Assignment> {
+    execute(state: RuleFacts, role: Role): Array<IAssignment> {
         // Sort by number
         return Array.from(this.usages.keys()).sort((a1, a2) => {
             let usageForP1 = state.number_of_times_role_used_by_person(role, a1);
@@ -195,7 +194,7 @@ class ConditionalRule extends Rule {
 }
 
 class AssignedToRoleCondition extends ConditionalRule {
-    @observable private role: Role;
+    @observable role: Role;
 
     constructor(role: Role) {
         super();

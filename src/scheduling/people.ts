@@ -7,7 +7,7 @@ import * as _ from "lodash";
 import {observable} from "mobx-angular";
 import {ObjectValidation} from "./shared";
 import {ObjectUtils} from "../pages/page-utils";
-import {NamedObject} from "./common/scheduler-store";
+import {NamedObject} from "./base-types";
 
 export class Person extends NamedObject {
     @observable email: string;
@@ -36,7 +36,7 @@ export class Person extends NamedObject {
             // console.log(`Not setting availability for ${this.name} to ${new_value}. It's the same as existing value: ${this._availability}`);
             return;
         }
-        console.debug(`Setting availability for ${this.name} to ${new_value}`);
+        // console.debug(`Setting availability for ${this.name} to ${new_value}`);
         this._availability = new_value;
     }
 

@@ -1,4 +1,4 @@
-import {NamedObject} from "./common/scheduler-store";
+import {NamedObject} from "./base-types";
 import {observable} from "mobx-angular";
 
 class Role extends NamedObject {

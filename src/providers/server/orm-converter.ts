@@ -6,7 +6,7 @@ import {
     PropertyMapping,
     REF_PREFIX
 } from "../mapping/orm-mapper-type";
-import {ObjectWithUUID, TypedObject} from "../../scheduling/common/base_model";
+import {ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
 import {GetTheTypeNameOfTheObject, OrmMapper} from "../mapping/orm-mapper";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";

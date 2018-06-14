@@ -2,7 +2,7 @@ import {isArray, isUndefined} from "util";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {SafeJSON} from "../../common/json/safe-stringify";
-import {ObjectWithUUID} from "../../scheduling/common/base_model";
+import {ObjectWithUUID} from "../../scheduling/base-types";
 import {isObservableArray, isObservableMap, isObservableObject} from "mobx";
 import {ClassFieldMapping, ClassMapping, MappingType, PropertyMapping} from "./orm-mapper-type";
 
