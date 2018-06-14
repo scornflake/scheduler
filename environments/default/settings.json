@@ -49,7 +49,7 @@
       },
       {
         "loggerName": "db.converter",
-        "logLevel": "DEBUG"
+        "logLevel": "INFO"
       }
     ],
     "browserConsoleAppender": {

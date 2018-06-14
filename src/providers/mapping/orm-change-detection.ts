@@ -104,7 +104,7 @@ class ObjectChangeTracker {
         if (propertiesMap) {
             propertiesMap.forEach((disposer, propertyName) => {
                 if (disposer) {
-                    this.tracking_debug(`Removing observer for ${object.constructor.name}.${propertyName}`);
+                    this.tracking_trace(`Removing observer for ${object.constructor.name}.${propertyName}`);
                     disposer();
                 }
             });
@@ -126,7 +126,7 @@ class ObjectChangeTracker {
             listener = chainListeners(this.notification_listener, listener);
         }
         this.trackPropertiesOfObject(instance, instance, instance.constructor.name, listener);
-        this.logger.info(`Done installing change listener for ${instance.type}`);
+        this.tracking_debug(`Done installing change listener for ${instance.type}`);
     }
 
     getChangedObjects(): Map<string, object> {
@@ -153,7 +153,7 @@ class ObjectChangeTracker {
     private trackFieldsOfObject(owner: ObjectWithUUID, instance: any, parent_path: string, listener: ChangeListener) {
         let props = this.mapper.propertiesFor(instance.constructor.name);
         if (!props) {
-            this.tracking_debug(`no further properties to track on ${parent_path}`);
+            this.tracking_trace(`no further properties to track on ${parent_path}`);
             return;
         }
 
@@ -174,16 +174,16 @@ class ObjectChangeTracker {
                 let typeName = NameForMappingPropType(type);
 
 
-                if (type == MappingType.Property) {
+                if (type == MappingType.Property || type == MappingType.Reference) {
                     // Simple property
-                    this.tracking_info(`consider ${typeName}, ${childPath} (using ${actualPropertyName})`);
+                    this.tracking_debug(`consider ${typeName}, ${childPath} (using ${actualPropertyName})`);
                     this.installObserverForPropertyNamed(owner, instance, parent_path, actualPropertyName, listener);
                 } else if (type == MappingType.NestedObject) {
-                    this.tracking_info(`consider ${typeName}, ${childPath} (using ${actualPropertyName})`);
+                    this.tracking_debug(`consider ${typeName}, ${childPath} (using ${actualPropertyName})`);
                     this.installObserverForPropertyNamed(owner, instance, parent_path, actualPropertyName, listener);
                     this.trackPropertiesOfObject(owner, value, childPath, listener);
                 } else if (type == MappingType.NestedObjectList || type == MappingType.ReferenceList) {
-                    this.tracking_info(`consider ${typeName}, ${childPath} (using ${actualPropertyName})`);
+                    this.tracking_debug(`consider ${typeName}, ${childPath} (using ${actualPropertyName})`);
 
                     // Track the members of the list
                     if (type == MappingType.NestedObjectList) {
@@ -197,7 +197,7 @@ class ObjectChangeTracker {
                     //    Important: If you use an accessor, mobx will return a REAL LIST.  Which isn't what we want, since we need to be able to observe it.
                     //    and it seems you cannot observe lists (you CAN observe ObservableArrays tho)
                     //    By getting the actual underlying property value directly, we end up getting the ObservableList.
-                    this.tracking_info(`consider list itself: ${childPath}`);
+                    this.tracking_debug(`consider list itself: ${childPath}`);
                     this.installObserverDirectlyOn(owner, value, childPath, listener);
                 }
             } catch (ex) {
@@ -211,12 +211,12 @@ class ObjectChangeTracker {
         return " ".repeat(width);
     }
 
-    tracking_debug(message) {
-        this.logger.debug(`${this.gap(this.nesting)}${message}`);
+    tracking_trace(message) {
+        this.logger.trace(`${this.gap(this.nesting)}${message}`);
     }
 
-    tracking_info(message) {
-        this.logger.info(`${this.gap(this.nesting)}${message}`);
+    tracking_debug(message) {
+        this.logger.debug(`${this.gap(this.nesting)}${message}`);
     }
 
     // Tracks the properties of this object
@@ -242,21 +242,21 @@ class ObjectChangeTracker {
     private installObserverDirectlyOn(owner: ObjectWithUUID, instance: any, parentPath: string, listener: ChangeListener) {
         let nameOfTheObject = GetTheTypeNameOfTheObject(instance);
         if (nameOfTheObject == 'array') {
-            this.tracking_debug(`Install change listener for: ${parentPath} (Array of ${instance.length})`);
+            this.tracking_trace(`Install change listener for: ${parentPath} (Array of ${instance.length})`);
             if (!isObservableArray(instance)) {
-                this.tracking_debug(`${parentPath} isn't an Observable array - this is going to fail?`);
+                this.tracking_trace(`${parentPath} isn't an Observable array - this is going to fail?`);
             }
         } else if (nameOfTheObject == 'map') {
-            this.tracking_debug(`Install change listener for: ${parentPath} (Map of ${instance.size})`);
+            this.tracking_trace(`Install change listener for: ${parentPath} (Map of ${instance.size})`);
         } else {
-            this.tracking_debug(`Install change listener for: ${parentPath} (${instance}/${instance.constructor.name})`);
+            this.tracking_trace(`Install change listener for: ${parentPath} (${instance}/${instance.constructor.name})`);
         }
 
         let propertyName = 'items';
         let disposersForInstance = this.tracked_object_disposers.get(instance);
         if (disposersForInstance) {
             if (disposersForInstance.get(propertyName)) {
-                this.tracking_debug(`We've already installed an observer for '${propertyName}' on this ${nameOfTheObject} instance`);
+                this.tracking_trace(`We've already installed an observer for '${propertyName}' on this ${nameOfTheObject} instance`);
                 return;
             }
         } else {
@@ -275,7 +275,7 @@ class ObjectChangeTracker {
             }
 
             if (this.tracking_disabled.get(owner.uuid)) {
-                this.tracking_debug(`ignore change for ${owner.uuid}, tracking disabled`);
+                this.tracking_trace(`ignore change for ${owner.uuid}, tracking disabled`);
                 return;
             }
 
@@ -298,7 +298,7 @@ class ObjectChangeTracker {
         let disposersForInstance = this.tracked_object_disposers.get(instance);
         if (disposersForInstance) {
             if (disposersForInstance.get(propertyName)) {
-                this.tracking_debug(`We've already installed an observer for ${propertyName} on this instance`);
+                this.tracking_trace(`We've already installed an observer for ${propertyName} on this instance`);
                 return;
             }
         } else {
@@ -306,7 +306,7 @@ class ObjectChangeTracker {
             this.tracked_object_disposers.set(instance, disposersForInstance);
         }
 
-        this.tracking_debug(`install change listener for: ${parentPath}.${propertyName} (${instance}/${instance.constructor.name})`);
+        this.tracking_trace(`install change listener for: ${parentPath}.${propertyName} (${instance}/${instance.constructor.name})`);
         let disposer = observe(instance, propertyName, (change) => {
             /*
             Ignore changes to '_rev'
@@ -318,7 +318,7 @@ class ObjectChangeTracker {
             }
 
             if (this.tracking_disabled.get(owner.uuid)) {
-                this.tracking_debug(`ignore change for ${owner.uuid}, tracking disabled`);
+                this.tracking_trace(`ignore change for ${owner.uuid}, tracking disabled`);
                 return;
             }
 
