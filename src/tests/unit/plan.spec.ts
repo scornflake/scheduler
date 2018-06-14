@@ -1,5 +1,5 @@
-import {Person} from "../people";
-import {AssignedToRoleCondition, OnThisDate, ScheduleOn} from "../rule_based/rules";
+import {Person} from "../../scheduling/people";
+import {AssignedToRoleCondition, OnThisDate, ScheduleOn} from "../../scheduling/rule_based/rules";
 import {
     defaultAcousticGuitar,
     defaultBass,
@@ -7,12 +7,12 @@ import {
     defaultLeaderRole,
     defaultSaxRole,
     defaultSoundRole, SetupDefaultRoles
-} from "./sample-data";
-import {Plan} from "../plan";
-import {RuleFacts} from "../rule_based/rule-facts";
-import {Assignment} from "../assignment";
-import {Team} from "../teams";
-import {Role} from "../role";
+} from "../sample-data";
+import {Plan} from "../../scheduling/plan";
+import {RuleFacts} from "../../scheduling/rule_based/rule-facts";
+import {Assignment} from "../../scheduling/assignment";
+import {Team} from "../../scheduling/teams";
+import {Role} from "../../scheduling/role";
 
 describe('service', () => {
     let plan: Plan;

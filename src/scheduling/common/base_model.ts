@@ -24,7 +24,7 @@ abstract class TypedObject {
 abstract class ObjectWithUUID extends TypedObject {
     @observable _id: string;
     @observable _rev: string;
-    is_new: boolean;
+    @observable is_new: boolean;
 
     constructor(uuid: string = null) {
         super();

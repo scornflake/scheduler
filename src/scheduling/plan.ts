@@ -18,7 +18,7 @@ class Plan extends NamedObject {
 
     @observable days_per_period: number;
 
-    @observable manual_layouts: Map<Date, Role>;
+    // @observable manual_layouts: Map<Date, Role>;
 
     @observable roles: Array<Role>;
 
@@ -28,7 +28,8 @@ class Plan extends NamedObject {
     @observable private _assignments: Array<Assignment>;
 
     // These are the rules applied to the people doing this service/event
-    @observable private specific_role_rules: Array<Rule>;
+    // Used at runtime only (I think?)
+    private specific_role_rules: Array<Rule>;
 
     private logger: Logger;
 
@@ -44,7 +45,7 @@ class Plan extends NamedObject {
         this._assignments = new Array<Assignment>();
         this.specific_role_rules = new Array<Rule>();
 
-        this.manual_layouts = new Map<Date, Role>();
+        // this.manual_layouts = new Map<Date, Role>();
         this.days_per_period = 7;
     }
 
@@ -75,6 +76,10 @@ class Plan extends NamedObject {
 
     get assignments(): Array<Assignment> {
         return this._assignments;
+    }
+
+    set assignments(new_assigns) {
+        this._assignments = new_assigns;
     }
 
     get_assignment_for(person: Person) {

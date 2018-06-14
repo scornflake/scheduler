@@ -15,10 +15,11 @@ import {ReplaySubject} from "rxjs/ReplaySubject";
 import {debounceTime} from "rxjs/operators";
 import {GenericManager, NamedObject} from "../../scheduling/common/scheduler-store";
 import {OrmMapper,} from "../mapping/orm-mapper";
-import {IObjectCache, IObjectLoader} from "../mapping/orm-mapper-type";
+import {IObjectLoader} from "../mapping/orm-mapper-type";
 
-import {OrmConverter} from "./orm";
+import {OrmConverter} from "./orm-converter";
 import Database = PouchDB.Database;
+import {IObjectCache, SimpleCache} from "../mapping/cache";
 
 enum SavingState {
     Idle = 0,  // No changes
@@ -211,7 +212,7 @@ class SchedulerDatabase implements IObjectLoader {
             throw new Error("Trying to save nothing / undefined?");
         }
 
-        this.tracker.disable_tracking_for(object);
+        this.tracker.disableTrackingFor(object);
         this.save_notifications.next(SavingState.StartedSaving);
         try {
             let object_state = object.is_new ? "new" : "existing";
@@ -220,7 +221,7 @@ class SchedulerDatabase implements IObjectLoader {
                     let existing = await this.db.get(object._id);
                     if (existing._rev != object._rev) {
                         // better update it!
-                        this.logger.info(`Updating rev on ${object} because the server is different`);
+                        this.logger.warn(`Updating rev on ${object} because the server is different (this could overwrite new changes)`);
                         object._rev = existing._rev;
                     }
                 } catch (err) {
@@ -254,7 +255,7 @@ class SchedulerDatabase implements IObjectLoader {
                 throw Error(`Exception while storing ${object_state} type ${object.type}. ${err}. id: ${object.uuid}.`);
             }
         } finally {
-            this.tracker.enable_tracking_for(object);
+            this.tracker.enableTrackingFor(object);
             this.save_notifications.next(SavingState.FinishedSaving);
         }
     }
@@ -299,7 +300,7 @@ class SchedulerDatabase implements IObjectLoader {
         if (object.is_new) {
             throw new Error("Cannot remove object that is 'new' and hasn't been saved yet");
         }
-        if(this.cache) {
+        if (this.cache) {
             this.cache.evict(object);
         }
         this.tracker.untrack(object);
@@ -342,6 +343,7 @@ class SchedulerDatabase implements IObjectLoader {
 
     setCache(cache: IObjectCache) {
         this.cache = cache;
+        this.converter.cache = cache;
     }
 }
 

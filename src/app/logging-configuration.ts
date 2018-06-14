@@ -67,11 +67,11 @@ class MockConfigurationService extends ConfigurationService {
                     },
                     {
                         "loggerName": "db.converter",
-                        "logLevel": "INFO"
+                        "logLevel": "DEBUG"
                     },
                     {
                         "loggerName": "db.tracking",
-                        "logLevel": "DEBUG"
+                        "logLevel": "INFO"
                     },
                 ]
             }

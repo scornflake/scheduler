@@ -8,6 +8,8 @@ import {Unavailability} from "../scheduling/unavailability";
 import {ClassFieldMapping, MappingType, PropertyHint} from "../providers/mapping/orm-mapper-type";
 import {FixedRoleOnDate, Rule, WeightedRoles} from "../scheduling/rule_based/rules";
 import {csd} from "../scheduling/common/date-utils";
+import {Role} from "../scheduling/role";
+import {Assignment} from "../scheduling/assignment";
 
 let scheduler_db_map: ClassFieldMapping = {
     classes: [
@@ -43,13 +45,35 @@ let scheduler_db_map: ClassFieldMapping = {
                 {name: 'start_date', hint: PropertyHint.Date},
                 {name: 'end_date', hint: PropertyHint.Date},
                 {name: 'days_per_period'},
-                {name: 'manual_layouts', type: MappingType.MapWithReferenceValues, hint: PropertyHint.Date},
+                {name: 'roles', type: MappingType.ReferenceList},
+                // {name: 'manual_layouts', type: MappingType.MapWithReferenceValues, hint: PropertyHint.Date},
                 {name: 'team', type: MappingType.Reference},
                 {name: 'assignments', type: MappingType.NestedObjectList},
-                {name: 'specific_role_rules', type: MappingType.NestedObjectList}
+                // {name: 'specific_role_rules', type: MappingType.NestedObjectList}
             ],
             inherit: 'NamedObject',
             factory: () => new Plan("New Plan", null)
+        },
+        {
+            name: 'Role',
+            fields: [
+                {name: '*'}
+            ],
+            inherit: 'NamedObject',
+            factory: () => new Role('New Role')
+        },
+        {
+            name: 'Assignment',
+            fields: [
+                {name: 'person', type: MappingType.Reference},
+                {name: 'role_weightings', type: MappingType.MapWithReferenceKeys, hint: PropertyHint.Number},
+                {
+                    name: 'specific_roles',
+                    type: MappingType.MapWithReferenceValues,
+                    hint: PropertyHint.String
+                },
+            ],
+            factory: () => new Assignment()
         },
         {
             name: 'Rule',

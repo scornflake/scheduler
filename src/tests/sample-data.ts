@@ -1,4 +1,4 @@
-import {Role} from "../role";
+import {Role} from "../scheduling/role";
 
 let speakerPriority = 12;
 let leaderPriority = 11;

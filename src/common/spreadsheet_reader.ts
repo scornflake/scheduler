@@ -8,8 +8,8 @@ import {LoggingWrapper} from "./logging-wrapper";
 import {SafeJSON} from "./json/safe-stringify";
 import {Plan} from "../scheduling/plan";
 import {Team} from "../scheduling/teams";
-import {NPBCStoreConstruction} from "../providers/store/test.store";
 import {PeopleManager} from "../scheduling/common/scheduler-store";
+import {NPBCStoreConstruction} from "../tests/test.store";
 
 export class SpreadsheetReader {
     problems: Map<string, Set<string>>;

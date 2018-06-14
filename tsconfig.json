@@ -12,15 +12,14 @@
     ],
     "module": "es2015",
     "moduleResolution": "node",
-    "sourceMap": true,
+    "sourceMap": false,
     "target": "es5"
   },
   "include": [
     "src/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "src/**/*.spec.ts"
+    "node_modules"
   ],
   "typeAcquisition": {
     "enable": true,

@@ -1,13 +1,13 @@
-import {FixedRoleOnDate, OnThisDate, UsageWeightedSequential, WeightedRoles} from "./rules";
-import {Person} from "../people";
-import {RuleFacts} from "./rule-facts";
+import {FixedRoleOnDate, OnThisDate, UsageWeightedSequential, WeightedRoles} from "../../scheduling/rule_based/rules";
+import {Person} from "../../scheduling/people";
+import {RuleFacts} from "../../scheduling/rule_based/rule-facts";
 import {SafeJSON} from "../../common/json/safe-stringify";
-import {defaultSoundRole, SetupDefaultRoles} from "../tests/sample-data";
-import {Plan} from "../plan";
-import {Assignment} from "../assignment";
-import {Team} from "../teams";
-import {Role} from "../role";
-import {PeopleManager, SchedulerObjectStore} from "../common/scheduler-store";
+import {defaultSoundRole, SetupDefaultRoles} from "../sample-data";
+import {Plan} from "../../scheduling/plan";
+import {Assignment} from "../../scheduling/assignment";
+import {Team} from "../../scheduling/teams";
+import {Role} from "../../scheduling/role";
+import {PeopleManager, SchedulerObjectStore} from "../../scheduling/common/scheduler-store";
 
 describe('rules', () => {
     let people_store: PeopleManager;

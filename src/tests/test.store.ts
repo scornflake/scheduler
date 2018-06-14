@@ -1,8 +1,8 @@
-import {Person} from "../../scheduling/people";
-import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../../scheduling/availability";
-import {ScheduleOn, TryToScheduleWith} from "../../scheduling/rule_based/rules";
-import {csd} from "../../scheduling/common/date-utils";
-import {RootStore} from "../../store/root";
+import {Person} from "../scheduling/people";
+import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../scheduling/availability";
+import {ScheduleOn, TryToScheduleWith} from "../scheduling/rule_based/rules";
+import {csd} from "../scheduling/common/date-utils";
+import {RootStore} from "../store/root";
 import {
     defaultAcousticGuitar,
     defaultBass,
@@ -15,11 +15,11 @@ import {
     defaultSoundRole,
     defaultVocalsRole,
     SetupDefaultRoles
-} from "../../scheduling/tests/sample-data";
-import {Plan} from "../../scheduling/plan";
-import {Team} from "../../scheduling/teams";
-import {Organization} from "../../scheduling/organization";
-import {PeopleManager} from "../../scheduling/common/scheduler-store";
+} from "./sample-data";
+import {Plan} from "../scheduling/plan";
+import {Team} from "../scheduling/teams";
+import {Organization} from "../scheduling/organization";
+import {PeopleManager} from "../scheduling/common/scheduler-store";
 
 
 export class NPBCStoreConstruction {

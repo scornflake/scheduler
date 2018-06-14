@@ -1,12 +1,12 @@
 import {Person} from "./people";
 import {AssignedToRoleCondition, ConditionalRule, Rule, SecondaryAction, WeightedRoles} from "./rule_based/rules";
 import {action, computed, observable} from "mobx-angular";
-import {check_if_undefined, delete_from_array} from "./common/base_model";
+import {check_if_undefined, delete_from_array, TypedObject} from "./common/base_model";
 import {dayAndHourForDate} from "./common/date-utils";
 import {Role} from "./role";
 
-class Assignment {
-    person: Person;
+class Assignment extends TypedObject {
+    @observable person: Person;
 
     @observable role_weightings: Map<Role, number>;
     @observable specific_roles: Map<string, Array<Role>>;
@@ -15,6 +15,7 @@ class Assignment {
     @observable private secondary_action_list: Array<SecondaryAction>;
 
     constructor(person: Person = new Person()) {
+        super();
         this.person = person;
         this.role_weightings = new Map<Role, number>();
         this.specific_roles = new Map<string, Array<Role>>();

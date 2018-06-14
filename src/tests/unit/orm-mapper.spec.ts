@@ -1,7 +1,7 @@
-import {OrmMapper} from "./orm-mapper";
+import {OrmMapper} from "../../providers/mapping/orm-mapper";
 import {getTestBed, TestBed} from "@angular/core/testing";
 import {scheduler_db_map} from "../../assets/db.mapping";
-import {MappingType, PropertyHint, PropertyMapping} from "./orm-mapper-type";
+import {MappingType, PropertyHint, PropertyMapping} from "../../providers/mapping/orm-mapper-type";
 import {TypedObject} from "../../scheduling/common/base_model";
 
 describe('mapper', () => {
@@ -40,6 +40,12 @@ describe('mapper', () => {
 
         expect(properties.get('type').type).toEqual(MappingType.Property);
         expect(properties.get('name').type).toEqual(MappingType.Property);
+    });
+
+    it('should throw if mapping not defined', () => {
+        expect(() => {
+            mapper.propertiesFor('FooScudBar')
+        }).toThrowError(/No properties defined for FooScudBar/)
     });
 
     it('should throw exception if inherited class isnt in the map', function () {
@@ -85,9 +91,18 @@ describe('mapper', () => {
             expect(names).not.toContain('*');
         });
 
-        it('returns [] if no properties', () => {
-            let properties = mapper.propertiesFor('AnObjectThatDoesntExist');
-            expect(properties).toEqual(new Map<string, PropertyMapping>());
+        it('throws for unknwon object', () => {
+            expect(() => {
+                mapper.propertiesFor('AnObjectThatDoesntExist');
+            }).toThrowError(/is the mapping complete?/);
         });
+    });
+
+    it('can test if a type inherits another ', function () {
+        expect(mapper.doesTypeInheritFrom('TypedObject', 'TypedObject')).toBeFalsy();
+
+        expect(mapper.doesTypeInheritFrom('ObjectWithUUID', 'TypedObject')).toBeTruthy();
+        expect(mapper.doesTypeInheritFrom('NamedObject', 'TypedObject')).toBeTruthy();
+
     });
 });

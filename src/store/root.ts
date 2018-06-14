@@ -7,7 +7,6 @@ import {SafeJSON} from "../common/json/safe-stringify";
 import {autorun, IReactionDisposer, observable} from "mobx";
 import {Plan} from "../scheduling/plan";
 import {SchedulerDatabase} from "../providers/server/db";
-import {NPBCStoreConstruction} from "../providers/store/test.store";
 import {Team} from "../scheduling/teams";
 import {ObjectWithUUID} from "../scheduling/common/base_model";
 import {LoggingWrapper} from "../common/logging-wrapper";
@@ -18,7 +17,8 @@ import {csd} from "../scheduling/common/date-utils";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import {SchedulerObjectStore} from "../scheduling/common/scheduler-store";
 import {Organization} from "../scheduling/organization";
-import {IObjectCache} from "../providers/mapping/orm-mapper-type";
+import {NPBCStoreConstruction} from "../tests/test.store";
+import {IObjectCache} from "../providers/mapping/cache";
 
 @Injectable()
 class RootStore extends SchedulerObjectStore implements IObjectCache {
@@ -118,6 +118,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
 
         await this.db.async_load_into_store<Person>(this.people, 'Person');
         await this.db.async_load_into_store<Team>(this.teams, 'Team');
+        await this.db.async_load_into_store<Plan>(this.plans, 'Plan');
     }
 
     get state(): SavedState {
@@ -142,6 +143,8 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
     }
 
     private setup_fake_draft_plan() {
+        return;
+
         // make up a default team
         let team = this.teams.firstThisTypeByName("Default");
         if (team) {
@@ -153,13 +156,13 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
 
                 NPBCStoreConstruction.AttachRolesToPlan(this.draft_service);
 
-                // try {
+                try {
                     NPBCStoreConstruction.AddPeopleToPlanWithRoles(this.draft_service, team);
-                // } catch (e) {
-                //     oh oh.
-                    // let ve = ObjectValidation.simple("Cannot setup default fake plan. Is the DB OK? " + e.toString().substr(0, 100));
-                    // this.pageUtils.show_validation_error(ve, true);
-                // }
+                } catch (e) {
+                    // oh oh.
+                    let ve = ObjectValidation.simple("Cannot setup default fake plan. Is the DB OK? " + e.toString().substr(0, 100));
+                    this.pageUtils.show_validation_error(ve, true);
+                }
             }
         } else {
             this.pageUtils.show_validation_error(ObjectValidation.simple("Cant do schedule cos no team!"));

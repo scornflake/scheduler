@@ -1,9 +1,9 @@
-import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../availability";
+import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../../scheduling/availability";
 import includes from 'lodash/includes';
-import {CSVExporter} from "../exporter/csv.exporter";
-import {addDaysToDate, constructSensibleDate} from "../common/date-utils";
+import {CSVExporter} from "../../scheduling/exporter/csv.exporter";
+import {addDaysToDate, constructSensibleDate} from "../../scheduling/common/date-utils";
 import {SafeJSON} from "../../common/json/safe-stringify";
-import {Person} from "../people";
+import {Person} from "../../scheduling/people";
 import {
     defaultAcousticGuitar,
     defaultComputerRole, defaultElectricGuitar,
@@ -11,11 +11,11 @@ import {
     defaultSoundRole,
     defaultSpeakerRole,
     defaultThemeRole, SetupDefaultRoles
-} from "../tests/sample-data";
-import {ScheduleWithRules} from "./scheduler";
-import {Plan} from "../plan";
-import {Team} from "../teams";
-import {Role} from "../role";
+} from "../sample-data";
+import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
+import {Plan} from "../../scheduling/plan";
+import {Team} from "../../scheduling/teams";
+import {Role} from "../../scheduling/role";
 
 describe('role scheduler', () => {
     let team: Team;

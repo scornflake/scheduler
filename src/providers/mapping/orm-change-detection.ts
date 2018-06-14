@@ -126,6 +126,7 @@ class ObjectChangeTracker {
             listener = chainListeners(this.notification_listener, listener);
         }
         this.trackPropertiesOfObject(instance, instance, instance.constructor.name, listener);
+        this.logger.info(`Done installing change listener for ${instance.type}`);
     }
 
     getChangedObjects(): Map<string, object> {
@@ -158,46 +159,50 @@ class ObjectChangeTracker {
 
         // Right, if any of these properties change, that means 'owner' has changed.
         // If any of the properties are ObjectWithUUID, start the tracking again with THAT object as the owner.
-
+        let all_properties = Object.keys(instance);
         props.forEach((mapping, propertyName) => {
-            let child_path = `${parent_path}.${propertyName}`;
-
+            let childPath = `${parent_path}.${propertyName}`;
             let actualPropertyName = mapping.privateName || propertyName;
+            try {
 
-            /*
-            Very careful here: get the underlying property.
-            Don't go through an accessor (e.g: Person.availability, etc).
-             */
-            let value = instance[actualPropertyName];
-            let type = mapping.type;
-            let typeName = NameForMappingPropType(type);
+                /*
+                Very careful here: get the underlying property.
+                Don't go through an accessor (e.g: Person.availability, etc).
+                 */
+                let value = instance[actualPropertyName];
+                let type = mapping.type;
+                let typeName = NameForMappingPropType(type);
 
 
-            if (type == MappingType.Property) {
-                // Simple property
-                this.tracking_info(`consider ${typeName}, ${child_path}`);
-                this.installObserverForPropertyNamed(owner, instance, parent_path, actualPropertyName, listener);
-            } else if (type == MappingType.NestedObject) {
-                this.tracking_info(`consider ${typeName}, ${child_path}`);
-                this.installObserverForPropertyNamed(owner, instance, parent_path, actualPropertyName, listener);
-                this.trackPropertiesOfObject(owner, value, child_path, listener);
-            } else if (type == MappingType.NestedObjectList || type == MappingType.ReferenceList) {
-                this.tracking_info(`consider ${typeName}, ${child_path}`);
+                if (type == MappingType.Property) {
+                    // Simple property
+                    this.tracking_info(`consider ${typeName}, ${childPath} (using ${actualPropertyName})`);
+                    this.installObserverForPropertyNamed(owner, instance, parent_path, actualPropertyName, listener);
+                } else if (type == MappingType.NestedObject) {
+                    this.tracking_info(`consider ${typeName}, ${childPath} (using ${actualPropertyName})`);
+                    this.installObserverForPropertyNamed(owner, instance, parent_path, actualPropertyName, listener);
+                    this.trackPropertiesOfObject(owner, value, childPath, listener);
+                } else if (type == MappingType.NestedObjectList || type == MappingType.ReferenceList) {
+                    this.tracking_info(`consider ${typeName}, ${childPath} (using ${actualPropertyName})`);
 
-                // Track the members of the list
-                if (type == MappingType.NestedObjectList) {
-                    value.forEach((v, idx) => {
-                        let element_path = `${child_path}[${idx}]`;
-                        this.trackPropertiesOfObject(owner, v, element_path, listener);
-                    });
+                    // Track the members of the list
+                    if (type == MappingType.NestedObjectList) {
+                        value.forEach((v, idx) => {
+                            let element_path = `${childPath}[${idx}]`;
+                            this.trackPropertiesOfObject(owner, v, element_path, listener);
+                        });
+                    }
+
+                    // Track the list itself
+                    //    Important: If you use an accessor, mobx will return a REAL LIST.  Which isn't what we want, since we need to be able to observe it.
+                    //    and it seems you cannot observe lists (you CAN observe ObservableArrays tho)
+                    //    By getting the actual underlying property value directly, we end up getting the ObservableList.
+                    this.tracking_info(`consider list itself: ${childPath}`);
+                    this.installObserverDirectlyOn(owner, value, childPath, listener);
                 }
-
-                // Track the list itself
-                //    Important: If you use an accessor, mobx will return a REAL LIST.  Which isn't what we want, since we need to be able to observe it.
-                //    and it seems you cannot observe lists (you CAN observe ObservableArrays tho)
-                //    By getting the actual underlying property value directly, we end up getting the ObservableList.
-                this.tracking_info(`consider list itself: ${child_path}`);
-                this.installObserverDirectlyOn(owner, value, child_path, listener);
+            } catch (ex) {
+                throw new Error(`Cannot track ${actualPropertyName} on ${childPath}. Does it have an @observable decorator? Type is: ${typeof instance}. ` +
+                    `All properties: ${JSON.stringify(all_properties)}, ${ex}`);
             }
         });
     }
@@ -219,7 +224,6 @@ class ObjectChangeTracker {
         if (instance instanceof ObjectWithUUID) {
             if (this.tracked_objects_by_uuid.has(instance.uuid)) {
                 // this.tracking_debug(`Stopping @ ${path}, with instance ${instance.constructor.name}. It's an ObjectWithUUID and is already tracked`);
-                return;
             }
         } else {
             // Can't check ... install regardless
@@ -337,22 +341,17 @@ class ObjectChangeTracker {
         this.changed_objects.delete(owner.uuid);
     }
 
-    disable_tracking_for(object: ObjectWithUUID) {
+    disableTrackingFor(object: ObjectWithUUID) {
         if (object) {
             this.tracking_disabled.set(object.uuid, true);
         }
     }
 
-    enable_tracking_for(object: ObjectWithUUID) {
+    enableTrackingFor(object: ObjectWithUUID) {
         if (object) {
             this.tracking_disabled.delete(object.uuid);
-
-            // try to track it. If we already are, the call will return without doing anything.
-            this.track(object);
-            this.logger.info(`Done installing change listener for ${object.type}`);
         }
     }
-
 }
 
 export {

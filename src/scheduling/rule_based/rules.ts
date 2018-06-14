@@ -13,12 +13,9 @@ class RuleExecution {
     object: any;
     trigger: Rule;
 
-    private logger: Logger;
-
     constructor(obj, trigger: Rule) {
         this.object = obj;
         this.trigger = trigger;
-        this.logger = LoggingWrapper.getLogger("scheduler.rules");
     }
 
     get empty(): boolean {

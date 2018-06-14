@@ -13,7 +13,7 @@ enum MappingType {
 enum PropertyHint {
     String = 'string',
     Date = 'date',
-    Number = 'num',
+    Number = 'num'
 }
 
 type PropertyMapping = {
@@ -25,7 +25,7 @@ type PropertyMapping = {
 
 type ClassMapping = {
     name: string;
-    fields?: PropertyMapping[],
+    fields?: (PropertyMapping)[],
     inherit?: string,
     factory // always required, because the mapper instantiates objects to check properties
 
@@ -35,13 +35,6 @@ type ClassFieldMapping = {
     classes: Array<ClassMapping>
 }
 
-interface IObjectCache {
-    getFromCache(uuid: string): ObjectWithUUID;
-
-    saveInCache(object: ObjectWithUUID): void;
-
-    evict(object: ObjectWithUUID): void;
-}
 
 interface IObjectLoader {
     async_store_or_update_object(object: ObjectWithUUID, force_rev_check: boolean, ignore_not_found: boolean): Promise<ObjectWithUUID>;
@@ -77,6 +70,5 @@ export {
     PropertyMapping,
     PropertyHint,
     NameForMappingPropType,
-    IObjectCache,
     REF_PREFIX
 };

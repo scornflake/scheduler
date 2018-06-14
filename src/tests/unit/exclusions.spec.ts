@@ -1,5 +1,5 @@
-import {Exclusion} from "../shared";
-import {Role} from "../role";
+import {Exclusion} from "../../scheduling/shared";
+import {Role} from "../../scheduling/role";
 
 describe('exclusions', () => {
     let role = new Role("one");

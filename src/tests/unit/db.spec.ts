@@ -13,29 +13,39 @@ import {
     PropertyMapping
 } from "../../providers/mapping/orm-mapper-type";
 import {Team} from "../../scheduling/teams";
-import {csd} from "../../scheduling/common/date-utils";
-import {OrmMapper} from "../../providers/mapping/orm-mapper";
-import {OrmConverter} from "../../providers/server/orm";
+import {csd, dayAndHourForDate} from "../../scheduling/common/date-utils";
+import {GetTheTypeNameOfTheObject, OrmMapper} from "../../providers/mapping/orm-mapper";
+import {OrmConverter} from "../../providers/server/orm-converter";
+import {Plan} from "../../scheduling/plan";
+import {defaultComputerRole, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
+import {Assignment} from "../../scheduling/assignment";
+import {IObjectCache, SimpleCache} from "../../providers/mapping/cache";
+import {Role} from "../../scheduling/role";
+import {Availability, AvailabilityUnit} from "../../scheduling/availability";
 
 class SomeEntity extends ObjectWithUUID {
-    some_field: string = "a value";
+    @observable some_field: string = "a value";
+
+    toString() {
+        return this.some_field;
+    }
 }
 
 class Empty extends ObjectWithUUID {
 }
 
 class ThingWithNestedObjects extends ObjectWithUUID {
-    my_list = new Array(new SomeEntity(), new SomeEntity(), new SomeEntity());
+    @observable my_list = new Array(new SomeEntity(), new SomeEntity(), new SomeEntity());
 }
 
 class ThingWithReference extends ObjectWithUUID {
-    name: string = "This is my name";
-    note: string = "This isn't persisted";
-    another_object: SomeEntity = new SomeEntity();
+    @observable name: string = "This is my name";
+    @observable note: string = "This isn't persisted";
+    @observable another_object: SomeEntity = new SomeEntity();
 }
 
 class ThingWithMapOfReferences extends ObjectWithUUID {
-    some_things: Map<Date, SomeEntity>;
+    @observable some_things: Map<Date, SomeEntity>;
 
     constructor() {
         super();
@@ -46,6 +56,7 @@ class ThingWithMapOfReferences extends ObjectWithUUID {
 describe('db', () => {
     let db;
     let mapper: OrmMapper;
+    let cache: IObjectCache;
     let test_config: ClassFieldMapping = {
         classes: [
             {
@@ -90,22 +101,21 @@ describe('db', () => {
     };
 
     beforeEach((done) => {
+        cache = new SimpleCache();
         mapper = new OrmMapper();
 
-        /*
-        Add in mappings that we need, since we reference other models in this test
-         */
+        //Add in mappings that we need, since we reference other models in this test
         mapper.addConfiguration(scheduler_db_map);
 
-        /*
-        Annnd... mappings for this test
-         */
+        // Annnd... mappings for this test
         mapper.addConfiguration(test_config);
 
-
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 500;
+        console.log(`MY PROCESS ENV: ${process.env.NODE_ENV}`);
         let config = MockConfigurationService.ServiceForTests();
         SchedulerDatabase.ConstructAndWait(config, mapper).then(new_db => {
             db = new_db;
+            db.setCache(cache);
             done();
         });
     });
@@ -118,9 +128,11 @@ describe('db', () => {
     });
 
     describe('converter tests', () => {
-        let converter;
+        let converter: OrmConverter;
+
         beforeEach(() => {
-            converter = new OrmConverter(mapper, db);
+            // so we get the one from the DB, along with the shared cache
+            converter = db.converter;
         });
 
         it('should convert null dates to null', function () {
@@ -131,6 +143,201 @@ describe('db', () => {
             };
             expect(converter.convert_from_js_value_to_db_value(null, mapping)).toBeNull();
             expect(converter.convert_from_js_value_to_db_value(undefined, mapping)).toBeUndefined();
+        });
+
+        it('should use the cache when creating from a dict', function (done) {
+            // convert a role to a dict, then convert it back. You should get back EXACTLY the same instance
+            // since the converter should return the object from the cache
+            let role_instance = new Role("Yo yo yo");
+            converter.cache.saveInCache(role_instance);
+
+            converter.async_create_dict_from_js_object(role_instance).then(dict => {
+                expect(dict.name).toEqual(role_instance.name);
+
+                converter.async_create_js_object_from_dict(dict, 'Role').then((newObj: Role) => {
+                    expect(role_instance == newObj).toBeTruthy();
+                    expect(newObj == new Role(role_instance.name)).toBeFalsy();
+                    done();
+                })
+            })
+        });
+
+        it('should use the cache for list of nested objects', function (done) {
+            let team = new Team("Scud Missile");
+            let neil = new Person("Neilos");
+            team.add(neil);
+
+            converter.cache.saveInCache(team);
+            converter.cache.saveInCache(neil);
+
+            converter.async_create_dict_from_js_object(team).then(team_dict => {
+                converter.async_create_js_object_from_dict(team_dict, 'Team').then((newTeam: Team) => {
+                    expect(team).toEqual(newTeam);
+                    expect(team.people[0]).toEqual(neil);
+                    expect(team.people[0] === neil).toBeTruthy();
+                    done();
+                });
+            })
+        });
+
+        it('should not use the cache for a nested object that doesnt inherit from ObjectWithUUID', (done) => {
+            // Person with availability is good for this
+            let neil = new Person();
+            neil.availability = new Availability(2, AvailabilityUnit.EVERY_N_DAYS);
+            cache.saveInCache(neil);
+
+            converter.async_create_dict_from_js_object(neil).then(neil_dict => {
+                converter.async_create_js_object_from_dict(neil_dict, 'Person').then((newPerson: Person) => {
+                    expect(neil).toEqual(newPerson);
+
+                    // should be different instances
+                    expect(neil.availability != newPerson.availability);
+                    // but same content
+                    expect(neil.availability.isEqual(newPerson.availability)).toBeTruthy();
+                    done();
+                })
+            });
+        });
+
+
+        it('should use the cache for a single nested object', function (done) {
+            // A plan has a team (single reference)
+            let team = new Team("A team");
+            let plan = new Plan("Ta daa", team);
+            cache.saveInCache(plan);
+
+            converter.async_create_dict_from_js_object(plan).then(plan_dict => {
+                converter.async_create_js_object_from_dict(plan_dict, 'Plan').then((newPlan: Plan) => {
+                    expect(plan).toEqual(newPlan);
+                    expect(team).toEqual(newPlan.team);
+                    expect(plan.team == newPlan.team).toBeTruthy();
+                    done();
+                })
+            });
+        });
+
+        describe('can persist a Plan', function () {
+            SetupDefaultRoles();
+
+            let neil;
+            let bob;
+            let team;
+            let thePlan;
+            let specificDate;
+            let soundRoleRef;
+            let computerRoleRef;
+
+            beforeEach(() => {
+                specificDate = csd(2018, 2, 10);
+
+                neil = new Person("neil");
+                bob = new Person("bob");
+                team = new Team("My team", [neil, bob]);
+                thePlan = new Plan("Cunning", team);
+
+                soundRoleRef = converter.reference_for_object(defaultSoundRole);
+                computerRoleRef = converter.reference_for_object(defaultComputerRole);
+
+                thePlan.start_date = csd(2018, 1, 21);
+                thePlan.end_date = csd(2018, 3, 21);
+                thePlan.add_role(defaultSoundRole);
+                thePlan.add_role(defaultComputerRole);
+
+                thePlan.assignment_for(neil).add_role(defaultSoundRole, 5);
+                thePlan.assignment_for(neil).add_role(defaultComputerRole);
+                thePlan.assignment_for(bob).add_role(defaultComputerRole);
+
+                thePlan.assignment_for(neil).put_on_specific_role_for_date(defaultSoundRole, specificDate);
+            });
+
+            it('can create JS object from dict', function (done) {
+                // have to do this cos at the moment, the converter does NOT add to the cache
+                cache.saveInCache(defaultSoundRole);
+                cache.saveInCache(defaultComputerRole);
+                converter.async_create_dict_from_js_object(thePlan).then(dict => {
+                    // console.log(`made a dict for the Plan: ${JSON.stringify(dict)}...`);
+                    converter.async_create_js_object_from_dict(dict, 'Plan').then((jsObject: Plan) => {
+                        console.log(`Reconstruction: ${SafeJSON.stringify(jsObject)}`);
+
+                        expect(jsObject.name).toEqual(thePlan.name);
+                        expect(jsObject.uuid).toEqual(thePlan.uuid);
+
+                        expect(jsObject.start_date).toEqual(thePlan.start_date);
+                        expect(jsObject.end_date).toEqual(thePlan.end_date);
+                        expect(jsObject.days_per_period).toEqual(thePlan.days_per_period);
+
+                        console.log(`Got roles: ${JSON.stringify(jsObject.roles)}`);
+
+                        // we lookup the exact same instances (shared ones). This checks that the cache
+                        // is used by the converter/loader
+                        expect(jsObject.roles.indexOf(defaultSoundRole)).not.toEqual(-1);
+                        expect(jsObject.roles.indexOf(defaultComputerRole)).not.toEqual(-1);
+
+                        done();
+                    });
+                });
+            });
+
+            it('can create dict from object', function (done) {
+                converter.async_create_dict_from_js_object(thePlan).then(dict => {
+                    console.log(`We made: ${JSON.stringify(dict)}`);
+
+                    expect(dict.start_date).toEqual(thePlan.start_date.toISOString());
+                    expect(dict.end_date).toEqual(thePlan.end_date.toISOString());
+
+                    // Roles
+                    let roles = dict.roles;
+                    expect(roles).not.toBeUndefined();
+                    expect(roles.length).toEqual(2);
+
+                    // a team would be good :)
+                    expect(dict.team).toEqual(converter.reference_for_object(team));
+
+                    // let specifics = dict.specific_role_rules;
+                    // expect(specifics).not.toBeNull();
+                    // console.log(`Specifics: ${JSON.stringify(specifics)}`);
+                    //
+                    // fail('ra');
+
+                    // assignments, fun times!
+                    // This should end up being a list of Assignment dicts. We want to see 2 (one pers person).
+                    let assigns = dict.assignments;
+                    expect(assigns.length).toEqual(2);
+                    let assign_for_neil: Assignment = null;
+                    let assign_for_bob: Assignment = null;
+
+                    // lets split them out and find the assignments for the people
+                    assigns.forEach(a => {
+                        console.log(`Assign: ${JSON.stringify(a)}`);
+                        if (a['person'] == converter.reference_for_object(neil)) {
+                            assign_for_neil = a;
+                        }
+                        if (a['person'] == converter.reference_for_object(bob)) {
+                            assign_for_bob = a;
+                        }
+                    });
+                    expect(assign_for_neil).not.toBeNull();
+                    expect(assign_for_bob).not.toBeNull();
+
+                    // Role Weightings - the basic stuff
+                    expect(assign_for_neil.role_weightings[soundRoleRef]).toEqual(5);
+                    expect(assign_for_neil.role_weightings[computerRoleRef]).toEqual(1);
+                    expect(assign_for_bob.role_weightings[computerRoleRef]).toEqual(1);
+
+
+                    // Specific Roles.
+                    //
+                    // Assignment has one of the most complex structures.
+                    // specific_roles
+                    //   Maps from a string -> array of role references
+
+                    // Lets take neil. In the 'computer' role.
+                    console.log(`checking assignment for ${dayAndHourForDate(specificDate)}`);
+                    expect(assign_for_neil.specific_roles[dayAndHourForDate(specificDate)]).toEqual([soundRoleRef]);
+
+                    done();
+                });
+            });
         });
 
         it('can convert map of {ref,any} to a dict', function (done) {
@@ -187,7 +394,7 @@ describe('db', () => {
             });
         });
 
-        it('converts only persistable properties', function (done) {
+        it('converts only mapped properties', function (done) {
             class ContainedObject extends TypedObject {
                 some_field: string = "a value";
                 something_else: string = "not persisted";
@@ -358,7 +565,8 @@ describe('db', () => {
                         expect(loaded_object.some_things.size).toEqual(2);
 
                         // expect the field to be a Map object instance
-                        expect(loaded_object.some_things instanceof Map).toBeTruthy();
+                        console.log(`Type of returned map is: ${loaded_object.some_things.constructor.name}`);
+                        expect(GetTheTypeNameOfTheObject(loaded_object.some_things)).toEqual("map");
 
                         // Check that the keys are Dates!
                         console.log(`Date One: ${date_one} = ${date_one.getTime()}`);
@@ -425,15 +633,6 @@ describe('db', () => {
                     expect(nested_two.some_field).toEqual(ld_nested_two.some_field);
                     expect(nested_three.some_field).toEqual(ld_nested_three.some_field);
 
-                    /*
-                        Note: ld_nested_* would normally have _id and _rev, based on ObjectWithUUID default constructor.
-                        However the db loader will check for this (in the factory). It 'undefines' _id and _rev so that new instances DO NOT automatically get _id and _rev.
-                     */
-
-                    // Because it was marked as a NestedObject and not a reference, no _id/_rev should be present
-                    // console.log(`Nested #1: ${SafeJSON.stringify(ld_nested_one)}`);
-                    expect(ld_nested_one._id).toBeUndefined();
-                    expect(ld_nested_one._rev).toBeUndefined();
                     done();
                 });
             })

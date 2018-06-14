@@ -1,9 +1,9 @@
-import {ScheduleAtDate} from "../shared";
-import {Person} from "../people";
-import {defaultBass, defaultSoundRole, SetupDefaultRoles} from "../tests/sample-data";
-import {constructSensibleDate} from "../common/date-utils";
-import {Plan} from "../plan";
-import {Team} from "../teams";
+import {ScheduleAtDate} from "../../scheduling/shared";
+import {Person} from "../../scheduling/people";
+import {defaultBass, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
+import {constructSensibleDate} from "../../scheduling/common/date-utils";
+import {Plan} from "../../scheduling/plan";
+import {Team} from "../../scheduling/teams";
 import {SafeJSON} from "../../common/json/safe-stringify";
 
 describe('schedule', () => {

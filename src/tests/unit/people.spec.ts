@@ -1,9 +1,9 @@
-import {Person} from "../people";
-import {csd} from "../common/date-utils";
-import {Plan} from "../plan";
-import {Team} from "../teams";
-import {PeopleManager, SchedulerObjectStore} from "../common/scheduler-store";
-import {AvailabilityEveryNOfM} from "../availability";
+import {Person} from "../../scheduling/people";
+import {csd} from "../../scheduling/common/date-utils";
+import {Plan} from "../../scheduling/plan";
+import {Team} from "../../scheduling/teams";
+import {PeopleManager, SchedulerObjectStore} from "../../scheduling/common/scheduler-store";
+import {AvailabilityEveryNOfM} from "../../scheduling/availability";
 import {SafeJSON} from "../../common/json/safe-stringify";
 
 describe('people', () => {

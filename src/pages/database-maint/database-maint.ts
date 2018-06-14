@@ -2,7 +2,6 @@ import {Component} from '@angular/core';
 import {AlertController, IonicPage, NavController, NavParams} from 'ionic-angular';
 import {SchedulerDatabase} from "../../providers/server/db";
 import {RootStore} from "../../store/root";
-import {NPBCStoreConstruction} from "../../providers/store/test.store";
 import {PageUtils} from "../page-utils";
 import {Team} from "../../scheduling/teams";
 import {Organization} from "../../scheduling/organization";
@@ -11,6 +10,7 @@ import {ClassMapping, PropertyMapping} from "../../providers/mapping/orm-mapper-
 import {ObjectValidation} from "../../scheduling/shared";
 import {Plan} from "../../scheduling/plan";
 import {csd} from "../../scheduling/common/date-utils";
+import {NPBCStoreConstruction} from "../../tests/test.store";
 
 @IonicPage({
     name: 'page-db',

@@ -1,36 +1,83 @@
-const webpackConfig = require('./webpack.test.js');
+var webpack = require('webpack');
+var path = require('path');
+
+function root(localPath) {
+    return path.resolve(__dirname, localPath);
+}
 
 module.exports = function (config) {
 
     const _config = {
-        basePath: '.',
+        basePath: '..',
 
         frameworks: [
             'jasmine'
         ],
         files: [
-            // '../node_modules/babel-polyfill/browser.js',
             {
-                pattern: './karma-test-shim.js',
+                pattern: 'test-config/karma-test-shim.js',
                 watched: true
             }
             // {
-            //     pattern: '../**/*.spec.js',
+            //     pattern: 'src/tests/unit/**/*.spec.ts',
             //     watched: false,
             // }
         ],
 
+        mime: {
+            'text/x-typescript': ['ts', 'tsx']
+        },
+
         preprocessors: {
-            // './karma-test-shim.js': ['webpack', 'sourcemap']
-            './karma-test-shim.js': ['webpack']
-            // '../**/*.spec.js': ['webpack']
+            'test-config/karma-test-shim.js': ['webpack'],
+            // 'src/tests/unit/**/*.spec.ts': ['karma-typescript', 'webpack']
         },
 
         phantomJsLauncher: {
             exitOnResourceError: true
         },
+        karmaTypescriptConfig: {
+            bundlerOptions: {
+                entrypoints: /\.spec\.ts$/
+            },
+            tsconfig: "tsconfig.json"
+        },
 
-        webpack: webpackConfig,
+        webpack: {
+            mode: "development",
+            // devtool: 'eval',
+            devtool: 'eval-source-map',
+            // devtool: 'source-map',
+            // target: 'node',
+            resolve: {
+                extensions: ['.ts', '.js']
+            },
+            module: {
+                rules: [{
+                    test: /\.ts$/,
+                    loaders: [{
+                        loader: 'ts-loader'
+                    }, 'angular2-template-loader']
+                },
+                    {
+                        test: /\.html$/,
+                        loader: 'html-loader?attrs=false'
+                    },
+                    {
+                        test: /\.(png|jpe?g|gif|svg|woff|woff2|ttf|eot|ico)$/,
+                        loader: 'null-loader'
+                    }
+                ]
+            },
+            plugins: [
+                new webpack.ContextReplacementPlugin(
+                    // The (\\|\/) piece accounts for path separators in *nix and Windows
+                    /(ionic-angular)|(angular(\\|\/)core(\\|\/)@angular)/,
+                    root('./src'), // location of your src
+                    {} // a map of your routes
+                )
+            ]
+        },
 
         webpackMiddleware: {
             stats: 'errors-only'
@@ -46,9 +93,7 @@ module.exports = function (config) {
             terminal: true
         },
 
-        // reporters: ['kjhtml', 'dots'],
-        reporters: ['dots'],
-        // reporters: ['kjhtml'],
+        reporters: ['progress'],
         port: 9876,
         colors: true,
         logLevel: config.LOG_INFO,

@@ -1,12 +1,11 @@
-import {ObjectWithUUID} from "./common/base_model";
+import {NamedObject} from "./common/scheduler-store";
+import {observable} from "mobx-angular";
 
-class Role extends ObjectWithUUID {
-    name: string;
-
-    minimum_needed: number;
-    maximum_wanted: number;
-    layout_priority: number;
-    display_order: number;
+class Role extends NamedObject {
+    @observable minimum_needed: number;
+    @observable maximum_wanted: number;
+    @observable layout_priority: number;
+    @observable display_order: number;
 
     constructor(name: string, min_required: number = 1, maximum = 1, layout_priority = 1) {
         super();
