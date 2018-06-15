@@ -91,7 +91,12 @@ class PeopleManager extends GenericManager<Person> {
     }
 
     remove(person: Person) {
-        this.store.remove_object_from_array(person);
+        // noinspection SuspiciousInstanceOfGuard
+        if (this.store instanceof SchedulerObjectStore) {
+            this.store.removePersonFromStoreWithRefcheck(person);
+            return;
+        }
+        throw new Error(`cannot call, the store isnt a SchedulerObjectStore`);
     }
 }
 
@@ -115,7 +120,12 @@ class TeamManager extends GenericManager<Team> {
     }
 
     remove(team: Team) {
-        this.store.remove_object_from_array(team);
+        // noinspection SuspiciousInstanceOfGuard
+        if (this.store instanceof SchedulerObjectStore) {
+            this.store.removeTeamFromStoreWithRefcheck(team);
+            return;
+        }
+        throw new Error(`cannot call, the store isnt a SchedulerObjectStore`);
     }
 }
 
@@ -137,6 +147,10 @@ class PlansManager extends GenericManager<Plan> {
             }
             return 0;
         }))
+    }
+
+    remove(plan: Plan) {
+        this.store.remove_object_from_array(plan);
     }
 }
 
@@ -172,6 +186,16 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
         return this.plansManager;
     }
 
+    removeTeamFromStoreWithRefcheck(team: Team) {
+        let msg = `Cannot delete team ${team.name}, `;
+        this.plans.forEach(p => {
+            if (p.team.uuid == team.uuid) {
+                throw new Error(`${msg}it is used in plan: ${p.name}`);
+            }
+        });
+        this.remove_object_from_array(team);
+    }
+
     removeRoleFromStoreWithRefcheck(role: Role) {
         let msg = `Cannot delete role ${role.name}, `;
 
@@ -179,18 +203,18 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
         this.plans.forEach(p => {
             // Roles
             if (p.roles.indexOf(role) != -1) {
-                throw new Error(`${msg}it is used in plan ${p.name}`);
+                throw new Error(`${msg}it is used in plan: ${p.name}`);
             }
 
             // Weighted roles per assignment
             let assignmentsWithRole = p.assignments_with_role(role);
             if (assignmentsWithRole.length > 0) {
-                throw new Error(`${msg}it is used in plan ${p.name} assignments`);
+                throw new Error(`${msg}it is used in plan: ${p.name} (assignments)`);
             }
 
             // Pick rules (OnThisDate)
             if (p.rules_for_role(role).length > 0) {
-                throw new Error(`${msg}it is used in plan ${p.name} pick rules`);
+                throw new Error(`${msg}it is used in plan: ${p.name} (pick rules)`);
             }
 
             // check condtional
@@ -198,7 +222,7 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
                 a.conditional_rules.forEach(cr => {
                     if (cr['role']) {
                         if (cr['role'].uuid == role.uuid) {
-                            throw new Error(`${msg}it is used in plan ${p.name} AssignedToRoleCondition condition`);
+                            throw new Error(`${msg}it is used in plan: ${p.name}  (conditions)`);
                         }
                     }
                     if (cr['actions']) {
@@ -208,7 +232,7 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
                             console.log(`check action: ${a}`);
                             if (a['role']) {
                                 if (a['role'].uuid == role.uuid) {
-                                    throw new Error(`${msg}it is used in plan ${p.name} condition action`);
+                                    throw new Error(`${msg}it is used in plan: ${p.name}  (actions)`);
                                 }
                             }
                         })
@@ -218,6 +242,16 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
         });
 
         this.remove_object_from_array(role);
+    }
+
+    removePersonFromStoreWithRefcheck(person: Person) {
+        let msg = `Cannot delete person ${person.name}, `;
+        this.teams.forEach(t => {
+            if (t.findPersonInTeam(person) != null) {
+                throw new Error(`${msg}they are in team: ${t.name}`);
+            }
+        });
+        this.remove_object_from_array(person);
     }
 }
 
