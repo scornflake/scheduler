@@ -1,6 +1,6 @@
 import {SchedulerDatabase} from "../../providers/server/db";
 import {Person} from "../../scheduling/people";
-import {ObjectWithUUID} from "../../scheduling/base-types";
+import {ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
 import {MockConfigurationService} from "../../app/logging-configuration";
 import {observable} from "mobx";
 import {SafeJSON} from "../../common/json/safe-stringify";
@@ -13,16 +13,14 @@ import {
     PropertyMapping
 } from "../../providers/mapping/orm-mapper-type";
 import {Team} from "../../scheduling/teams";
-import {csd, dayAndHourForDate} from "../../scheduling/common/date-utils";
+import {csd} from "../../scheduling/common/date-utils";
 import {GetTheTypeNameOfTheObject, OrmMapper} from "../../providers/mapping/orm-mapper";
 import {OrmConverter} from "../../providers/server/orm-converter";
 import {Plan} from "../../scheduling/plan";
 import {defaultComputerRole, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
-import {Assignment} from "../../scheduling/assignment";
 import {IObjectCache, SimpleCache} from "../../providers/mapping/cache";
 import {Role} from "../../scheduling/role";
 import {Availability, AvailabilityUnit} from "../../scheduling/availability";
-import {TypedObject} from "../../scheduling/base-types";
 
 class SomeEntity extends ObjectWithUUID {
     @observable some_field: string = "a value";
@@ -119,6 +117,10 @@ describe('db', () => {
             db.setCache(cache);
             done();
         });
+    });
+
+    it('should store references to role_weightings on an Assignment', function () {
+
     });
 
     it('can create reference of person object', function () {
@@ -328,40 +330,17 @@ describe('db', () => {
                     // fail('ra');
 
                     // assignments, fun times!
-                    // This should end up being a list of Assignment dicts. We want to see 2 (one pers person).
+                    // This should end up being a list of Assignment refs. We want to see 2 (one per person).
                     let assigns = dict.assignments;
                     expect(assigns.length).toEqual(2);
-                    let assign_for_neil: Assignment = null;
-                    let assign_for_bob: Assignment = null;
 
                     // lets split them out and find the assignments for the people
                     assigns.forEach(a => {
                         console.log(`Assign: ${JSON.stringify(a)}`);
-                        if (a['person'] == converter.reference_for_object(neil)) {
-                            assign_for_neil = a;
-                        }
-                        if (a['person'] == converter.reference_for_object(bob)) {
-                            assign_for_bob = a;
-                        }
+                        let ref = converter.parse_reference(a);
+                        let obj = cache.getFromCache(ref.id);
+                        expect(obj).not.toBe(null);
                     });
-                    expect(assign_for_neil).not.toBeNull();
-                    expect(assign_for_bob).not.toBeNull();
-
-                    // Role Weightings - the basic stuff
-                    expect(assign_for_neil.role_weightings[soundRoleRef]).toEqual(5);
-                    expect(assign_for_neil.role_weightings[computerRoleRef]).toEqual(1);
-                    expect(assign_for_bob.role_weightings[computerRoleRef]).toEqual(1);
-
-
-                    // Specific Roles.
-                    //
-                    // Assignment has one of the most complex structures.
-                    // specific_roles
-                    //   Maps from a string -> array of role references
-
-                    // Lets take neil. In the 'computer' role.
-                    console.log(`checking assignment for ${dayAndHourForDate(specificDate)}`);
-                    expect(assign_for_neil.specific_roles[dayAndHourForDate(specificDate)]).toEqual([soundRoleRef]);
 
                     done();
                 });

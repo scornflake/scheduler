@@ -63,7 +63,7 @@ let scheduler_db_map: ClassFieldMapping = {
                 {name: 'days_per_period'},
                 {name: 'roles', type: MappingType.ReferenceList},
                 {name: 'team', type: MappingType.Reference},
-                {name: 'assignments', type: MappingType.NestedObjectList},
+                {name: 'assignments', type: MappingType.ReferenceList},
                 // {name: 'specific_role_rules', type: MappingType.NestedObjectList}
             ],
             inherit: 'NamedObject',
@@ -115,6 +115,7 @@ let scheduler_db_map: ClassFieldMapping = {
                     hint: PropertyHint.String
                 },
             ],
+            inherit: 'ObjectWithUUID',
             factory: () => new Assignment()
         },
         /*

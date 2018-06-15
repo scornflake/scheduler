@@ -2,6 +2,7 @@ import {
     IObjectLoader,
     MappingType,
     NameForMappingPropType,
+    ObjectReference,
     PropertyHint,
     PropertyMapping,
     REF_PREFIX
@@ -80,7 +81,7 @@ class OrmConverter {
                     } else {
                         this.debug(`Using existing object from cache for ${new_object_type}/${uuid}`, nesting);
                     }
-                } else{
+                } else {
                     this.debug(`Didn't check cache for ${JSON.stringify(dict)}, it doesn't have an _id`, nesting);
                 }
             } else {
@@ -163,7 +164,8 @@ class OrmConverter {
 
                     case MappingType.Reference: {
                         this.debug(`${propertyName} = reference: ${value}`, nesting);
-                        new_object[propertyName] = await this._async_lookup_object_reference(value, nesting + 1);
+                        let ref: ObjectReference = this.parse_reference(value);
+                        new_object[propertyName] = await this._async_lookup_object_reference(ref, nesting + 1);
                         break;
                     }
 
@@ -217,7 +219,8 @@ class OrmConverter {
             let reference = key.toString();
             this.debug(`_lookup_map_of_reference_keys going to try lookup on: ${reference}`, nesting);
 
-            let reference_obj = await this._async_lookup_object_reference(reference);
+            let ref: ObjectReference = this.parse_reference(reference);
+            let reference_obj = await this._async_lookup_object_reference(ref);
             let js_value = this.convert_from_db_value_to_js_type(value[key], mapping);
             result_map.set(reference_obj, js_value);
         }
@@ -239,7 +242,8 @@ class OrmConverter {
                 result_map.set(js_key, await this._async_lookup_list_of_references(reference, nesting + 1));
             } else {
                 this.debug(`_lookup_map_of_reference_values going to try lookup on: ${reference}/${typeName}`, nesting);
-                result_map.set(js_key, await this._async_lookup_object_reference(reference, nesting + 1));
+                let ref: ObjectReference = this.parse_reference(reference);
+                result_map.set(js_key, await this._async_lookup_object_reference(ref, nesting + 1));
             }
         }
 
@@ -279,22 +283,15 @@ class OrmConverter {
     private async _async_lookup_list_of_references(value, nesting: number = 0) {
         let new_list = observable([]);
         for (let item of value) {
-            new_list.push(await this._async_lookup_object_reference(item, nesting + 1));
+            let ref: ObjectReference = this.parse_reference(item);
+            new_list.push(await this._async_lookup_object_reference(ref, nesting + 1));
         }
         return new_list;
     }
 
 
-    private async _async_lookup_object_reference(reference: string, nesting: number = 0) {
-        let parts = reference.split(':');
-        if (parts.length != 3) {
-            throw new Error(`Invalid reference ${reference}. Expected 3 parts`);
-        }
-        if (parts[0] != REF_PREFIX) {
-            throw new Error(`Invalid reference ${reference}. Expected part[0] to be 'ref'`);
-        }
-        let object_id = parts[2];
-        return await this.objectLoader.async_load_object_with_id(object_id, true, nesting);
+    private async _async_lookup_object_reference(reference: ObjectReference, nesting: number = 0) {
+        return await this.objectLoader.async_load_object_with_id(reference.id, true, nesting);
     }
 
     async _convert_object_value_to_dict(mapping, value, nesting: number = 0) {
@@ -482,6 +479,20 @@ class OrmConverter {
         return `${REF_PREFIX}:${obj.type}:${obj._id}`;
     }
 
+    parse_reference(reference: string): ObjectReference {
+        // noinspection SuspiciousTypeOfGuard
+        if (typeof reference != 'string') {
+            throw new Error(`reference ${reference} is not a string!`);
+        }
+        let parts = reference.split(':');
+        if (parts.length != 3) {
+            throw new Error(`Invalid reference ${reference}. Expected 3 parts`);
+        }
+        if (parts[0] != REF_PREFIX) {
+            throw new Error(`Invalid reference ${reference}. Expected part[0] to be 'ref'`);
+        }
+        return {type: parts[1], id: parts[2]};
+    }
 
     gap(width: number): string {
         return " ".repeat(width);

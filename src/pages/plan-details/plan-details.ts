@@ -29,6 +29,12 @@ export class PlanDetailsPage {
         return NamedObject.sortByName(this.plan.people);
     }
 
+    description_for_person(p: Person) {
+        let items: Array<any> = [p.availability];
+        items = items.concat(this.plan.get_assignment_for(p).roles);
+        return items.join(", ");
+    }
+
     ionViewDidLoad() {
         if (this.plan == null) {
             this.navCtrl.pop();
@@ -76,13 +82,13 @@ export class PlanDetailsPage {
         alert.addButton({
             text: 'Add',
             handler: (uuids) => {
-                for(let uuid of uuids) {
+                for (let uuid of uuids) {
                     let person = team.findPersonByUUID(uuid);
                     this.plan.assignment_for(person);
                 }
 
                 // If just single person added, can edit this directly
-                if(uuids.length == 1) {
+                if (uuids.length == 1) {
                     // Kick off UI with this
                     let person = team.findPersonByUUID(uuids[0]);
                     this.show_assignment(person);

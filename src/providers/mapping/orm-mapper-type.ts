@@ -17,6 +17,11 @@ enum PropertyHint {
     Number = 'num'
 }
 
+type ObjectReference = {
+    type: string;
+    id: string;
+}
+
 type PropertyMapping = {
     name: string,
     privateName?: string,
@@ -65,6 +70,7 @@ function NameForMappingPropType(type: MappingType) {
 
 export {
     IObjectLoader,
+    ObjectReference,
     MappingType,
     ClassMapping,
     ClassFieldMapping,
