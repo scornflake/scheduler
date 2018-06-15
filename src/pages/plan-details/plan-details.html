@@ -35,9 +35,9 @@
     </ion-list-header>
     <ion-list>
         <ion-item-sliding *ngFor="let p of sorted_people">
-            <ion-item (tap)="show_assignment(p)">
+            <ion-item (tap)="show_assignment(p)" text-wrap>
                 <h2>{{p.name}}</h2>
-                <p>{{plan.get_assignment_for(p).roles.join(", ")}}</p>
+                <p>{{p.availability}}, {{plan.get_assignment_for(p).roles.join(", ")}}</p>
             </ion-item>
             <ion-item-options side="right">
                 <button ion-button color="danger" (tap)="delete_assignment_for_person(p)">Delete</button>

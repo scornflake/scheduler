@@ -4,6 +4,7 @@ import {Person} from "../../scheduling/people";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {RootStore} from "../../store/root";
 import {NamedObject} from "../../scheduling/base-types";
+import {PageUtils} from "../page-utils";
 
 @IonicPage({
     name: 'page-people',
@@ -20,6 +21,7 @@ export class PeoplePage {
 
     constructor(public navCtrl: NavController,
                 public rootStore: RootStore,
+                public pageUtils: PageUtils,
                 public logService: LoggingService
     ) {
         this.logger = logService.getLogger('page.people');
@@ -51,9 +53,10 @@ export class PeoplePage {
     }
 
     delete_person(person: Person) {
-        this.rootStore.people.remove(person);
-        this.rootStore.async_remove_object_from_db(person).then(() => {
-            console.log("Removed from DB");
-        })
+        try {
+            this.rootStore.people.remove(person);
+        } catch (er) {
+            this.pageUtils.show_error(er);
+        }
     }
 }

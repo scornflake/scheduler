@@ -10,6 +10,7 @@ import {Team} from "./teams";
 import {Role} from "./role";
 import {NamedObject} from "./base-types";
 import {observable} from "mobx-angular";
+import {addDaysToDate} from "./common/date-utils";
 
 class Plan extends NamedObject {
     @observable start_date: Date;
@@ -35,8 +36,8 @@ class Plan extends NamedObject {
         super(name);
         this.logger = LoggingWrapper.getLogger("model.plan");
 
-        this.start_date = null;
-        this.end_date = null;
+        this.start_date = new Date();
+        this.end_date = addDaysToDate(this.start_date, 30);
         this.team = team;
         this.roles = new Array<Role>();
 

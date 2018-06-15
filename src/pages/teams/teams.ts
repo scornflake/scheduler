@@ -2,6 +2,7 @@ import {Component} from '@angular/core';
 import {IonicPage, NavController, NavParams} from 'ionic-angular';
 import {RootStore} from "../../store/root";
 import {Team} from "../../scheduling/teams";
+import {PageUtils} from "../page-utils";
 
 @IonicPage({
     name: 'page-teams',
@@ -15,6 +16,7 @@ export class TeamsPage {
 
     constructor(public navCtrl: NavController,
                 public rootStore: RootStore,
+                public pageUtils: PageUtils,
                 public navParams: NavParams) {
     }
 
@@ -47,9 +49,10 @@ export class TeamsPage {
     }
 
     delete_team(team: Team) {
-        this.rootStore.teams.remove(team);
-        this.rootStore.async_remove_object_from_db(team).then(() => {
-            console.log("Removed from DB");
-        });
+        try {
+            this.rootStore.teams.remove(team);
+        } catch (ex) {
+            this.pageUtils.show_error(ex);
+        }
     }
 }

@@ -19,6 +19,7 @@ import {SchedulerObjectStore} from "../scheduling/common/scheduler-store";
 import {Organization} from "../scheduling/organization";
 import {NPBCStoreConstruction} from "../tests/test.store";
 import {IObjectCache} from "../providers/mapping/cache";
+import {Role} from "../scheduling/role";
 
 @Injectable()
 class RootStore extends SchedulerObjectStore implements IObjectCache {
@@ -192,6 +193,40 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
 
     evict(object: ObjectWithUUID): void {
         this.remove_object_from_array(object);
+    }
+
+    removeAndWait(obj: ObjectWithUUID) {
+        this.async_remove_object_from_db(obj).then(() => {
+            console.log(`Removed '${obj.uuid}/${obj.type}' from DB`);
+        });
+    }
+
+    removeTeamFromStoreWithRefcheck(team: Team): void {
+        super.removeTeamFromStoreWithRefcheck(team);
+        this.removeAndWait(team);
+    }
+
+    removePlanFromStoreWithRefcheck(plan: Plan): void {
+        super.removePlanFromStoreWithRefcheck(plan);
+        this.removeAndWait(plan);
+    }
+
+    removeRoleFromStoreWithRefcheck(role: Role): void {
+        super.removeRoleFromStoreWithRefcheck(role);
+        this.removeAndWait(role);
+    }
+
+    removePersonFromStoreWithRefcheck(person: Person): void {
+        super.removePersonFromStoreWithRefcheck(person);
+        this.removeAndWait(person);
+    }
+
+    createNewPlan(planName: string, team: Team) {
+        let plan = new Plan(planName, team);
+        this.roles.forEach(r => {
+            plan.add_role(r);
+        });
+        return plan;
     }
 }
 

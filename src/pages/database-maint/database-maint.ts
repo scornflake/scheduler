@@ -108,6 +108,7 @@ export class DatabaseMaintPage {
         let teams = this.rootStore.teams;
         return [
             {label: 'Num orgs', value: this.rootStore.organization ? 1 : 0},
+            {label: 'Num roles', value: this.rootStore.roles.length},
             {label: 'Num people', value: this.rootStore.people.length},
             {label: 'Num plans', value: this.rootStore.plans.length},
             {label: 'Num teams', value: teams.length, next: () => this.stats_for_teams(teams.teams)}

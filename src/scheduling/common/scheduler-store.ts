@@ -150,7 +150,12 @@ class PlansManager extends GenericManager<Plan> {
     }
 
     remove(plan: Plan) {
-        this.store.remove_object_from_array(plan);
+        // noinspection SuspiciousInstanceOfGuard
+        if (this.store instanceof SchedulerObjectStore) {
+            this.store.removePlanFromStoreWithRefcheck(plan);
+            return;
+        }
+        throw new Error(`cannot call, the store isnt a SchedulerObjectStore`);
     }
 }
 
@@ -194,6 +199,10 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
             }
         });
         this.remove_object_from_array(team);
+    }
+
+    removePlanFromStoreWithRefcheck(plan: Plan) {
+        this.remove_object_from_array(plan);
     }
 
     removeRoleFromStoreWithRefcheck(role: Role) {

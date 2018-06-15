@@ -14,6 +14,10 @@ class PageUtils {
         this.show_alert(validation.errors.join(", "), {cssClass: 'validation'}, stay_open);
     }
 
+    public show_error(message: string) {
+        this.show_alert(message, {cssClass: 'validation'}, false);
+    }
+
     show_message(message: string) {
         this.show_alert(message, {cssClass: 'success'}, false);
     }
@@ -23,7 +27,7 @@ class PageUtils {
             message: message,
             showCloseButton: stay_open
         };
-        if(more_options) {
+        if (more_options) {
             Object.assign(options, more_options);
         }
         if (!stay_open) {

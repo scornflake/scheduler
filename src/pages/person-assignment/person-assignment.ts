@@ -6,6 +6,7 @@ import {Availability, AvailabilityUnit} from "../../scheduling/availability";
 import {Person} from "../../scheduling/people";
 import {RootStore} from "../../store/root";
 import {Role} from "../../scheduling/role";
+import {Plan} from "../../scheduling/plan";
 
 @IonicPage({
     name: 'page-person-assignment',
@@ -17,6 +18,7 @@ import {Role} from "../../scheduling/role";
 })
 export class PersonAssignmentPage {
     assignment: Assignment;
+    plan: Plan;
     private active: ViewController;
 
     constructor(public navCtrl: NavController,
@@ -25,6 +27,7 @@ export class PersonAssignmentPage {
                 public popoverCtrl: PopoverController,
                 public navParams: NavParams) {
 
+        this.plan = navParams.get('plan');
         this.assignment = navParams.get('assignment');
     }
 
@@ -45,10 +48,10 @@ export class PersonAssignmentPage {
     get person_name_details(): string {
         if (this.person) {
             let list = [];
-            if(this.person.name) {
+            if (this.person.name) {
                 list.push(this.person.name);
             }
-            if(this.person.email) {
+            if (this.person.email) {
                 list.push(this.person.email)
             }
             return list.join(", ")
@@ -59,7 +62,7 @@ export class PersonAssignmentPage {
 
     add_roles_to_alert(alert, input_type = 'checkbox', handler = (r) => {
     }) {
-        let all_roles = this.rootStore.draft_service.roles;
+        let all_roles = this.plan.roles;
         for (let r of all_roles) {
             if (input_type == 'button') {
                 alert.addButton({
@@ -96,7 +99,7 @@ export class PersonAssignmentPage {
             handler: data => {
                 // We receive an array of 'values'
                 for (let role_id of data) {
-                    let role_to_add = this.rootStore.draft_service.find_role_by_uuid(role_id);
+                    let role_to_add = this.plan.find_role_by_uuid(role_id);
                     if (role_to_add) {
                         this.assignment.add_role(role_to_add);
                     }
@@ -143,7 +146,7 @@ export class PersonAssignmentPage {
     }
 
     private add_if_in_role_rule() {
-        let list_of_things = this.rootStore.draft_service.roles;
+        let list_of_things = this.plan.roles;
         this.navCtrl.push('list-of-things', {
             things: list_of_things,
             'title': 'When in role...',
@@ -168,7 +171,7 @@ export class PersonAssignmentPage {
     }
 
     private continue_add_in_role(if_in_this_role: Role) {
-        let roles = this.rootStore.draft_service.roles;
+        let roles = this.plan.roles;
         this.navCtrl.push('list-of-things', {
             things: roles,
             'title': 'Also be in role...',

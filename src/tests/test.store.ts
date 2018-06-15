@@ -293,18 +293,18 @@ export class NPBCStoreConstruction {
         return people_added;
     }
 
-    static AttachRolesToPlan(service: Plan) {
+    static AttachRolesToPlan(plan: Plan) {
         SetupDefaultRoles();
-        service.add_role(defaultLeaderRole);
-        service.add_role(defaultSoundRole);
-        service.add_role(defaultComputerRole);
-        service.add_role(defaultKeysRole);
-        service.add_role(defaultVocalsRole).maximum_wanted = 2;
-        service.add_role(defaultDrumsRole);
-        service.add_role(defaultBass);
-        service.add_role(defaultAcousticGuitar).maximum_wanted = 2;
-        service.add_role(defaultElectricGuitar).minimum_needed = 0;
-        service.add_role(defaultSaxRole).minimum_needed = 0;
+        plan.add_role(defaultLeaderRole);
+        plan.add_role(defaultSoundRole);
+        plan.add_role(defaultComputerRole);
+        plan.add_role(defaultKeysRole);
+        plan.add_role(defaultVocalsRole).maximum_wanted = 2;
+        plan.add_role(defaultDrumsRole);
+        plan.add_role(defaultBass);
+        plan.add_role(defaultAcousticGuitar).maximum_wanted = 2;
+        plan.add_role(defaultElectricGuitar).minimum_needed = 0;
+        plan.add_role(defaultSaxRole).minimum_needed = 0;
 
         defaultAcousticGuitar.minimum_needed = 0;
     }

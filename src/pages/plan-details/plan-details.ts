@@ -51,7 +51,7 @@ export class PlanDetailsPage {
         // Choose a person
         // Show a selection of people, with add/cancel button
         let alert = this.alertCtrl.create({
-            title: "Select person to add"
+            title: "Select people to add"
         });
         let team = this.plan.team;
         let people_not_in_plan = team.people.filter(p => this.plan.get_assignment_for(p) == null);
@@ -61,7 +61,7 @@ export class PlanDetailsPage {
         }
         for (let p of NamedObject.sortByName(people_not_in_plan)) {
             alert.addInput({
-                type: 'radio',
+                type: 'checkbox',
                 value: p.uuid,
                 label: p.name
             })
@@ -75,10 +75,18 @@ export class PlanDetailsPage {
         });
         alert.addButton({
             text: 'Add',
-            handler: (uuid) => {
-                let person = team.findPersonByUUID(uuid);
-                // Kick off UI with this
-                this.show_assignment(person);
+            handler: (uuids) => {
+                for(let uuid of uuids) {
+                    let person = team.findPersonByUUID(uuid);
+                    this.plan.assignment_for(person);
+                }
+
+                // If just single person added, can edit this directly
+                if(uuids.length == 1) {
+                    // Kick off UI with this
+                    let person = team.findPersonByUUID(uuids[0]);
+                    this.show_assignment(person);
+                }
             }
         });
         alert.present();
@@ -91,7 +99,9 @@ export class PlanDetailsPage {
     show_assignment(person) {
         let assignment = this.plan.get_or_create_assignment_for(person);
         if (assignment) {
+            console.log(`Showing assignment for ${assignment.person.name} and plan ${this.plan.name}`);
             this.navCtrl.push('page-person-assignment', {
+                plan: this.plan,
                 assignment: assignment
             })
         }
