@@ -110,7 +110,6 @@ describe('db', () => {
         mapper.addConfiguration(test_config);
 
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 500;
-        console.log(`MY PROCESS ENV: ${process.env.NODE_ENV}`);
         let config = MockConfigurationService.ServiceForTests();
         SchedulerDatabase.ConstructAndWait(config, mapper).then(new_db => {
             db = new_db;

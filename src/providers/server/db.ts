@@ -30,6 +30,9 @@ enum SavingState {
 
 @Injectable()
 class SchedulerDatabase implements IObjectLoader {
+    get converter(): OrmConverter {
+        return this._converter;
+    }
     save_notifications = new Subject<SavingState>();
     ready_event: Subject<boolean>;
     info: PouchDB.Core.DatabaseInfo;
@@ -42,7 +45,7 @@ class SchedulerDatabase implements IObjectLoader {
     private db_name: string;
     private tracker: ObjectChangeTracker;
     private mapper: OrmMapper;
-    private converter: OrmConverter;
+    private _converter: OrmConverter;
     private cache: IObjectCache;
 
     static ConstructAndWait(configService: ConfigurationService, mapper: OrmMapper): Promise<SchedulerDatabase> {
@@ -59,7 +62,7 @@ class SchedulerDatabase implements IObjectLoader {
         let db_config = configService.getValue("database");
 
         this.mapper = mapper;
-        this.converter = new OrmConverter(this.mapper, this);
+        this._converter = new OrmConverter(this.mapper, this);
         this.db_name = db_config['name'];
         this.logger = LoggingWrapper.getLogger("db");
         PouchDB.plugin(PouchDBFind);
@@ -69,7 +72,9 @@ class SchedulerDatabase implements IObjectLoader {
         this.ready_event = new ReplaySubject();
         this.tracker = new ObjectChangeTracker(this.mapper);
 
-        this.initialize();
+        this.initialize().then(() => {
+            this.logger.debug(`DB initialize() done`);
+        });
 
         // This is so we can output a single stream of 'idle, change waiting, saving/done'
         this.tracker.changes.subscribe(() => {
@@ -147,7 +152,7 @@ class SchedulerDatabase implements IObjectLoader {
         if (doc['type']) {
             let object_type = doc['type'];
             this.persistence_debug(`load object ${id}, type: ${object_type}`, nesting);
-            let instance = await this.converter.async_create_js_object_from_dict(doc, object_type, nesting);
+            let instance = await this._converter.async_create_js_object_from_dict(doc, object_type, nesting);
             return this.trackChanges(instance);
         }
         throw new Error(`Loaded doc from store with id ${id}, but it doesn't have a 'type' field. Don't know how to turn it into an object!`);
@@ -232,13 +237,13 @@ class SchedulerDatabase implements IObjectLoader {
                 }
             }
 
-            let dict_of_object = await this.converter.async_create_dict_from_js_object(object);
+            let dict_of_object = await this._converter.async_create_dict_from_js_object(object);
             dict_of_object = this._convert_add_type_id_and_rev(dict_of_object, object, true);
             this.logger.debug(`About to 'put' dict '${dict_of_object}' from type ${object.type}`);
             try {
                 let response = await this.db.put(dict_of_object);
 
-                this.logger.info(`Stored ${object_state} object ${object.type} with new ID: ${object._id}`);
+                this.logger.debug(`Stored ${object_state} object ${object.type} with new ID: ${object._id}`);
                 if (object._id != response.id) {
                     object._id = response.id;
                 }
@@ -266,7 +271,7 @@ class SchedulerDatabase implements IObjectLoader {
         let list_of_new_things = [];
         for (let doc of all_objects_of_type.docs) {
             let type = doc['type'];
-            let new_object = await this.converter.async_create_js_object_from_dict(doc, type);
+            let new_object = await this._converter.async_create_js_object_from_dict(doc, type);
             if (new_object) {
                 list_of_new_things.push(new_object);
             } else {
@@ -343,7 +348,7 @@ class SchedulerDatabase implements IObjectLoader {
 
     setCache(cache: IObjectCache) {
         this.cache = cache;
-        this.converter.cache = cache;
+        this._converter.cache = cache;
     }
 }
 

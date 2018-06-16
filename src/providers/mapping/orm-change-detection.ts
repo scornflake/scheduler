@@ -199,6 +199,10 @@ class ObjectChangeTracker {
                     //    By getting the actual underlying property value directly, we end up getting the ObservableList.
                     this.tracking_debug(`consider list itself: ${childPath}`);
                     this.installObserverDirectlyOn(owner, value, childPath, listener);
+                } else if (type == MappingType.MapWithReferenceKeys || type == MappingType.MapWithReferenceValues) {
+                    // Track the map itself
+                    this.tracking_debug(`consider map itself: ${childPath}`);
+                    this.installObserverDirectlyOn(owner, value, childPath, listener);
                 }
             } catch (ex) {
                 throw new Error(`Cannot track ${actualPropertyName} on ${childPath}. Does it have an @observable decorator? Type is: ${typeof instance}. ` +

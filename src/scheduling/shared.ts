@@ -6,6 +6,10 @@ import {delete_from_array} from "./common/base_model";
 import {Role} from "./role";
 import {ConditionalRule} from "./rule_based/rules";
 
+interface ICloneable {
+    createClone(): any;
+}
+
 interface IAssignment {
     person: Person;
     name: string;
@@ -271,5 +275,6 @@ export {
     ScheduleAtDate,
     daysBetween,
     ObjectValidation,
-    IAssignment
+    IAssignment,
+    ICloneable
 }

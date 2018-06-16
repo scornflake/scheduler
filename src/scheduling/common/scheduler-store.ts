@@ -4,7 +4,6 @@ import {Team} from "../teams";
 import {Person} from "../people";
 import {Plan} from "../plan";
 import {Role} from "../role";
-import {AssignedToRoleCondition} from "../rule_based/rules";
 import {NamedObject, ObjectWithUUID} from "../base-types";
 
 abstract class GenericManager<T extends NamedObject> {
@@ -36,6 +35,10 @@ abstract class GenericManager<T extends NamedObject> {
         return this.store.items.filter(item => {
             return item.type == this.type;
         });
+    }
+
+    findOfThisTypeByUUID(uuid: string): T {
+        return this.findAllThisType().find(p => p.uuid == uuid);
     }
 
     findThisTypeByName(name: string): T[] {
@@ -138,7 +141,7 @@ class PlansManager extends GenericManager<Plan> {
         return this.findAllThisType();
     }
 
-    get plans_by_date_latest_first(): Array<Plan> {
+    get plansByDateLatestFirst(): Array<Plan> {
         return this.plans.sort(((a, b) => {
             if (a.start_date > b.start_date) {
                 return -1;

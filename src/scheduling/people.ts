@@ -76,11 +76,11 @@ export class Person extends NamedObject {
 
     is_unavailable_on(date: Date) {
         // See if this date is inside the unavailable date ranges
-        console.log(`unavail on : ${date} ?`);
+        // console.log(`unavail on : ${date} ?`);
         for (let unavail of this.unavailable) {
-            console.log(`  - check: ${unavail}`);
+            // console.log(`  - check: ${unavail}`);
             if (unavail.contains_date(date)) {
-                console.log(` - date ${date} is contained in ${unavail}, returning TRUE`);
+                // console.log(` - date ${date} is contained in ${unavail}, returning TRUE`);
                 return true;
             }
         }

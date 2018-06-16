@@ -1,4 +1,4 @@
-<div>
+<div *ngIf="rowMode; else colMode">
     <ion-grid>
         <ion-row>
             <ion-col class="heading" *ngFor="let header of headers">{{header.name|uppercase}}</ion-col>
@@ -19,3 +19,27 @@
         </ion-row>
     </ion-grid>
 </div>
+<ng-template #colMode class="horizSchedule">
+    <!--selector for the date-->
+    <ion-grid class="horizScheduleHeading">
+        <ion-row>
+            <button col-sm-2 col-md-1 (tap)="selectNextDate(-1)">Prev</button>
+            <p text-center col-auto col-sm-8 col-md-10>{{colSelectedDate|date:'longDate'}}</p>
+            <button col-sm-2 col-md-1 (tap)="selectNextDate(1)">next</button>
+        </ion-row>
+    </ion-grid>
+    <ion-grid class="horizSchedulePage">
+        <ion-slides [pager]="true" (ionSlideDidChange)="slideChanged()">
+            <ion-slide *ngFor="let sd of schedule.dates">
+                <ion-row>
+                    <ion-col col-6 text-left>Role</ion-col>
+                    <ion-col col-6 text-left>Who</ion-col>
+                </ion-row>
+                <ion-row *ngFor="let person of sd.people_sorted_by_role_priority.reverse()">
+                    <ion-col col-6 text-left>{{sd.assignment_for_person(person).roles}}</ion-col>
+                    <ion-col col-6 text-left>{{person.name}}</ion-col>
+                </ion-row>
+            </ion-slide>
+        </ion-slides>
+    </ion-grid>
+</ng-template>

@@ -102,7 +102,17 @@ class OrmMapper {
                             inherited = Array.from(inheritedProps.keys());
                             this.logger.debug(`Inherited properties: ${SafeJSON.stringify(inherited)}`);
                         }
-                        actual_properties.forEach(key => {
+                        actual_properties.forEach((key: string) => {
+                            // If it starts with an _, assume it is private. Take it out (we'll discover private as part of sanitize_field)
+                            if (key.startsWith("_")) {
+                                key = key.substr(1);
+                            }
+                            if(cm.exclude) {
+                                if(cm.exclude.indexOf(key) != -1) {
+                                    this.logger.debug(`Ignore ${key}, it's excluded`);
+                                    return;
+                                }
+                            }
                             let field: PropertyMapping = {name: key, type: MappingType.Property};
                             if (inherited.indexOf(key) != -1) {
                                 this.logger.debug(` * skip prop ${cm.name}.${field.name}, inherited`);
@@ -186,12 +196,6 @@ class OrmMapper {
             return field;
         }
 
-        // let isPrivate = field.name.startsWith('_');
-        // if (isPrivate) {
-        //     this.logger.debug(`Field ${field.name} starts with _, assuming it's private and removing leading _`);
-        //     field.name = field.name.substr(1)
-        // }
-
         // Does it exist?
         if (validate_prop_name) {
             if (actual_properties.find(name => name == field.name) == null) {
@@ -223,14 +227,14 @@ class OrmMapper {
     doesTypeInheritFrom(type: string, inherits: string) {
         // does 'other_type' inherit from 'type' at any point?
         let defs = this.definitions.get(type);
-        if(!defs) {
+        if (!defs) {
             throw Error(`Cannot find definitions for type ${type}`);
         }
-        if(!this.definitions.get(inherits)) {
+        if (!this.definitions.get(inherits)) {
             throw Error(`Cannot find definitions for other type ${inherits}, can't test if ${type} is one of those cos I don't know what the other side is`);
         }
-        if(defs.inherit) {
-            if(defs.inherit == inherits) {
+        if (defs.inherit) {
+            if (defs.inherit == inherits) {
                 return true;
             }
             // no? Walk up and see if any super object does

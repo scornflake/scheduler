@@ -33,6 +33,7 @@ type ClassMapping = {
     name: string;
     fields?: (PropertyMapping)[],
     inherit?: string,
+    exclude?: string[],
     factory // always required, because the mapper instantiates objects to check properties
 
 }

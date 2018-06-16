@@ -5,6 +5,7 @@ import {computed} from "mobx-angular";
 import {Person} from "../../scheduling/people";
 import {RootStore} from "../../store/root";
 import {UIStore} from "../../store/UIState";
+import {Observable} from "rxjs/Observable";
 
 @Component({
     selector: 'person-editor',
@@ -14,25 +15,11 @@ export class PersonEditorComponent {
     constructor(private store: RootStore) {
     }
 
-    @computed
-    get schedule(): ScheduleWithRules {
-        return this.store.schedule;
-    }
-
-    @computed
-    get ui(): UIStore {
-        return this.store.ui_store;
-    }
-
-    @computed
-    get person(): Person {
-        return this.store.ui_store.selected_person;
-    }
-
-    scheduled_dates() {
-        // Find a list of schedules for this person
-        return Array.from(this.schedule.dates.values()).filter(v => {
-            return includes(v.people, this.ui.selected_person);
+    scheduled_dates$(): Observable<Array<any>> {
+        return this.store.schedule$.map(schedule => {
+            return Array.from(schedule.dates.values()).filter(v => {
+                return includes(v.people, this.store.ui_store.selected_person);
+            })
         });
     }
 }

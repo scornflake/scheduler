@@ -331,7 +331,7 @@ class OrmConverter {
             // If the doc was NOT new, it means we have an 'old/existing' object that no longer exists.
             // At this present time, fail, and we'll see what this means later (with more use)
             if (!obj.is_new) {
-                throw new Error(`The referenced object ${obj} was not new, it means you have an 'old/existing' object in your graph that no longer exists in the DB.`);
+                throw new Error(`The referenced object ${obj.type}/${obj} was not new, it means you have an 'old/existing' object in your graph that no longer exists in the DB.`);
             }
 
             // Try to store

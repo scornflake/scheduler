@@ -58,6 +58,7 @@
     "lodash": "^4.17.4",
     "mobx": "^4.3.1",
     "mobx-angular": "^3.0.1",
+    "mobx-utils": "^5.0.0",
     "moment": "^2.20.1",
     "ng-circle-progress": "^0.9.9",
     "pouchdb": "^6.4.3",

@@ -11,6 +11,9 @@ import {RootStore} from "../../store/root";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {Plan} from "../../scheduling/plan";
 import {SavedState} from "../../store/UIState";
+import {Observable} from "rxjs/Observable";
+import {computed} from "mobx-angular";
+import {debounceTime} from "rxjs/operators";
 
 
 @IonicPage({
@@ -28,20 +31,20 @@ export class HomePage {
                 private loggingService: LoggingService,
                 private sheetAPI: GAPIS,
                 private server: ServerProvider,
-                public rootStore: RootStore) {
+                public store: RootStore) {
         this.logger = this.loggingService.getLogger("home");
     }
 
     ionViewDidEnter() {
         this.sheetAPI.init();
 
-        let readyEvent = this.rootStore.ready_event;
+        let readyEvent = this.store.ready_event;
         readyEvent.subscribe(value => {
             if (value) {
                 let validateLoginToken = this.server.validateLoginToken();
                 validateLoginToken.subscribe(resp => {
                     this.logger.info(`Validation returned: ${SafeJSON.stringify(resp)}`);
-                    if (!this.rootStore.ui_store.signed_in) {
+                    if (!this.store.ui_store.signed_in) {
                         this.navCtrl.push('login');
                     } else {
 
@@ -54,29 +57,16 @@ export class HomePage {
     }
 
     clear_selection() {
-        this.rootStore.ui_store.clear_selection();
+        this.store.ui_store.clear_selection();
     }
 
-    get saved_state(): SavedState {
-        return this.rootStore.ui_store.saved_state;
+    ssss(thing: any) {
+        return SafeJSON.stringify(thing);
     }
 
-    get selected_plan(): Plan {
-        return this.rootStore.findByUUID(this.saved_state.selected_plan_uuid) as Plan;
-    }
-
-    get selected_plan_uuid(): string {
-        if (this.selected_plan == null) {
-            if (this.plans_by_date_latest_first.length) {
-                this.rootStore.ui_store.select_plan(this.plans_by_date_latest_first[0]);
-            }
-        }
-        return this.rootStore.ui_store.saved_state.selected_plan_uuid;
-    }
-
-    get plans_by_date_latest_first(): Array<Plan> {
+    get plansByDateLatestFirst(): Array<Plan> {
         // Sort by date, latest first
-        return this.rootStore.plans.plans_by_date_latest_first;
+        return this.store.plans.plansByDateLatestFirst;
     }
 
     plan_title(p: Plan): string {
@@ -89,20 +79,20 @@ export class HomePage {
             tab_title: "Select tab to use as previous schedule",
             done: (spreadsheet, sheet, error) => {
                 console.log("Done. Selected sheet: " + spreadsheet.spreadsheetId + ", and tab: " + sheet.properties.title + ", " + sheet.properties.sheetId);
-                this.rootStore.state.previous_sheet_id = spreadsheet.spreadsheetId;
-                this.rootStore.state.previous_sheet_tab_id = sheet.properties.sheetId;
+                this.store.state.previous_sheet_id = spreadsheet.spreadsheetId;
+                this.store.state.previous_sheet_tab_id = sheet.properties.sheetId;
             }
         });
     }
 
     read_as_previous_schedule() {
-        if (this.rootStore.ui_store.saved_state.have_previous_selection) {
-            let sheet_id = this.rootStore.ui_store.saved_state.previous_sheet_id;
+        if (this.store.ui_store.saved_state.have_previous_selection) {
+            let sheet_id = this.store.ui_store.saved_state.previous_sheet_id;
             this.sheetAPI.load_sheet_with_id(sheet_id).subscribe((spreadsheet) => {
-                let sheet = spreadsheet.sheets.find(s => s.properties.sheetId == this.rootStore.state.previous_sheet_tab_id);
+                let sheet = spreadsheet.sheets.find(s => s.properties.sheetId == this.store.state.previous_sheet_tab_id);
                 this.sheetAPI.read_spreadsheet_data(spreadsheet, sheet).subscribe(rows => {
 
-                    let reader = new SpreadsheetReader(this.rootStore.people);
+                    let reader = new SpreadsheetReader(this.store.people);
                     reader.parse_schedule_from_spreadsheet(rows);
 
                     if (reader.has_problems) {
@@ -115,7 +105,7 @@ export class HomePage {
                         this.logger.info(`Had problems: ${s}`);
                     }
                     this.logger.info("Made schedule!");
-                    this.rootStore.set_previous_schedule(reader.schedule);
+                    this.store.set_previous_schedule(reader.schedule);
                 });
             });
         }
@@ -127,8 +117,8 @@ export class HomePage {
         if (sheet_id) {
             this.sheetAPI.load_sheet_with_id(sheet_id).subscribe((spreadsheet) => {
                 console.log("Loaded the sheet!");
-                let sheet = spreadsheet.sheets.find(s => s.properties.sheetId == this.rootStore.state.google_sheet_tab_id);
-                this.sheetAPI.clear_and_write_schedule(spreadsheet, sheet, this.rootStore.schedule);
+                let sheet = spreadsheet.sheets.find(s => s.properties.sheetId == this.store.state.google_sheet_tab_id);
+                this.sheetAPI.clear_and_write_schedule(spreadsheet, sheet, this.store.schedule);
             }, (error) => {
                 console.log("Error loading sheet: " + error);
             });
@@ -143,8 +133,8 @@ export class HomePage {
                 title: "Select sheet to export into",
                 tab_title: "Select tab to export into",
                 done: (spreadsheet, sheet, error) => {
-                    this.rootStore.state.google_sheet_id = spreadsheet.spreadsheetId;
-                    this.rootStore.state.google_sheet_tab_id = sheet.properties.sheetId;
+                    this.store.state.google_sheet_id = spreadsheet.spreadsheetId;
+                    this.store.state.google_sheet_tab_id = sheet.properties.sheetId;
                     console.log("Done. Selected sheet: " + spreadsheet.spreadsheetId + ", and tab: " + sheet.properties.title);
                 }
             });
@@ -152,11 +142,11 @@ export class HomePage {
     }
 
     clear_sheet_state() {
-        this.rootStore.ui_store.clear_sheet_state();
+        this.store.ui_store.clear_sheet_state();
     }
 
     export_as_csv() {
-        let exporter = new CSVExporter(this.rootStore.schedule);
+        let exporter = new CSVExporter(this.store.schedule);
         exporter.write_to_file("schedule.csv");
     }
 

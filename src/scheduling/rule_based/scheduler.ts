@@ -11,17 +11,20 @@ import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Role} from "../role";
 
 class ScheduleWithRules {
-    service: Plan;
+    plan: Plan;
     facts: RuleFacts;
     free_text: {};
 
     private logger: Logger;
     private previous_scheduler: ScheduleWithRules;
 
-    constructor(service: Plan, previous: ScheduleWithRules = null) {
+    constructor(plan: Plan, previous: ScheduleWithRules = null) {
+        if (!plan) {
+            throw new Error(`no plan given to the SchedulerWithRules`);
+        }
         this.logger = LoggingWrapper.getLogger('scheduler');
-        this.service = service;
-        this.service.validate();
+        this.plan = plan;
+        this.plan.validate();
         this.free_text = {};
         if (previous) {
             this.warmup_using(previous);
@@ -33,19 +36,23 @@ class ScheduleWithRules {
         return this.facts.schedule_dates;
     }
 
+    scheduleForDate(date: Date): ScheduleAtDate {
+        return this.facts.get_schedule_for_date(date);
+    }
+
     get assignments(): Array<Assignment> {
-        return this.service.assignments;
+        return this.plan.assignments;
     }
 
     create_schedule() {
-        if (!this.service) {
+        if (!this.plan) {
             throw new Error("No service defined, cannot create the schedule");
         }
-        let schedule_duration = this.service.schedule_duration_in_days;
-        this.logger.info("Working from " + this.service.start_date + " to: " + this.service.end_date);
+        let schedule_duration = this.plan.schedule_duration_in_days;
+        this.logger.info("Working from " + this.plan.start_date + " to: " + this.plan.end_date);
         this.logger.debug("Schedule is " + schedule_duration + " days long");
 
-        let role_groups = this.service.roles_in_layout_order_grouped;
+        let role_groups = this.plan.roles_in_layout_order_grouped;
         let role_names = role_groups.map(g => SafeJSON.stringify(g.map(r => r.name)));
         this.logger.debug("Roles (in order of importance): " + SafeJSON.stringify(role_names));
 
@@ -59,13 +66,13 @@ class ScheduleWithRules {
     process_role_group(role_group: Array<Role>) {
         this.facts.begin_new_role_group(role_group);
 
-        let current_date = this.service.start_date;
+        let current_date = this.plan.start_date;
         this.logger.debug("\r\nNext group: " + SafeJSON.stringify(role_group.map(r => r.name)));
 
         // Iterate through all dates
         let iterations = 0;
 
-        while (current_date.valueOf() <= this.service.end_date.valueOf()) {
+        while (current_date.valueOf() <= this.plan.end_date.valueOf()) {
             this.logger.debug("Next date: " + current_date);
 
             for (let role of role_group) {
@@ -129,7 +136,7 @@ class ScheduleWithRules {
         }
 
         // For this date, try to layout all people
-        let people_for_this_role = this.service.assignments_with_role(role);
+        let people_for_this_role = this.plan.assignments_with_role(role);
 
         // Setup our available people (which at the beginning, is 'everyone')
         if (people_for_this_role.length == 0) {
@@ -209,13 +216,13 @@ class ScheduleWithRules {
     private choose_next_schedule_date(date: Date): Date {
         let next_date = new Date(date);
         // this.logger.debug("Moving from date ... : " + next_date);
-        next_date.setDate(date.getDate() + this.service.days_per_period);
+        next_date.setDate(date.getDate() + this.plan.days_per_period);
         // this.logger.debug(".... to date ... : " + next_date);
         return next_date;
     }
 
     private clear_working_state() {
-        this.facts = new RuleFacts(this.service);
+        this.facts = new RuleFacts(this.plan);
         if (this.previous_scheduler) {
             this.facts.copyUsageDataFrom(this.previous_scheduler.facts);
             this.logger.info("Taking usage data from previous schedule...");
@@ -230,7 +237,7 @@ class ScheduleWithRules {
         // These 'people' end up being our roles.
         // Thing is, we want to know ALL people, in order...
         // So I think - lets do this for ALL roles first
-        let ordered_roles = this.service.roles_in_layout_order;
+        let ordered_roles = this.plan.roles_in_layout_order;
         let dates = this.facts.schedule_dates;
 
         let rows = [];
@@ -256,7 +263,7 @@ class ScheduleWithRules {
     }
 
     jsonFields(): Array<{ name: string, priority: number }> {
-        let ordered_roles = this.service.roles_in_layout_order;
+        let ordered_roles = this.plan.roles_in_layout_order;
         let field_names = ordered_roles.map(r => {
             return {name: r.name, priority: r.layout_priority};
         });
@@ -311,7 +318,7 @@ class ScheduleWithRules {
     }
 
     private prepare_rules_for_execution() {
-        this.service.assignments.forEach(assignment => {
+        this.plan.assignments.forEach(assignment => {
             assignment.conditional_rules.forEach(a => a.prepare_for_execution());
             assignment.secondary_actions.forEach(a => a.prepare_for_execution());
         });
@@ -319,7 +326,7 @@ class ScheduleWithRules {
 
     private process_secondary_actions() {
         // Check everyone that has secondary actions
-        this.service.assignments.forEach(assignment => {
+        this.plan.assignments.forEach(assignment => {
             let secondary_actions = assignment.secondary_actions;
             secondary_actions.forEach(secondary_action => {
                 /*

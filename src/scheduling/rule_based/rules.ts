@@ -37,6 +37,21 @@ class Rule extends TypedObject {
     toString() {
         return this.description;
     }
+
+    // protected createNewCloneInstance() {
+    //     return new Rule();
+    // }
+    //
+    // private applyThisToClone(instance: Rule) {
+    //
+    // }
+    //
+    // createClone(): any {
+    //     let instance = this.createNewCloneInstance();
+    //     this.applyThisToClone(instance);
+    //     instance.priority = this.priority;
+    //     return instance;
+    // }
 }
 
 class FixedRoleOnDate extends Rule {

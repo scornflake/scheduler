@@ -19,27 +19,30 @@
     <saving-state></saving-state>
 </ion-header>
 
-<ion-content padding>
-    <ion-item id="planselection">
+<ion-content >
+    <ion-item id="planselection" no-padding>
         <ion-label class="hidden-sm-down">Showing Plan</ion-label>
-        <ion-select col-sm col-md-8 text-center
-                    [(ngModel)]="selected_plan_uuid"
+        <ion-select *ngIf="(store.saved_state$ | async) as state"
+                    col-sm col-md-8 text-center
+                    [ngModel]="state.selected_plan_uuid" (ngModelChange)="state.selected_plan_uuid = $event"
                     placeholder="Plan">
-            <ion-option *ngFor="let p of plans_by_date_latest_first"
-                        value="{{p.uuid}}">
+            <ion-option *ngFor="let p of plansByDateLatestFirst" value="{{p.uuid}}"
+                        [selected]="state.selected_plan_uuid == p.uuid">
                 {{p.name}} {{p.start_date|date:'shortDate'}}-{{p.end_date|date:'shortDate'}}
             </ion-option>
         </ion-select>
     </ion-item>
     <ion-grid>
         <ion-row>
-            <ion-col auto>
-                <schedule-viewer [schedule]="rootStore.schedule"></schedule-viewer>
+            <ion-col auto *ngIf="(store.schedule$|async) as schedule">
+                <schedule-viewer [schedule]="schedule"></schedule-viewer>
             </ion-col>
-            <ion-col *ngIf="rootStore.ui_store.have_selection" col-3>
+        </ion-row>
+        <ion-row>
+            <ion-col *ngIf="store.ui_store.have_selection">
                 <person-editor></person-editor>
-                <reasons
-                        [decisions]="rootStore.organization_store.schedule.reasons_for(rootStore.ui_store.selected_person, rootStore.ui_store.selected_date)"
+                <reasons *ngIf="store.schedule$|async as schedule"
+                         [decisions]="schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"
                 >
                 </reasons>
             </ion-col>
@@ -48,20 +51,20 @@
 </ion-content>
 
 <ion-footer>
-    <ion-buttons>
+    <ion-buttons *ngIf="(store.saved_state$ | async) as state">
         <button small ion-button
                 (click)="export_as_csv()">To CSV
         </button>
-        <button small ion-button *ngIf="rootStore.ui_store.saved_state?.have_previous_selection"
+        <button small ion-button *ngIf="state.have_previous_selection"
                 (click)="read_as_previous_schedule()">Read Previous...
         </button>
-        <button small ion-button *ngIf="!rootStore.ui_store.saved_state?.have_previous_selection"
+        <button small ion-button *ngIf="!state.have_previous_selection"
                 (click)="select_previous_schedule()">Select Previous...
         </button>
-        <button small ion-button *ngIf="rootStore.ui_store.signed_in_to_google"
+        <button small ion-button *ngIf="store.ui_store.signed_in_to_google"
                 (click)="export_as_sheets()">Export Sheet...
         </button>
-        <button small ion-button *ngIf="rootStore.ui_store.signed_in_to_google"
+        <button small ion-button *ngIf="store.ui_store.signed_in_to_google"
                 (click)="clear_sheet_state()">Clear State
         </button>
     </ion-buttons>

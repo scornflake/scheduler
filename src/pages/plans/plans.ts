@@ -74,6 +74,15 @@ export class PlansPage {
         this.navCtrl.push('page-plan-details', {plan: plan})
     }
 
+    duplicate_plan(plan: Plan) {
+        let newPlan = this.rootStore.asyncDuplicateExistingPlan('New Plan', plan).then(newPlan => {
+            this.rootStore.plans.add(newPlan);
+            this.show_plan_detail(newPlan);
+            // this.rootStore.async_save_or_update_to_db(newPlan).then(() => {
+            // });
+        });
+    }
+
     delete_plan(plan: Plan) {
         let alert = this.alertCtrl.create({
             message: "Are you sure?",

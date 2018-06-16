@@ -42,8 +42,12 @@ export class ServerProvider {
         return this.http.get(url).map(r => {
             let res = Object.assign(new LoginResponse(), r);
             if (res.ok) {
-                if (res['token'])
-                    this.store.ui_store.saved_state.login_token = res['token'];
+                if (res['token']) {
+                    let token = res['token'];
+                    if (token != this.store.ui_store.saved_state.login_token) {
+                        this.store.ui_store.saved_state.login_token = token;
+                    }
+                }
             }
             return res;
         });

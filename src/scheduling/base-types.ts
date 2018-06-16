@@ -26,7 +26,7 @@ abstract class ObjectWithUUID extends TypedObject {
     constructor(uuid: string = null) {
         super();
         if (uuid == null) {
-            uuid = this.guid();
+            uuid = ObjectWithUUID.guid();
         }
         this.is_new = true;
         this._id = uuid;
@@ -41,12 +41,12 @@ abstract class ObjectWithUUID extends TypedObject {
         }
     }
 
-    guid() {
+    static guid() {
         return this.s4() + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' +
             this.s4() + '-' + this.s4() + this.s4() + this.s4();
     }
 
-    s4() {
+    static s4() {
         return Math.floor((1 + Math.random()) * 0x10000)
             .toString(16)
             .substring(1);

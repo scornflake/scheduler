@@ -24,6 +24,14 @@
         "logLevel": "INFO"
       },
       {
+        "loggerName": "component",
+        "logLevel": "INFO"
+      },
+      {
+        "loggerName": "component.schedule.view",
+        "logLevel": "INFO"
+      },
+      {
         "loggerName": "home",
         "logLevel": "INFO"
       },
@@ -49,7 +57,7 @@
       },
       {
         "loggerName": "db.converter",
-        "logLevel": "INFO"
+        "logLevel": "WARN"
       }
     ],
     "browserConsoleAppender": {

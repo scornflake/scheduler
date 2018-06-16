@@ -1,24 +1,24 @@
 <div>
-    <ion-list>
+    <ion-list *ngIf="(store.ui_store|async) as ui">
         <ion-list-header color="light">Info</ion-list-header>
         <ion-item>
             <ion-label>Name</ion-label>
-            <ion-input [(ngModel)]="store.ui_store.selected_person.name"></ion-input>
+            <ion-input [(ngModel)]="ui.selected_person.name"></ion-input>
         </ion-item>
 
         <ion-list-header color="light">Roles</ion-list-header>
-        <ion-item *ngFor="let role of store.ui_store.selected_person.roles">
+        <ion-item *ngFor="let role of ui.selected_person.roles">
             {{role.name}}
         </ion-item>
 
         <ion-list-header color="light">Schedule On</ion-list-header>
-        <ion-item *ngFor="let sd of scheduled_dates()">
+        <ion-item *ngFor="let sd of scheduled_dates$|async">
             {{sd.date|date}} - {{sd.score_for(person).roles|pluck:'name'|join:", "}}
         </ion-item>
 
         <ion-list-header color="light">Unavailable</ion-list-header>
-        <ion-item *ngFor="let u of store.ui_store.selected_person.unavailable_by_date">
-            <div *ngIf="u.is_date_range">{{u.from_date|date}} to {{u.to_date|date}} </div>
+        <ion-item *ngFor="let u of ui.selected_person.unavailable_by_date">
+            <div *ngIf="u.is_date_range">{{u.from_date|date}} to {{u.to_date|date}}</div>
             <div *ngIf="!u.is_date_range">{{u.from_date|date}}</div>
         </ion-item>
     </ion-list>

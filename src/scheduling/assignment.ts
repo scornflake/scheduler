@@ -5,7 +5,7 @@ import {check_if_undefined, delete_from_array} from "./common/base_model";
 import {dayAndHourForDate} from "./common/date-utils";
 import {Role} from "./role";
 import {IAssignment} from "./shared";
-import {ObjectWithUUID, TypedObject} from "./base-types";
+import {ObjectWithUUID} from "./base-types";
 
 class Assignment extends ObjectWithUUID implements IAssignment {
     @observable person: Person;

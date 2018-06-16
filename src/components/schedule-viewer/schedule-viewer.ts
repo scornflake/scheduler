@@ -1,11 +1,14 @@
-import {ApplicationRef, Component, Input} from '@angular/core';
+import {ApplicationRef, Component, Input, ViewChild} from '@angular/core';
 import {isArray} from "util";
 import {Person} from "../../scheduling/people";
-import {PopoverController} from "ionic-angular";
+import {PopoverController, Slides} from "ionic-angular";
 import {ReasonsComponent} from "../reasons/reasons";
 import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
 import {computed} from "mobx-angular";
 import {RootStore} from "../../store/root";
+import {ScheduleAtDate} from "../../scheduling/shared";
+import {LoggingWrapper} from "../../common/logging-wrapper";
+import {Logger} from "ionic-logging-service";
 
 @Component({
     // changeDetection: ChangeDetectionStrategy.OnPush,
@@ -13,12 +16,46 @@ import {RootStore} from "../../store/root";
     templateUrl: 'schedule-viewer.html'
 })
 export class ScheduleViewerComponent {
-    @Input()
-    schedule: ScheduleWithRules;
+    @Input() schedule: ScheduleWithRules;
+
+    @ViewChild(Slides) slides: Slides;
+
+    colSelectedDate: Date;
+    private logger: Logger;
 
     constructor(private store: RootStore,
                 private appRef: ApplicationRef,
                 public popoverCtrl: PopoverController) {
+        this.logger = LoggingWrapper.getLogger('component.schedule.view')
+    }
+
+    ngOnInit() {
+        // if (this.store.ui_store.saved_state.last_selected_date == null) {
+        //     if(this.colSelectableDates) {
+        //         if (this.colSelectableDates.length > 0) {
+        //             this.logger.info(`Selecting a new default date of: ${this.colSelectableDates[0]}`);
+        //             this.store.ui_store.saved_state.last_selected_date = this.colSelectableDates[0];
+        //         }
+        //     }
+        // }
+        this.colSelectedDate = this.store.ui_store.saved_state.last_selected_date;
+        if (!this.colSelectedDate) {
+            if (this.schedule) {
+                this.colSelectedDate = this.schedule.dates[0].date;
+            }
+        }
+    }
+
+    get colSelectableDates(): Date[] {
+        return this.schedule.dates.map(sd => sd.date);
+    }
+
+    get colSelectedSchedule(): ScheduleAtDate {
+        return this.schedule.scheduleForDate(this.colSelectedDate);
+    }
+
+    get rowMode(): boolean {
+        return false;
     }
 
     @computed
@@ -71,7 +108,7 @@ export class ScheduleViewerComponent {
         if (!person) {
             return false;
         }
-        let role = this.store.draft_service.find_role(role_name);
+        let role = this.schedule.plan.find_role(role_name);
         if (!role) {
             return false;
         }
@@ -97,13 +134,13 @@ export class ScheduleViewerComponent {
             if (obj.uuid != person.uuid) {
                 return false;
             }
-            return this.store.draft_service.find_role(role_name);
+            return this.schedule.plan.find_role(role_name);
         }
     }
 
     select(obj: Object, date: Date, role_name: string) {
         if (obj instanceof Person) {
-            let role = this.store.draft_service.find_role(role_name);
+            let role = this.schedule.plan.find_role(role_name);
             console.log("Selecting: " + obj + " on " + date.toDateString() + " for " + role.name);
 
             this.store.ui_store.select(obj, date, role);
@@ -131,5 +168,24 @@ export class ScheduleViewerComponent {
             return "Nothing";
         }
         return this.selected_person.name;
+    }
+
+    selectNextDate(offset: number) {
+        // find the next date!
+        let dates = this.schedule.dates.map(sd => sd.date);
+        let currentIndex = dates.indexOf(this.colSelectedDate);
+        if (currentIndex != -1) {
+            let nextIndex = currentIndex + offset;
+            if (nextIndex >= 0 && nextIndex < this.schedule.dates.length) {
+                this.colSelectedDate = this.schedule.dates[nextIndex].date;
+            }
+            this.slides.slideTo(nextIndex);
+        }
+    }
+
+    slideChanged() {
+        // select the correct date for the given sd
+        let currentIndex = this.slides.getActiveIndex();
+        this.colSelectedDate = this.schedule.dates[currentIndex].date;
     }
 }
