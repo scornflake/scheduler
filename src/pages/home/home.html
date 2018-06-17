@@ -19,9 +19,9 @@
     <saving-state></saving-state>
 </ion-header>
 
-<ion-content >
+<ion-content>
     <ion-item id="planselection" no-padding>
-        <ion-label class="hidden-sm-down">Showing Plan</ion-label>
+        <ion-label class="hidden-sm-down" padding-left>Showing Plan</ion-label>
         <ion-select *ngIf="(store.saved_state$ | async) as state"
                     col-sm col-md-8 text-center
                     [ngModel]="state.selected_plan_uuid" (ngModelChange)="state.selected_plan_uuid = $event"
@@ -32,9 +32,9 @@
             </ion-option>
         </ion-select>
     </ion-item>
-    <ion-grid>
+    <ion-grid *ngIf="(store.schedule$|async) as schedule">
         <ion-row>
-            <ion-col auto *ngIf="(store.schedule$|async) as schedule">
+            <ion-col auto>
                 <schedule-viewer [schedule]="schedule"></schedule-viewer>
             </ion-col>
         </ion-row>
@@ -47,25 +47,26 @@
                 </reasons>
             </ion-col>
         </ion-row>
+        <person-schedule [person]="store.loggedInPerson" [schedule]="schedule"></person-schedule>
     </ion-grid>
 </ion-content>
 
 <ion-footer>
-    <ion-buttons *ngIf="(store.saved_state$ | async) as state">
-        <button small ion-button
-                (click)="export_as_csv()">To CSV
-        </button>
-        <button small ion-button *ngIf="state.have_previous_selection"
-                (click)="read_as_previous_schedule()">Read Previous...
-        </button>
-        <button small ion-button *ngIf="!state.have_previous_selection"
-                (click)="select_previous_schedule()">Select Previous...
-        </button>
-        <button small ion-button *ngIf="store.ui_store.signed_in_to_google"
-                (click)="export_as_sheets()">Export Sheet...
-        </button>
-        <button small ion-button *ngIf="store.ui_store.signed_in_to_google"
-                (click)="clear_sheet_state()">Clear State
-        </button>
-    </ion-buttons>
+    <!--<ion-buttons *ngIf="(store.saved_state$ | async) as state">-->
+    <!--<button small ion-button-->
+    <!--(click)="export_as_csv()">To CSV-->
+    <!--</button>-->
+    <!--<button small ion-button *ngIf="state.have_previous_selection"-->
+    <!--(click)="read_as_previous_schedule()">Read Previous...-->
+    <!--</button>-->
+    <!--<button small ion-button *ngIf="!state.have_previous_selection"-->
+    <!--(click)="select_previous_schedule()">Select Previous...-->
+    <!--</button>-->
+    <!--<button small ion-button *ngIf="store.ui_store.signed_in_to_google"-->
+    <!--(click)="export_as_sheets()">Export Sheet...-->
+    <!--</button>-->
+    <!--<button small ion-button *ngIf="store.ui_store.signed_in_to_google"-->
+    <!--(click)="clear_sheet_state()">Clear State-->
+    <!--</button>-->
+    <!--</ion-buttons>-->
 </ion-footer>

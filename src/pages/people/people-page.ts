@@ -47,7 +47,7 @@ export class PeoplePage {
 
     private add_person(new_person: Person) {
         this.rootStore.people.add(new_person);
-        this.rootStore.async_save_or_update_to_db(new_person).then(() => {
+        this.rootStore.asyncSaveOrUpdateDb(new_person).then(() => {
             console.log("Added to DB");
         });
     }

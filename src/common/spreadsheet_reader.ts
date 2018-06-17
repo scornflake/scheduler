@@ -8,16 +8,16 @@ import {LoggingWrapper} from "./logging-wrapper";
 import {SafeJSON} from "./json/safe-stringify";
 import {Plan} from "../scheduling/plan";
 import {Team} from "../scheduling/teams";
-import {PeopleManager} from "../scheduling/common/scheduler-store";
+import {PersonManager} from "../scheduling/common/scheduler-store";
 import {NPBCStoreConstruction} from "../tests/test.store";
 
 export class SpreadsheetReader {
     problems: Map<string, Set<string>>;
     schedule: ScheduleWithRules;
     private logger: Logger;
-    private people: PeopleManager;
+    private people: PersonManager;
 
-    constructor(ppl_manager: PeopleManager) {
+    constructor(ppl_manager: PersonManager) {
         this.problems = new Map<string, Set<string>>();
         this.logger = LoggingWrapper.getLogger("spreadsheet.reader");
         this.people = ppl_manager;

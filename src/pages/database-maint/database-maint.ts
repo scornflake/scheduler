@@ -107,7 +107,7 @@ export class DatabaseMaintPage {
     get stats() {
         let teams = this.rootStore.teams;
         return [
-            {label: 'Num orgs', value: this.rootStore.organization ? 1 : 0},
+            {label: 'Num orgs', value: this.rootStore.organizations.length},
             {label: 'Num roles', value: this.rootStore.roles.length},
             {label: 'Num people', value: this.rootStore.people.length},
             {label: 'Num plans', value: this.rootStore.plans.length},
@@ -116,18 +116,18 @@ export class DatabaseMaintPage {
     }
 
     async store_fake_data() {
-        /*
-        Need an organization
-         */
-        if (!this.rootStore.organization) {
-            this.rootStore.organization = new Organization("North Porirua Baptist Church");
-            await this.db.async_store_or_update_object(this.rootStore.organization);
-            this.pageUtils.show_message("Added default org");
-        }
-
         // This gets us the people.
         // NOTE: This sets up default availability. No 'unavailable' tho.
         let people_added = NPBCStoreConstruction.SetupPeople(this.rootStore.people);
+        let neil = this.rootStore.people.findByNameFuzzy("Neil Clayton");
+        if(neil) {
+            if(!neil.organization) {
+                neil.organization = new Organization("North Porirua Baptist Church");
+                this.pageUtils.show_message("Added org to neil");
+                await this.db.async_store_or_update_object(neil.organization);
+                await this.db.async_store_or_update_object(neil);
+            }
+        }
 
         /*
         Teams need people!

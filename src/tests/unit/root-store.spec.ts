@@ -36,26 +36,26 @@ describe('root store', () => {
             db = new_db;
             db.setCache(cache);
 
-            store = new RootStore(db, null, null);
+            store = new RootStore(db, null);
             done();
         });
     });
 
     it('should be able to clone a plan', function (done) {
-        store.async_save_or_update_to_db(team).then(() => {
+        store.asyncSaveOrUpdateDb(team).then(() => {
 
             // Lets give it some meaningful data
             plan.assignment_for(neil).add_role(defaultSoundRole);
             plan.assignment_for(neil).add_role(defaultSaxRole, 4);
 
             // Store this plan so it's live in the db
-            store.async_save_or_update_to_db(plan).then(() => {
+            store.asyncSaveOrUpdateDb(plan).then(() => {
                 console.log(`Stored original plan`);
                 store.asyncDuplicateExistingPlan('New Plan', plan).then((duplicated: Plan) => {
                     console.log(`Got back a duplicated plan!`);
                     expect(duplicated.name).toEqual('New Plan');
                     expect(duplicated.uuid).not.toEqual(plan.uuid);
-                        store.async_save_or_update_to_db(duplicated).then(() => {
+                        store.asyncSaveOrUpdateDb(duplicated).then(() => {
                             console.log(`Stored the duplicated plan`);
                             done();
                         });

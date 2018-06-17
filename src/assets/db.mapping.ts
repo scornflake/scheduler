@@ -44,7 +44,8 @@ let scheduler_db_map: ClassFieldMapping = {
                 {name: 'phone'},
                 {name: 'email'},
                 {name: 'availability', type: MappingType.Reference},
-                {name: 'unavailable', type: MappingType.NestedObjectList}
+                {name: 'unavailable', type: MappingType.NestedObjectList},
+                {name: 'organization', type: MappingType.Reference}
             ],
             inherit: 'NamedObject',
             factory: () => new Person()

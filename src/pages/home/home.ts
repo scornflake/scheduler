@@ -6,14 +6,11 @@ import {SheetSelectionPage} from "../sheet-selection/sheet-selection";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {toJS} from "mobx";
 import {SpreadsheetReader} from "../../common/spreadsheet_reader";
-import {ServerProvider} from "../../providers/server/server";
+import {RESTServer} from "../../providers/server/server";
 import {RootStore} from "../../store/root";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {Plan} from "../../scheduling/plan";
-import {SavedState} from "../../store/UIState";
-import {Observable} from "rxjs/Observable";
-import {computed} from "mobx-angular";
-import {debounceTime} from "rxjs/operators";
+import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 
 
 @IonicPage({
@@ -30,9 +27,9 @@ export class HomePage {
     constructor(public navCtrl: NavController,
                 private loggingService: LoggingService,
                 private sheetAPI: GAPIS,
-                private server: ServerProvider,
+                private server: SchedulerServer,
                 public store: RootStore) {
-        this.logger = this.loggingService.getLogger("home");
+        this.logger = this.loggingService.getLogger("page.home");
     }
 
     ionViewDidEnter() {
@@ -42,17 +39,15 @@ export class HomePage {
         readyEvent.subscribe(value => {
             if (value) {
                 let validateLoginToken = this.server.validateLoginToken();
-                validateLoginToken.subscribe(resp => {
+                validateLoginToken.then(resp => {
                     this.logger.info(`Validation returned: ${SafeJSON.stringify(resp)}`);
-                    if (!this.store.ui_store.signed_in) {
+                    if (!this.store.ui_store.signed_in || true) {
                         this.navCtrl.push('login');
                     } else {
 
                     }
                 });
             }
-
-
         });
     }
 

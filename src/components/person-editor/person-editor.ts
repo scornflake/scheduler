@@ -1,10 +1,6 @@
 import {Component} from '@angular/core';
 import includes from 'lodash/includes';
-import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
-import {computed} from "mobx-angular";
-import {Person} from "../../scheduling/people";
 import {RootStore} from "../../store/root";
-import {UIStore} from "../../store/UIState";
 import {Observable} from "rxjs/Observable";
 
 @Component({
@@ -14,6 +10,7 @@ import {Observable} from "rxjs/Observable";
 export class PersonEditorComponent {
     constructor(private store: RootStore) {
     }
+
 
     scheduled_dates$(): Observable<Array<any>> {
         return this.store.schedule$.map(schedule => {

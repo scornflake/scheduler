@@ -16,11 +16,23 @@
         "logLevel": "WARN"
       },
       {
+        "loggerName": "service",
+        "logLevel": "INFO"
+      },
+      {
+        "loggerName": "service.store",
+        "logLevel": "INFO"
+      },
+      {
         "loggerName": "model",
         "logLevel": "INFO"
       },
       {
         "loggerName": "page",
+        "logLevel": "INFO"
+      },
+      {
+        "loggerName": "page.home",
         "logLevel": "INFO"
       },
       {
@@ -32,16 +44,8 @@
         "logLevel": "INFO"
       },
       {
-        "loggerName": "home",
-        "logLevel": "INFO"
-      },
-      {
         "loggerName": "google",
         "logLevel": "WARN"
-      },
-      {
-        "loggerName": "store",
-        "logLevel": "INFO"
       },
       {
         "loggerName": "db",

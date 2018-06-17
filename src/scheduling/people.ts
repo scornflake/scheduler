@@ -8,13 +8,17 @@ import {observable} from "mobx-angular";
 import {ObjectValidation} from "./shared";
 import {ObjectUtils} from "../pages/page-utils";
 import {NamedObject} from "./base-types";
+import {Organization} from "./organization";
 
 export class Person extends NamedObject {
     @observable email: string;
     @observable phone: string;
-
     @observable _availability: Availability;
     @observable unavailable: Array<Unavailability>;
+    @observable organization: Organization;
+
+    // Set when this user logs in
+    serverId: number;
 
     constructor(name: string = "put name here") {
         super(name);
@@ -92,7 +96,14 @@ export class Person extends NamedObject {
     }
 
     valueOf() {
-        return this.name;
+        let idents = [];
+        if(this.name) {
+            idents.push(this.name);
+        }
+        if(this.email) {
+            idents.push(this.email);
+        }
+        return idents.join(', ');
     }
 
     validate(): ObjectValidation {

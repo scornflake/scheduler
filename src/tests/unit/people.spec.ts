@@ -2,14 +2,14 @@ import {Person} from "../../scheduling/people";
 import {csd} from "../../scheduling/common/date-utils";
 import {Plan} from "../../scheduling/plan";
 import {Team} from "../../scheduling/teams";
-import {PeopleManager, SchedulerObjectStore} from "../../scheduling/common/scheduler-store";
+import {PersonManager, SchedulerObjectStore} from "../../scheduling/common/scheduler-store";
 import {AvailabilityEveryNOfM} from "../../scheduling/availability";
 import {SafeJSON} from "../../common/json/safe-stringify";
 
 describe('people', () => {
     let schedulerObjectStore: SchedulerObjectStore;
     let firstPerson: Person;
-    let person_store: PeopleManager;
+    let person_store: PersonManager;
     let plan: Plan;
     let someDate: Date = new Date(2010, 10, 3);
 

@@ -33,7 +33,7 @@ export class TeamsPage {
         this.show_team_detail(team, (add: boolean) => {
             if (add) {
                 this.rootStore.teams.add(team);
-                this.rootStore.async_save_or_update_to_db(team).then(() => {
+                this.rootStore.asyncSaveOrUpdateDb(team).then(() => {
                     console.log("Added to DB")
                 })
             }

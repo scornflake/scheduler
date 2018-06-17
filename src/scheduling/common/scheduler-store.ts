@@ -80,7 +80,7 @@ class RoleManager extends GenericManager<Role> {
     }
 }
 
-class PeopleManager extends GenericManager<Person> {
+class PersonManager extends GenericManager<Person> {
     constructor(store) {
         super(store, 'Person');
     }
@@ -91,6 +91,10 @@ class PeopleManager extends GenericManager<Person> {
 
     findByNameFuzzy(name: string) {
         return find_object_with_name(this.people, name, true);
+    }
+
+    findByEmail(email: string) {
+        return this.people.find(p => p.email == email);
     }
 
     remove(person: Person) {
@@ -163,22 +167,26 @@ class PlansManager extends GenericManager<Plan> {
 }
 
 class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
-    private peopleManager: PeopleManager;
+    private peopleManager: PersonManager;
     private teamManager: TeamManager;
     private plansManager: PlansManager;
     private rolesManager: RoleManager;
-
-    organization: Organization;
+    private organizationManager: OrganizationManager;
 
     constructor() {
         super();
-        this.peopleManager = new PeopleManager(this);
+        this.peopleManager = new PersonManager(this);
         this.teamManager = new TeamManager(this);
         this.rolesManager = new RoleManager(this);
         this.plansManager = new PlansManager(this);
+        this.organizationManager = new OrganizationManager(this);
     }
 
-    get people(): PeopleManager {
+    get organizations(): OrganizationManager {
+        return this.organizationManager;
+    }
+
+    get people(): PersonManager {
         return this.peopleManager;
     }
 
@@ -269,7 +277,7 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
 
 export {
     SchedulerObjectStore,
-    PeopleManager,
+    PersonManager,
     GenericManager,
     OrganizationManager,
     TeamManager

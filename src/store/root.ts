@@ -4,14 +4,13 @@ import {Logger} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
 import {share, take} from "rxjs/operators";
 import {SafeJSON} from "../common/json/safe-stringify";
-import {IReactionDisposer, observable, toJS} from "mobx";
+import {observable, toJS} from "mobx";
 import {Plan} from "../scheduling/plan";
 import {SchedulerDatabase} from "../providers/server/db";
 import {Team} from "../scheduling/teams";
 import {ObjectWithUUID} from "../scheduling/base-types";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {Person} from "../scheduling/people";
-import {PageUtils} from "../pages/page-utils";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import {SchedulerObjectStore} from "../scheduling/common/scheduler-store";
 import {Organization} from "../scheduling/organization";
@@ -27,23 +26,22 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
     @observable private _ui_store: UIStore;
 
     ready_event: Observable<boolean>;
+    loggedInPerson: Person;
 
     @observable schedule: ScheduleWithRules;
     @observable previous_schedule: ScheduleWithRules;
 
-    private saving: IReactionDisposer;
     private logger: Logger;
     private savedStateSubject: Subject<SavedState>;
     private scheduleSubject: Subject<ScheduleWithRules>;
     private selectedPlanSubject: Subject<Plan>;
     private uiStoreSubject: Subject<UIStore>;
+    private loggedInPersonSubject: Subject<Person>;
 
-    constructor(public db: SchedulerDatabase,
-                public pageUtils: PageUtils,
-    ) {
+    constructor(public db: SchedulerDatabase) {
         super();
 
-        this.logger = LoggingWrapper.getLogger("store");
+        this.logger = LoggingWrapper.getLogger("service.store");
         this._ui_store = new UIStore();
 
         this.initialize();
@@ -90,13 +88,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
         Can only load stuff when we have our organization (everything depends on that, since it names our shared DB, thus connection to the outside)
          */
 
-        // In our DB, we expect only ONE organization
-        try {
-            this.organization = await this.singleOrgStoredInDB();
-        } catch (e) {
-            this.pageUtils.show_message(`During load(): ${e}`);
-        }
-
+        await this.db.async_load_into_store<Organization>(this.organizations, 'Organization');
         await this.db.async_load_into_store<Person>(this.people, 'Person');
         await this.db.async_load_into_store<Team>(this.teams, 'Team');
         await this.db.async_load_into_store<Plan>(this.plans, 'Plan');
@@ -107,26 +99,27 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
 
             this.logger.info(`Retrieved state: ${SafeJSON.stringify(saved_state)}`);
 
-            // Make sure subject's are alive. In particular the 'defaults' one takes the first change and makes some sanity checks.
-            // We want that 'defaults' one to be alive so it triggers when we first load the state
-            this.startCheckForDefaults();
-
             this._ui_store.saved_state = saved_state as SavedState;
             if (!this._ui_store.saved_state) {
                 this.logger.warn(`Oh oh, saved state wasn't restored. The returned object was a ${saved_state.constructor.name}... Maybe that's != SavedState?  Have reset it to a NEW SavedState instance.`);
                 this._ui_store.saved_state = new SavedState('saved-state');
             }
         } catch (e) {
-            // Make sure subject's are alive. In particular the 'defaults' one takes the first change and makes some sanity checks.
-            // We want that 'defaults' one to be alive so it triggers when we first load the state
-            this.startCheckForDefaults();
-
             this._ui_store.saved_state = new SavedState('saved-state');
             this.logger.error(e);
             this.logger.info("No stored saved state. Starting from fresh.");
-            await this.async_save_or_update_to_db(this._ui_store.saved_state);
-        }
 
+            await this.asyncSaveOrUpdateDb(this._ui_store.saved_state);
+        }
+        this.setInitialState();
+    }
+
+    setInitialState() {
+        // Sort out who the logged in user is (plus this.organization)
+        this.setLoggedInPersonUsingSavedState();
+
+        // We want that 'defaults' one to be alive so it triggers when we first load the state
+        this.checkForDefaults();
     }
 
     get state(): SavedState {
@@ -167,6 +160,28 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
             }).subscribe(this.uiStoreSubject);
         }
         return this.uiStoreSubject;
+    }
+
+    get loggedInPerson$(): Observable<Person> {
+        if (!this.loggedInPersonSubject) {
+            this.loggedInPersonSubject = new Subject<Person>();
+            this.saved_state$.map(state => {
+                this.setLoggedInPersonUsingSavedState();
+                return this.loggedInPerson;
+            }).subscribe(this.loggedInPersonSubject);
+        }
+        return this.loggedInPersonSubject;
+    }
+
+    private setLoggedInPersonUsingSavedState() {
+        let state = this.ui_store.saved_state;
+        if (state.logged_in_person_uuid) {
+            this.loggedInPerson = this.people.findOfThisTypeByUUID(state.logged_in_person_uuid);
+            this.logger.info(`Logged in person = ${this.loggedInPerson}`);
+        } else {
+            this.logger.warn(`Logged in person is None`);
+            this.loggedInPerson = null;
+        }
     }
 
     get saved_state$(): Observable<SavedState> {
@@ -232,7 +247,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
         // }
     }
 
-    async async_save_or_update_to_db(object: ObjectWithUUID) {
+    async asyncSaveOrUpdateDb(object: ObjectWithUUID) {
         return await this.db.async_store_or_update_object(object);
     }
 
@@ -332,30 +347,27 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
         return newPlan;
     }
 
-    private startCheckForDefaults() {
-        this.saved_state$.pipe(take(1)).subscribe(state => {
-            this.logger.info(`Checking to see if we have a default selected plan...`);
-            let planSet = state.selected_plan_uuid != null;
-            let planDoesntExist = planSet && this.plans.findOfThisTypeByUUID(state.selected_plan_uuid) == null;
-            if (!planSet || planDoesntExist) {
-                if (!planSet) {
-                    this.logger.info(`No plan set`);
-                }
-                if (planDoesntExist) {
-                    this.logger.info(`Plan set to ${this._ui_store.saved_state.selected_plan_uuid}, but I can't find that...`);
-                }
-                if (this.plans.plansByDateLatestFirst.length > 0) {
-                    this.logger.info(`Setting default selected plan to: ${this.plans.plansByDateLatestFirst[0].name}`);
-                    this._ui_store.saved_state.selected_plan_uuid = this.plans.plansByDateLatestFirst[0].uuid;
-                } else {
-                    this.logger.info(`Tried to setup a new default plan, but no plans in the DB for us to choose from :(`);
-                }
-            } else {
-                this.logger.info(`Yeh, we do... the default plan is: ${this._ui_store.saved_state.selected_plan_uuid}`)
+    private checkForDefaults() {
+        let state = this.ui_store.saved_state;
+        this.logger.info(`Checking to see if we have a default selected plan...`);
+        let planSet = state.selected_plan_uuid != null;
+        let planDoesntExist = planSet && this.plans.findOfThisTypeByUUID(state.selected_plan_uuid) == null;
+        if (!planSet || planDoesntExist) {
+            if (!planSet) {
+                this.logger.info(`No plan set`);
             }
-        });
-
-        this._ui_store.saved_state = this._ui_store.saved_state;
+            if (planDoesntExist) {
+                this.logger.info(`Plan set to ${this._ui_store.saved_state.selected_plan_uuid}, but I can't find that...`);
+            }
+            if (this.plans.plansByDateLatestFirst.length > 0) {
+                this.logger.info(`Setting default selected plan to: ${this.plans.plansByDateLatestFirst[0].name}`);
+                this._ui_store.saved_state.selected_plan_uuid = this.plans.plansByDateLatestFirst[0].uuid;
+            } else {
+                this.logger.info(`Tried to setup a new default plan, but no plans in the DB for us to choose from :(`);
+            }
+        } else {
+            this.logger.info(`Yeh, we do... the default plan is: ${this._ui_store.saved_state.selected_plan_uuid}`)
+        }
     }
 }
 

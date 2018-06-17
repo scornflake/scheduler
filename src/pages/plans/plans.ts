@@ -54,7 +54,7 @@ export class PlansPage {
                 let team = this.rootStore.findByUUID(uuid) as Team;
                 let plan = this.rootStore.createNewPlan('New Plan', team);
 
-                this.rootStore.async_save_or_update_to_db(plan).then(() => {
+                this.rootStore.asyncSaveOrUpdateDb(plan).then(() => {
                     this.rootStore.plans.add(plan);
                     this.show_plan_detail(plan);
                 });

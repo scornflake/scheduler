@@ -15,6 +15,8 @@ class SavedState extends ObjectWithUUID {
     @observable login_token: string;
     @observable private _selected_plan_uuid: string;
 
+    @observable logged_in_person_uuid: string;
+
     @observable last_selected_date;
     private logger: Logger;
 
@@ -29,7 +31,6 @@ class SavedState extends ObjectWithUUID {
     }
 
     set selected_plan_uuid(value: string) {
-        this.logger.info(`TRY : ${value}`);
         if (value != this._selected_plan_uuid) {
             this.logger.info(`Setting selected to Plan UUID : ${value}`);
             this._selected_plan_uuid = value;

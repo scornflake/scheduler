@@ -12,7 +12,7 @@ import * as _ from 'lodash';
 import {Logger} from "ionic-logging-service";
 import {formatDateForGoogleSpreadsheet} from "../scheduling/common/date-utils";
 import {LoggingWrapper} from "./logging-wrapper";
-import {ServerProvider} from "../providers/server/server";
+import {RESTServer} from "../providers/server/server";
 import {RootStore} from "../store/root";
 import {SavedState, UIStore} from "../store/UIState";
 import Spreadsheet = gapi.client.sheets.Spreadsheet;
@@ -30,7 +30,7 @@ class GAPIS {
     private logger: Logger;
 
     constructor(private rootStore: RootStore,
-                private server: ServerProvider,
+                private server: RESTServer,
                 private appRef: ApplicationRef) {
         this.logger = LoggingWrapper.getLogger("google");
     }

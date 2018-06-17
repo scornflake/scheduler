@@ -7,10 +7,10 @@ import {Plan} from "../../scheduling/plan";
 import {Assignment} from "../../scheduling/assignment";
 import {Team} from "../../scheduling/teams";
 import {Role} from "../../scheduling/role";
-import {PeopleManager, SchedulerObjectStore} from "../../scheduling/common/scheduler-store";
+import {PersonManager, SchedulerObjectStore} from "../../scheduling/common/scheduler-store";
 
 describe('rules', () => {
-    let people_store: PeopleManager;
+    let people_store: PersonManager;
     let state, service;
     let neil: Person, bob: Person, tim: Person;
     let neil_assign: Assignment, bob_assign: Assignment, tim_assign: Assignment;

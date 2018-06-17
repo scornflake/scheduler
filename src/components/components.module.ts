@@ -12,6 +12,8 @@ import {RoleDetailComponent} from './role-detail/role-detail';
 import {RuleDetailsComponent} from './rule-details/rule-details';
 import {PeopleComponent} from './people/people';
 import {SavingStateComponent} from './saving-state/saving-state';
+import { PersonScheduleComponent } from './person-schedule/person-schedule';
+import { PersonUnavailbleComponent } from './person-unavailble/person-unavailble';
 
 @NgModule({
     declarations: [
@@ -26,6 +28,8 @@ import {SavingStateComponent} from './saving-state/saving-state';
         RuleDetailsComponent,
         PeopleComponent,
         SavingStateComponent,
+    PersonScheduleComponent,
+    PersonUnavailbleComponent,
     ],
     imports: [
         IonicModule,
@@ -43,6 +47,8 @@ import {SavingStateComponent} from './saving-state/saving-state';
         RuleDetailsComponent,
         PeopleComponent,
         SavingStateComponent,
+    PersonScheduleComponent,
+    PersonUnavailbleComponent,
     ]
 })
 export class ComponentsModule {

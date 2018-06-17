@@ -19,7 +19,7 @@ import {
 import {Plan} from "../scheduling/plan";
 import {Team} from "../scheduling/teams";
 import {Organization} from "../scheduling/organization";
-import {PeopleManager} from "../scheduling/common/scheduler-store";
+import {PersonManager} from "../scheduling/common/scheduler-store";
 
 
 export class NPBCStoreConstruction {
@@ -226,7 +226,7 @@ export class NPBCStoreConstruction {
             .add_role(defaultComputerRole, 2)
     }
 
-    static SetupPeople(people_store: PeopleManager): Array<Person> {
+    static SetupPeople(people_store: PersonManager): Array<Person> {
         let people_added = [];
 
         function aint(name: string) {

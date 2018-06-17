@@ -1,24 +1,22 @@
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {ConfigurationService} from "ionic-configuration-service";
-import {LoginResponse, ValidationResponse} from "../../common/interfaces";
+import {LoginResponse, OrganizationResponse, UserResponse, ValidationResponse} from "../../common/interfaces";
 import {Observable} from "rxjs/Observable";
 import "rxjs/add/operator/map";
 import {Logger, LoggingService} from "ionic-logging-service";
-import {RootStore} from "../../store/root";
-import {isUndefined} from "util";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import "rxjs/add/observable/from";
 
 @Injectable()
-export class ServerProvider {
+export class RESTServer {
     logger: Logger;
+    loginToken: string;
 
     constructor(public http: HttpClient,
-                public store: RootStore,
                 public loggingService: LoggingService,
                 public config: ConfigurationService) {
-        this.logger = this.loggingService.getLogger("server")
+        this.logger = this.loggingService.getLogger("service.rest")
     }
 
     private server_url(path): string {
@@ -37,38 +35,22 @@ export class ServerProvider {
     }
 
 
-    loginUser(username: string, password: string): Observable<ValidationResponse> {
+    async login(username: string, password: string): Promise<LoginResponse> {
         let url = this.server_url("login/" + `?email=${username}&password=${password}`);
         return this.http.get(url).map(r => {
-            let res = Object.assign(new LoginResponse(), r);
-            if (res.ok) {
-                if (res['token']) {
-                    let token = res['token'];
-                    if (token != this.store.ui_store.saved_state.login_token) {
-                        this.store.ui_store.saved_state.login_token = token;
-                    }
-                }
-            }
-            return res;
-        });
+            return Object.assign(new LoginResponse(), r)
+        }).toPromise();
     }
 
-    validateLoginToken(): Observable<ValidationResponse> {
-        let token = this.store.ui_store.saved_state.login_token;
-        if (isUndefined(token)) {
-            return Observable.from([{ok: false, detail: 'No token is defined', user: null}]);
-        }
-        this.logger.info(`Validating login token: ${SafeJSON.stringify(token)}`);
-        let url = this.server_url("validate_token/?token=" + token);
-        return this.http.get(url).map(r => {
-            let vr: ValidationResponse = {
+    async validateLoginToken(token: string): Promise<ValidationResponse> {
+        let url = this.server_url(`validate_token/?token=${token}`);
+        return await this.http.get(url).map(r => {
+            return {
                 ok: r['ok'],
                 detail: r['detail'],
                 user: r['user']
             };
-            this.store.ui_store.login_token_validated = vr.ok;
-            return vr;
-        })
+        }).toPromise();
     }
 
     // // I wonder, can the client use the servers google token to talk to it?
@@ -92,12 +74,9 @@ export class ServerProvider {
     //
     // }
 
-    get headers() {
-        if (this.store) {
-            if (this.store.ui_store.signed_in) {
-                let token = this.store.ui_store.saved_state.login_token;
-                return new HttpHeaders({'Authorization': `Token ${token}`});
-            }
+    get headers(): HttpHeaders {
+        if (this.loginToken) {
+            return new HttpHeaders({'Authorization': `Token ${this.loginToken}`});
         }
         return null;
     }
@@ -123,4 +102,38 @@ export class ServerProvider {
             return new LoginResponse(false, r['detail']);
         })
     }
+
+    async saveUser(user: object): Promise<UserResponse> {
+        if (!user['id']) {
+            throw new Error(`No ID specified in the user object, ${JSON.stringify(user)}`);
+        }
+        let url = this.server_url(`user/${user['id']}/`);
+        this.logger.info(`Updating user on server with: ${JSON.stringify(user)}`);
+        return Object.assign(new UserResponse(), await this.http.patch(url, user, this.options).toPromise());
+    }
+
+    async updateOrganization(org: OrganizationResponse): Promise<OrganizationResponse> {
+        if (!org.id) {
+            throw new Error(`No ID specified in the organization object, ${JSON.stringify(org)}`);
+        }
+        let url = this.server_url(`organization/${org.id}/`);
+        this.logger.info(`Updating organization on server with: ${JSON.stringify(org)}`);
+        return Object.assign(new OrganizationResponse(), await this.http.patch(url, org, this.options).toPromise());
+    }
+
+    async createOrganization(user: UserResponse): Promise<OrganizationResponse> {
+        let url = this.server_url("organization/");
+        let org: OrganizationResponse = {name: `Organization for ${user.email}`};
+        let options = this.options;
+        this.logger.info(`Creating new organization, ${JSON.stringify(org)}`);
+        return await this.http.post(url, org, options).toPromise() as OrganizationResponse;
+    }
+
+    async getOrganization(organization_id: number): Promise<OrganizationResponse> {
+        let url = this.server_url(`organization/${organization_id}/`);
+        let options = this.options;
+        this.logger.debug(`Getting organization, ${organization_id}`);
+        return await this.http.get(url, options).toPromise() as OrganizationResponse;
+    }
+
 }

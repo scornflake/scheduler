@@ -30,9 +30,6 @@ enum SavingState {
 
 @Injectable()
 class SchedulerDatabase implements IObjectLoader {
-    get converter(): OrmConverter {
-        return this._converter;
-    }
     save_notifications = new Subject<SavingState>();
     ready_event: Subject<boolean>;
     info: PouchDB.Core.DatabaseInfo;
@@ -94,6 +91,10 @@ class SchedulerDatabase implements IObjectLoader {
                 this.logger.info("DB is NOT ready");
             }
         });
+    }
+
+    get converter(): OrmConverter {
+        return this._converter;
     }
 
     async initialize() {

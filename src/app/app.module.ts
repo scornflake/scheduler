@@ -15,7 +15,7 @@ import {TabSelectionPageModule} from "../pages/tab-selection/tab-selection.modul
 import {ConfigurationService} from "ionic-configuration-service";
 import {LoggingService} from "ionic-logging-service";
 import {loadConfiguration} from "./logging-configuration";
-import {ServerProvider} from "../providers/server/server";
+import {RESTServer} from "../providers/server/server";
 import {HomePageModule} from "../pages/home/home.module";
 import {LoginPageModule} from "../pages/login/login.module";
 import {RootStore} from "../store/root";
@@ -31,6 +31,7 @@ import {OrmMapper} from "../providers/mapping/orm-mapper";
 import {scheduler_db_map} from "../assets/db.mapping";
 import {SchedulerObjectStore} from "../scheduling/common/scheduler-store";
 import {SchedulerDatabase} from "../providers/server/db";
+import {SchedulerServer} from "../providers/server/scheduler-server.service";
 
 export function setupMapper(): OrmMapper {
     let mapper = new OrmMapper();
@@ -82,12 +83,13 @@ export function setupMapper(): OrmMapper {
         SplashScreen,
         RootStore,
         PageUtils,
+        SchedulerServer,
         SchedulerDatabase,
         ConfigurationService,
         {provide: ErrorHandler, useClass: IonicErrorHandler},
         LoggingService,
         GAPIS,
-        ServerProvider
+        RESTServer
     ]
 })
 

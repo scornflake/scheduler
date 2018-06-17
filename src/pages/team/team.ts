@@ -59,7 +59,7 @@ export class TeamPage {
     }
 
     add_person_to_team(person: Person) {
-        this.rootStore.async_save_or_update_to_db(person).then((new_person) => {
+        this.rootStore.asyncSaveOrUpdateDb(person).then((new_person) => {
             this.rootStore.people.add(person);
             this.team.add(person);
         });

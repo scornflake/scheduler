@@ -1,12 +1,13 @@
 import {Component} from '@angular/core';
 import {AlertController, IonicPage, Loading, LoadingController, NavController} from 'ionic-angular';
 import {FormBuilder, FormGroup, Validators} from "@angular/forms";
-import {ServerProvider} from "../../providers/server/server";
+import {RESTServer} from "../../providers/server/server";
 import {isDefined} from "ionic-angular/util/util";
 import {Subject} from "rxjs/Subject";
 import "rxjs/add/operator/debounceTime";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {SafeJSON} from "../../common/json/safe-stringify";
+import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 
 class AbstractLoginPage {
     loginForm: FormGroup;
@@ -18,19 +19,19 @@ class AbstractLoginPage {
 
     private _registration_username: string;
     private username_checker: Subject<any>;
-    private logger: Logger;
+    logger: Logger;
 
     constructor(protected nav: NavController,
                 protected alertCtrl: AlertController,
                 protected logService: LoggingService,
-                protected server: ServerProvider,
+                protected bridge: SchedulerServer,
                 protected loadingCtrl: LoadingController) {
         this.registration_error = "";
         this.logger = this.logService.getLogger("page.login.abstract");
 
         this.username_checker = new Subject();
         this.username_checker.debounceTime(500).subscribe(v => {
-            this.check_username()
+            this.checkUsername()
         });
     }
 
@@ -46,12 +47,12 @@ class AbstractLoginPage {
         this.username_checker.next(value)
     }
 
-    private async check_username() {
+    private async checkUsername() {
         let username = this._registration_username;
-        this.logger.info(`Checking that ${username} is ok...`);
+        this.logger.debug(`Checking that ${username} is valid...`);
         if (isDefined(username)) {
             try {
-                this.username_usability = await this.server.isUsernameAvailableAndGood(username).toPromise();
+                this.username_usability = await this.bridge.isUsernameAvailableAndGood(username).toPromise();
             } catch (e) {
                 this.registration_error = SafeJSON.stringify(e);
                 console.log(e);
@@ -123,10 +124,10 @@ export class LoginPage extends AbstractLoginPage {
     constructor(protected nav: NavController,
                 protected alert: AlertController,
                 protected logService: LoggingService,
-                protected server: ServerProvider,
+                protected bridge: SchedulerServer,
                 loading: LoadingController,
                 private formBuilder: FormBuilder) {
-        super(nav, alert, logService, server, loading);
+        super(nav, alert, logService, bridge, loading);
         this.loginForm = this.formBuilder.group({
             'email': ["", [Validators.email, Validators.required]],
             'password': ["", [Validators.required, Validators.minLength(8)]],
@@ -149,9 +150,10 @@ export class LoginPage extends AbstractLoginPage {
 
         // let password = this.registration_password;
         let password = this.loginForm.get('password').value;
-        console.log(`Starting login... using ${username} and ${password}`);
-        this.server.loginUser(username, password).subscribe(({user, ok, detail}) => {
-            console.log(`Login completed ${ok}: ${detail}`);
+        // this.logger.info(`Starting login... using ${username} and ${password}`);
+        this.logger.info(`Starting login for: ${username}`);
+        this.bridge.loginUser(username, password).then(({user, ok, detail}) => {
+            this.logger.info(`Login completed ${ok}: ${detail}`);
             if (!ok) {
                 this.showError(detail);
             } else {
