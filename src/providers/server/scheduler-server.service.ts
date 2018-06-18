@@ -9,12 +9,13 @@ import {Person} from "../../scheduling/people";
 import {Observable} from "rxjs/Observable";
 import {Injectable} from "@angular/core";
 import {Organization} from "../../scheduling/organization";
+import {SchedulerDatabase} from "./db";
 
 @Injectable()
 class SchedulerServer {
     private logger: Logger;
 
-    constructor(public store: RootStore, public restAPI: RESTServer) {
+    constructor(public store: RootStore, public restAPI: RESTServer, public db: SchedulerDatabase) {
         this.logger = LoggingWrapper.getLogger('service.bridge');
     }
 
@@ -65,16 +66,14 @@ class SchedulerServer {
 
     async syncUserWithServer(serverUser: UserResponse): Promise<UserResponse> {
         let localPerson: Person;
+        let munge = false;
         if (!serverUser.uuid) {
             // No UUID set. Assume this is the "munge" scenario.
             // This in theory only happens when I'm testing myself, and have created manual fields on the server
             localPerson = this.store.people.findByEmail(serverUser.email);
+            this.logger.warn(`MUNGE: Going to create a local user in Pouch with ${serverUser.email}`);
             if (localPerson == null) {
-                localPerson = new Person("Your name");
-                localPerson.email = serverUser.email;
-                localPerson.name = [serverUser.first_name, serverUser.last_name].join(" ").trim();
-                localPerson.serverId = serverUser.id;
-                this.store.people.add(localPerson);
+                localPerson = this.createNewPersonFromUserResponse(serverUser);
             } else {
                 if (localPerson.serverId != serverUser.id) {
                     this.logger.info(`Updating local person ${localPerson.email} to have server user ID: ${serverUser.id}`);
@@ -83,22 +82,30 @@ class SchedulerServer {
             }
 
             // Update our local pouch store
-            await this.store.asyncSaveOrUpdateDb(localPerson);
+            this.logger.warn(`MUNGE: Created new local Person ${localPerson}`);
 
             // Update the remote server (with the new users uuid)
-            if(serverUser.uuid != localPerson.uuid) {
+            if (serverUser.uuid != localPerson.uuid) {
                 serverUser.uuid = localPerson.uuid;
                 await this.restAPI.saveUser(serverUser);
+                this.logger.warn(`MUNGE Done. Falling through to rest of init.`);
             }
+            munge = true;
         } else {
             // The user supplied an ID. Does that user exist here?
             localPerson = this.store.people.findOfThisTypeByUUID(serverUser.uuid);
             if (!localPerson) {
-                throw new Error(`Server says this user has ID ${serverUser.uuid} but no such user exists in the loca DB`);
+                // This can happen, when I've deleted the local DB, but NOT the remote. So remote still references UUIDs that no longer exist,
+                this.logger.warn(`Server says this user has ID ${serverUser.uuid} but no such user exists in the local DB`);
+                localPerson = this.createNewPersonFromUserResponse(serverUser);
+                munge = true;
             }
         }
 
-        await this.ensureUserHasOrganization(serverUser, localPerson);
+        await this.savePerson(localPerson);
+        await this.ensureUserHasOrganization(serverUser, localPerson, munge);
+
+        this.store.ui_store.saved_state.logged_in_person_uuid = localPerson.uuid;
 
         // This will setup the loggedInUser, organization, etc. Required for use of the app.
         this.store.setInitialState();
@@ -106,15 +113,24 @@ class SchedulerServer {
         return serverUser;
     }
 
+    private createNewPersonFromUserResponse(serverUser: UserResponse) {
+        let person = new Person("Your name", serverUser.uuid);
+        person.email = serverUser.email;
+        person.name = [serverUser.first_name, serverUser.last_name].join(" ").trim();
+        person.serverId = serverUser.id;
+        this.store.people.add(person);
+        return person;
+    }
+
     /*
-    Organizations 'source of truth' is the server. So queries START there.
+        Organizations 'source of truth' is the server. So queries START there.
 
-    An alternate way to do all this might be for the server to do it, and rely on replication
-    to bring the correct data to the client.  The client makes a single request and waits until the data
-    shows up.
+        An alternate way to do all this might be for the server to do it, and rely on replication
+        to bring the correct data to the client.  The client makes a single request and waits until the data
+        shows up.
 
-    */
-    private async ensureUserHasOrganization(user: UserResponse, localPerson: Person): Promise<Organization> {
+        */
+    private async ensureUserHasOrganization(user: UserResponse, localPerson: Person, munge: boolean): Promise<Organization> {
         // Is there an org associated with us on the server?
         if (!user.organization_id) {
             this.logger.info(`This user doesn't have an organization on the server. Creating one.`);
@@ -139,6 +155,7 @@ class SchedulerServer {
             return org;
         } else {
             // They have an org on the server. Get it.
+            this.logger.info(`User has organization ID: ${user.organization_id}`);
             let orgResponse = await this.restAPI.getOrganization(user.organization_id);
 
             // Wait! the org on the server isn't tied to an org in pouch.
@@ -150,17 +167,25 @@ class SchedulerServer {
             }
 
             // Find the org in pouch
-            let org = await this.store.db.async_load_object_with_id(orgResponse.uuid) as Organization;
+            let org = await this.db.async_load_object_with_id(orgResponse.uuid) as Organization;
             if (!org) {
-                throw new Error(`No organization exists with UUID: ${orgResponse.uuid}`);
+                let message = `No organization exists with UUID: ${orgResponse.uuid}`;
+                if(munge) {
+                    this.logger.warn(message + " ... creating it (part of MUNGE).");
+                    org = new Organization(`Munged org for ${user.email}`);
+                    org._id = orgResponse.uuid;
+                    await this.saveOrganization(org);
+                } else {
+                    throw new Error(message);
+                }
             }
 
             // Make sure the user points at this org.
-            if(!localPerson.organization) {
+            if (!localPerson.organization) {
                 this.logger.info(`Logged in person has no organization. Assigning: ${org.name}`);
                 localPerson.organization = org;
             } else {
-                if(localPerson.organization.uuid != org.uuid) {
+                if (localPerson.organization.uuid != org.uuid) {
                     this.logger.info(`Logged in person has association to wrong org. Assigning to ${org.name}`);
                     localPerson.organization = org;
                 }
@@ -173,9 +198,16 @@ class SchedulerServer {
     private async createNewOrganizationInPouch(name: string): Promise<Organization> {
         // Create this here in Pouch.
         let org = new Organization(name);
-        return await this.store.db.async_store_or_update_object(org) as Organization;
+        return await this.db.async_store_or_update_object(org) as Organization;
     }
 
+    async saveOrganization(organization: Organization): Promise<Organization> {
+        return await this.db.async_store_or_update_object(organization) as Organization;
+    }
+
+    async savePerson(person: Person): Promise<Person> {
+        return await this.db.async_store_or_update_object(person) as Person;
+    }
 }
 
 export {

@@ -40,8 +40,8 @@ export class HomePage {
             if (value) {
                 let validateLoginToken = this.server.validateLoginToken();
                 validateLoginToken.then(resp => {
-                    this.logger.info(`Validation returned: ${SafeJSON.stringify(resp)}`);
-                    if (!this.store.ui_store.signed_in || true) {
+                    if (!resp.ok) {
+                        this.logger.info(`Validation returned: ${SafeJSON.stringify(resp)}`);
                         this.navCtrl.push('login');
                     } else {
 

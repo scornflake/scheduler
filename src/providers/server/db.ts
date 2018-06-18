@@ -21,6 +21,9 @@ import {OrmConverter} from "./orm-converter";
 import {IObjectCache} from "../mapping/cache";
 import Database = PouchDB.Database;
 
+// Put this back in when we move to v7 of Pouch.
+// import plugin from 'pouchdb-adapter-idb';
+
 enum SavingState {
     Idle = 0,  // No changes
     ChangeDetected = 1, // changes were begun
@@ -37,6 +40,8 @@ class SchedulerDatabase implements IObjectLoader {
     logger: Logger;
 
     private db: Database<{}>;
+    private server_db: PouchDB.Database<{}>;
+
     private is_ready: boolean = false;
     private current_indexes: PouchDB.Find.GetIndexesResponse<{}>;
     private db_name: string;
@@ -98,7 +103,11 @@ class SchedulerDatabase implements IObjectLoader {
     }
 
     async initialize() {
-        this.db = await new PouchDB(this.db_name);
+        // Put this back in when we move to v7 of Pouch.
+        // let options = {adapter: 'idb'};
+        // PouchDB.plugin(plugin);
+        let options = {};
+        this.db = await new PouchDB(this.db_name, options);
 
         this.logger.info("Getting DB information");
         this.info = await this.db.info();
@@ -148,13 +157,20 @@ class SchedulerDatabase implements IObjectLoader {
             }
         }
 
-        let doc = await this.db.get(id);
-        this.logger.debug(`Doc for loaded object: ${SafeJSON.stringify(doc)}`);
-        if (doc['type']) {
-            let object_type = doc['type'];
-            this.persistence_debug(`load object ${id}, type: ${object_type}`, nesting);
-            let instance = await this._converter.async_create_js_object_from_dict(doc, object_type, nesting);
-            return this.trackChanges(instance);
+        try {
+            let doc = await this.db.get(id);
+            this.logger.debug(`Doc for loaded object: ${SafeJSON.stringify(doc)}`);
+            if (doc['type']) {
+                let object_type = doc['type'];
+                this.persistence_debug(`load object ${id}, type: ${object_type}`, nesting);
+                let instance = await this._converter.async_create_js_object_from_dict(doc, object_type, nesting);
+                return this.trackChanges(instance);
+            }
+        } catch (err) {
+            if (err.status == 404) {
+                return null;
+            }
+            throw err;
         }
         throw new Error(`Loaded doc from store with id ${id}, but it doesn't have a 'type' field. Don't know how to turn it into an object!`);
     }
@@ -269,12 +285,17 @@ class SchedulerDatabase implements IObjectLoader {
     async async_load_and_create_objects_for_query(query) {
         let all_objects_of_type = await this.db.find(query);
         this.persistence_debug(`Hydrating ${all_objects_of_type.docs.length} objects, for query: ${query}`, 0);
+        return await this.convert_docs_to_objects_and_store_in_cache(all_objects_of_type.docs);
+    }
+
+    async convert_docs_to_objects_and_store_in_cache(docs: Array<any>) {
         let list_of_new_things = [];
-        for (let doc of all_objects_of_type.docs) {
+        for (let doc of docs) {
             let type = doc['type'];
             let new_object = await this._converter.async_create_js_object_from_dict(doc, type);
             if (new_object) {
                 list_of_new_things.push(new_object);
+                this.storeInCache(new_object);
             } else {
                 throw new Error(`Eh? Tried to load a doc ${doc._id}, but got nothing back... Result: '${SafeJSON.stringify(new_object)}'`);
             }
@@ -351,8 +372,40 @@ class SchedulerDatabase implements IObjectLoader {
         this.cache = cache;
         this._converter.cache = cache;
     }
-}
 
+    startReplication(remoteDBName: string) {
+        if (!remoteDBName) {
+            throw new Error(`Cannot begin replication without remote DB name being specified.`);
+        }
+        this.server_db = new PouchDB(`http://localhost:5984/${remoteDBName}`);
+        this.db.sync(this.server_db, {live: true, retry: true})
+            .on('change', (change) => {
+                if (change.direction == 'pull') {
+                    console.log(`Incomming change: ${JSON.stringify(change)}`);
+                    let data = change.change;
+                    let docs = data.docs;
+                    // Want to update existing store using this data, as though we had read it direct from the DB
+                    this.convert_docs_to_objects_and_store_in_cache(docs).then((items) => {
+                        console.log(` ... incoming change (${items.length} docs) processed and stored in DB/cache`);
+                    })
+                } else {
+                    console.log(`Outgoing change: ${JSON.stringify(change)}`);
+                }
+            })
+            .on('paused', (info) => {
+                console.log(`Sync paused`);
+            })
+            .on('complete', (info) => {
+                console.log(`Sync complete, ${JSON.stringify(info)}`);
+            })
+            .on('denied', (info) => {
+                console.log(`Sync denied! ${JSON.stringify(info)}`);
+            })
+            .on('error', (err) => {
+                console.error(`Sync error: ${err}`);
+            });
+    }
+}
 
 export {
     SchedulerDatabase,

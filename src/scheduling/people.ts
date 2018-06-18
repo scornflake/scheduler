@@ -20,8 +20,8 @@ export class Person extends NamedObject {
     // Set when this user logs in
     serverId: number;
 
-    constructor(name: string = "put name here") {
-        super(name);
+    constructor(name: string = "put name here", uuid: string = null) {
+        super(name, uuid);
         this.unavailable = [];
         this.availability = new Availability();
     }
@@ -97,10 +97,10 @@ export class Person extends NamedObject {
 
     valueOf() {
         let idents = [];
-        if(this.name) {
+        if (this.name) {
             idents.push(this.name);
         }
-        if(this.email) {
+        if (this.email) {
             idents.push(this.email);
         }
         return idents.join(', ');

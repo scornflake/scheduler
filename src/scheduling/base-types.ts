@@ -75,8 +75,8 @@ abstract class ObjectWithUUID extends TypedObject {
 class NamedObject extends ObjectWithUUID {
     @observable name: string;
 
-    constructor(name: string = "") {
-        super();
+    constructor(name: string = "", uuid: string = null) {
+        super(uuid);
         this.name = name;
     }
 

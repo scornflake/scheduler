@@ -3,6 +3,7 @@ import {Person} from "../../scheduling/people";
 import {AlertController, NavController} from "ionic-angular";
 import {PageUtils} from "../../pages/page-utils";
 import {ObjectValidation} from "../../scheduling/shared";
+import {NamedObject} from "../../scheduling/base-types";
 
 @Component({
     selector: 'people',
@@ -14,9 +15,19 @@ export class PeopleComponent {
     @Output() delete = new EventEmitter<Person>();
     @Output() person_added = new EventEmitter<Person>();
 
+    name_filter: string = "";
+
     constructor(private navCtrl: NavController,
                 private pageUtils: PageUtils,
                 private alertCtrl: AlertController) {
+    }
+
+    filtered_people(): Array<Person> {
+        let people = NamedObject.sortByName(this.people);
+        if (this.name_filter.length > 0) {
+            people = people.filter(p => p.name.toLowerCase().indexOf(this.name_filter.toLowerCase()) >= 0);
+        }
+        return people;
     }
 
     public show_person_detail(person: Person) {

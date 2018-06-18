@@ -295,6 +295,9 @@ class OrmConverter {
     }
 
     async _convert_object_value_to_dict(mapping, value, nesting: number = 0) {
+        if(value == null) {
+            return null;
+        }
         switch (mapping.type) {
             case MappingType.Reference:
                 return await this._convert_to_reference(mapping, value, nesting + 1);

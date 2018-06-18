@@ -97,7 +97,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
         try {
             let saved_state = await this.db.async_load_object_with_id('saved-state');
 
-            this.logger.info(`Retrieved state: ${SafeJSON.stringify(saved_state)}`);
+            this.logger.debug(`Retrieved state: ${SafeJSON.stringify(saved_state)}`);
 
             this._ui_store.saved_state = saved_state as SavedState;
             if (!this._ui_store.saved_state) {
@@ -106,7 +106,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
             }
         } catch (e) {
             this._ui_store.saved_state = new SavedState('saved-state');
-            this.logger.error(e);
+            this.logger.debug(e);
             this.logger.info("No stored saved state. Starting from fresh.");
 
             await this.asyncSaveOrUpdateDb(this._ui_store.saved_state);
@@ -120,6 +120,25 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
 
         // We want that 'defaults' one to be alive so it triggers when we first load the state
         this.checkForDefaults();
+
+        this.startReplication();
+    }
+
+    private startReplication() {
+        if (this.loggedInPerson) {
+            if (this.loggedInPerson.organization) {
+                if (this.loggedInPerson.organization.uuid) {
+                    this.db.startReplication(`org_${this.loggedInPerson.organization.uuid}`);
+                    this.logger.info("Started replication");
+                } else {
+                    this.logger.warn(`Cannot start replication: Logged in person doesn't have an organization UUID`);
+                }
+            } else {
+                this.logger.warn(`Cannot start replication: Logged in person doesn't have an organization`);
+            }
+        } else {
+            this.logger.warn(`Cannot start replication: No logged in person`);
+        }
     }
 
     get state(): SavedState {
@@ -192,8 +211,12 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
             toStream(() => {
                 // accessAllTheProperties
                 toJS(this._ui_store.saved_state);
-                let foo = this._ui_store.saved_state.selected_plan_uuid;
-                this.logger.info(`Saved state changed... (plan: ${foo})`);
+                if (this._ui_store.saved_state) {
+                    let plan_uuid = this._ui_store.saved_state.selected_plan_uuid;
+                    this.logger.info(`Saved state changed... (plan UUID: ${plan_uuid})`);
+                } else {
+                    this.logger.info(`Saved state is None`);
+                }
                 return this._ui_store.saved_state;
             }).subscribe(this.savedStateSubject);
         }
@@ -218,33 +241,6 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
             });
         }
         return this.selectedPlanSubject;
-    }
-
-    private setup_fake_draft_plan() {
-        return;
-
-        // make up a default team
-        // let team = this.teams.firstThisTypeByName("Default");
-        // if (team) {
-        //     // for testing, create some fake
-        //     if (!this.draft_service) {
-        //         this.draft_service = this.plans.add(new Plan("Sunday Morning Service", team));
-        //         this.draft_service.start_date = csd(2018, 6, 3);
-        //         this.draft_service.end_date = csd(2018, 9, 30);
-        //
-        //         NPBCStoreConstruction.AttachRolesToPlan(this.draft_service);
-        //
-        //         try {
-        //             NPBCStoreConstruction.AddPeopleToPlanWithRoles(this.draft_service, team);
-        //         } catch (e) {
-        //             // oh oh.
-        //             let ve = ObjectValidation.simple("Cannot setup default fake plan. Is the DB OK? " + e.toString().substr(0, 100));
-        //             this.pageUtils.show_validation_error(ve, true);
-        //         }
-        //     }
-        // } else {
-        //     this.pageUtils.show_validation_error(ObjectValidation.simple("Cant do schedule cos no team!"));
-        // }
     }
 
     async asyncSaveOrUpdateDb(object: ObjectWithUUID) {
@@ -363,7 +359,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
                 this.logger.info(`Setting default selected plan to: ${this.plans.plansByDateLatestFirst[0].name}`);
                 this._ui_store.saved_state.selected_plan_uuid = this.plans.plansByDateLatestFirst[0].uuid;
             } else {
-                this.logger.info(`Tried to setup a new default plan, but no plans in the DB for us to choose from :(`);
+                this.logger.info(`Tried to select a default plan, but no plans in the DB for us to choose from :(`);
             }
         } else {
             this.logger.info(`Yeh, we do... the default plan is: ${this._ui_store.saved_state.selected_plan_uuid}`)

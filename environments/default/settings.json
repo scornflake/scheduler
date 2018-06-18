@@ -53,7 +53,7 @@
       },
       {
         "loggerName": "db.mapping",
-        "logLevel": "INFO"
+        "logLevel": "WARN"
       },
       {
         "loggerName": "db.tracking",

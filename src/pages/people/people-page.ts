@@ -15,7 +15,6 @@ import {PageUtils} from "../page-utils";
     templateUrl: 'people-page.html'
 })
 export class PeoplePage {
-    name_filter: string = "";
     @ViewChild('personlist') pc;
     private logger: Logger;
 
@@ -25,14 +24,6 @@ export class PeoplePage {
                 public logService: LoggingService
     ) {
         this.logger = logService.getLogger('page.people');
-    }
-
-    public people(): Array<Person> {
-        let people = NamedObject.sortByName(this.rootStore.people.all);
-        if (this.name_filter.length > 0) {
-            people = people.filter(p => p.name.toLowerCase().indexOf(this.name_filter.toLowerCase()) >= 0);
-        }
-        return people;
     }
 
     public show_person_detail(person: Person) {

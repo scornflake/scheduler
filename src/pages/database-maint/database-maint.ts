@@ -4,13 +4,15 @@ import {SchedulerDatabase} from "../../providers/server/db";
 import {RootStore} from "../../store/root";
 import {PageUtils} from "../page-utils";
 import {Team} from "../../scheduling/teams";
-import {Organization} from "../../scheduling/organization";
 import {OrmMapper} from "../../providers/mapping/orm-mapper";
 import {ClassMapping, PropertyMapping} from "../../providers/mapping/orm-mapper-type";
 import {ObjectValidation} from "../../scheduling/shared";
 import {Plan} from "../../scheduling/plan";
 import {csd} from "../../scheduling/common/date-utils";
 import {NPBCStoreConstruction} from "../../tests/test.store";
+import {LoggingWrapper} from "../../common/logging-wrapper";
+import {Logger} from "ionic-logging-service";
+import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 
 @IonicPage({
     name: 'page-db',
@@ -23,14 +25,17 @@ import {NPBCStoreConstruction} from "../../tests/test.store";
 export class DatabaseMaintPage {
 
     database_type: string = "";
+    private logger: Logger;
 
     constructor(public navCtrl: NavController,
                 public alertCtrl: AlertController,
-                public rootStore: RootStore,
+                public store: RootStore,
+                public server: SchedulerServer,
                 public mapper: OrmMapper,
                 public pageUtils: PageUtils,
                 public navParams: NavParams,
                 public db: SchedulerDatabase) {
+        this.logger = LoggingWrapper.getLogger('page.dbmaint');
     }
 
     ionViewDidLoad() {
@@ -42,7 +47,7 @@ export class DatabaseMaintPage {
                 }
                 this.database_type = type;
             } else {
-                this.database_type = `Unknown`;
+                this.database_type = this.db.info['adapter'] || "Unknown";
             }
         })
     }
@@ -105,12 +110,12 @@ export class DatabaseMaintPage {
     }
 
     get stats() {
-        let teams = this.rootStore.teams;
+        let teams = this.store.teams;
         return [
-            {label: 'Num orgs', value: this.rootStore.organizations.length},
-            {label: 'Num roles', value: this.rootStore.roles.length},
-            {label: 'Num people', value: this.rootStore.people.length},
-            {label: 'Num plans', value: this.rootStore.plans.length},
+            {label: 'Num orgs', value: this.store.organizations.length},
+            {label: 'Num roles', value: this.store.roles.length},
+            {label: 'Num people', value: this.store.people.length},
+            {label: 'Num plans', value: this.store.plans.length},
             {label: 'Num teams', value: teams.length, next: () => this.stats_for_teams(teams.teams)}
         ];
     }
@@ -118,14 +123,15 @@ export class DatabaseMaintPage {
     async store_fake_data() {
         // This gets us the people.
         // NOTE: This sets up default availability. No 'unavailable' tho.
-        let people_added = NPBCStoreConstruction.SetupPeople(this.rootStore.people);
-        let neil = this.rootStore.people.findByNameFuzzy("Neil Clayton");
-        if(neil) {
-            if(!neil.organization) {
-                neil.organization = new Organization("North Porirua Baptist Church");
-                this.pageUtils.show_message("Added org to neil");
-                await this.db.async_store_or_update_object(neil.organization);
-                await this.db.async_store_or_update_object(neil);
+        let people_added = NPBCStoreConstruction.SetupPeople(this.store.people);
+        let neil = this.store.people.findByNameFuzzy("Neil Clayton");
+        if (neil) {
+            if (neil.organization) {
+                if(neil.organization.name != "North Porirua Baptist Church") {
+                    neil.organization.name = "North Porirua Baptist Church";
+                    await this.server.saveOrganization(neil.organization);
+                    this.pageUtils.show_message("Updated org name");
+                }
             }
         }
 
@@ -133,10 +139,10 @@ export class DatabaseMaintPage {
         Teams need people!
         This sets unavailability
          */
-        let teamManager = this.rootStore.teams;
+        let teamManager = this.store.teams;
         let defaultTeam = teamManager.firstThisTypeByName("Default");
         if (!defaultTeam) {
-            defaultTeam = new Team("Default", this.rootStore.people.all);
+            defaultTeam = new Team("Default", this.store.people.all);
             teamManager.add(defaultTeam);
             this.pageUtils.show_message("Added default team");
         }
@@ -144,7 +150,8 @@ export class DatabaseMaintPage {
         NPBCStoreConstruction.SetupTeamUnavailability(defaultTeam);
 
         for (let person of people_added) {
-            await this.db.async_store_or_update_object(person);
+            // this.logger.info(`Saving: ${person}`);
+            await this.server.savePerson(person);
         }
 
         if (people_added.length > 0) {
@@ -159,9 +166,9 @@ export class DatabaseMaintPage {
     private setup_fake_draft_plan(team: Team): Plan {
         // make up a default team
         // for testing, create some fake
-        let plan = this.rootStore.plans.firstThisTypeByName("Sunday Morning Service");
+        let plan = this.store.plans.firstThisTypeByName("Sunday Morning Service");
         if (plan == null) {
-            plan = this.rootStore.plans.add(new Plan("Sunday Morning Service", team));
+            plan = this.store.plans.add(new Plan("Sunday Morning Service", team));
             this.pageUtils.show_message('Adding new default plan')
         }
         plan.start_date = csd(2018, 6, 3);
