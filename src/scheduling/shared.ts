@@ -266,6 +266,10 @@ class ScheduleAtDate {
     can_place_person_in_role(person: Person, role: Role) {
         return this.number_of_people_in_role(role) < role.maximum_wanted;
     }
+
+    is_person_in_role(person: Person, role: Role) {
+        return this.people_in_role(role).indexOf(person) != -1;
+    }
 }
 
 

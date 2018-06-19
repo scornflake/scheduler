@@ -9,6 +9,8 @@ import {RootStore} from "../../store/root";
 import {ScheduleAtDate} from "../../scheduling/shared";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
+import {PageUtils} from "../../pages/page-utils";
+import {Role} from "../../scheduling/role";
 
 @Component({
     // changeDetection: ChangeDetectionStrategy.OnPush,
@@ -17,6 +19,7 @@ import {Logger} from "ionic-logging-service";
 })
 export class ScheduleViewerComponent {
     @Input() schedule: ScheduleWithRules;
+    @Input() me: Person;
 
     @ViewChild(Slides) slides: Slides;
 
@@ -25,6 +28,7 @@ export class ScheduleViewerComponent {
 
     constructor(private store: RootStore,
                 private appRef: ApplicationRef,
+                private pageUtils: PageUtils,
                 public popoverCtrl: PopoverController) {
         this.logger = LoggingWrapper.getLogger('component.schedule.view')
     }
@@ -44,6 +48,10 @@ export class ScheduleViewerComponent {
                 this.colSelectedDate = this.schedule.dates[0].date;
             }
         }
+    }
+
+    get roles(): Array<Role> {
+        return this.schedule.plan.roles;
     }
 
     get colSelectableDates(): Date[] {

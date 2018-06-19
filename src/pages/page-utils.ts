@@ -1,5 +1,5 @@
 import {ObjectValidation} from "../scheduling/shared";
-import {ToastController} from "ionic-angular";
+import {Platform, ToastController} from "ionic-angular";
 import {Injectable} from "@angular/core";
 import deepEqual from "deep-equal";
 import {ToastOptions} from "ionic-angular/components/toast/toast-options";
@@ -7,11 +7,16 @@ import {ToastOptions} from "ionic-angular/components/toast/toast-options";
 
 @Injectable()
 class PageUtils {
-    constructor(private toastController: ToastController) {
+    constructor(private toastController: ToastController,
+                private platform: Platform) {
     }
 
     public show_validation_error(validation: ObjectValidation, stay_open: boolean = false) {
         this.show_alert(validation.errors.join(", "), {cssClass: 'validation'}, stay_open);
+    }
+
+    get small(): boolean {
+        return this.platform.width() <= 576;
     }
 
     public show_error(message: string) {

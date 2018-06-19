@@ -18,6 +18,14 @@
   visibility: hidden !important;
 }
 
+@each $size, $size-value in $screen-breakpoints {
+  .hide-#{$size} {
+    @media (min-width: $size-value) {
+      display: none;
+    }
+  }
+}
+
 .hidden-xs-up {
   display: none !important;
 }

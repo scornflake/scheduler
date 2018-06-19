@@ -13,9 +13,49 @@ schedule-viewer {
     color: white;
   }
 
-  ion-slides {
-    .swiper-slide {
-      font-size: 13px;
+  // no shadows for md buttons please
+  .button-md {
+    box-shadow: none;
+  }
+
+  .horizSchedule {
+
+    .horizScheduleHeading {
+      background: map_get($colors, 'primary');
+      color: map_get($colors, 'light');
+    }
+
+    .horizScheduleGrid {
+      padding-left: 4px;
+      padding-right: 4px;
+
+      ion-slides {
+        .swiper-slide {
+          //font-size: 14px;
+        }
+      }
+
+      ion-col:first-child {
+        border-right: 1px solid lightgrey;
+      }
+
+      ion-col:nth-child(2) {
+        padding-left: 8px;
+      }
+
+      border-bottom: 1px solid lightgrey;
+    }
+
+  }
+
+  .me {
+    font-weight: bold;
+  }
+
+  .people {
+    // This puts commas between the various people in the list
+    span + span:before {
+      content: ", ";
     }
   }
 }

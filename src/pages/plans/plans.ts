@@ -51,13 +51,17 @@ export class PlansPage {
         alert.addButton({
             text: 'Add',
             handler: (uuid) => {
-                let team = this.rootStore.findByUUID(uuid) as Team;
-                let plan = this.rootStore.createNewPlan('New Plan', team);
+                try {
+                    let team = this.rootStore.findByUUID(uuid) as Team;
+                    let plan = this.rootStore.createNewPlan('New Plan', team);
 
-                this.rootStore.asyncSaveOrUpdateDb(plan).then(() => {
-                    this.rootStore.plans.add(plan);
-                    this.show_plan_detail(plan);
-                });
+                    this.rootStore.asyncSaveOrUpdateDb(plan).then(() => {
+                        this.rootStore.plans.add(plan);
+                        this.show_plan_detail(plan);
+                    });
+                } catch(err) {
+                    this.pageUtils.show_error(err);
+                }
             }
         });
         alert.addButton({

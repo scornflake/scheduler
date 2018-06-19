@@ -1,5 +1,5 @@
-<div *ngIf="schedule$|async as sd">
-  <ion-list-header color="light">Schedule On</ion-list-header>
+<div *ngIf="schedule as sd">
+  <ion-list-header color="light">Scheduled On</ion-list-header>
   <ion-item *ngFor="let sd of scheduled_dates">
     {{sd.date|date}} - {{sd.score_for(person).roles|pluck:'name'|join:", "}}
   </ion-item>

@@ -14,6 +14,7 @@ import {PeopleComponent} from './people/people';
 import {SavingStateComponent} from './saving-state/saving-state';
 import { PersonScheduleComponent } from './person-schedule/person-schedule';
 import { PersonUnavailbleComponent } from './person-unavailble/person-unavailble';
+import { PlanDateRangeComponent } from './plan-date-range/plan-date-range';
 
 @NgModule({
     declarations: [
@@ -30,6 +31,7 @@ import { PersonUnavailbleComponent } from './person-unavailble/person-unavailble
         SavingStateComponent,
     PersonScheduleComponent,
     PersonUnavailbleComponent,
+    PlanDateRangeComponent,
     ],
     imports: [
         IonicModule,
@@ -49,6 +51,7 @@ import { PersonUnavailbleComponent } from './person-unavailble/person-unavailble
         SavingStateComponent,
     PersonScheduleComponent,
     PersonUnavailbleComponent,
+    PlanDateRangeComponent,
     ]
 })
 export class ComponentsModule {

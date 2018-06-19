@@ -108,14 +108,17 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
     }
 
     async setupAfterUserLoggedIn() {
-        this.logger.info(`Loading organizations...`);
-        await this.db.async_load_into_store<Organization>(this.organizations, 'Organization', true);
-        this.logger.info(`Loading people...`);
-        await this.db.async_load_into_store<Person>(this.people, 'Person', true);
-        this.logger.info(`Loading teams...`);
-        await this.db.async_load_into_store<Team>(this.teams, 'Team', true);
-        this.logger.info(`Loading plans...`);
-        await this.db.async_load_into_store<Plan>(this.plans, 'Plan', true);
+        let items = await this.db.async_load_into_store<Organization>(this.organizations, 'Organization');
+        this.logger.info(`Loaded ${items.length} organizations...`);
+
+        items = await this.db.async_load_into_store<Person>(this.people, 'Person');
+        this.logger.info(`Loaded ${items.length} people...`);
+
+        items = await this.db.async_load_into_store<Team>(this.teams, 'Team');
+        this.logger.info(`Loaded ${items.length} teams...`);
+
+        items = await this.db.async_load_into_store<Plan>(this.plans, 'Plan');
+        this.logger.info(`Loaded ${items.length} plans...`);
 
         // Sort out who the logged in user is (plus this.organization)
         this.setLoggedInPersonUsingSavedState();
@@ -159,11 +162,13 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
                     this.logger.info(`Regenerating schedule`);
                     let schedule = new ScheduleWithRules(plan, this.previous_schedule);
                     schedule.create_schedule();
+                    // this.scheduleSubject.next(schedule);
                     return schedule;
                 } else {
-                    this.logger.info(`No schedule generated, the provided plan was null`);
+                    this.logger.warn(`No schedule generated, the provided plan was null`);
                 }
-            }, true).subscribe(this.scheduleSubject);
+                return null;
+            }).subscribe(this.scheduleSubject);
         }
         return this.scheduleSubject;
     }
@@ -243,7 +248,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
             }).subscribe(uuid => {
                 let plan = this.plans.findOfThisTypeByUUID(uuid);
                 if (plan) {
-                    // this.logger.debug(`Plan changed to: ${uuid}`);
+                    this.logger.debug(`Plan changed to: ${uuid}`);
                     this.selectedPlanSubject.next(plan);
                 } else {
                     this.logger.info(`selected_plan$ failure - can't find plan with ID: ${uuid}`);
@@ -301,6 +306,9 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
     }
 
     createNewPlan(planName: string, team: Team) {
+        if (team == null) {
+            throw new Error('No team specified');
+        }
         let plan = new Plan(planName, team);
         this.roles.forEach(r => {
             plan.add_role(r);
@@ -372,7 +380,12 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
                 this.logger.info(`Tried to select a default plan, but no plans in the DB for us to choose from :(`);
             }
         } else {
-            this.logger.info(`Yeh, we do... the default plan is: ${this._ui_store.saved_state.selected_plan_uuid}`)
+            this.logger.info(`We do... the default plan is: ${this._ui_store.saved_state.selected_plan_uuid}`);
+
+            // Seems we have to kick the value to make .next() fire on the plan again
+            let temp = this._ui_store.saved_state.selected_plan_uuid;
+            this._ui_store.saved_state.selected_plan_uuid = null;
+            this._ui_store.saved_state.selected_plan_uuid = temp;
         }
     }
 

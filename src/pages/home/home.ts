@@ -13,6 +13,7 @@ import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {action} from "mobx-angular";
 import {Subscription} from "rxjs/Subscription";
 import {LoggingWrapper} from "../../common/logging-wrapper";
+import {PageUtils} from "../page-utils";
 
 
 @IonicPage({
@@ -29,6 +30,7 @@ export class HomePage {
 
     constructor(public navCtrl: NavController,
                 private sheetAPI: GAPIS,
+                private pageUtils: PageUtils,
                 private server: SchedulerServer,
                 private store: RootStore) {
 
@@ -51,9 +53,12 @@ export class HomePage {
         // this.store.saved_state$.subscribe(ss => {
         //     this.logger.warn(`Saved state: ${SafeJSON.stringify(ss)}`)
         // })
+        // this.store.schedule$.subscribe(ss => {
+        //     this.logger.warn(`Schedule: ${SafeJSON.stringify(ss)}`)
+        // })
     }
 
-    set_plan(uuid:string) {
+    set_plan(uuid: string) {
         this.store.ui_store.saved_state.selected_plan_uuid = uuid;
     }
 
@@ -77,10 +82,6 @@ export class HomePage {
 
     clear_selection() {
         this.store.ui_store.clear_selection();
-    }
-
-    ssss(thing: any) {
-        return SafeJSON.stringify(thing);
     }
 
     get plansByDateLatestFirst(): Array<Plan> {

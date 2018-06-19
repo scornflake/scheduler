@@ -2,7 +2,7 @@ import {Component, Input} from '@angular/core';
 import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
 import {RootStore} from "../../store/root";
 import {Person} from "../../scheduling/people";
-import includes from 'lodash/includes';
+import {ScheduleAtDate} from "../../scheduling/shared";
 
 @Component({
     selector: 'person-schedule',
@@ -16,12 +16,12 @@ export class PersonScheduleComponent {
     constructor(public store: RootStore) {
     }
 
-    scheduled_dates(): Array<any> {
+    get scheduled_dates(): Array<ScheduleAtDate> {
+        if (!this.person || !this.schedule) {
+            return [];
+        }
         return this.schedule.dates.filter(schedule => {
-            if (!this.person) {
-                return false;
-            }
-            return includes(schedule.people, this.person);
+            return schedule.people.indexOf(this.person) != -1;
         });
     }
 }
