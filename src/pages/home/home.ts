@@ -44,6 +44,17 @@ export class HomePage {
                 this.check_login();
             }
         });
+
+        // this.store.ui_store$.subscribe(ius => {
+        //     this.logger.warn(`Home Says Signed In: ${ius.signed_in}`);
+        // });
+        // this.store.saved_state$.subscribe(ss => {
+        //     this.logger.warn(`Saved state: ${SafeJSON.stringify(ss)}`)
+        // })
+    }
+
+    set_plan(uuid:string) {
+        this.store.ui_store.saved_state.selected_plan_uuid = uuid;
     }
 
     @action

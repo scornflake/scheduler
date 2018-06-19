@@ -293,23 +293,23 @@ class SchedulerDatabase implements IObjectLoader {
         let list_of_new_things = [];
         for (let doc of docs) {
             let docId = doc['_id'];
-            if(docId.startsWith("_design/")) {
+            if (docId.startsWith("_design/")) {
                 continue;
             }
             let type = doc['type'];
-            if(!type) {
+            if (!type) {
                 this.logger.error(`ERROR processing doc ID: ${docId}. No TYPE information. This was skipped.`);
                 this.logger.error(`DOC was: ${SafeJSON.stringify(doc)}`);
                 continue;
             }
             let new_object = null;
             try {
-                await this._converter.async_create_js_object_from_dict(doc, type);
+                new_object = await this._converter.async_create_js_object_from_dict(doc, type);
                 if (new_object) {
                     list_of_new_things.push(new_object);
                     this.storeInCache(new_object);
                 }
-            } catch(err) {
+            } catch (err) {
                 this.logger.error(`ERROR processing doc ID: ${docId}, ${err}`);
                 this.logger.error(`DOC was: ${SafeJSON.stringify(doc)}`);
             }
@@ -322,18 +322,25 @@ class SchedulerDatabase implements IObjectLoader {
         return await this.async_load_and_create_objects_for_query(query);
     }
 
-    async async_load_into_store<T extends NamedObject>(manager: GenericManager<T>, type: string) {
+    async async_load_into_store<T extends NamedObject>(manager: GenericManager<T>, type: string, log_result: boolean = false) {
         let loaded_objects = await this.async_load_all_objects_of_type(type);
+        if (log_result) {
+            this.logger.info(`Loaded ${loaded_objects.length} objects`);
+        }
+        let added: number = 0;
         loaded_objects.forEach(o => {
             let ooo = o as T;
             if (ooo) {
                 manager.add(ooo);
                 this.trackChanges(ooo);
+                added++;
             } else {
                 this.logger.warn(`Skipped ${o} because its not of the expected type: ${type}`);
             }
         });
-
+        if (log_result) {
+            this.logger.info(`Added ${added} objects to manager`);
+        }
         return loaded_objects;
     }
 
@@ -391,7 +398,7 @@ class SchedulerDatabase implements IObjectLoader {
         if (!remoteDBName) {
             throw new Error(`Cannot begin replication without remote DB name being specified.`);
         }
-        if(this.server_db) {
+        if (this.server_db) {
             this.logger.warn(`Replication already started, ignored`);
         }
         this.server_db = new PouchDB(`http://localhost:5984/${remoteDBName}`);

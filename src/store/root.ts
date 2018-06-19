@@ -108,12 +108,14 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
     }
 
     async setupAfterUserLoggedIn() {
-        this.logger.info(`Setting up app person: ${this.loggedInPerson}`);
-
-        await this.db.async_load_into_store<Organization>(this.organizations, 'Organization');
-        await this.db.async_load_into_store<Person>(this.people, 'Person');
-        await this.db.async_load_into_store<Team>(this.teams, 'Team');
-        await this.db.async_load_into_store<Plan>(this.plans, 'Plan');
+        this.logger.info(`Loading organizations...`);
+        await this.db.async_load_into_store<Organization>(this.organizations, 'Organization', true);
+        this.logger.info(`Loading people...`);
+        await this.db.async_load_into_store<Person>(this.people, 'Person', true);
+        this.logger.info(`Loading teams...`);
+        await this.db.async_load_into_store<Team>(this.teams, 'Team', true);
+        this.logger.info(`Loading plans...`);
+        await this.db.async_load_into_store<Plan>(this.plans, 'Plan', true);
 
         // Sort out who the logged in user is (plus this.organization)
         this.setLoggedInPersonUsingSavedState();
@@ -122,6 +124,8 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
         this.checkForDefaults();
 
         this.startReplication();
+
+        this.logger.info(`App ready for: ${this.loggedInPerson}`);
     }
 
     private startReplication() {
@@ -147,7 +151,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
 
     get schedule$(): Observable<ScheduleWithRules> {
         if (!this.scheduleSubject) {
-            this.scheduleSubject = new Subject<ScheduleWithRules>();
+            this.scheduleSubject = new BehaviorSubject<ScheduleWithRules>(null);
 
             // Subscribe to a change in the plan, generate a new schedule, and then broadcast that
             this.selected_plan$.map(plan => {
@@ -170,7 +174,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
 
     get ui_store$(): Subject<UIStore> {
         if (!this.uiStoreSubject) {
-            this.uiStoreSubject = new Subject<UIStore>();
+            this.uiStoreSubject = new BehaviorSubject<UIStore>(null);
 
             let stream = toStream(() => {
                 // trace();
@@ -187,7 +191,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
 
     get loggedInPerson$(): Observable<Person> {
         if (!this.loggedInPersonSubject) {
-            this.loggedInPersonSubject = new Subject<Person>();
+            this.loggedInPersonSubject = new BehaviorSubject<Person>(null);
             this.saved_state$.map(state => {
                 this.setLoggedInPersonUsingSavedState();
                 return this.loggedInPerson;
@@ -209,7 +213,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
 
     get saved_state$(): Observable<SavedState> {
         if (!this.savedStateSubject) {
-            this.savedStateSubject = new Subject<SavedState>();
+            this.savedStateSubject = new BehaviorSubject<SavedState>(null);
 
             // Observe changes, and send these to the subject
             toStream(() => {
@@ -231,7 +235,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
 
     get selected_plan$(): Observable<Plan> {
         if (!this.selectedPlanSubject) {
-            this.selectedPlanSubject = new Subject<Plan>();
+            this.selectedPlanSubject = new BehaviorSubject<Plan>(null);
 
             // If the selected plan UUID changes, lookup the plan and broadcast the change
             toStream(() => {

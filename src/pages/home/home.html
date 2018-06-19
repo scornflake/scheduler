@@ -22,14 +22,14 @@
 <ion-content>
     <div *ngIf="store.ui_store$|async as ui">
         <div *ngIf="ui.signed_in; else notSignedIn">
-            <ion-item id="planselection" no-padding *ngIf="store.saved_state$ | async as state">
+            <ion-item id="planselection" no-padding *ngIf="store.saved_state$ | async as ss">
                 <ion-label class="hidden-sm-down" padding-left>Showing Plan</ion-label>
                 <ion-select
                         col-sm col-md-8 text-center
-                        [ngModel]="state.selected_plan_uuid" (ngModelChange)="state.selected_plan_uuid = $event"
+                        [ngModel]="ss.selected_plan_uuid" (ngModelChange)="ss.selected_plan_uuid = $event"
                         placeholder="Plan">
                     <ion-option *ngFor="let p of plansByDateLatestFirst" value="{{p.uuid}}"
-                                [selected]="state.selected_plan_uuid == p.uuid">
+                                [selected]="ss.selected_plan_uuid == p.uuid">
                         {{p.name}} {{p.start_date|date:'shortDate'}}-{{p.end_date|date:'shortDate'}}
                     </ion-option>
                 </ion-select>

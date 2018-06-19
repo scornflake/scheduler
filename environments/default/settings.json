@@ -49,7 +49,7 @@
       },
       {
         "loggerName": "db",
-        "logLevel": "INFO"
+        "logLevel": "DEBUG"
       },
       {
         "loggerName": "db.mapping",
