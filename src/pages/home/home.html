@@ -20,38 +20,48 @@
 </ion-header>
 
 <ion-content>
-    <ion-item id="planselection" no-padding>
-        <ion-label class="hidden-sm-down" padding-left>Showing Plan</ion-label>
-        <ion-select *ngIf="(store.saved_state$ | async) as state"
-                    col-sm col-md-8 text-center
-                    [ngModel]="state.selected_plan_uuid" (ngModelChange)="state.selected_plan_uuid = $event"
-                    placeholder="Plan">
-            <ion-option *ngFor="let p of plansByDateLatestFirst" value="{{p.uuid}}"
-                        [selected]="state.selected_plan_uuid == p.uuid">
-                {{p.name}} {{p.start_date|date:'shortDate'}}-{{p.end_date|date:'shortDate'}}
-            </ion-option>
-        </ion-select>
-    </ion-item>
-    <ion-grid *ngIf="(store.schedule$|async) as schedule">
-        <ion-row>
-            <ion-col auto>
-                <schedule-viewer [schedule]="schedule"></schedule-viewer>
-            </ion-col>
-        </ion-row>
-        <ion-row>
-            <ion-col *ngIf="store.ui_store.have_selection">
-                <person-editor></person-editor>
-                <reasons *ngIf="store.schedule$|async as schedule"
-                         [decisions]="schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"
-                >
-                </reasons>
-            </ion-col>
-        </ion-row>
-        <person-schedule [person]="store.loggedInPerson" [schedule]="schedule"></person-schedule>
-    </ion-grid>
+    <div *ngIf="store.ui_store$|async as ui">
+        <div *ngIf="ui.signed_in; else notSignedIn">
+            <ion-item id="planselection" no-padding *ngIf="store.saved_state$ | async as state">
+                <ion-label class="hidden-sm-down" padding-left>Showing Plan</ion-label>
+                <ion-select
+                        col-sm col-md-8 text-center
+                        [ngModel]="state.selected_plan_uuid" (ngModelChange)="state.selected_plan_uuid = $event"
+                        placeholder="Plan">
+                    <ion-option *ngFor="let p of plansByDateLatestFirst" value="{{p.uuid}}"
+                                [selected]="state.selected_plan_uuid == p.uuid">
+                        {{p.name}} {{p.start_date|date:'shortDate'}}-{{p.end_date|date:'shortDate'}}
+                    </ion-option>
+                </ion-select>
+            </ion-item>
+            <ion-grid *ngIf="store.schedule$ | async as schedule">
+                <ion-row>
+                    <ion-col auto>
+                        <schedule-viewer [schedule]="schedule"></schedule-viewer>
+                    </ion-col>
+                </ion-row>
+                <ion-row>
+                    <ion-col *ngIf="store.ui_store.have_selection">
+                        <person-editor></person-editor>
+                        <reasons *ngIf="store.schedule$|async as schedule"
+                                 [decisions]="schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"
+                        >
+                        </reasons>
+                    </ion-col>
+                </ion-row>
+                <person-schedule [person]="store.loggedInPerson" [schedule]="schedule"></person-schedule>
+            </ion-grid>
+        </div>
+        <ng-template #notSignedIn>
+            Please sign in
+        </ng-template>
+    </div>
 </ion-content>
 
 <ion-footer>
+    <ion-buttons>
+        <button small ion-button (tap)="change_state()">Test</button>
+    </ion-buttons>
     <!--<ion-buttons *ngIf="(store.saved_state$ | async) as state">-->
     <!--<button small ion-button-->
     <!--(click)="export_as_csv()">To CSV-->

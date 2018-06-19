@@ -87,9 +87,15 @@ class UIStore {
         this._saved_state = value;
     }
 
+    get foo(): boolean {
+        return true;
+    }
+
     @computed
     get signed_in(): boolean {
-        return this._saved_state.login_token && this.login_token_validated;
+        let value = this._saved_state.login_token && this.login_token_validated;
+        // console.log(`signed in: ${value}, token: ${this._saved_state.login_token}, valid: ${this.login_token_validated}`);
+        return value;
     }
 
     @computed

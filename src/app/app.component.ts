@@ -3,6 +3,7 @@ import {MenuController, Nav, Platform} from 'ionic-angular';
 import {StatusBar} from '@ionic-native/status-bar';
 import {SplashScreen} from '@ionic-native/splash-screen';
 import {HomePage} from "../pages/home/home";
+import {RootStore} from "../store/root";
 
 @Component({
     templateUrl: 'app.html'
@@ -14,6 +15,7 @@ export class MyApp {
     constructor(private platform: Platform,
                 private statusBar: StatusBar,
                 private splashScreen: SplashScreen,
+                private store:RootStore,
                 private menu: MenuController) {
         this.menu.enable(true, 'menu');
         platform.ready().then(() => {
@@ -32,11 +34,20 @@ export class MyApp {
             {title: "Plans", page: 'page-plans'},
             {title: "DB Maint", page: 'page-db'},
             {title: "About", page: 'page-about'},
+            {
+                title: "Logout", function: () => {
+                    this.store.logout();
+                }
+            },
         ]
     }
 
     openPage(p) {
+        if(p.function) {
+            p.function();
+        } else {
+            this.nav.push(p.page);
+        }
         this.menu.close();
-        this.nav.push(p.page);
     }
 }

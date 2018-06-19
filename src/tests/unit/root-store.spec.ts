@@ -36,7 +36,7 @@ describe('root store', () => {
             db = new_db;
             db.setCache(cache);
 
-            store = new RootStore(db, null);
+            store = new RootStore(db);
             done();
         });
     });

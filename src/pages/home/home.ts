@@ -3,14 +3,16 @@ import {IonicPage, NavController} from 'ionic-angular';
 import {CSVExporter} from "../../scheduling/exporter/csv.exporter";
 import {GAPIS} from "../../common/gapis-auth";
 import {SheetSelectionPage} from "../sheet-selection/sheet-selection";
-import {Logger, LoggingService} from "ionic-logging-service";
+import {Logger} from "ionic-logging-service";
 import {toJS} from "mobx";
 import {SpreadsheetReader} from "../../common/spreadsheet_reader";
-import {RESTServer} from "../../providers/server/server";
 import {RootStore} from "../../store/root";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {Plan} from "../../scheduling/plan";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
+import {action} from "mobx-angular";
+import {Subscription} from "rxjs/Subscription";
+import {LoggingWrapper} from "../../common/logging-wrapper";
 
 
 @IonicPage({
@@ -23,30 +25,41 @@ import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 })
 export class HomePage {
     private logger: Logger;
+    private sub: Subscription;
 
     constructor(public navCtrl: NavController,
-                private loggingService: LoggingService,
                 private sheetAPI: GAPIS,
                 private server: SchedulerServer,
-                public store: RootStore) {
-        this.logger = this.loggingService.getLogger("page.home");
+                private store: RootStore) {
+
+        this.logger = LoggingWrapper.getLogger("page.home");
     }
 
-    ionViewDidEnter() {
-        this.sheetAPI.init();
+    ngOnInit() {
+        // this.sheetAPI.init();
 
         let readyEvent = this.store.ready_event;
         readyEvent.subscribe(value => {
             if (value) {
-                let validateLoginToken = this.server.validateLoginToken();
-                validateLoginToken.then(resp => {
-                    if (!resp.ok) {
-                        this.logger.info(`Validation returned: ${SafeJSON.stringify(resp)}`);
-                        this.navCtrl.push('login');
-                    } else {
+                this.check_login();
+            }
+        });
+    }
 
-                    }
-                });
+    @action
+    change_state() {
+        this.store.ui_store.login_token_validated = false;
+        this.store.ui_store.login_token_validated = true;
+    }
+
+    check_login() {
+        let validateLoginToken = this.server.validateLoginToken();
+        validateLoginToken.then(resp => {
+            if (!resp.ok) {
+                this.logger.info(`Validation returned: ${SafeJSON.stringify(resp)}`);
+                this.navCtrl.push('login');
+            } else {
+                this.logger.info(`Validation ok: ${SafeJSON.stringify(resp)}`);
             }
         });
     }

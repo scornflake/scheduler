@@ -32,12 +32,7 @@ import {scheduler_db_map} from "../assets/db.mapping";
 import {SchedulerObjectStore} from "../scheduling/common/scheduler-store";
 import {SchedulerDatabase} from "../providers/server/db";
 import {SchedulerServer} from "../providers/server/scheduler-server.service";
-
-export function setupMapper(): OrmMapper {
-    let mapper = new OrmMapper();
-    mapper.addConfiguration(scheduler_db_map);
-    return mapper;
-}
+import {setupOrmMapper} from "../providers/mapping/setup";
 
 @NgModule({
     declarations: [
@@ -70,7 +65,7 @@ export function setupMapper(): OrmMapper {
     providers: [
         {
             provide: OrmMapper,
-            useFactory: setupMapper,
+            useFactory: setupOrmMapper,
             deps: [],
         },
         {

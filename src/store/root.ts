@@ -2,7 +2,6 @@ import {SavedState, UIStore} from "./UIState";
 import {Injectable} from "@angular/core";
 import {Logger} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
-import {share, take} from "rxjs/operators";
 import {SafeJSON} from "../common/json/safe-stringify";
 import {observable, toJS} from "mobx";
 import {Plan} from "../scheduling/plan";
@@ -20,18 +19,21 @@ import {Assignment} from "../scheduling/assignment";
 import {toStream} from "mobx-utils";
 import {action} from "mobx-angular";
 import {Subject} from "rxjs/Subject";
+import {BehaviorSubject} from "rxjs/BehaviorSubject";
+import {trace} from "mobx";
 
 @Injectable()
 class RootStore extends SchedulerObjectStore implements IObjectCache {
     @observable private _ui_store: UIStore;
 
-    ready_event: Observable<boolean>;
+    ready_event: Subject<boolean>;
     loggedInPerson: Person;
 
     @observable schedule: ScheduleWithRules;
     @observable previous_schedule: ScheduleWithRules;
 
     private logger: Logger;
+
     private savedStateSubject: Subject<SavedState>;
     private scheduleSubject: Subject<ScheduleWithRules>;
     private selectedPlanSubject: Subject<Plan>;
@@ -43,9 +45,9 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
 
         this.logger = LoggingWrapper.getLogger("service.store");
         this._ui_store = new UIStore();
+        this.db.setCache(this);
 
         this.initialize();
-        this.db.setCache(this);
     }
 
     @action
@@ -54,18 +56,19 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
     }
 
     initialize() {
-        this.ready_event = Observable.create(obs => {
+        if (!this.ready_event) {
+            this.ready_event = new BehaviorSubject(false);
+
             // Wait for the DB to be ready, then load data
             this.db.ready_event.subscribe(() => {
                 this.load().then(() => {
-                    obs.next(true);
+                    this.logger.info("RootStore done with init");
+                    this.ready_event.next(true);
                 });
             });
-        }).pipe(share());
 
-        this.ready_event.subscribe(() => {
-            this.logger.info("RootStore done with init");
-        })
+        }
+        return this.ready_event;
     }
 
     async singleOrgStoredInDB(): Promise<Organization> {
@@ -82,16 +85,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
     }
 
     async load() {
-        this.logger.info(`Loading base data...`);
-
-        /*
-        Can only load stuff when we have our organization (everything depends on that, since it names our shared DB, thus connection to the outside)
-         */
-
-        await this.db.async_load_into_store<Organization>(this.organizations, 'Organization');
-        await this.db.async_load_into_store<Person>(this.people, 'Person');
-        await this.db.async_load_into_store<Team>(this.teams, 'Team');
-        await this.db.async_load_into_store<Plan>(this.plans, 'Plan');
+        this.logger.info(`Restoring saved state...`);
 
         // Now load the saved state, defaults, etc
         try {
@@ -111,10 +105,16 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
 
             await this.asyncSaveOrUpdateDb(this._ui_store.saved_state);
         }
-        this.setInitialState();
     }
 
-    setInitialState() {
+    async setupAfterUserLoggedIn() {
+        this.logger.info(`Setting up app person: ${this.loggedInPerson}`);
+
+        await this.db.async_load_into_store<Organization>(this.organizations, 'Organization');
+        await this.db.async_load_into_store<Person>(this.people, 'Person');
+        await this.db.async_load_into_store<Team>(this.teams, 'Team');
+        await this.db.async_load_into_store<Plan>(this.plans, 'Plan');
+
         // Sort out who the logged in user is (plus this.organization)
         this.setLoggedInPersonUsingSavedState();
 
@@ -168,15 +168,19 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
         return this._ui_store;
     }
 
-    get ui_store$(): Observable<UIStore> {
+    get ui_store$(): Subject<UIStore> {
         if (!this.uiStoreSubject) {
             this.uiStoreSubject = new Subject<UIStore>();
 
-            toStream(() => {
-                console.log(`UI Store changed`);
+            let stream = toStream(() => {
+                // trace();
+                this.logger.info(`UI Store changed to ${this._ui_store}. Signed in: ${this._ui_store.signed_in}`);
+                this.uiStoreSubject.next(this._ui_store);
                 toJS(this._ui_store);
                 return this._ui_store;
-            }).subscribe(this.uiStoreSubject);
+            });
+
+            stream.subscribe(this.uiStoreSubject);
         }
         return this.uiStoreSubject;
     }
@@ -217,6 +221,8 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
                 } else {
                     this.logger.info(`Saved state is None`);
                 }
+                // TODO: Figure out why this is needed and remove it
+                this.savedStateSubject.next(this._ui_store.saved_state);
                 return this._ui_store.saved_state;
             }).subscribe(this.savedStateSubject);
         }
@@ -233,7 +239,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
             }).subscribe(uuid => {
                 let plan = this.plans.findOfThisTypeByUUID(uuid);
                 if (plan) {
-                    this.logger.debug(`Plan changed to: ${uuid}`);
+                    // this.logger.debug(`Plan changed to: ${uuid}`);
                     this.selectedPlanSubject.next(plan);
                 } else {
                     this.logger.info(`selected_plan$ failure - can't find plan with ID: ${uuid}`);
@@ -364,6 +370,17 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
         } else {
             this.logger.info(`Yeh, we do... the default plan is: ${this._ui_store.saved_state.selected_plan_uuid}`)
         }
+    }
+
+    @action
+    logout() {
+        this.ui_store.saved_state.logged_in_person_uuid = "";
+        this.ui_store.saved_state.login_token = "";
+        this.ui_store.saved_state.selected_plan_uuid = "";
+        this.clear();
+        this.db.async_store_or_update_object(this.ui_store.saved_state).then(() => {
+            location.reload();
+        });
     }
 }
 

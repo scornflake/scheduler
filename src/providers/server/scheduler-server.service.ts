@@ -10,6 +10,7 @@ import {Observable} from "rxjs/Observable";
 import {Injectable} from "@angular/core";
 import {Organization} from "../../scheduling/organization";
 import {SchedulerDatabase} from "./db";
+import {ObjectWithUUID} from "../../scheduling/base-types";
 
 @Injectable()
 class SchedulerServer {
@@ -24,26 +25,44 @@ class SchedulerServer {
     }
 
     async loginUser(username: string, password: string): Promise<LoginResponse> {
+        this.logger.info(`Requesting user info from server: ${username}`);
         let res: LoginResponse = await this.restAPI.login(username, password);
 
         let uiStore = this.store.ui_store;
+        let savedState = uiStore.saved_state;
         if (res.ok) {
-            let savedState = uiStore.saved_state;
-
             let user = res.user;
-            this.logger.info(`Login: setting login token to ${user.logintoken}`);
-            uiStore.login_token_validated = true;
-            savedState.login_token = user.logintoken;
-            this.restAPI.loginToken = user.logintoken;
+
+            this.setLoginTokenFromUserResponse(res.ok, user);
 
             // Make sure user is synced with server. Return all known user info.
-            return new LoginResponse(true, "", await this.syncUserWithServer(res.user));
+            let loginResponse = new LoginResponse(true, "", await this.syncUserWithServer(res.user));
+
+            // Tell the store to initialize on this user
+            await this.store.setupAfterUserLoggedIn();
+
+            return loginResponse;
         } else {
-            this.logger.error(`Login was not OK. ${JSON.stringify(res)}`);
-            this.logger.info(`Login: Clearing logger in person UUID`);
-            uiStore.saved_state.logged_in_person_uuid = null;
+            this.setLoginTokenFromUserResponse(false);
         }
         return res;
+    }
+
+    setLoginTokenFromUserResponse(good: boolean, user: UserResponse = null) {
+        let uiStore = this.store.ui_store;
+        let savedState = uiStore.saved_state;
+
+        if (good) {
+            this.logger.info(`Login: setting login token to ${user.logintoken}`);
+            savedState.login_token = user.logintoken;
+            this.restAPI.loginToken = user.logintoken;
+        } else {
+            this.logger.error(`Login was not OK.`);
+            this.logger.info(`Login: Clearing logger in person UUID`);
+            savedState.login_token = null;
+            uiStore.saved_state.logged_in_person_uuid = null;
+        }
+        uiStore.login_token_validated = good;
     }
 
     async validateLoginToken(): Promise<ValidationResponse> {
@@ -59,18 +78,24 @@ class SchedulerServer {
         this.logger.info(`Validating login token: ${SafeJSON.stringify(token)}`);
 
         let vr = await this.restAPI.validateLoginToken(savedState.login_token);
+
         this.store.ui_store.login_token_validated = vr.ok;
         this.restAPI.loginToken = savedState.login_token;
+
+        // Tell the store to initialize on this user
+        await this.store.setupAfterUserLoggedIn();
+
         return vr;
     }
 
     async syncUserWithServer(serverUser: UserResponse): Promise<UserResponse> {
         let localPerson: Person;
         let munge = false;
+
         if (!serverUser.uuid) {
             // No UUID set. Assume this is the "munge" scenario.
-            // This in theory only happens when I'm testing myself, and have created manual fields on the server
-            localPerson = this.store.people.findByEmail(serverUser.email);
+            // This in theory only happens when I'm testing myself, and have created user instances on the server (via createneil.py)
+            localPerson = await this.db_findPersonByEmail(serverUser.email);
             this.logger.warn(`MUNGE: Going to create a local user in Pouch with ${serverUser.email}`);
             if (localPerson == null) {
                 localPerson = this.createNewPersonFromUserResponse(serverUser);
@@ -93,7 +118,7 @@ class SchedulerServer {
             munge = true;
         } else {
             // The user supplied an ID. Does that user exist here?
-            localPerson = this.store.people.findOfThisTypeByUUID(serverUser.uuid);
+            localPerson = await this.db_findByUUID(serverUser.uuid) as Person;
             if (!localPerson) {
                 // This can happen, when I've deleted the local DB, but NOT the remote. So remote still references UUIDs that no longer exist,
                 this.logger.warn(`Server says this user has ID ${serverUser.uuid} but no such user exists in the local DB`);
@@ -106,9 +131,6 @@ class SchedulerServer {
         await this.ensureUserHasOrganization(serverUser, localPerson, munge);
 
         this.store.ui_store.saved_state.logged_in_person_uuid = localPerson.uuid;
-
-        // This will setup the loggedInUser, organization, etc. Required for use of the app.
-        this.store.setInitialState();
 
         return serverUser;
     }
@@ -167,10 +189,10 @@ class SchedulerServer {
             }
 
             // Find the org in pouch
-            let org = await this.db.async_load_object_with_id(orgResponse.uuid) as Organization;
+            let org = await this.db_findByUUID(orgResponse.uuid) as Organization;
             if (!org) {
                 let message = `No organization exists with UUID: ${orgResponse.uuid}`;
-                if(munge) {
+                if (munge) {
                     this.logger.warn(message + " ... creating it (part of MUNGE).");
                     org = new Organization(`Munged org for ${user.email}`);
                     org._id = orgResponse.uuid;
@@ -207,6 +229,19 @@ class SchedulerServer {
 
     async savePerson(person: Person): Promise<Person> {
         return await this.db.async_store_or_update_object(person) as Person;
+    }
+
+    private async db_findPersonByEmail(email: string): Promise<Person> {
+        let query = {selector: {type: 'Person', email: email}};
+        let all_objects_of_type = await this.db.findBySelector<Person>(query, true);
+        if (all_objects_of_type && all_objects_of_type.length > 0) {
+            return all_objects_of_type[0];
+        }
+        return null;
+    }
+
+    private async db_findByUUID<T extends ObjectWithUUID>(uuid: string): Promise<T> {
+        return await this.db.async_load_object_with_id(uuid) as T;
     }
 }
 

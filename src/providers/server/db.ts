@@ -2,7 +2,7 @@ import {Injectable} from "@angular/core";
 import PouchDB from 'pouchdb';
 import PouchDBFind from 'pouchdb-find';
 import {Logger} from "ionic-logging-service";
-import {TypedObject, NamedObject, ObjectWithUUID} from "../../scheduling/base-types";
+import {NamedObject, ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
 import 'reflect-metadata';
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {LoggingWrapper} from "../../common/logging-wrapper";
@@ -128,6 +128,7 @@ class SchedulerDatabase implements IObjectLoader {
         if (!this.index_exists('type')) {
             this.logger.info("Creating index: type");
             await this.db.createIndex({index: {name: 'type', fields: ['type']}});
+            await this.db.createIndex({index: {name: 'type and email', fields: ['type', 'email']}});
         }
     }
 
@@ -145,7 +146,7 @@ class SchedulerDatabase implements IObjectLoader {
         return this.current_indexes.indexes.find(idx => idx.name == name) != null;
     }
 
-    async async_load_object_with_id(id: string, useCache: boolean = true, nesting: number = 0): Promise<TypedObject> {
+    async async_load_object_with_id(id: string, useCache: boolean = true, nesting: number = 0): Promise<ObjectWithUUID> {
         if (isUndefined(id)) {
             throw new Error("load_object_with_id failed. You must pass in an id (you passed in 'undefined')");
         }
@@ -291,13 +292,26 @@ class SchedulerDatabase implements IObjectLoader {
     async convert_docs_to_objects_and_store_in_cache(docs: Array<any>) {
         let list_of_new_things = [];
         for (let doc of docs) {
+            let docId = doc['_id'];
+            if(docId.startsWith("_design/")) {
+                continue;
+            }
             let type = doc['type'];
-            let new_object = await this._converter.async_create_js_object_from_dict(doc, type);
-            if (new_object) {
-                list_of_new_things.push(new_object);
-                this.storeInCache(new_object);
-            } else {
-                throw new Error(`Eh? Tried to load a doc ${doc._id}, but got nothing back... Result: '${SafeJSON.stringify(new_object)}'`);
+            if(!type) {
+                this.logger.error(`ERROR processing doc ID: ${docId}. No TYPE information. This was skipped.`);
+                this.logger.error(`DOC was: ${SafeJSON.stringify(doc)}`);
+                continue;
+            }
+            let new_object = null;
+            try {
+                await this._converter.async_create_js_object_from_dict(doc, type);
+                if (new_object) {
+                    list_of_new_things.push(new_object);
+                    this.storeInCache(new_object);
+                }
+            } catch(err) {
+                this.logger.error(`ERROR processing doc ID: ${docId}, ${err}`);
+                this.logger.error(`DOC was: ${SafeJSON.stringify(doc)}`);
             }
         }
         return list_of_new_things;
@@ -377,33 +391,48 @@ class SchedulerDatabase implements IObjectLoader {
         if (!remoteDBName) {
             throw new Error(`Cannot begin replication without remote DB name being specified.`);
         }
+        if(this.server_db) {
+            this.logger.warn(`Replication already started, ignored`);
+        }
         this.server_db = new PouchDB(`http://localhost:5984/${remoteDBName}`);
         this.db.sync(this.server_db, {live: true, retry: true})
             .on('change', (change) => {
                 if (change.direction == 'pull') {
-                    console.log(`Incomming change: ${JSON.stringify(change)}`);
+                    this.logger.info(`Processing incomming change: ${JSON.stringify(change)}`);
+                    this.logger.debug(` ... Incomming change: ${JSON.stringify(change)}`);
                     let data = change.change;
                     let docs = data.docs;
                     // Want to update existing store using this data, as though we had read it direct from the DB
                     this.convert_docs_to_objects_and_store_in_cache(docs).then((items) => {
-                        console.log(` ... incoming change (${items.length} docs) processed and stored in DB/cache`);
+                        this.logger.debug(` ... incoming change (${items.length} docs) processed and stored in DB/cache`);
                     })
                 } else {
-                    console.log(`Outgoing change: ${JSON.stringify(change)}`);
+                    this.logger.debug(`Outgoing change: ${JSON.stringify(change)}`);
                 }
             })
             .on('paused', (info) => {
-                console.log(`Sync paused`);
+                this.logger.debug(`Sync paused`);
             })
             .on('complete', (info) => {
-                console.log(`Sync complete, ${JSON.stringify(info)}`);
+                this.logger.debug(`Sync complete, ${JSON.stringify(info)}`);
             })
             .on('denied', (info) => {
-                console.log(`Sync denied! ${JSON.stringify(info)}`);
+                this.logger.warn(`Sync denied! ${JSON.stringify(info)}`);
             })
             .on('error', (err) => {
-                console.error(`Sync error: ${err}`);
+                this.logger.error(`Sync error: ${err}`);
             });
+    }
+
+    async findBySelector<T>(selector: any, expectOne: boolean = false): Promise<T[]> {
+        let all_objects_of_type = await this.db.find(selector);
+        if (all_objects_of_type.docs.length) {
+            if (all_objects_of_type.docs.length > 1 && expectOne) {
+                throw new Error(`Query ${JSON.stringify(selector)} returned more than one match`)
+            }
+            return await this.convert_docs_to_objects_and_store_in_cache(all_objects_of_type.docs) as T[];
+        }
+        return null;
     }
 }
 
