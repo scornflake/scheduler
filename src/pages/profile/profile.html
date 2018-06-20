@@ -6,7 +6,7 @@
 </ion-header>
 
 
-<ion-content no-padding>
+<ion-content no-padding >
     <div *ngIf="store.loggedInPerson$ | async as person">
         <organization-editor [organization]="person.organization"></organization-editor>
         <person-details [person]="person"></person-details>

@@ -102,7 +102,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
             this.logger.debug(e);
             this.logger.info("No stored saved state. Starting from fresh.");
 
-            this.ui_store.saved_state = new SavedState('saved-state');
+            this.ui_store.setSavedState(new SavedState('saved-state'));
             await this.asyncSaveOrUpdateDb(this.ui_store.saved_state);
         }
     }

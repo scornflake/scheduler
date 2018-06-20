@@ -151,7 +151,7 @@ class ObjectChangeTracker {
     }
 
     get ignored(): string[] {
-        return ["type", "_id", "_rev"];
+        return ["type", "_id", "_rev", "rev", "id"];
     }
 
     shouldBeIgnored(propertyName:string) {
@@ -350,7 +350,7 @@ class ObjectChangeTracker {
         this.tracked_objects_by_uuid.set(owner.uuid, owner);
     }
 
-    clear_changes_for(owner: ObjectWithUUID) {
+    clearChangesFor(owner: ObjectWithUUID) {
         this.changed_objects.delete(owner.uuid);
     }
 

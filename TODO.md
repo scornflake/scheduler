@@ -1,6 +1,28 @@
-TODO
-----
+TODO:
+-----
+- Two clients (safari/chrome):
+  - An incoming change should NOT result in that data being written out... or should it? That write is LOCAL. I think pouchdb is smart enuf?
+  - Starts going into endless update loop. Going to have to make writes much smarter. It *looks* like the change detector is seeing a change to 'rev' on SavedState
 - Make it so scheduler tells you if a required role isn't filled
+- Regenerate the schedule on change of:
+  - unavailability
+  - availability
+  - schedule start/end dates
+  - adding / removing people
+  - role weightings
+  - changing rules
+  - changing role assignments
+- Finish 'clone plan'
+- Make it possible to specify period of the plan (days in between each) and what time it starts (e.g: 10am)
+- Performance
+    - revisit mobx-angular
+    - Work out why mobx not updating in ng
+      - It's not triggering a refresh of view when UIStore.selected_person is changed
+      - Because *mobxAutorun turns OFF change detection. And expects a model change to fire a change to the 'view'. However; this doesn't happen because most of the stuff is computed.  I think perhaps I don't have enough stuff marked as @computed?
+- Work out possible hosting. Google? AWS? Cost?
+  - It would be GREAT to have CI build the docker images (after running tests) and auto-deploy. At least for a test environment.
+- Add 'level' to Person, and write up about game-ifying the whole thing
+
 
 Storing Data - Probably a good idea!
 ----

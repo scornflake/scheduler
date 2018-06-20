@@ -389,7 +389,7 @@ class SchedulerDatabase implements IObjectLoader {
                 let owuid = owner as ObjectWithUUID;
                 await this.async_store_or_update_object(owuid).then(() => {
                     this.logger.info(`Save object: ${owuid.uuid}`);
-                    this.tracker.clear_changes_for(owuid);
+                    this.tracker.clearChangesFor(owuid);
                 });
             }
             // console.log(`XXXXXXXXX: ${SafeJSON.stringify(owner['uuid'])}`);
