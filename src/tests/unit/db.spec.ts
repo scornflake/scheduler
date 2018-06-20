@@ -265,14 +265,14 @@ describe('db', () => {
 
                 thePlan.start_date = csd(2018, 1, 21);
                 thePlan.end_date = csd(2018, 3, 21);
-                thePlan.add_role(defaultSoundRole);
-                thePlan.add_role(defaultComputerRole);
+                thePlan.addRole(defaultSoundRole);
+                thePlan.addRole(defaultComputerRole);
 
-                thePlan.assignment_for(neil).add_role(defaultSoundRole, 5);
-                thePlan.assignment_for(neil).add_role(defaultComputerRole);
-                thePlan.assignment_for(bob).add_role(defaultComputerRole);
+                thePlan.assignmentFor(neil).addRole(defaultSoundRole, 5);
+                thePlan.assignmentFor(neil).addRole(defaultComputerRole);
+                thePlan.assignmentFor(bob).addRole(defaultComputerRole);
 
-                thePlan.assignment_for(neil).put_on_specific_role_for_date(defaultSoundRole, specificDate);
+                thePlan.assignmentFor(neil).put_on_specific_role_for_date(defaultSoundRole, specificDate);
             });
 
             it('can create JS object from dict', function (done) {

@@ -15,7 +15,7 @@ describe('object store', () => {
 
     it('can store people', () => {
         let p = new Person("Neil");
-        store.add_object_to_array(p);
+        store.addObjectToStore(p);
         expect(store.find(o => o.name == "Neil")).toEqual(p);
     });
 
@@ -72,14 +72,14 @@ describe('object store', () => {
             });
 
             it('cannot delete if used in plan', function () {
-                plan.add_role(role);
+                plan.addRole(role);
                 expect(() => {
                     store.roles.remove(role);
                 }).toThrowError(/Cannot delete role/);
             });
 
             it('cannot be deleted if part of assignment role weighting', () => {
-                plan.assignment_for(neil).add_role(role);
+                plan.assignmentFor(neil).addRole(role);
                 expect(() => {
                     store.roles.remove(role);
                 }).toThrowError(/Cannot delete role/);
@@ -93,7 +93,7 @@ describe('object store', () => {
             });
 
             it('cannot be removed if used in OnThisDate', () => {
-                let neil_assign = plan.assignment_for(neil);
+                let neil_assign = plan.assignmentFor(neil);
                 plan.addPickRule(new OnThisDate(csd(2011, 1, 1), neil_assign, role));
                 expect(() => {
                     store.roles.remove(role);
@@ -101,12 +101,12 @@ describe('object store', () => {
             });
 
             it('cannot be removed if used in "if_assigned_to" / AssignedToRoleCondition', () => {
-                let neil_assign = plan.assignment_for(neil);
+                let neil_assign = plan.assignmentFor(neil);
                 neil_assign.if_assigned_to(role);
 
                 // so that this test doesn't pass because the role is part of other
                 // role based integrity tests
-                plan.remove_role(role);
+                plan.removeRole(role);
                 neil_assign.remove_role(role);
 
                 expect(() => {
@@ -115,12 +115,12 @@ describe('object store', () => {
             });
 
             it('cannot be removed if used in ScheduleOn', () => {
-                let neil_assign = plan.assignment_for(neil);
+                let neil_assign = plan.assignmentFor(neil);
                 neil_assign.if_assigned_to(defaultSoundRole).then(new ScheduleOn(neil, role));
 
                 // so that this test doesn't pass because the role is part of other
                 // role based integrity tests
-                plan.remove_role(role);
+                plan.removeRole(role);
                 neil_assign.remove_role(role);
 
                 expect(() => {

@@ -105,11 +105,11 @@ export class ThamesTest {
         org_store.addOrganizaton(new Organization("Thames Baptist Church"));
 
         person_store.add_person(foster)
-            .add_role(defaultComputerRole)
+            .addRole(defaultComputerRole)
             .avail_every(12, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(lynette)
-            .add_role(defaultLeaderRole)
+            .addRole(defaultLeaderRole)
             .set_availability(new AvailabilityEveryNOfM(2, 3));
 
         lynette.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(lynette, defaultKeysRole));
@@ -121,43 +121,43 @@ export class ThamesTest {
         lynette.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(levi, defaultBass));
 
         person_store.add_person(eddie)
-            .add_role(defaultVocalsRole)
-            .add_role(defaultSoundRole)
+            .addRole(defaultVocalsRole)
+            .addRole(defaultSoundRole)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(donald)
-            .add_role(defaultSoundRole)
+            .addRole(defaultSoundRole)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(levi)
-            .add_role(defaultBass)
+            .addRole(defaultBass)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(elizabeth)
-            .add_role(defaultComputerRole)
+            .addRole(defaultComputerRole)
             .avail_every(6, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(gael)
-            .add_role(defaultComputerRole)
+            .addRole(defaultComputerRole)
             .avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(felicia)
-            .add_role(defaultComputerRole)
+            .addRole(defaultComputerRole)
             .avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(rose)
-            .add_role(defaultComputerRole)
+            .addRole(defaultComputerRole)
             .avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(bernard);
 
         person_store.add_person(henryk)
-            .add_role(defaultSoundRole)
+            .addRole(defaultSoundRole)
             .avail_every(10, AvailabilityUnit.EVERY_N_WEEKS);
         henryk.if_assigned_to(defaultSoundRole).then(new ScheduleOn(felicia, defaultComputerRole));
 
         person_store.add_person(shaz)
-            .add_role(defaultLeaderRole)
+            .addRole(defaultLeaderRole)
             .avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
 
         shaz.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(shaz, defaultAccousticGuitar));
@@ -166,7 +166,7 @@ export class ThamesTest {
         shaz.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(bernard, defaultSoundRole));
 
         person_store.add_person(brian)
-            .add_role(defaultLeaderRole)
+            .addRole(defaultLeaderRole)
             .avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
         brian.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(zoe, defaultLeaderRole));
         brian.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(bronwyn, defaultVocalsRole));
@@ -197,12 +197,12 @@ export class NPBCStoreConstruction {
         org_store.addOrganizaton(new Organization("North Porirua Baptist Church"));
 
         person_store.add_person(neil)
-            .add_role(defaultSoundRole, 1)
-            .add_role(defaultSaxRole, 3)
+            .addRole(defaultSoundRole, 1)
+            .addRole(defaultSaxRole, 3)
             .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(cherilyn)
-            .add_role(defaultKeysRole)
+            .addRole(defaultKeysRole)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
         cherilyn.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(cherilyn, defaultKeysRole));
 
@@ -211,15 +211,15 @@ export class NPBCStoreConstruction {
         christine.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(christine, defaultVocalsRole));
 
         person_store.add_person(stuart)
-            .add_role(defaultAccousticGuitar)
-            .add_role(defaultVocalsRole)
+            .addRole(defaultAccousticGuitar)
+            .addRole(defaultVocalsRole)
             .avail_every(6, AvailabilityUnit.EVERY_N_WEEKS);
         stuart.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(stuart, defaultAccousticGuitar));
         stuart.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(stuart, defaultVocalsRole));
 
         person_store.add_person(jeremy_selfe)
-            .add_role(defaultLeaderRole, 2)
-            .add_role(defaultElectricGuitar)
+            .addRole(defaultLeaderRole, 2)
+            .addRole(defaultElectricGuitar)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
         jeremy_selfe.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(jeremy_selfe, defaultElectricGuitar));
 
@@ -231,76 +231,76 @@ export class NPBCStoreConstruction {
 
 
         person_store.add_person(daniel)
-            .add_role(defaultDrumsRole, 3)
-            .add_role(defaultBass);
+            .addRole(defaultDrumsRole, 3)
+            .addRole(defaultBass);
 
         person_store.add_person(craig)
-            .add_role(defaultDrumsRole)
+            .addRole(defaultDrumsRole)
             .avail_every(5, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(ben)
-            .add_role(defaultBass, 1)
-            // .add_role(defaultDrumsRole, 3)
+            .addRole(defaultBass, 1)
+            // .addRole(defaultDrumsRole, 3)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(courtney)
-            .add_role(defaultVocalsRole)
+            .addRole(defaultVocalsRole)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(robp)
-            .add_role(defaultBass, 3)
-            .add_role(defaultSoundRole)
+            .addRole(defaultBass, 3)
+            .addRole(defaultSoundRole)
             .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(robs)
-            .add_role(defaultBass)
+            .addRole(defaultBass)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(dave)
-            .add_role(defaultAccousticGuitar)
-            .add_role(defaultVocalsRole)
+            .addRole(defaultAccousticGuitar)
+            .addRole(defaultVocalsRole)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
         dave.if_assigned_to(defaultAccousticGuitar).then(new ScheduleOn(dave, defaultVocalsRole));
 
         person_store.add_person(anita)
-            .add_role(defaultVocalsRole)
+            .addRole(defaultVocalsRole)
             .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(annie)
-            .add_role(defaultVocalsRole)
+            .addRole(defaultVocalsRole)
             .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(jo)
-            .add_role(defaultVocalsRole)
+            .addRole(defaultVocalsRole)
             .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(allie)
-            .add_role(defaultVocalsRole)
+            .addRole(defaultVocalsRole)
             .avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(chris)
-            .add_role(defaultSoundRole)
-            // .add_role(defaultElectricGuitar)
+            .addRole(defaultSoundRole)
+            // .addRole(defaultElectricGuitar)
             .avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(jeremy_l)
-            .add_role(defaultSoundRole, 2)
-            .add_role(defaultComputerRole)
+            .addRole(defaultSoundRole, 2)
+            .addRole(defaultComputerRole)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(andre_l)
-            .add_role(defaultSoundRole)
-            .add_role(defaultElectricGuitar)
+            .addRole(defaultSoundRole)
+            .addRole(defaultElectricGuitar)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(jeremy_w)
-            .add_role(defaultSoundRole, 2)
-            .add_role(defaultComputerRole)
+            .addRole(defaultSoundRole, 2)
+            .addRole(defaultComputerRole)
             .avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         person_store.add_person(john)
-            .add_role(defaultSoundRole)
-            .add_role(defaultComputerRole, 2)
+            .addRole(defaultSoundRole)
+            .addRole(defaultComputerRole, 2)
             .avail_every(1, AvailabilityUnit.EVERY_N_WEEKS);
     }
 }

@@ -95,8 +95,8 @@ describe('observation', () => {
         let person = new Person("Neilos Neilski");
         let team = new Team("A Team", [person]);
         let newplan = new Plan("haha", team);
-        newplan.add_role(defaultSoundRole);
-        newplan.assignment_for(person).add_role(defaultSoundRole);
+        newplan.addRole(defaultSoundRole);
+        newplan.assignmentFor(person).addRole(defaultSoundRole);
         newplan.start_date = csd(2018, 6, 17);
         newplan.end_date = csd(2018, 7, 17);
 

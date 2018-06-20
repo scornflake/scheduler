@@ -29,7 +29,7 @@ class SchedulerServer {
         this.logger = LoggingWrapper.getLogger('service.bridge');
 
 
-        this.db.ready_event.subscribe(isReady => {
+        this.db.readyEvent.subscribe(isReady => {
             if (isReady) {
                 this.store.load().then(() => {
                     // If we have a login token, try to validate this and login if possible

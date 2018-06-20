@@ -31,7 +31,7 @@ describe('root store', () => {
         //Add in mappings that we need, since we reference other models in this test
         mapper.addConfiguration(scheduler_db_map);
 
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 4000;
         let config = MockConfigurationService.ServiceForTests();
         SchedulerDatabase.ConstructAndWait(config, mapper).then(new_db => {
             db = new_db;
@@ -46,8 +46,8 @@ describe('root store', () => {
         store.asyncSaveOrUpdateDb(team).then(() => {
 
             // Lets give it some meaningful data
-            plan.assignment_for(neil).add_role(defaultSoundRole);
-            plan.assignment_for(neil).add_role(defaultSaxRole, 4);
+            plan.assignmentFor(neil).addRole(defaultSoundRole);
+            plan.assignmentFor(neil).addRole(defaultSaxRole, 4);
 
             // Store this plan so it's live in the db
             store.asyncSaveOrUpdateDb(plan).then(() => {
@@ -70,13 +70,13 @@ describe('root store', () => {
         expect(store).not.toBeNull();
         expect(neil).not.toBeNull();
 
-        store.add_object_to_array(neil);
+        store.addObjectToStore(neil);
         expect(store.length).toEqual(1, "huh? not added");
         expect(isObservableArray(store.items)).toBeTruthy();
 
         expect(store.findIndexOfObject(neil)).not.toBe(-1, "why not found?");
 
-        store.remove_object_from_array(neil);
+        store.removeObjectFromStore(neil);
         expect(store.length).toEqual(0, "not removed!");
         expect(isObservableArray(store.items)).toBeTruthy();
     });

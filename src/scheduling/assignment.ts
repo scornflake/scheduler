@@ -26,7 +26,7 @@ class Assignment extends ObjectWithUUID implements IAssignment {
     }
 
     @action
-    add_role(r: Role, weighting = 1): Assignment {
+    addRole(r: Role, weighting = 1): Assignment {
         check_if_undefined(this.person, "Cannot add a nil or undefined person");
         check_if_undefined(r, "Cannot add a nil or undefined role");
         this.role_weightings.set(r, weighting);
@@ -134,14 +134,14 @@ class Assignment extends ObjectWithUUID implements IAssignment {
     }
 
     if_assigned_to(role: Role): ConditionalRule {
-        this.add_role(role);
+        this.addRole(role);
 
         let roleRule = new AssignedToRoleCondition(role);
         this.condition_rules.push(roleRule);
         return roleRule;
     }
 
-    has_primary_role(role: Role) {
+    hasPrimaryRole(role: Role) {
         let matching_roles = this.roles.filter(r => {
             return r.uuid == role.uuid;
         });

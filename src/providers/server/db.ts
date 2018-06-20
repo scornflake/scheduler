@@ -35,7 +35,7 @@ enum SavingState {
 @Injectable()
 class SchedulerDatabase implements IObjectLoader {
     save_notifications = new Subject<SavingState>();
-    ready_event: Subject<boolean>;
+    readyEvent: Subject<boolean>;
     info: PouchDB.Core.DatabaseInfo;
 
     logger: Logger;
@@ -54,7 +54,7 @@ class SchedulerDatabase implements IObjectLoader {
         return new Promise<SchedulerDatabase>((resolve) => {
             let instance = new SchedulerDatabase(configService, mapper);
             // instance.logger.info("Starting DB setup for TEST");
-            instance.ready_event.subscribe(() => {
+            instance.readyEvent.subscribe(() => {
                 resolve(instance);
             })
         });
@@ -71,7 +71,7 @@ class SchedulerDatabase implements IObjectLoader {
 
         this.logger.info(`Setting up database: ${this.db_name} ...`);
 
-        this.ready_event = new ReplaySubject();
+        this.readyEvent = new ReplaySubject();
         this.tracker = new ObjectChangeTracker(this.mapper);
 
         this.initialize().then(() => {
@@ -89,7 +89,7 @@ class SchedulerDatabase implements IObjectLoader {
         );
         changes.subscribe(this.trackerNotification.bind(this));
 
-        this.ready_event.subscribe(val => {
+        this.readyEvent.subscribe(val => {
             if (val) {
                 this.logger.info("DB is ready");
             } else {
@@ -114,7 +114,7 @@ class SchedulerDatabase implements IObjectLoader {
         this.logger.debug(`DB: ${this.info.db_name}. ${this.info.doc_count} docs.`);
         await this.setupIndexes();
 
-        Observable.create(obs => obs.next(true)).subscribe(this.ready_event);
+        Observable.create(obs => obs.next(true)).subscribe(this.readyEvent);
     }
 
     async setupIndexes() {

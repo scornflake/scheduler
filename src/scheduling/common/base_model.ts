@@ -35,7 +35,7 @@ class GenericObjectStore<T extends ObjectWithUUID> {
         this.items = [];
     }
 
-    add_object_to_array(instance: T, overwrite_existing = true): T {
+    addObjectToStore(instance: T, overwrite_existing = true): T {
         if (!instance) {
             throw new Error(`Cannot add 'null' to this list. We are: ${this.constructor.name}s`)
         }
@@ -57,7 +57,7 @@ class GenericObjectStore<T extends ObjectWithUUID> {
         }
     }
 
-    remove_object_from_array(instance: T) {
+    removeObjectFromStore(instance: T) {
         let index = this.findIndexOfObject(instance);
         if (index != -1) {
             this.items.splice(index, 1);

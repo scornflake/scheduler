@@ -39,7 +39,7 @@ export class DatabaseMaintPage {
     }
 
     ionViewDidLoad() {
-        this.db.ready_event.subscribe(() => {
+        this.db.readyEvent.subscribe(() => {
             if (this.db.info.backend_adapter) {
                 let type = this.db.info.backend_adapter.toString();
                 if (this.db.info['sqlite_plugin']) {

@@ -84,7 +84,7 @@ export class PlanDetailsPage {
             handler: (uuids) => {
                 for (let uuid of uuids) {
                     let person = team.findPersonByUUID(uuid);
-                    this.plan.assignment_for(person);
+                    this.plan.assignmentFor(person);
                 }
 
                 // If just single person added, can edit this directly

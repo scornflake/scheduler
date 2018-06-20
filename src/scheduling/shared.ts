@@ -17,7 +17,7 @@ interface IAssignment {
     roles: Array<Role>;
     highest_role_layout_priority: number;
 
-    has_primary_role(role: Role): boolean;
+    hasPrimaryRole(role: Role): boolean;
 }
 
 class ObjectValidation {
@@ -25,18 +25,18 @@ class ObjectValidation {
     warnings: string[] = new Array<string>();
     ok: boolean = true;
 
-    public add_error(e: string) {
+    public addError(e: string) {
         this.errors.push(e);
         this.ok = false;
     }
 
-    public add_warning(e: string) {
+    public addWarning(e: string) {
         this.warnings.push(e);
     }
 
     static simple(message: string) {
         let validation = new ObjectValidation();
-        validation.add_error(message);
+        validation.addError(message);
         return validation;
     }
 }
@@ -61,11 +61,11 @@ class ScheduleScore {
         return "Score: " + this.score + " for role: " + this.roles.join(", ");
     }
 
-    add_role(role: Role) {
+    addRole(role: Role) {
         this.roles.push(role);
     }
 
-    remove_role(r: Role) {
+    removeRole(r: Role) {
         delete_from_array(this.roles, r);
     }
 }
@@ -164,7 +164,7 @@ class ScheduleAtDate {
             this.assignment_by_score.set(assignment, new ScheduleScore(role));
         } else {
             let score = this.assignment_by_score.get(assignment);
-            score.add_role(role);
+            score.addRole(role);
         }
     }
 

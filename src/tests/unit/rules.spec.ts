@@ -28,13 +28,13 @@ describe('rules', () => {
 
         // If we have people in order, it just returns sequentially
         neil = team.getOrAddPerson(new Person("Neil"));
-        neil_assign = service.assignment_for(neil).add_role(defaultSoundRole);
+        neil_assign = service.assignmentFor(neil).addRole(defaultSoundRole);
 
         bob = team.add(new Person("Bob"));
-        bob_assign = service.assignment_for(bob).add_role(defaultSoundRole);
+        bob_assign = service.assignmentFor(bob).addRole(defaultSoundRole);
 
         tim = team.add(new Person("Tim"));
-        tim_assign = service.assignment_for(tim).add_role(defaultSoundRole);
+        tim_assign = service.assignmentFor(tim).addRole(defaultSoundRole);
 
         date = new Date(2010, 10, 0);
         state.current_date = date;

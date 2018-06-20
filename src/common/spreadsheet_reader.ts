@@ -108,7 +108,7 @@ export class SpreadsheetReader {
                                     // Make sure they are part of the team
                                     team.getOrAddPerson(person);
 
-                                    let assignment = plan.assignment_for(person).add_role(role);
+                                    let assignment = plan.assignmentFor(person).addRole(role);
                                     this.schedule.facts.place_person_in_role(assignment, role, current_date, true, false);
                                 }
                             }

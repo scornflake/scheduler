@@ -31,8 +31,8 @@ describe('schedule', () => {
         team.add(daniel);
         let plan = new Plan("test", team);
 
-        let neil_assignment = plan.assignment_for(neil);
-        let daniel_assignment = plan.assignment_for(daniel);
+        let neil_assignment = plan.assignmentFor(neil);
+        let daniel_assignment = plan.assignmentFor(daniel);
 
         /*
         intentionally have not added roles to neil, daniel at the Service level.

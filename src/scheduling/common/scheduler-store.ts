@@ -57,7 +57,7 @@ abstract class GenericManager<T extends NamedObject> {
     }
 
     add(item: T): T {
-        return this.store.add_object_to_array(item);
+        return this.store.addObjectToStore(item);
     }
 
     addAll(objects: T[]) {
@@ -213,11 +213,11 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
                 throw new Error(`${msg}it is used in plan: ${p.name}`);
             }
         });
-        this.remove_object_from_array(team);
+        this.removeObjectFromStore(team);
     }
 
     removePlanFromStoreWithRefcheck(plan: Plan) {
-        this.remove_object_from_array(plan);
+        this.removeObjectFromStore(plan);
     }
 
     removeRoleFromStoreWithRefcheck(role: Role) {
@@ -265,7 +265,7 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
             })
         });
 
-        this.remove_object_from_array(role);
+        this.removeObjectFromStore(role);
     }
 
     removePersonFromStoreWithRefcheck(person: Person) {
@@ -275,7 +275,7 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
                 throw new Error(`${msg}they are in team: ${t.name}`);
             }
         });
-        this.remove_object_from_array(person);
+        this.removeObjectFromStore(person);
     }
 }
 

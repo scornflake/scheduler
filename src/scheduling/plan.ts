@@ -132,7 +132,7 @@ class Plan extends NamedObject {
         return this.roles.find(r => r.uuid == uuid);
     }
 
-    assignment_for(person: Person): Assignment {
+    assignmentFor(person: Person): Assignment {
         // This person must exist in the team.
         let p = this.team.findPersonInTeam(person);
         if (!p) {
@@ -237,7 +237,7 @@ class Plan extends NamedObject {
         return assignment_rule_map;
     }
 
-    add_role(sr: Role): Role {
+    addRole(sr: Role): Role {
         let existingIndex = this.roles.findIndex(r => r.name == sr.name);
         if (existingIndex != -1) {
             this.roles.splice(existingIndex, 1);
@@ -246,7 +246,7 @@ class Plan extends NamedObject {
         return sr;
     }
 
-    remove_role(role: Role) {
+    removeRole(role: Role) {
         let existingIndex = this.roles.findIndex(r => r.uuid == role.uuid);
         if (existingIndex != -1) {
             this.roles.splice(existingIndex, 1);

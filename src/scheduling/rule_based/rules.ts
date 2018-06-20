@@ -136,7 +136,7 @@ class OnThisDate extends Rule {
     }
 
     execute(state: RuleFacts): IAssignment {
-        let hasPrimaryRole = this.assignment.has_primary_role(this.role);
+        let hasPrimaryRole = this.assignment.hasPrimaryRole(this.role);
         if (state.current_date == this.date && hasPrimaryRole) {
             return this.assignment;
         }

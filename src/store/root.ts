@@ -182,11 +182,11 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
     }
 
     saveInCache(object: ObjectWithUUID): void {
-        this.add_object_to_array(object, true);
+        this.addObjectToStore(object, true);
     }
 
     evict(object: ObjectWithUUID): void {
-        this.remove_object_from_array(object);
+        this.removeObjectFromStore(object);
     }
 
     removeAndWait(obj: ObjectWithUUID) {
@@ -221,10 +221,10 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         }
         let plan = new Plan(planName, team);
         this.roles.forEach(r => {
-            plan.add_role(r);
+            plan.addRole(r);
         });
         plan.team.people.forEach(p => {
-            plan.assignment_for(p);
+            plan.assignmentFor(p);
         });
         return plan;
     }
@@ -241,7 +241,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
 
         // use same set of roles
         existingPlan.roles.forEach(r => {
-            newPlan.add_role(r);
+            newPlan.addRole(r);
         });
 
         // this is a bit meh. I want to take a deep copy of the assignments, but do this via JSON because of circular refs.

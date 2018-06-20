@@ -33,7 +33,7 @@ describe('service', () => {
     });
 
     it('can add dependent roles', () => {
-        let cher_assignment = plan.assignment_for(cherilyn);
+        let cher_assignment = plan.assignmentFor(cherilyn);
         cher_assignment.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(cherilyn, defaultKeysRole));
 
         expect(cher_assignment.roles.length).toEqual(1);
@@ -49,23 +49,23 @@ describe('service', () => {
 
     it('can sort people by role layout priority', () => {
         // people are in roles. Get a list of people based on their max role layout priority
-        let leader = plan.add_role(defaultLeaderRole);
+        let leader = plan.addRole(defaultLeaderRole);
         leader.layout_priority = 10;
-        let keys = plan.add_role(defaultKeysRole);
+        let keys = plan.addRole(defaultKeysRole);
         keys.layout_priority = 5;
-        let gopher = plan.add_role(new Role("Gopher"));
+        let gopher = plan.addRole(new Role("Gopher"));
 
         let tim = team.add(new Person("Tim"));
         let janice = team.add(new Person("Janice"));
 
         // Tim = Keys
-        let p2 = plan.assignment_for(tim).add_role(keys);
+        let p2 = plan.assignmentFor(tim).addRole(keys);
 
         // Janice = Gopher
-        let p3 = plan.assignment_for(janice).add_role(gopher);
+        let p3 = plan.assignmentFor(janice).addRole(gopher);
 
         // Neil = Gopher + Leader
-        let neil_assignment = plan.assignment_for(neil).add_role(gopher).add_role(leader);
+        let neil_assignment = plan.assignmentFor(neil).addRole(gopher).addRole(leader);
 
         // // Expect Neil, Tim, Janice
         // let ordered = service.people();
@@ -75,8 +75,8 @@ describe('service', () => {
     });
 
     it('can return roles sorted by layout order', () => {
-        let sr2 = plan.add_role(defaultSaxRole);
-        let sr1 = plan.add_role(defaultLeaderRole);
+        let sr2 = plan.addRole(defaultSaxRole);
+        let sr1 = plan.addRole(defaultLeaderRole);
         sr1.layout_priority = 3;
         sr2.layout_priority = 1;
         console.log(`Plan has roles: ${plan.roles}`);
@@ -89,16 +89,16 @@ describe('service', () => {
     });
 
     it('can sort roles by priority, into groups', () => {
-        plan.assignment_for(neil).add_role(defaultSoundRole);
-        plan.assignment_for(tim).add_role(defaultAcousticGuitar);
-        plan.assignment_for(cherilyn).add_role(defaultLeaderRole);
+        plan.assignmentFor(neil).addRole(defaultSoundRole);
+        plan.assignmentFor(tim).addRole(defaultAcousticGuitar);
+        plan.assignmentFor(cherilyn).addRole(defaultLeaderRole);
 
         defaultSoundRole.layout_priority = 1;
         defaultAcousticGuitar.layout_priority = 1;
         defaultLeaderRole.layout_priority = 2;
-        plan.add_role(defaultSoundRole);
-        plan.add_role(defaultAcousticGuitar);
-        plan.add_role(defaultLeaderRole);
+        plan.addRole(defaultSoundRole);
+        plan.addRole(defaultAcousticGuitar);
+        plan.addRole(defaultLeaderRole);
 
         let groups = plan.roles_in_layout_order_grouped;
         console.log(`Groups are: ${groups}`);
@@ -118,14 +118,14 @@ describe('service', () => {
         beforeEach(() => {
             date = new Date(2017, 10, 1);
 
-            plan.add_role(defaultSaxRole);
-            plan.add_role(defaultSoundRole);
-            plan.add_role(defaultBass);
+            plan.addRole(defaultSaxRole);
+            plan.addRole(defaultSoundRole);
+            plan.addRole(defaultBass);
 
-            neil_assignment = plan.assignment_for(neil).add_role(defaultSaxRole, 3).add_role(defaultSoundRole, 1);
+            neil_assignment = plan.assignmentFor(neil).addRole(defaultSaxRole, 3).addRole(defaultSoundRole, 1);
 
             rob = team.add(new Person("rob"));
-            rob_assignment = plan.assignment_for(rob).add_role(defaultBass).add_role(defaultSoundRole);
+            rob_assignment = plan.assignmentFor(rob).addRole(defaultBass).addRole(defaultSoundRole);
 
             state = new RuleFacts(plan);
             state.current_date = date;
@@ -134,7 +134,7 @@ describe('service', () => {
         it('should be able to remove a role from a plan', function () {
             // OK. doesn't make SENSE, but the method should work
             expect(plan.roles.indexOf(defaultSaxRole)).not.toBe(-1);
-            plan.remove_role(defaultSaxRole);
+            plan.removeRole(defaultSaxRole);
             expect(plan.roles.indexOf(defaultSaxRole)).toBe(-1, 'role still there?');
         });
 

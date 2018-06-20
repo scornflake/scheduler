@@ -132,98 +132,98 @@ export class NPBCStoreConstruction {
         let john_sutherland = team.findPersonWithName("John Sutherland");
 
 
-        service.assignment_for(neil)
-            .add_role(defaultSoundRole, 1)
-            .add_role(defaultSaxRole, 3)
+        service.assignmentFor(neil)
+            .addRole(defaultSoundRole, 1)
+            .addRole(defaultSaxRole, 3)
             .add_secondary_action(new TryToScheduleWith(cherilyn, new Availability(1, AvailabilityUnit.EVERY_N_WEEKS), 2));
 
-        service.assignment_for(cherilyn)
-            .add_role(defaultKeysRole)
+        service.assignmentFor(cherilyn)
+            .addRole(defaultKeysRole)
             .if_assigned_to(defaultLeaderRole).then(new ScheduleOn(cherilyn, defaultKeysRole));
 
-        service.assignment_for(christine)
-            .add_role(defaultVocalsRole);
+        service.assignmentFor(christine)
+            .addRole(defaultVocalsRole);
         // christine.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(christine, defaultVocalsRole));
 
-        let stuart_assignment = service.assignment_for(stuart);
+        let stuart_assignment = service.assignmentFor(stuart);
         stuart_assignment
-            .add_role(defaultAcousticGuitar)
-            .add_role(defaultVocalsRole)
+            .addRole(defaultAcousticGuitar)
+            .addRole(defaultVocalsRole)
             .if_assigned_to(defaultLeaderRole).then(new ScheduleOn(stuart, defaultAcousticGuitar));
         stuart_assignment.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(stuart, defaultVocalsRole));
 
-        service.assignment_for(kylie)
-            .add_role(defaultAcousticGuitar)
+        service.assignmentFor(kylie)
+            .addRole(defaultAcousticGuitar)
             .if_assigned_to(defaultAcousticGuitar).then(new ScheduleOn(kylie, defaultVocalsRole));
 
-        service.assignment_for(jeremy_selfe)
-            .add_role(defaultLeaderRole, 2)
-            .add_role(defaultElectricGuitar)
+        service.assignmentFor(jeremy_selfe)
+            .addRole(defaultLeaderRole, 2)
+            .addRole(defaultElectricGuitar)
             .if_assigned_to(defaultLeaderRole).then(new ScheduleOn(jeremy_selfe, defaultElectricGuitar));
 
-        service.assignment_for(ralph)
-            .add_role(defaultAcousticGuitar)
+        service.assignmentFor(ralph)
+            .addRole(defaultAcousticGuitar)
             .if_assigned_to(defaultAcousticGuitar).then(new ScheduleOn(anita, defaultVocalsRole));
 
-        service.assignment_for(daniel)
-            .add_role(defaultDrumsRole, 3)
-            .add_role(defaultBass);
+        service.assignmentFor(daniel)
+            .addRole(defaultDrumsRole, 3)
+            .addRole(defaultBass);
 
-        service.assignment_for(craig)
-            .add_role(defaultDrumsRole);
+        service.assignmentFor(craig)
+            .addRole(defaultDrumsRole);
 
-        service.assignment_for(ben)
-            .add_role(defaultBass, 1);
+        service.assignmentFor(ben)
+            .addRole(defaultBass, 1);
 
-        service.assignment_for(courtney)
-            .add_role(defaultVocalsRole);
+        service.assignmentFor(courtney)
+            .addRole(defaultVocalsRole);
 
-        service.assignment_for(robp)
-            .add_role(defaultBass, 3)
-            .add_role(defaultSoundRole);
+        service.assignmentFor(robp)
+            .addRole(defaultBass, 3)
+            .addRole(defaultSoundRole);
 
-        service.assignment_for(robs)
-            .add_role(defaultBass);
+        service.assignmentFor(robs)
+            .addRole(defaultBass);
 
-        service.assignment_for(dave)
-            .add_role(defaultAcousticGuitar)
-            .add_role(defaultVocalsRole)
+        service.assignmentFor(dave)
+            .addRole(defaultAcousticGuitar)
+            .addRole(defaultVocalsRole)
             .if_assigned_to(defaultAcousticGuitar).then(new ScheduleOn(dave, defaultVocalsRole));
 
-        service.assignment_for(anita)
-            .add_role(defaultVocalsRole);
+        service.assignmentFor(anita)
+            .addRole(defaultVocalsRole);
 
-        service.assignment_for(annie)
-            .add_role(defaultVocalsRole);
+        service.assignmentFor(annie)
+            .addRole(defaultVocalsRole);
 
-        service.assignment_for(jo)
-            .add_role(defaultVocalsRole);
+        service.assignmentFor(jo)
+            .addRole(defaultVocalsRole);
 
-        service.assignment_for(allie)
-            .add_role(defaultVocalsRole);
+        service.assignmentFor(allie)
+            .addRole(defaultVocalsRole);
 
-        service.assignment_for(chris)
-            .add_role(defaultSoundRole)
-            .add_role(defaultElectricGuitar);
+        service.assignmentFor(chris)
+            .addRole(defaultSoundRole)
+            .addRole(defaultElectricGuitar);
 
-        service.assignment_for(jeremy_l)
-            .add_role(defaultSoundRole, 2)
-            .add_role(defaultComputerRole);
+        service.assignmentFor(jeremy_l)
+            .addRole(defaultSoundRole, 2)
+            .addRole(defaultComputerRole);
 
-        service.assignment_for(andre_l)
-            .add_role(defaultSoundRole)
-            .add_role(defaultElectricGuitar);
+        service.assignmentFor(andre_l)
+            .addRole(defaultSoundRole)
+            .addRole(defaultElectricGuitar);
 
-        service.assignment_for(suzie_l)
-            .add_role(defaultElectricGuitar);
+        service.assignmentFor(suzie_l)
+            .addRole(defaultElectricGuitar);
 
-        service.assignment_for(jeremy_w)
-            .add_role(defaultSoundRole, 2)
-            .add_role(defaultComputerRole);
+        service.assignmentFor(jeremy_w)
+            .addRole(defaultSoundRole, 2)
+            .addRole(defaultComputerRole);
 
-        service.assignment_for(john_sutherland)
-            .add_role(defaultSoundRole)
-            .add_role(defaultComputerRole, 2)
+        service.assignmentFor(john_sutherland)
+            .addRole(defaultSoundRole)
+            .addRole(defaultComputerRole, 2)
     }
 
     static SetupPeople(people_store: PersonManager): Array<Person> {
@@ -296,16 +296,16 @@ export class NPBCStoreConstruction {
 
     static AttachRolesToPlan(plan: Plan) {
         SetupDefaultRoles();
-        plan.add_role(defaultLeaderRole);
-        plan.add_role(defaultSoundRole);
-        plan.add_role(defaultComputerRole);
-        plan.add_role(defaultKeysRole);
-        plan.add_role(defaultVocalsRole).maximum_wanted = 2;
-        plan.add_role(defaultDrumsRole);
-        plan.add_role(defaultBass);
-        plan.add_role(defaultAcousticGuitar).maximum_wanted = 2;
-        plan.add_role(defaultElectricGuitar).minimum_needed = 0;
-        plan.add_role(defaultSaxRole).minimum_needed = 0;
+        plan.addRole(defaultLeaderRole);
+        plan.addRole(defaultSoundRole);
+        plan.addRole(defaultComputerRole);
+        plan.addRole(defaultKeysRole);
+        plan.addRole(defaultVocalsRole).maximum_wanted = 2;
+        plan.addRole(defaultDrumsRole);
+        plan.addRole(defaultBass);
+        plan.addRole(defaultAcousticGuitar).maximum_wanted = 2;
+        plan.addRole(defaultElectricGuitar).minimum_needed = 0;
+        plan.addRole(defaultSaxRole).minimum_needed = 0;
 
         defaultAcousticGuitar.minimum_needed = 0;
     }

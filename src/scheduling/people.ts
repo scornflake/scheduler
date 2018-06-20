@@ -112,10 +112,10 @@ export class Person extends NamedObject {
     validate(): ObjectValidation {
         let validation = new ObjectValidation();
         if (!this.name) {
-            validation.add_error("Name is required");
+            validation.addError("Name is required");
         }
         if (!this.email) {
-            validation.add_error("Email is required");
+            validation.addError("Email is required");
         }
         return validation;
     }

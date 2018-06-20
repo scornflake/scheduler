@@ -101,7 +101,7 @@ export class PersonAssignmentPage {
                 for (let role_id of data) {
                     let role_to_add = this.plan.find_role_by_uuid(role_id);
                     if (role_to_add) {
-                        this.assignment.add_role(role_to_add);
+                        this.assignment.addRole(role_to_add);
                     }
                 }
                 console.log(`selected: ${JSON.stringify(data)}`)

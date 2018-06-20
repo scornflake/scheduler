@@ -44,11 +44,11 @@ describe('role scheduler', () => {
         plan.start_date = start_date;
         plan.end_date = end_date;
 
-        plan.add_role(defaultSoundRole);
-        plan.add_role(defaultComputerRole);
-        plan.add_role(defaultAcousticGuitar);
-        plan.add_role(defaultElectricGuitar);
-        plan.assignment_for(neil).add_role(defaultSoundRole);
+        plan.addRole(defaultSoundRole);
+        plan.addRole(defaultComputerRole);
+        plan.addRole(defaultAcousticGuitar);
+        plan.addRole(defaultElectricGuitar);
+        plan.assignmentFor(neil).addRole(defaultSoundRole);
 
         // Roles on a plan are derived from the people in the plan
         sound = plan.find_role("Sound");
@@ -169,7 +169,7 @@ describe('role scheduler', () => {
         plan.start_date = new Date(2017, 9, 1);
         plan.end_date = new Date(2017, 9, 25);
 
-        plan.assignment_for(neil).remove_role(sound).add_role(defaultComputerRole);
+        plan.assignmentFor(neil).remove_role(sound).addRole(defaultComputerRole);
         neil.availability = new Availability(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         // If unavailability affects exclusions we should end up with not being able to schedule on the first date
@@ -200,10 +200,10 @@ describe('role scheduler', () => {
         // Should see that the maximum number of placements in 'guitar' is one, not two.
         let roleToTestWith = defaultElectricGuitar;
         expect(roleToTestWith.maximum_wanted).toBe(1);
-        plan.assignment_for(neil).remove_role(sound).add_role(roleToTestWith);
+        plan.assignmentFor(neil).remove_role(sound).addRole(roleToTestWith);
         neil.availability = new Availability(1, AvailabilityUnit.AVAIL_ANYTIME);
 
-        plan.assignment_for(daniel).add_role(roleToTestWith);
+        plan.assignmentFor(daniel).addRole(roleToTestWith);
 
         // Do a schedule. For one week.
         // We should see just ONE person on guitar.
@@ -227,8 +227,8 @@ describe('role scheduler', () => {
         let ben = new Person("Ben");
         team.add(ben);
 
-        plan.assignment_for(daniel).add_role(defaultSoundRole);
-        plan.assignment_for(ben).add_role(defaultSoundRole);
+        plan.assignmentFor(daniel).addRole(defaultSoundRole);
+        plan.assignmentFor(ben).addRole(defaultSoundRole);
 
         schedule = new ScheduleWithRules(plan);
         schedule.create_schedule();
