@@ -9,9 +9,7 @@ import {SpreadsheetReader} from "../../common/spreadsheet_reader";
 import {RootStore} from "../../store/root";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {Plan} from "../../scheduling/plan";
-import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {action} from "mobx-angular";
-import {Subscription} from "rxjs/Subscription";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {PageUtils} from "../page-utils";
 
@@ -26,12 +24,10 @@ import {PageUtils} from "../page-utils";
 })
 export class HomePage {
     private logger: Logger;
-    private sub: Subscription;
 
-    constructor(public navCtrl: NavController,
+    constructor(private navCtrl: NavController,
                 private sheetAPI: GAPIS,
                 private pageUtils: PageUtils,
-                private server: SchedulerServer,
                 private store: RootStore) {
 
         this.logger = LoggingWrapper.getLogger("page.home");
@@ -40,12 +36,7 @@ export class HomePage {
     ngOnInit() {
         // this.sheetAPI.init();
 
-        let readyEvent = this.store.ready_event;
-        readyEvent.subscribe(value => {
-            if (value) {
-                this.check_login();
-            }
-        });
+        // this.pageUtils.validateLoginAndShowPageIfNotValid(this.navCtrl);
 
         // this.store.ui_store$.subscribe(ius => {
         //     this.logger.warn(`Home Says Signed In: ${ius.signed_in}`);
@@ -56,6 +47,8 @@ export class HomePage {
         // this.store.schedule$.subscribe(ss => {
         //     this.logger.warn(`Schedule: ${SafeJSON.stringify(ss)}`)
         // })
+
+        // this.navCtrl.push('page-profile');
     }
 
     set_plan(uuid: string) {
@@ -66,18 +59,6 @@ export class HomePage {
     change_state() {
         this.store.ui_store.login_token_validated = false;
         this.store.ui_store.login_token_validated = true;
-    }
-
-    check_login() {
-        let validateLoginToken = this.server.validateLoginToken();
-        validateLoginToken.then(resp => {
-            if (!resp.ok) {
-                this.logger.info(`Validation returned: ${SafeJSON.stringify(resp)}`);
-                this.navCtrl.push('login');
-            } else {
-                this.logger.info(`Validation ok: ${SafeJSON.stringify(resp)}`);
-            }
-        });
     }
 
     clear_selection() {

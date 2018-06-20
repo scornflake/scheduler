@@ -28,7 +28,7 @@
                     <ion-select
                             ion-col col-sm text-center
                             [ngModel]="ss.selected_plan_uuid"
-                            (ngModelChange)="ss.selected_plan_uuid = $event"
+                            (ngModelChange)="ss.setSelectedPlanUUID($event)"
                             placeholder="Plan"
                     >
                         <ion-option *ngFor="let p of plansByDateLatestFirst" value="{{p.uuid}}"
@@ -50,17 +50,17 @@
             </div>
 
 
-            <ion-grid *ngIf="store.schedule$ | async as schedule" no-padding>
-                <ion-row>
-                    <ion-col *ngIf="store.ui_store.have_selection">
-                        <person-editor></person-editor>
-                        <reasons *ngIf="store.schedule$|async as schedule"
-                                 [decisions]="schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"
-                        >
-                        </reasons>
-                    </ion-col>
-                </ion-row>
-            </ion-grid>
+            <!--<ion-grid *ngIf="store.schedule$ | async as schedule" no-padding>-->
+                <!--<ion-row>-->
+                    <!--<ion-col *ngIf="store.ui_store.have_selection">-->
+                        <!--<person-editor></person-editor>-->
+                        <!--<reasons *ngIf="store.schedule$|async as schedule"-->
+                                 <!--[decisions]="schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"-->
+                        <!--&gt;-->
+                        <!--</reasons>-->
+                    <!--</ion-col>-->
+                <!--</ion-row>-->
+            <!--</ion-grid>-->
         </div>
         <ng-template #notSignedIn>
             Please sign in

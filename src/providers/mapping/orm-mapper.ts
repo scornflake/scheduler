@@ -3,7 +3,7 @@ import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {ObjectWithUUID} from "../../scheduling/base-types";
-import {isObservableArray, isObservableMap, isObservableObject} from "mobx";
+import {configure, isObservableArray, isObservableMap, isObservableObject} from "mobx";
 import {ClassFieldMapping, ClassMapping, MappingType, PropertyMapping} from "./orm-mapper-type";
 
 function GetTheTypeNameOfTheObject(object: any): string {
@@ -55,6 +55,10 @@ class OrmMapper {
         this.logger = LoggingWrapper.getLogger('db.mapping');
         this.definitions = new Map<string, ClassMapping>();
         this.addConfiguration(internal_mappings, false);
+
+        configure({
+            enforceActions: true
+        });
     }
 
     addConfiguration(map: ClassFieldMapping, verify_property_names: boolean = true) {
@@ -81,6 +85,8 @@ class OrmMapper {
             }
             if (actual_instance) {
                 actual_properties = Object.keys(actual_instance);
+                // actual_properties = Object.getOwnPropertyNames(actual_instance);
+                this.logger.debug(`All properties of ${cm.name}: ${actual_properties.join(", ")}`);
             }
 
             // Check the inherit field
@@ -135,7 +141,11 @@ class OrmMapper {
                     }
                 });
             }
-            this.logger.info(`Add mapping for ${cm.name} (${verify_property_names ? "verified" : "non-verified"})`);
+            let names = "";
+            if(cm.fields) {
+                names = cm.fields.map(f => f.name).join(", ");
+            }
+            this.logger.debug(`Add mapping for ${cm.name} (${verify_property_names ? "verified" : "non-verified"}) (${names})`);
             this.definitions.set(cm.name, cm);
         })
     }

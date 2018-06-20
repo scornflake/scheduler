@@ -77,11 +77,11 @@ import {setupOrmMapper} from "../providers/mapping/setup";
         StatusBar,
         SplashScreen,
         RootStore,
-        PageUtils,
         SchedulerServer,
         SchedulerDatabase,
         ConfigurationService,
         {provide: ErrorHandler, useClass: IonicErrorHandler},
+        PageUtils,
         LoggingService,
         GAPIS,
         RESTServer

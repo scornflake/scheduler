@@ -3,7 +3,7 @@ import {Injectable} from "@angular/core";
 import {Logger} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
 import {SafeJSON} from "../common/json/safe-stringify";
-import {observable, toJS} from "mobx";
+import {IReactionDisposer, observable, reaction, toJS, trace} from "mobx";
 import {Plan} from "../scheduling/plan";
 import {SchedulerDatabase} from "../providers/server/db";
 import {Team} from "../scheduling/teams";
@@ -20,13 +20,11 @@ import {toStream} from "mobx-utils";
 import {action} from "mobx-angular";
 import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
-import {trace} from "mobx";
 
 @Injectable()
 class RootStore extends SchedulerObjectStore implements IObjectCache {
-    @observable private _ui_store: UIStore;
+    @observable ui_store: UIStore;
 
-    ready_event: Subject<boolean>;
     loggedInPerson: Person;
 
     @observable schedule: ScheduleWithRules;
@@ -39,36 +37,20 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
     private selectedPlanSubject: Subject<Plan>;
     private uiStoreSubject: Subject<UIStore>;
     private loggedInPersonSubject: Subject<Person>;
+    private ssDisposer: IReactionDisposer;
+    private uiDisposer: IReactionDisposer;
 
     constructor(public db: SchedulerDatabase) {
         super();
 
         this.logger = LoggingWrapper.getLogger("service.store");
-        this._ui_store = new UIStore();
+        this.setUIStore(new UIStore());
         this.db.setCache(this);
-
-        this.initialize();
     }
 
     @action
     set_previous_schedule(schedule: ScheduleWithRules) {
         this.previous_schedule = schedule;
-    }
-
-    initialize() {
-        if (!this.ready_event) {
-            this.ready_event = new BehaviorSubject(false);
-
-            // Wait for the DB to be ready, then load data
-            this.db.ready_event.subscribe(() => {
-                this.load().then(() => {
-                    this.logger.info("RootStore done with init");
-                    this.ready_event.next(true);
-                });
-            });
-
-        }
-        return this.ready_event;
     }
 
     async singleOrgStoredInDB(): Promise<Organization> {
@@ -91,19 +73,18 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
         try {
             let saved_state = await this.db.async_load_object_with_id('saved-state');
 
-            this.logger.debug(`Retrieved state: ${SafeJSON.stringify(saved_state)}`);
+            this.logger.debug(`Retrieved state successfully from store: ${SafeJSON.stringify(saved_state).substr(0, 60)}...`);
 
-            this._ui_store.saved_state = saved_state as SavedState;
-            if (!this._ui_store.saved_state) {
+            this.ui_store.setSavedState(saved_state as SavedState);
+            if (!this.ui_store.saved_state) {
                 this.logger.warn(`Oh oh, saved state wasn't restored. The returned object was a ${saved_state.constructor.name}... Maybe that's != SavedState?  Have reset it to a NEW SavedState instance.`);
-                this._ui_store.saved_state = new SavedState('saved-state');
+                this.ui_store.saved_state = new SavedState('saved-state');
             }
         } catch (e) {
-            this._ui_store.saved_state = new SavedState('saved-state');
             this.logger.debug(e);
             this.logger.info("No stored saved state. Starting from fresh.");
 
-            await this.asyncSaveOrUpdateDb(this._ui_store.saved_state);
+            await this.asyncSaveOrUpdateDb(this.ui_store.saved_state);
         }
     }
 
@@ -149,7 +130,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
     }
 
     get state(): SavedState {
-        return this._ui_store.saved_state;
+        return this.ui_store.saved_state;
     }
 
     get schedule$(): Observable<ScheduleWithRules> {
@@ -173,23 +154,18 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
         return this.scheduleSubject;
     }
 
-    get ui_store(): UIStore {
-        return this._ui_store;
-    }
-
     get ui_store$(): Subject<UIStore> {
         if (!this.uiStoreSubject) {
             this.uiStoreSubject = new BehaviorSubject<UIStore>(null);
 
-            let stream = toStream(() => {
+            this.uiDisposer = reaction(() => {
                 // trace();
-                this.logger.info(`UI Store changed to ${this._ui_store}. Signed in: ${this._ui_store.signed_in}`);
-                this.uiStoreSubject.next(this._ui_store);
-                toJS(this._ui_store);
-                return this._ui_store;
-            });
-
-            stream.subscribe(this.uiStoreSubject);
+                this.logger.info(`UI Store changed to ${this.ui_store}. Signed in: ${this.ui_store.signed_in}`);
+                toJS(this.ui_store);
+                return this.ui_store;
+            }, () => {
+                this.uiStoreSubject.next(this.ui_store);
+            }, {name: 'ui store', equals: (a, b) => false});
         }
         return this.uiStoreSubject;
     }
@@ -218,22 +194,28 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
 
     get saved_state$(): Observable<SavedState> {
         if (!this.savedStateSubject) {
-            this.savedStateSubject = new BehaviorSubject<SavedState>(null);
+            // this.savedStateSubject = new BehaviorSubject<SavedState>(null);
+            this.savedStateSubject = new Subject<SavedState>();
 
             // Observe changes, and send these to the subject
-            toStream(() => {
-                // accessAllTheProperties
-                toJS(this._ui_store.saved_state);
-                if (this._ui_store.saved_state) {
-                    let plan_uuid = this._ui_store.saved_state.selected_plan_uuid;
+
+            this.ssDisposer = reaction(() => {
+                toJS(this.ui_store.saved_state);
+                if (this.ui_store.saved_state) {
+                    let plan_uuid = this.ui_store.saved_state.selected_plan_uuid;
                     this.logger.info(`Saved state changed... (plan UUID: ${plan_uuid})`);
                 } else {
                     this.logger.info(`Saved state is None`);
                 }
-                // TODO: Figure out why this is needed and remove it
-                this.savedStateSubject.next(this._ui_store.saved_state);
-                return this._ui_store.saved_state;
-            }).subscribe(this.savedStateSubject);
+                return this.ui_store.saved_state;
+            }, savedState => {
+                this.logger.info(`firing ${savedState} to the subjects observers`);
+                this.savedStateSubject.next(savedState);
+            }, {
+                name: 'saved state',
+                equals: (a, b) => false // so that we ALWAYS fire to the subject
+            });
+
         }
         return this.savedStateSubject;
     }
@@ -244,7 +226,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
 
             // If the selected plan UUID changes, lookup the plan and broadcast the change
             toStream(() => {
-                return this._ui_store.saved_state.selected_plan_uuid;
+                return this.ui_store.saved_state.selected_plan_uuid;
             }).subscribe(uuid => {
                 let plan = this.plans.findOfThisTypeByUUID(uuid);
                 if (plan) {
@@ -371,33 +353,36 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
                 this.logger.info(`No plan set`);
             }
             if (planDoesntExist) {
-                this.logger.info(`Plan set to ${this._ui_store.saved_state.selected_plan_uuid}, but I can't find that...`);
+                this.logger.info(`Plan set to ${this.ui_store.saved_state.selected_plan_uuid}, but I can't find that...`);
             }
             if (this.plans.plansByDateLatestFirst.length > 0) {
                 this.logger.info(`Setting default selected plan to: ${this.plans.plansByDateLatestFirst[0].name}`);
-                this._ui_store.saved_state.selected_plan_uuid = this.plans.plansByDateLatestFirst[0].uuid;
+                this.ui_store.saved_state.setSelectedPlanUUID(this.plans.plansByDateLatestFirst[0].uuid);
             } else {
                 this.logger.info(`Tried to select a default plan, but no plans in the DB for us to choose from :(`);
             }
         } else {
-            this.logger.info(`We do... the default plan is: ${this._ui_store.saved_state.selected_plan_uuid}`);
+            this.logger.info(`We do... the default plan is: ${this.ui_store.saved_state.selected_plan_uuid}`);
 
             // Seems we have to kick the value to make .next() fire on the plan again
-            let temp = this._ui_store.saved_state.selected_plan_uuid;
-            this._ui_store.saved_state.selected_plan_uuid = null;
-            this._ui_store.saved_state.selected_plan_uuid = temp;
+            let temp = this.ui_store.saved_state.selected_plan_uuid;
+            this.ui_store.saved_state.setSelectedPlanUUID(null);
+            this.ui_store.saved_state.setSelectedPlanUUID(temp);
         }
     }
 
-    @action
-    logout() {
+    @action logout() {
         this.ui_store.saved_state.logged_in_person_uuid = "";
         this.ui_store.saved_state.login_token = "";
-        this.ui_store.saved_state.selected_plan_uuid = "";
+        this.ui_store.saved_state.setSelectedPlanUUID("");
         this.clear();
         this.db.async_store_or_update_object(this.ui_store.saved_state).then(() => {
             location.reload();
         });
+    }
+
+    private setUIStore(uiStore: UIStore) {
+        this.ui_store = uiStore;
     }
 }
 

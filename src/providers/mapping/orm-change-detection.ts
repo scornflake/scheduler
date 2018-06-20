@@ -150,6 +150,14 @@ class ObjectChangeTracker {
         this.tracked_objects_by_uuid.delete(object.uuid);
     }
 
+    get ignored(): string[] {
+        return ["type", "_id", "_rev"];
+    }
+
+    shouldBeIgnored(propertyName:string) {
+        return this.ignored.indexOf(propertyName) != -1;
+    }
+
     private trackFieldsOfObject(owner: ObjectWithUUID, instance: any, parent_path: string, listener: ChangeListener) {
         let props = this.mapper.propertiesFor(instance.constructor.name);
         if (!props) {
@@ -164,7 +172,9 @@ class ObjectChangeTracker {
             let childPath = `${parent_path}.${propertyName}`;
             let actualPropertyName = mapping.privateName || propertyName;
             try {
-
+                if (this.shouldBeIgnored(propertyName)) {
+                    return;
+                }
                 /*
                 Very careful here: get the underlying property.
                 Don't go through an accessor (e.g: Person.availability, etc).
@@ -172,7 +182,6 @@ class ObjectChangeTracker {
                 let value = instance[actualPropertyName];
                 let type = mapping.type;
                 let typeName = NameForMappingPropType(type);
-
 
                 if (type == MappingType.Property || type == MappingType.Reference) {
                     // Simple property
@@ -270,10 +279,10 @@ class ObjectChangeTracker {
 
         let disposer = observe(instance, (change) => {
             /*
-            Ignore changes to '_rev'
+            Ignore changes to _rev, _id and type
              */
             if (change['name']) {
-                if (change['name'] == '_rev') {
+                if(this.shouldBeIgnored(change['name'])) {
                     return;
                 }
             }
@@ -313,10 +322,10 @@ class ObjectChangeTracker {
         this.tracking_trace(`install change listener for: ${parentPath}.${propertyName} (${instance}/${instance.constructor.name})`);
         let disposer = observe(instance, propertyName, (change) => {
             /*
-            Ignore changes to '_rev'
+            Ignore changes to _rev, _id and type
              */
             if (change['name']) {
-                if (change['name'] == '_rev') {
+                if(this.shouldBeIgnored(change['name'])) {
                     return;
                 }
             }

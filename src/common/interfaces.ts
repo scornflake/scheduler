@@ -1,3 +1,5 @@
+export type LoginCallback = (loginTokenValid:boolean) => void;
+
 export interface ValidationResponse {
     user?: UserResponse,
     ok: boolean,

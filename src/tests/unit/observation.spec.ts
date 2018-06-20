@@ -1,6 +1,6 @@
 import {ObjectWithUUID} from "../../scheduling/base-types";
-import {observe} from "mobx";
-import {observable} from "mobx-angular";
+import {configure, getDependencyTree, getObserverTree, observe, spy, transaction} from "mobx";
+import {action, observable} from "mobx-angular";
 import {RootStore} from "../../store/root";
 import {MockConfigurationService} from "../../app/logging-configuration";
 import {SchedulerDatabase} from "../../providers/server/db";
@@ -10,9 +10,16 @@ import {Plan} from "../../scheduling/plan";
 import {Team} from "../../scheduling/teams";
 import {defaultSoundRole} from "../sample-data";
 import {csd} from "../../scheduling/common/date-utils";
+import {SafeJSON} from "../../common/json/safe-stringify";
+import {printDependencyMap} from "@ionic/app-scripts";
+import {ObjectUtils} from "../../pages/page-utils";
 
 class SomeThing extends ObjectWithUUID {
     @observable some_field: string = "a value";
+
+    @action setField(value) {
+        this.some_field = value;
+    }
 
     toString() {
         return this.some_field;
@@ -23,24 +30,36 @@ describe('observation', () => {
     let db;
     let store;
     beforeEach((done) => {
+        configure({
+            enforceActions: true
+        });
+
         let config = MockConfigurationService.ServiceForTests();
         let mapper = setupOrmMapper();
         SchedulerDatabase.ConstructAndWait(config, mapper).then(new_db => {
             db = new_db;
             store = new RootStore(db);
-            done();
+            store.load().then(() => {
+                done();
+            });
         });
+
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
     });
 
     it('can observe change to saved state', function (done) {
+        expect(store.ui_store).not.toBeNull();
+        expect(store.ui_store.saved_state).not.toBeNull();
+
         store.saved_state$.subscribe(ss => {
+            console.log(`subscriber got ${SafeJSON.stringify(ss)}`);
             if (ss) {
                 if (ss.selected_plan_uuid == "1234") {
                     done();
                 }
             }
         });
-        store.ui_store.saved_state.selected_plan_uuid = "1234";
+        store.ui_store.saved_state.setSelectedPlanUUID("1234");
     });
 
     it('can observe change to selected plan', function (done) {
@@ -53,7 +72,7 @@ describe('observation', () => {
                 }
             }
         });
-        store.ui_store.saved_state.selected_plan_uuid = newplan.uuid;
+        store.ui_store.saved_state.setSelectedPlanUUID(newplan.uuid);
     });
 
     it('can observe change to logged in person', function (done) {
@@ -69,7 +88,7 @@ describe('observation', () => {
             }
         });
 
-        store.ui_store.saved_state.logged_in_person_uuid = person.uuid;
+        store.ui_store.saved_state.setLoggedInPersonUUID(person.uuid);
     });
 
     it('can observe change to schedule', function (done) {
@@ -88,7 +107,7 @@ describe('observation', () => {
         expect(store.schedule).toBeUndefined();
 
         store.schedule$.subscribe(swr => {
-            if(swr) {
+            if (swr) {
                 if (swr.plan == newplan) {
                     done();
                 }
@@ -96,7 +115,7 @@ describe('observation', () => {
         });
 
         // Select the new plan!
-        store.ui_store.saved_state.selected_plan_uuid = newplan.uuid;
+        store.ui_store.saved_state.setSelectedPlanUUID(newplan.uuid);
     });
 
     it('can observe property on class', (done) => {
@@ -108,7 +127,7 @@ describe('observation', () => {
         });
 
         // change the object
-        instance.some_field = '1234';
+        instance.setField('1234');
     });
 
 });

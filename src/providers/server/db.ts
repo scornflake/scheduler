@@ -20,6 +20,7 @@ import {IObjectLoader} from "../mapping/orm-mapper-type";
 import {OrmConverter} from "./orm-converter";
 import {IObjectCache} from "../mapping/cache";
 import Database = PouchDB.Database;
+import {action} from "mobx-angular";
 
 // Put this back in when we move to v7 of Pouch.
 // import plugin from 'pouchdb-adapter-idb';
@@ -53,7 +54,7 @@ class SchedulerDatabase implements IObjectLoader {
     static ConstructAndWait(configService: ConfigurationService, mapper: OrmMapper): Promise<SchedulerDatabase> {
         return new Promise<SchedulerDatabase>((resolve) => {
             let instance = new SchedulerDatabase(configService, mapper);
-            instance.logger.info("Starting DB setup for TEST");
+            // instance.logger.info("Starting DB setup for TEST");
             instance.ready_event.subscribe(() => {
                 resolve(instance);
             })
@@ -109,9 +110,9 @@ class SchedulerDatabase implements IObjectLoader {
         let options = {};
         this.db = await new PouchDB(this.db_name, options);
 
-        this.logger.info("Getting DB information");
+        this.logger.debug("Getting DB information");
         this.info = await this.db.info();
-        this.logger.info(`DB: ${this.info.db_name}. ${this.info.doc_count} docs.`);
+        this.logger.debug(`DB: ${this.info.db_name}. ${this.info.doc_count} docs.`);
         await this.setup_indexes();
 
         this.is_ready = true;
@@ -120,13 +121,13 @@ class SchedulerDatabase implements IObjectLoader {
     }
 
     async setup_indexes() {
-        this.logger.info("Checking indexes...");
-        this.logger.info("Getting existing indexes...");
+        this.logger.debug("Checking indexes...");
+        this.logger.debug("Getting existing indexes...");
 
         this.current_indexes = await this.db.getIndexes();
-        this.logger.info(`DB has indexes ${this.current_indexes.indexes.map(i => i.name).join(', ')}`);
+        this.logger.debug(`DB has indexes ${this.current_indexes.indexes.map(i => i.name).join(', ')}`);
         if (!this.index_exists('type')) {
-            this.logger.info("Creating index: type");
+            this.logger.debug("Creating index: type");
             await this.db.createIndex({index: {name: 'type', fields: ['type']}});
             await this.db.createIndex({index: {name: 'type and email', fields: ['type', 'email']}});
         }
@@ -146,6 +147,7 @@ class SchedulerDatabase implements IObjectLoader {
         return this.current_indexes.indexes.find(idx => idx.name == name) != null;
     }
 
+    @action
     async async_load_object_with_id(id: string, useCache: boolean = true, nesting: number = 0): Promise<ObjectWithUUID> {
         if (isUndefined(id)) {
             throw new Error("load_object_with_id failed. You must pass in an id (you passed in 'undefined')");
@@ -229,6 +231,7 @@ class SchedulerDatabase implements IObjectLoader {
         }
     }
 
+    @action
     async async_store_or_update_object(object: ObjectWithUUID, force_rev_check: boolean = false, ignore_not_found: boolean = false): Promise<ObjectWithUUID> {
         // Get the latest rev
         if (object == null || isUndefined(object)) {
@@ -245,7 +248,7 @@ class SchedulerDatabase implements IObjectLoader {
                     if (existing._rev != object._rev) {
                         // better update it!
                         this.logger.warn(`Updating rev on ${object} because the server is different (this could overwrite new changes)`);
-                        object._rev = existing._rev;
+                        object.setRev(existing._rev);
                     }
                 } catch (err) {
                     if (!ignore_not_found) {
@@ -263,19 +266,19 @@ class SchedulerDatabase implements IObjectLoader {
 
                 this.logger.debug(`Stored ${object_state} object ${object.type} with new ID: ${object._id}`);
                 if (object._id != response.id) {
-                    object._id = response.id;
+                    object.setId(response.id);
                 }
                 if (object._rev != response.rev) {
-                    object._rev = response.rev;
+                    object.setRev(response.rev);
                 }
                 if (object.is_new) {
-                    object.is_new = false;
+                    object.setIsNew(false);
                 }
                 this.trackChanges(object);
                 return object;
             } catch (err) {
                 this.logger.debug(`Failed to store entity. Err: ${err}. Data: ${SafeJSON.stringify(dict_of_object)}`);
-                throw Error(`Exception while storing ${object_state} type ${object.type}. ${err}. id: ${object.uuid}.`);
+                throw Error(`Exception while storing ${object_state} ${object.type}. ${err}. id: ${object.uuid}. Tried to store: ${JSON.stringify(dict_of_object)}`);
             }
         } finally {
             this.tracker.enableTrackingFor(object);
@@ -283,6 +286,7 @@ class SchedulerDatabase implements IObjectLoader {
         }
     }
 
+    @action
     async async_load_and_create_objects_for_query(query) {
         let all_objects_of_type = await this.db.find(query);
         this.persistence_debug(`Hydrating ${all_objects_of_type.docs.length} objects, for query: ${query}`, 0);
@@ -317,21 +321,23 @@ class SchedulerDatabase implements IObjectLoader {
         return list_of_new_things;
     }
 
+    @action
     async async_load_all_objects_of_type(type: string) {
         let query = {selector: {type: type}};
         return await this.async_load_and_create_objects_for_query(query);
     }
 
+    @action
     async async_load_into_store<T extends NamedObject>(manager: GenericManager<T>, type: string, log_result: boolean = false) {
         let loaded_objects = await this.async_load_all_objects_of_type(type);
         if (log_result) {
             this.logger.info(`Loaded ${loaded_objects.length} objects`);
         }
         let added: number = 0;
+        manager.addAll(loaded_objects);
         loaded_objects.forEach(o => {
             let ooo = o as T;
             if (ooo) {
-                manager.add(ooo);
                 this.trackChanges(ooo);
                 added++;
             } else {
@@ -344,6 +350,7 @@ class SchedulerDatabase implements IObjectLoader {
         return loaded_objects;
     }
 
+    @action
     async async_delete_object(object: ObjectWithUUID) {
         if (object.is_new) {
             throw new Error("Cannot remove object that is 'new' and hasn't been saved yet");

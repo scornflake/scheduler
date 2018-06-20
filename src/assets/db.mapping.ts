@@ -23,9 +23,7 @@ let scheduler_db_map: ClassFieldMapping = {
     classes: [
         {
             name: 'SavedState',
-            fields: [
-                {name: '*'} // means: discover the properties by yourself, everything
-            ],
+            fields: [{name: '*'},],
             exclude: ['logger'],
             inherit: 'ObjectWithUUID',
             factory: () => new SavedState('Moooo')

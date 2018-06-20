@@ -9,7 +9,7 @@ import {Person} from "../../scheduling/people";
 })
 export class PersonDetailsComponent {
     @Input() person: Person;
-
+    @Input() availabilityTitle: string = "Availability";
     @Output() show_availability = new EventEmitter();
 
     constructor(public navCtrl: NavController,

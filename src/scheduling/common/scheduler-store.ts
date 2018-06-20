@@ -59,6 +59,10 @@ abstract class GenericManager<T extends NamedObject> {
     add(item: T): T {
         return this.store.add_object_to_array(item);
     }
+
+    addAll(objects: T[]) {
+        return this.store.add_objects_to_array(objects);
+    }
 }
 
 class RoleManager extends GenericManager<Role> {

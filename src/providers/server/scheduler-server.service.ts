@@ -7,17 +7,40 @@ import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {Person} from "../../scheduling/people";
 import {Observable} from "rxjs/Observable";
-import {Injectable} from "@angular/core";
+import {forwardRef, Inject, Injectable} from "@angular/core";
 import {Organization} from "../../scheduling/organization";
 import {SchedulerDatabase} from "./db";
 import {ObjectWithUUID} from "../../scheduling/base-types";
+import {Subject} from "rxjs/Subject";
+import {BehaviorSubject} from "rxjs/BehaviorSubject";
+import {action} from "mobx-angular";
 
 @Injectable()
 class SchedulerServer {
+    readyEvent: Subject<boolean> = new BehaviorSubject(false);
+
     private logger: Logger;
 
-    constructor(public store: RootStore, public restAPI: RESTServer, public db: SchedulerDatabase) {
+    constructor(@Inject(forwardRef(() => RootStore)) private store,
+                private restAPI: RESTServer,
+                private db: SchedulerDatabase) {
         this.logger = LoggingWrapper.getLogger('service.bridge');
+
+        this.db.ready_event.subscribe(isReady => {
+            if (isReady) {
+                this.store.load().then(() => {
+                    // If we have a login token, try to validate this and login if possible
+                    if (this.store.ui_store.saved_state.login_token) {
+                        this.logger.info(`Logging in user as part of SchedulerServer init...`);
+                        this.validateLoginToken().then(vr => {
+                            this.readyEvent.next(true);
+                        });
+                    } else {
+                        this.readyEvent.next(true);
+                    }
+                })
+            }
+        })
     }
 
     isUsernameAvailableAndGood(username: string): Observable<string> {
@@ -62,9 +85,10 @@ class SchedulerServer {
             savedState.login_token = null;
             uiStore.saved_state.logged_in_person_uuid = null;
         }
-        uiStore.login_token_validated = good;
+        uiStore.setLoginTokenValidated(good);
     }
 
+    @action
     async validateLoginToken(): Promise<ValidationResponse> {
         // If no 'person uuid', need to login
         let savedState = this.store.ui_store.saved_state;
@@ -79,7 +103,7 @@ class SchedulerServer {
 
         let vr = await this.restAPI.validateLoginToken(savedState.login_token);
 
-        this.store.ui_store.login_token_validated = vr.ok;
+        this.store.ui_store.setLoginTokenValidated(vr.ok);
         this.restAPI.loginToken = savedState.login_token;
 
         // Tell the store to initialize on this user
@@ -88,6 +112,7 @@ class SchedulerServer {
         return vr;
     }
 
+    @action
     async syncUserWithServer(serverUser: UserResponse): Promise<UserResponse> {
         let localPerson: Person;
         let munge = false;
@@ -152,6 +177,7 @@ class SchedulerServer {
         shows up.
 
         */
+    @action
     private async ensureUserHasOrganization(user: UserResponse, localPerson: Person, munge: boolean): Promise<Organization> {
         // Is there an org associated with us on the server?
         if (!user.organization_id) {

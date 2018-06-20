@@ -1,0 +1,14 @@
+<ion-header>
+
+    <ion-navbar>
+        <ion-title>My Profile</ion-title>
+    </ion-navbar>
+
+</ion-header>
+
+
+<ion-content no-padding>
+    <person-details *ngIf="store.loggedInPerson$ | async as person"
+                    [person]="person">
+    </person-details>
+</ion-content>

@@ -1,4 +1,4 @@
-import {observable} from "mobx-angular";
+import {action, observable} from "mobx-angular";
 
 abstract class TypedObject {
     @observable type: string;
@@ -16,6 +16,10 @@ abstract class TypedObject {
         }
         return this.type == obj.type;
     }
+
+    @action setType(type: string) {
+        this.type = type;
+    }
 }
 
 abstract class ObjectWithUUID extends TypedObject {
@@ -30,6 +34,18 @@ abstract class ObjectWithUUID extends TypedObject {
         }
         this.is_new = true;
         this._id = uuid;
+    }
+
+    @action setId(id: string) {
+        this._id = id;
+    }
+
+    @action setIsNew(flag: boolean) {
+        this.is_new = flag;
+    }
+
+    @action setRev(revision: string) {
+        this._rev = revision;
     }
 
     isEqual(obj: object): boolean {

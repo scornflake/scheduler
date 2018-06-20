@@ -29,6 +29,7 @@ export class MyApp {
     pages() {
         return [
             {title: "Dashboard", page: 'home'},
+            {title: "Profile", page: 'page-profile'},
             {title: "People", page: 'page-people'},
             {title: "Teams", page: 'page-teams'},
             {title: "Plans", page: 'page-plans'},
