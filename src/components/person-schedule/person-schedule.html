@@ -1,6 +1,11 @@
 <div *ngIf="schedule as sd">
-  <ion-list-header color="light">Scheduled On</ion-list-header>
-  <ion-item *ngFor="let sd of scheduled_dates">
-    {{sd.date|date}} - {{sd.score_for(person).roles|pluck:'name'|join:", "}}
-  </ion-item>
+    <ion-list-header color="light">Scheduled On</ion-list-header>
+    <ion-item *ngFor="let sd of scheduled_dates">
+        <ion-label class="hidden-sm-up">
+            {{sd.date|date}} - {{sd.score_for(person).roles|pluck:'name'|join:", "}}
+        </ion-label>
+        <ion-label class="hidden-xs-down">
+            {{sd.date|date:'longDate'}} - {{sd.score_for(person).roles|pluck:'name'|join:", "}}
+        </ion-label>
+    </ion-item>
 </div>
