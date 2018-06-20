@@ -5,10 +5,12 @@
         </ion-toolbar>
     </ion-header>
     <ion-content>
-        <ion-list>
-            <button ion-item *ngFor="let p of pages()" (tap)="openPage(p)">{{p.title}}</button>
-            <ion-item menuClose>Close Menu</ion-item>
-        </ion-list>
+        <div *ngFor="let g of groups">
+            <ion-list-header *ngIf="g.title">{{g.title}}</ion-list-header>
+            <ion-list>
+                <button ion-item *ngFor="let p of pagesOfGroup(g)" (tap)="openPage(p)">{{p.title}}</button>
+            </ion-list>
+        </div>
     </ion-content>
 </ion-menu>
 

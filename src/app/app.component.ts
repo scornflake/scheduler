@@ -15,7 +15,7 @@ export class MyApp {
     constructor(private platform: Platform,
                 private statusBar: StatusBar,
                 private splashScreen: SplashScreen,
-                private store:RootStore,
+                private store: RootStore,
                 private menu: MenuController) {
         this.menu.enable(true, 'menu');
         platform.ready().then(() => {
@@ -26,25 +26,45 @@ export class MyApp {
         });
     }
 
-    pages() {
+    get groups() {
         return [
-            {title: "Dashboard", page: 'home'},
-            {title: "Profile", page: 'page-profile'},
-            {title: "People", page: 'page-people'},
-            {title: "Teams", page: 'page-teams'},
-            {title: "Plans", page: 'page-plans'},
-            {title: "DB Maint", page: 'page-db'},
-            {title: "About", page: 'page-about'},
             {
-                title: "Logout", function: () => {
-                    this.store.logout();
-                }
+                title: "", items: [
+                    {title: "Dashboard", page: 'home'},
+                    {title: "Profile", page: 'page-profile'},
+                    {title: "About", page: 'page-about'},
+                ]
+            },
+            {
+                title: "Admin", items: [
+                    {title: "People", page: 'page-people'},
+                    {title: "Teams", page: 'page-teams'},
+                    {title: "Plans", page: 'page-plans'},
+                ]
+            },
+            {
+                title: "Dev", items: [
+                    {title: "DB Maint", page: 'page-db'},
+                ]
+            },
+            {
+                title: "", items: [
+                    {
+                        title: "Logout", function: () => {
+                            this.store.logout();
+                        }
+                    }
+                ]
             },
         ]
     }
 
+    pagesOfGroup(group) {
+        return group.items;
+    }
+
     openPage(p) {
-        if(p.function) {
+        if (p.function) {
             p.function();
         } else {
             this.nav.push(p.page);
