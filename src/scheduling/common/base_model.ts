@@ -68,6 +68,10 @@ class GenericObjectStore<T extends ObjectWithUUID> {
         this.items = []
     }
 
+    get length(): number {
+        return this.items.length;
+    }
+
     findByUUID(uuid: string): T {
         return this.items.find(v => v.uuid == uuid);
     }

@@ -67,12 +67,17 @@ describe('root store', () => {
     });
 
     it('items of a BaseStore should still be observable after "remove" is called', function () {
+        expect(store).not.toBeNull();
+        expect(neil).not.toBeNull();
+
         store.add_object_to_array(neil);
-        expect(store.length).toEqual(1);
+        expect(store.length).toEqual(1, "huh? not added");
         expect(isObservableArray(store.items)).toBeTruthy();
 
+        expect(store.findIndexOfObject(neil)).not.toBe(-1, "why not found?");
+
         store.remove_object_from_array(neil);
-        expect(store.length).toEqual(0);
+        expect(store.length).toEqual(0, "not removed!");
         expect(isObservableArray(store.items)).toBeTruthy();
     });
 });
