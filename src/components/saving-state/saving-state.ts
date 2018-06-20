@@ -7,7 +7,7 @@ import {Observable} from "rxjs/Observable";
     templateUrl: 'saving-state.html'
 })
 export class SavingStateComponent {
-    savingstate: string;
+    savingstate: string = "idle";
 
     constructor(db: SchedulerDatabase) {
         db.save_notifications.subscribe(state => {

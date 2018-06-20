@@ -11,6 +11,7 @@ import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {PageUtils} from "../../pages/page-utils";
 import {Role} from "../../scheduling/role";
+import {SafeJSON} from "../../common/json/safe-stringify";
 
 @Component({
     // changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,20 +35,16 @@ export class ScheduleViewerComponent {
     }
 
     ngOnInit() {
-        // if (this.store.ui_store.saved_state.last_selected_date == null) {
-        //     if(this.colSelectableDates) {
-        //         if (this.colSelectableDates.length > 0) {
-        //             this.logger.info(`Selecting a new default date of: ${this.colSelectableDates[0]}`);
-        //             this.store.ui_store.saved_state.last_selected_date = this.colSelectableDates[0];
-        //         }
-        //     }
-        // }
         this.colSelectedDate = this.store.ui_store.saved_state.last_selected_date;
         if (!this.colSelectedDate) {
             if (this.schedule) {
                 this.colSelectedDate = this.schedule.dates[0].date;
             }
         }
+
+        // this.store.selected_plan$.subscribe(p => {
+        //     this.logger.info(`SVC sees: ${SafeJSON.stringify(p)}`);
+        // })
     }
 
     get roles(): Array<Role> {

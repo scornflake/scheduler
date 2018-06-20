@@ -157,9 +157,7 @@ class SchedulerServer {
         await this.savePerson(localPerson);
         await this.ensureUserHasOrganization(serverUser, localPerson, munge);
 
-        if(munge) {
-            this.store.ui_store.saved_state.setLoggedInPersonUUID(localPerson.uuid);
-        }
+        this.store.ui_store.saved_state.setLoggedInPersonUUID(localPerson.uuid);
 
         return serverUser;
     }

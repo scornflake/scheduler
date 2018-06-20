@@ -56,6 +56,8 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         this.scheduleSubject = new BehaviorSubject<ScheduleWithRules>(null);
         this.savedStateSubject = new BehaviorSubject<SavedState>(null);
         this.selectedPlanSubject = new BehaviorSubject<Plan>(null);
+
+        this.setupSubjects();
     }
 
     ngOnDestroy() {
@@ -121,7 +123,10 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
 
         // Sort out who the logged in user is (plus this.organization)
         // Need to kick this again, because lookup of the logged in person isn't possible until people are loaded.
-        this.lookupPersonAndTellSubscribers(this.ui_store.saved_state.logged_in_person_uuid);
+        if (this.ui_store.saved_state.logged_in_person_uuid) {
+            this.logger.info(`Letting the app know about the person thats logged in (${this.ui_store.saved_state.logged_in_person_uuid})`);
+            this.lookupPersonAndTellSubscribers(this.ui_store.saved_state.logged_in_person_uuid);
+        }
 
         // We want that 'defaults' one to be alive so it triggers when we first load the state
         this.checkForDefaults();
@@ -152,57 +157,6 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         return this.ui_store.saved_state;
     }
 
-    get schedule$(): Observable<ScheduleWithRules> {
-        if (!this.scheduleSubscription) {
-            // Subscribe to a change in the plan, generate a new schedule, and then broadcast that
-            this.scheduleSubscription = this.selected_plan$.map(plan => {
-                if (plan) {
-                    this.logger.info(`Regenerating schedule`);
-                    let schedule = new ScheduleWithRules(plan, this.previousSchedule);
-                    schedule.create_schedule();
-                    // this.scheduleSubject.next(schedule);
-                    return schedule;
-                } else {
-                    this.logger.warn(`No schedule generated, the provided plan was null`);
-                }
-                return null;
-            }).subscribe(this.scheduleSubject);
-        }
-        return this.scheduleSubject;
-    }
-
-    get ui_store$(): Subject<UIStore> {
-        if (!this.uiDisposer) {
-            this.uiDisposer = reaction(() => {
-                // trace();
-                this.logger.info(`UI Store changed to ${this.ui_store}. Signed in: ${this.ui_store.signed_in}`);
-                toJS(this.ui_store);
-                return this.ui_store;
-            }, () => {
-                this.uiStoreSubject.next(this.ui_store);
-            }, {name: 'ui store', equals: (a, b) => false});
-        }
-        return this.uiStoreSubject;
-    }
-
-    get loggedInPerson$(): Observable<Person> {
-        if (!this.lipDisposer) {
-            this.lipDisposer = reaction(() => {
-                trace();
-                let state = this.ui_store.saved_state;
-                if (state) {
-                    return state.logged_in_person_uuid;
-                }
-                return null;
-            }, (value) => {
-                this.logger.debug("loggedInPerson$", `state change saw: ${value}`);
-                this.lookupPersonAndTellSubscribers(value);
-            }, {name: 'logged in person'});
-            // above reaction uses default comparator, so that it only fires when the UUID CHANGES! yay.
-        }
-        return this.loggedInPersonSubject;
-    }
-
     private lookupPersonAndTellSubscribers(uuid: string) {
         if (uuid) {
             this.loggedInPerson = this.people.findOfThisTypeByUUID(uuid);
@@ -214,47 +168,6 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         if (this.loggedInPersonSubject) {
             this.loggedInPersonSubject.next(this.loggedInPerson);
         }
-    }
-
-    get saved_state$(): Observable<SavedState> {
-        if (!this.ssDisposer) {
-            // Observe changes, and send these to the subject
-            this.ssDisposer = reaction(() => {
-                toJS(this.ui_store.saved_state);
-                if (this.ui_store.saved_state) {
-                    let plan_uuid = this.ui_store.saved_state.selected_plan_uuid;
-                    this.logger.info(`Saved state changed... (plan UUID: ${plan_uuid})`);
-                }
-                return this.ui_store.saved_state;
-            }, savedState => {
-                // this.logger.info(`firing ${savedState} to the subjects observers`);
-                this.savedStateSubject.next(savedState);
-            }, {
-                name: 'saved state',
-                equals: (a, b) => false // so that we ALWAYS fire to the subject
-            });
-
-        }
-        return this.savedStateSubject;
-    }
-
-    get selected_plan$(): Observable<Plan> {
-        if (!this.spDisposer) {
-
-            // If the selected plan UUID changes, lookup the plan and broadcast the change
-            this.spDisposer = reaction(() => {
-                return this.ui_store.saved_state.selected_plan_uuid;
-            }, uuid => {
-                let plan = this.plans.findOfThisTypeByUUID(uuid);
-                if (plan) {
-                    this.logger.debug(`Plan changed to: ${uuid}`);
-                    this.selectedPlanSubject.next(plan);
-                } else {
-                    this.logger.info(`selected_plan$ failure - can't find plan with ID: ${uuid}`);
-                }
-            }, {name: 'selected plan'});
-        }
-        return this.selectedPlanSubject;
     }
 
     async asyncSaveOrUpdateDb(object: ObjectWithUUID) {
@@ -398,6 +311,127 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
 
     private setUIStore(uiStore: UIStore) {
         this.ui_store = uiStore;
+    }
+
+    private setupSubjects() {
+        this._createLoggedInPersonReaction();
+        this._createSavedStateReaction();
+        this._createScheduleReaction();
+        this._createSelectedPlanReaction();
+        this._createUIStoreReaction();
+    }
+
+    private _createScheduleReaction() {
+        if (!this.scheduleSubscription) {
+            // Subscribe to a change in the plan, generate a new schedule, and then broadcast that
+            this.scheduleSubscription = this.selected_plan$.map(plan => {
+                if (plan) {
+                    this.logger.info(`Regenerating schedule`);
+                    let schedule = new ScheduleWithRules(plan, this.previousSchedule);
+                    schedule.create_schedule();
+                    // this.scheduleSubject.next(schedule);
+                    return schedule;
+                } else {
+                    this.logger.warn(`No schedule generated, the provided plan was null`);
+                }
+                return null;
+            }).subscribe(this.scheduleSubject);
+        }
+    }
+
+    private _createSavedStateReaction() {
+        if (!this.ssDisposer) {
+            // Observe changes, and send these to the subject
+            this.ssDisposer = reaction(() => {
+                toJS(this.ui_store.saved_state);
+                if (this.ui_store.saved_state) {
+                    let plan_uuid = this.ui_store.saved_state.selected_plan_uuid;
+                    this.logger.info(`Saved state changed... (plan UUID: ${plan_uuid})`);
+                }
+                return this.ui_store.saved_state;
+            }, savedState => {
+                // this.logger.info(`firing ${savedState} to the subjects observers`);
+                this.savedStateSubject.next(savedState);
+            }, {
+                name: 'saved state',
+                equals: (a, b) => false // so that we ALWAYS fire to the subject
+            });
+
+        }
+    }
+
+    private _createSelectedPlanReaction() {
+        if (!this.spDisposer) {
+            // If the selected plan UUID changes, lookup the plan and broadcast the change
+            this.spDisposer = reaction(() => {
+                if(this.ui_store.saved_state) {
+                    return this.ui_store.saved_state.selected_plan_uuid;
+                }
+                return null;
+            }, uuid => {
+                let plan = this.plans.findOfThisTypeByUUID(uuid);
+                if (plan) {
+                    this.logger.warn(`Plan changed to: ${uuid}`);
+                    this.selectedPlanSubject.next(plan);
+                } else {
+                    this.logger.warn(`selected_plan$ failure - can't find plan with ID: ${uuid}`);
+                }
+            }, {name: 'selected plan'});
+        }
+    }
+
+    private _createUIStoreReaction() {
+        if (!this.uiDisposer) {
+            this.uiDisposer = reaction(() => {
+                // trace();
+                this.logger.info(`UI Store changed to ${this.ui_store}. Signed in: ${this.ui_store.signed_in}`);
+                toJS(this.ui_store);
+                return this.ui_store;
+            }, () => {
+                this.uiStoreSubject.next(this.ui_store);
+            }, {name: 'ui store', equals: (a, b) => false});
+        }
+    }
+
+    private _createLoggedInPersonReaction() {
+        if (!this.lipDisposer) {
+            this.lipDisposer = reaction(() => {
+                trace();
+                if (this.ui_store) {
+                    if (this.ui_store.saved_state) {
+                        let state = this.ui_store.saved_state;
+                        if (state) {
+                            return state.logged_in_person_uuid;
+                        }
+                    }
+                }
+                return null;
+            }, (value) => {
+                this.logger.debug("loggedInPerson$", `state change saw: ${value}`);
+                this.lookupPersonAndTellSubscribers(value);
+            }, {name: 'logged in person'});
+            // above reaction uses default comparator, so that it only fires when the UUID CHANGES! yay.
+        }
+    }
+
+    get schedule$(): Observable<ScheduleWithRules> {
+        return this.scheduleSubject;
+    }
+
+    get ui_store$(): Subject<UIStore> {
+        return this.uiStoreSubject;
+    }
+
+    get loggedInPerson$(): Observable<Person> {
+        return this.loggedInPersonSubject;
+    }
+
+    get saved_state$(): Observable<SavedState> {
+        return this.savedStateSubject;
+    }
+
+    get selected_plan$(): Observable<Plan> {
+        return this.selectedPlanSubject;
     }
 }
 
