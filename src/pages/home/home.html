@@ -20,10 +20,10 @@
 </ion-header>
 
 <ion-content>
-    <div *ngIf="store.ui_store$|async as ui">
+    <div *ngIf="store.uiStore$|async as ui">
         <div *ngIf="ui.signed_in; else notSignedIn">
             <ion-grid>
-                <ion-item ion-row id="planselection" no-padding *ngIf="store.saved_state$ | async as ss">
+                <ion-item ion-row id="planselection" no-padding *ngIf="store.preferences$ | async as ss">
                     <ion-label ion-col col-auto class="hidden-xs-down" padding-left>Showing Plan</ion-label>
                     <ion-select
                             ion-col col-sm text-center

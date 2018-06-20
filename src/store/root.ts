@@ -1,4 +1,4 @@
-import {SavedState, UIStore} from "./UIState";
+import {Preferences, UIStore} from "./UIState";
 import {Injectable, OnDestroy} from "@angular/core";
 import {Logger} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
@@ -15,7 +15,6 @@ import {Organization} from "../scheduling/organization";
 import {IObjectCache} from "../providers/mapping/cache";
 import {Role} from "../scheduling/role";
 import {Assignment} from "../scheduling/assignment";
-import {toStream} from "mobx-utils";
 import {action} from "mobx-angular";
 import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
@@ -32,7 +31,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
 
     private logger: Logger;
 
-    private savedStateSubject: Subject<SavedState>;
+    private preferencesSubject: Subject<Preferences>;
     private scheduleSubject: Subject<ScheduleWithRules>;
     private selectedPlanSubject: Subject<Plan>;
     private uiStoreSubject: Subject<UIStore>;
@@ -54,7 +53,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         this.loggedInPersonSubject = new BehaviorSubject<Person>(null);
         this.uiStoreSubject = new BehaviorSubject<UIStore>(null);
         this.scheduleSubject = new BehaviorSubject<ScheduleWithRules>(null);
-        this.savedStateSubject = new BehaviorSubject<SavedState>(null);
+        this.preferencesSubject = new BehaviorSubject<Preferences>(null);
         this.selectedPlanSubject = new BehaviorSubject<Plan>(null);
 
         this.setupSubjects();
@@ -77,33 +76,32 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
             if (orgs.length > 1) {
                 throw new Error(`${orgs.length} organizations. Oh no! I expected only one!`);
             } else if (orgs.length == 1) {
-                return orgs[0];
+                return orgs[0] as Organization;
             }
         }
         return null;
     }
 
     async load() {
-        this.logger.info(`Restoring saved state...`);
+        this.logger.info(`Restoring preferences...`);
 
-        // Now load the saved state, defaults, etc
         try {
-            let saved_state = await this.db.async_load_object_with_id('saved-state') as SavedState;
+            let saved_state = await this.db.async_load_object_with_id('saved-state') as Preferences;
 
             this.logger.info(`Login Token: ${saved_state.login_token}`);
             this.logger.info(`Logged in person: ${saved_state.logged_in_person_uuid}`);
 
-            this.ui_store.setSavedState(saved_state as SavedState);
-            if (!this.ui_store.saved_state) {
-                this.logger.warn(`Oh oh, saved state wasn't restored. The returned object was a ${saved_state.constructor.name}... Maybe that's != SavedState?  Have reset it to a NEW SavedState instance.`);
-                this.ui_store.saved_state = new SavedState('saved-state');
+            this.ui_store.setPreferences(saved_state as Preferences);
+            if (!this.ui_store.preferences) {
+                this.logger.warn(`Oh oh, prefs wasn't restored. The returned object was a ${saved_state.constructor.name}... Maybe that's != Preferences?  Have reset it to a NEW SavedState instance.`);
+                this.ui_store.preferences = new Preferences('saved-state');
             }
         } catch (e) {
             this.logger.debug(e);
-            this.logger.info("No stored saved state. Starting from fresh.");
+            this.logger.info("No prefs. Starting from fresh.");
 
-            this.ui_store.setSavedState(new SavedState('saved-state'));
-            await this.asyncSaveOrUpdateDb(this.ui_store.saved_state);
+            this.ui_store.setPreferences(new Preferences('saved-state'));
+            await this.asyncSaveOrUpdateDb(this.ui_store.preferences);
         }
     }
 
@@ -123,9 +121,9 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
 
         // Sort out who the logged in user is (plus this.organization)
         // Need to kick this again, because lookup of the logged in person isn't possible until people are loaded.
-        if (this.ui_store.saved_state.logged_in_person_uuid) {
-            this.logger.info(`Letting the app know about the person thats logged in (${this.ui_store.saved_state.logged_in_person_uuid})`);
-            this.lookupPersonAndTellSubscribers(this.ui_store.saved_state.logged_in_person_uuid);
+        if (this.ui_store.preferences.logged_in_person_uuid) {
+            this.logger.info(`Letting the app know about the person thats logged in (${this.ui_store.preferences.logged_in_person_uuid})`);
+            this.lookupPersonAndTellSubscribers(this.ui_store.preferences.logged_in_person_uuid);
         }
 
         // We want that 'defaults' one to be alive so it triggers when we first load the state
@@ -153,8 +151,8 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         }
     }
 
-    get state(): SavedState {
-        return this.ui_store.saved_state;
+    get state(): Preferences {
+        return this.ui_store.preferences;
     }
 
     private lookupPersonAndTellSubscribers(uuid: string) {
@@ -274,7 +272,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
     }
 
     private checkForDefaults() {
-        let state = this.ui_store.saved_state;
+        let state = this.ui_store.preferences;
         this.logger.info(`Checking to see if we have a default selected plan...`);
         let planSet = state.selected_plan_uuid != null;
         let planDoesntExist = planSet && this.plans.findOfThisTypeByUUID(state.selected_plan_uuid) == null;
@@ -283,28 +281,28 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
                 this.logger.info(`No plan set`);
             }
             if (planDoesntExist) {
-                this.logger.info(`Plan set to ${this.ui_store.saved_state.selected_plan_uuid}, but I can't find that...`);
+                this.logger.info(`Plan set to ${this.ui_store.preferences.selected_plan_uuid}, but I can't find that...`);
             }
             if (this.plans.plansByDateLatestFirst.length > 0) {
                 this.logger.info(`Setting default selected plan to: ${this.plans.plansByDateLatestFirst[0].name}`);
-                this.ui_store.saved_state.setSelectedPlanUUID(this.plans.plansByDateLatestFirst[0].uuid);
+                this.ui_store.preferences.setSelectedPlanUUID(this.plans.plansByDateLatestFirst[0].uuid);
             } else {
                 this.logger.info(`Tried to select a default plan, but no plans in the DB for us to choose from :(`);
             }
         } else {
-            this.logger.info(`We do... the default plan is: ${this.ui_store.saved_state.selected_plan_uuid}`);
+            this.logger.info(`We do... the default plan is: ${this.ui_store.preferences.selected_plan_uuid}`);
 
             // Seems we have to kick the value to make .next() fire on the plan again
-            let temp = this.ui_store.saved_state.selected_plan_uuid;
-            this.ui_store.saved_state.setSelectedPlanUUID(null);
-            this.ui_store.saved_state.setSelectedPlanUUID(temp);
+            let temp = this.ui_store.preferences.selected_plan_uuid;
+            this.ui_store.preferences.setSelectedPlanUUID(null);
+            this.ui_store.preferences.setSelectedPlanUUID(temp);
         }
     }
 
     @action logout() {
-        this.ui_store.saved_state.clearLogin();
+        this.ui_store.preferences.clearLogin();
         this.clear();
-        this.db.async_store_or_update_object(this.ui_store.saved_state).then(() => {
+        this.db.async_store_or_update_object(this.ui_store.preferences).then(() => {
             location.reload();
         });
     }
@@ -315,7 +313,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
 
     private setupSubjects() {
         this._createLoggedInPersonReaction();
-        this._createSavedStateReaction();
+        this._createPreferencesReaction();
         this._createScheduleReaction();
         this._createSelectedPlanReaction();
         this._createUIStoreReaction();
@@ -324,7 +322,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
     private _createScheduleReaction() {
         if (!this.scheduleSubscription) {
             // Subscribe to a change in the plan, generate a new schedule, and then broadcast that
-            this.scheduleSubscription = this.selected_plan$.map(plan => {
+            this.scheduleSubscription = this.selectedPlan$.map(plan => {
                 if (plan) {
                     this.logger.info(`Regenerating schedule`);
                     let schedule = new ScheduleWithRules(plan, this.previousSchedule);
@@ -339,21 +337,20 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         }
     }
 
-    private _createSavedStateReaction() {
+    private _createPreferencesReaction() {
         if (!this.ssDisposer) {
             // Observe changes, and send these to the subject
             this.ssDisposer = reaction(() => {
-                toJS(this.ui_store.saved_state);
-                if (this.ui_store.saved_state) {
-                    let plan_uuid = this.ui_store.saved_state.selected_plan_uuid;
-                    this.logger.info(`Saved state changed... (plan UUID: ${plan_uuid})`);
+                toJS(this.ui_store.preferences);
+                if (this.ui_store.preferences) {
+                    let plan_uuid = this.ui_store.preferences.selected_plan_uuid;
+                    this.logger.info(`Preferences changed... (plan UUID: ${plan_uuid})`);
                 }
-                return this.ui_store.saved_state;
-            }, savedState => {
-                // this.logger.info(`firing ${savedState} to the subjects observers`);
-                this.savedStateSubject.next(savedState);
+                return this.ui_store.preferences;
+            }, prefs => {
+                this.preferencesSubject.next(prefs);
             }, {
-                name: 'saved state',
+                name: 'preferences',
                 equals: (a, b) => false // so that we ALWAYS fire to the subject
             });
 
@@ -364,8 +361,8 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         if (!this.spDisposer) {
             // If the selected plan UUID changes, lookup the plan and broadcast the change
             this.spDisposer = reaction(() => {
-                if(this.ui_store.saved_state) {
-                    return this.ui_store.saved_state.selected_plan_uuid;
+                if(this.ui_store.preferences) {
+                    return this.ui_store.preferences.selected_plan_uuid;
                 }
                 return null;
             }, uuid => {
@@ -398,8 +395,8 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
             this.lipDisposer = reaction(() => {
                 trace();
                 if (this.ui_store) {
-                    if (this.ui_store.saved_state) {
-                        let state = this.ui_store.saved_state;
+                    if (this.ui_store.preferences) {
+                        let state = this.ui_store.preferences;
                         if (state) {
                             return state.logged_in_person_uuid;
                         }
@@ -418,7 +415,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         return this.scheduleSubject;
     }
 
-    get ui_store$(): Subject<UIStore> {
+    get uiStore$(): Subject<UIStore> {
         return this.uiStoreSubject;
     }
 
@@ -426,11 +423,11 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         return this.loggedInPersonSubject;
     }
 
-    get saved_state$(): Observable<SavedState> {
-        return this.savedStateSubject;
+    get preferences$(): Observable<Preferences> {
+        return this.preferencesSubject;
     }
 
-    get selected_plan$(): Observable<Plan> {
+    get selectedPlan$(): Observable<Plan> {
         return this.selectedPlanSubject;
     }
 }

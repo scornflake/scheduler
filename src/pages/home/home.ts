@@ -41,8 +41,8 @@ export class HomePage {
         // this.store.ui_store$.subscribe(ius => {
         //     this.logger.warn(`Home Says Signed In: ${ius.signed_in}`);
         // });
-        // this.store.saved_state$.subscribe(ss => {
-        //     this.logger.warn(`Saved state: ${SafeJSON.stringify(ss)}`)
+        // this.store.preferences.subscribe(ss => {
+        //     this.logger.warn(`Prefs: ${SafeJSON.stringify(ss)}`)
         // })
         // this.store.schedule$.subscribe(ss => {
         //     this.logger.warn(`Schedule: ${SafeJSON.stringify(ss)}`)
@@ -52,7 +52,7 @@ export class HomePage {
     }
 
     selectPlan(uuid: string) {
-        this.store.ui_store.saved_state.selected_plan_uuid = uuid;
+        this.store.ui_store.preferences.selected_plan_uuid = uuid;
     }
 
     clear_selection() {
@@ -81,8 +81,8 @@ export class HomePage {
     }
 
     read_as_previous_schedule() {
-        if (this.store.ui_store.saved_state.have_previous_selection) {
-            let sheet_id = this.store.ui_store.saved_state.previous_sheet_id;
+        if (this.store.ui_store.preferences.have_previous_selection) {
+            let sheet_id = this.store.ui_store.preferences.previous_sheet_id;
             this.sheetAPI.load_sheet_with_id(sheet_id).subscribe((spreadsheet) => {
                 let sheet = spreadsheet.sheets.find(s => s.properties.sheetId == this.store.state.previous_sheet_tab_id);
                 this.sheetAPI.read_spreadsheet_data(spreadsheet, sheet).subscribe(rows => {

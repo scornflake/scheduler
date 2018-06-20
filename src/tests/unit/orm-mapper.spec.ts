@@ -83,8 +83,7 @@ describe('mapper', () => {
         });
 
         it('putting * in fields means all fields', () => {
-            // Try SavedState
-            let properties = mapper.propertiesFor('SavedState');
+            let properties = mapper.propertiesFor('Preferences');
             let names = Array.from(properties.keys());
             console.log(`Got names: ${JSON.stringify(names)}`);
             expect(names).toContain('previous_sheet_id');

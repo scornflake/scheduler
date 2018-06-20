@@ -14,6 +14,7 @@ import {ObjectWithUUID} from "../../scheduling/base-types";
 import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {action} from "mobx-angular";
+import {Storage} from '@ionic/storage';
 
 @Injectable()
 class SchedulerServer {
@@ -23,14 +24,16 @@ class SchedulerServer {
 
     constructor(@Inject(forwardRef(() => RootStore)) private store,
                 private restAPI: RESTServer,
+                private storage: Storage,
                 private db: SchedulerDatabase) {
         this.logger = LoggingWrapper.getLogger('service.bridge');
+
 
         this.db.ready_event.subscribe(isReady => {
             if (isReady) {
                 this.store.load().then(() => {
                     // If we have a login token, try to validate this and login if possible
-                    if (this.store.ui_store.saved_state.login_token) {
+                    if (this.store.ui_store.preferences.login_token) {
                         this.logger.info(`Logging in user as part of SchedulerServer init...`);
                         this.validateLoginToken().then(vr => {
                             this.readyEvent.next(true);
@@ -51,8 +54,6 @@ class SchedulerServer {
         this.logger.info(`Requesting user info from server: ${username}`);
         let res: LoginResponse = await this.restAPI.login(username, password);
 
-        let uiStore = this.store.ui_store;
-        let savedState = uiStore.saved_state;
         if (res.ok) {
             let user = res.user;
 
@@ -73,16 +74,16 @@ class SchedulerServer {
 
     setLoginTokenFromUserResponse(good: boolean, user: UserResponse = null) {
         let uiStore = this.store.ui_store;
-        let savedState = uiStore.saved_state;
+        let prefs = uiStore.preferences;
 
         if (good) {
             this.logger.info(`Login: setting login token to ${user.logintoken}`);
-            savedState.setLoginToken(user.logintoken);
+            prefs.setLoginToken(user.logintoken);
             this.restAPI.loginToken = user.logintoken;
         } else {
             this.logger.error(`Login was not OK.`);
             this.logger.info(`Login: Clearing logger in person UUID`);
-            savedState.clearLogin();
+            prefs.clearLogin();
         }
         uiStore.setLoginTokenValidated(good);
     }
@@ -90,20 +91,20 @@ class SchedulerServer {
     @action
     async validateLoginToken(): Promise<ValidationResponse> {
         // If no 'person uuid', need to login
-        let savedState = this.store.ui_store.saved_state;
-        if (!savedState.logged_in_person_uuid) {
+        let prefs = this.store.ui_store.preferences;
+        if (!prefs.logged_in_person_uuid) {
             return new LoginResponse(false, 'No person uuid is defined');
         }
-        let token = savedState.login_token;
+        let token = prefs.login_token;
         if (isUndefined(token)) {
             return new LoginResponse(false, 'No person is defined');
         }
         this.logger.info(`Validating login token: ${SafeJSON.stringify(token)}`);
 
-        let vr = await this.restAPI.validateLoginToken(savedState.login_token);
+        let vr = await this.restAPI.validateLoginToken(prefs.login_token);
 
         this.store.ui_store.setLoginTokenValidated(vr.ok);
-        this.restAPI.loginToken = savedState.login_token;
+        this.restAPI.loginToken = prefs.login_token;
 
         // Tell the store to initialize on this user
         await this.store.setupAfterUserLoggedIn();
@@ -157,7 +158,7 @@ class SchedulerServer {
         await this.savePerson(localPerson);
         await this.ensureUserHasOrganization(serverUser, localPerson, munge);
 
-        this.store.ui_store.saved_state.setLoggedInPersonUUID(localPerson.uuid);
+        this.store.ui_store.preferences.setLoggedInPersonUUID(localPerson.uuid);
 
         return serverUser;
     }

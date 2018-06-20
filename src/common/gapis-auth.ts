@@ -14,7 +14,7 @@ import {formatDateForGoogleSpreadsheet} from "../scheduling/common/date-utils";
 import {LoggingWrapper} from "./logging-wrapper";
 import {RESTServer} from "../providers/server/server";
 import {RootStore} from "../store/root";
-import {SavedState, UIStore} from "../store/UIState";
+import {Preferences, UIStore} from "../store/UIState";
 import Spreadsheet = gapi.client.sheets.Spreadsheet;
 import Sheet = gapi.client.sheets.Sheet;
 import ValueRange = gapi.client.sheets.ValueRange;
@@ -140,7 +140,7 @@ class GAPIS {
         });
     }
 
-    get state(): SavedState {
+    get state(): Preferences {
         return this.rootStore.state;
     }
 

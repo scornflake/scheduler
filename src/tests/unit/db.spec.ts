@@ -106,7 +106,7 @@ describe('db', () => {
         //Add in mappings that we need, since we reference other models in this test
         mapper.addConfiguration(scheduler_db_map);
 
-        // Annnd... mappings for this test
+        // And... mappings for this test
         mapper.addConfiguration(test_config);
 
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 500;
@@ -116,10 +116,6 @@ describe('db', () => {
             db.setCache(cache);
             done();
         });
-    });
-
-    it('should store references to role_weightings on an Assignment', function () {
-
     });
 
     it('can create reference of person object', function () {
@@ -583,11 +579,13 @@ describe('db', () => {
                         //
                         // So doing the check a somewhat roundabout way...
                         for (let key of Array.from(loaded_object.some_things.keys())) {
+                            // noinspection SuspiciousInstanceOfGuard
                             expect(key instanceof Date).toBeTruthy();
                             console.log(`Key: '${key}' = ${key.getTime()}, is type ${typeof key} / ${key.constructor.name}`);
 
                             let value = loaded_object.some_things.get(key);
                             console.log(`   - value for that key: ${JSON.stringify(value)}`);
+                            // noinspection SuspiciousInstanceOfGuard
                             expect(value instanceof SomeEntity).toBeTruthy();
 
                             expect(value.some_field).toEqual("a value");
@@ -704,18 +702,6 @@ describe('db', () => {
             ]);
         });
 
-        it('items of a BaseStore should still be observable after "remove" is called', function () {
-            /*
-            remove assigns a NEW list to this.items.
-            want to make sure it's still observable
-             */
-            function test_is_observable(list) {
-
-            }
-
-            // let team_store = new TeamsStore();
-        });
-
         it('should store a person with nested availability', function (done) {
             let me = new Person("Neil");
             expect(me.availability).not.toBeNull();
@@ -731,6 +717,7 @@ describe('db', () => {
                     reconstructed_js_obj['_rev'] = undefined;
 
                     console.log(`I loaded: ${SafeJSON.stringify(reconstructed_js_obj)}`);
+                    // noinspection SuspiciousInstanceOfGuard
                     expect(reconstructed_js_obj instanceof Person).toBeTruthy();
                     expect(reconstructed_js_obj.name).toEqual(me.name);
                     expect(reconstructed_js_obj.availability).toEqual(me.availability);
@@ -738,5 +725,43 @@ describe('db', () => {
                 })
             });
         });
+
+        it('_deleted are not accepted into store', function (done) {
+            let docs = [
+                {"_id": "12346", "_rev": "2-1823773772", "name": "foo", "_deleted":{}}
+            ];
+            db.convert_docs_to_objects_and_store_in_cache(docs).then(objects => {
+                expect(objects.length).toBe(0);
+                done();
+            });
+        });
+
+        it('_design are not accepted into store', function (done) {
+            let docs = [
+                {"_id": "_design/12346", "_rev": "1-1823773772", "name": "foo"}
+            ];
+            db.convert_docs_to_objects_and_store_in_cache(docs).then(objects => {
+                expect(objects.length).toBe(0);
+                done();
+            });
+        });
+
+        it('conversion of an array of docs returns array of objects', (done) => {
+            let person = new Person("Personage");
+            converter.async_create_dict_from_js_object(person).then(dict => {
+                let docs = [dict];
+                db.convert_docs_to_objects_and_store_in_cache(docs).then(objects => {
+                    expect(objects.length).toBe(1);
+                    expect(cache.getFromCache(person.uuid)).not.toBeNull();
+                    done();
+                });
+            });
+        });
+
+        xit('should store references to role_weightings on an Assignment', function () {
+
+        });
+
+
     })
 });

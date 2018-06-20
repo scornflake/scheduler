@@ -9,6 +9,7 @@ import {ObjectValidation} from "./shared";
 import {ObjectUtils} from "../pages/page-utils";
 import {NamedObject} from "./base-types";
 import {Organization} from "./organization";
+import {Preferences} from "../store/UIState";
 
 export class Person extends NamedObject {
     @observable email: string;
@@ -16,6 +17,7 @@ export class Person extends NamedObject {
     @observable _availability: Availability;
     @observable unavailable: Array<Unavailability>;
     @observable organization: Organization;
+    @observable preferences: Preferences;
 
     // Set when this user logs in
     serverId: number;

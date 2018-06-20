@@ -112,12 +112,12 @@ class SchedulerDatabase implements IObjectLoader {
         this.logger.debug("Getting DB information");
         this.info = await this.db.info();
         this.logger.debug(`DB: ${this.info.db_name}. ${this.info.doc_count} docs.`);
-        await this.setup_indexes();
+        await this.setupIndexes();
 
         Observable.create(obs => obs.next(true)).subscribe(this.ready_event);
     }
 
-    async setup_indexes() {
+    async setupIndexes() {
         this.logger.debug("Checking indexes...");
         this.logger.debug("Getting existing indexes...");
 
@@ -283,6 +283,7 @@ class SchedulerDatabase implements IObjectLoader {
         }
     }
 
+
     @action
     async async_load_and_create_objects_for_query(query) {
         let all_objects_of_type = await this.db.find(query);
@@ -291,7 +292,7 @@ class SchedulerDatabase implements IObjectLoader {
     }
 
     @action
-    async convert_docs_to_objects_and_store_in_cache(docs: Array<any>) {
+    async convert_docs_to_objects_and_store_in_cache(docs: Array<any>): Promise<Array<ObjectWithUUID>> {
         let list_of_new_things = [];
         for (let doc of docs) {
             let docId = doc['_id'];
@@ -300,7 +301,8 @@ class SchedulerDatabase implements IObjectLoader {
             }
 
             if (doc['_deleted']) {
-                this.logger.warn(`IDS: ${doc['_revisions'].join(",")} deleted. Not sure what to do with those...`);
+                let revisions = doc['_revisions'] || [];
+                this.logger.warn(`IDS: ${revisions.join(",")} deleted. Not sure what to do with those...`);
                 continue;
             }
 
@@ -409,11 +411,11 @@ class SchedulerDatabase implements IObjectLoader {
             this.logger.warn(`Replication already started, ignored`);
         }
         let serverConf = this.configService.getValue('server');
-        if(!serverConf) {
+        if (!serverConf) {
             throw new Error(`invalid config, no server config`);
         }
         let couchAddr = serverConf['couch'];
-        if(!couchAddr) {
+        if (!couchAddr) {
             throw new Error(`invalid config, no couch entry in server config`);
         }
         this.server_db = new PouchDB(`${couchAddr}/${remoteDBName}`);
@@ -453,7 +455,7 @@ class SchedulerDatabase implements IObjectLoader {
             });
     }
 
-    async findBySelector<T>(selector: any, expectOne: boolean = false): Promise<T[]> {
+    async findBySelector<T extends ObjectWithUUID>(selector: any, expectOne: boolean = false): Promise<T[]> {
         let all_objects_of_type = await this.db.find(selector);
         if (all_objects_of_type.docs.length) {
             if (all_objects_of_type.docs.length > 1 && expectOne) {

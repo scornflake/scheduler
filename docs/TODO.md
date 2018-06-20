@@ -1,8 +1,9 @@
 TODO:
 -----
+- Migrate SavedState to Person
 - Two clients (safari/chrome):
-  - An incoming change should NOT result in that data being written out... or should it? That write is LOCAL. I think pouchdb is smart enuf?
   - Starts going into endless update loop. Going to have to make writes much smarter. It *looks* like the change detector is seeing a change to 'rev' on SavedState
+- Rules dont appear to be persisted (see AddPeopleToPlanWithRoles for neil)
 - Make it so scheduler tells you if a required role isn't filled
 - Regenerate the schedule on change of:
   - unavailability

@@ -5,7 +5,7 @@ import {ObjectWithUUID} from "../scheduling/base-types";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 
-class SavedState extends ObjectWithUUID {
+class Preferences extends ObjectWithUUID {
     @observable previous_sheet_id: string;
     @observable previous_sheet_tab_id: number;
     @observable google_sheet_id: string;
@@ -21,7 +21,7 @@ class SavedState extends ObjectWithUUID {
 
     constructor(uuid: string) {
         super(uuid);
-        this.logger = LoggingWrapper.getLogger('model.savedstate');
+        this.logger = LoggingWrapper.getLogger('model.preferences');
     }
 
     @computed
@@ -77,15 +77,15 @@ class UIStore {
     /*
     Saved state
      */
-    @observable saved_state;
+    @observable preferences;
 
     constructor() {
         this.login_token_validated = false;
         this.signed_in_to_google = false;
     }
 
-    @action setSavedState(value: SavedState) {
-        this.saved_state = value;
+    @action setPreferences(value: Preferences) {
+        this.preferences = value;
     }
 
     @action setLoginTokenValidated(flag: boolean) {
@@ -93,10 +93,10 @@ class UIStore {
     }
 
     @computed get signed_in(): boolean {
-        if (!this.saved_state) {
+        if (!this.preferences) {
             return false;
         }
-        let value = this.saved_state.login_token && this.login_token_validated;
+        let value = this.preferences.login_token && this.login_token_validated;
         // console.log(`signed in: ${value}, token: ${this._saved_state.login_token}, valid: ${this.login_token_validated}`);
         return value;
     }
@@ -116,16 +116,16 @@ class UIStore {
     }
 
     clear_sheet_state() {
-        this.saved_state.clear_all_sheet_state();
+        this.preferences.clear_all_sheet_state();
     }
 
     @action logout() {
-        this.saved_state.clearLogin();
+        this.preferences.clearLogin();
         this.signed_in_to_google = false;
     }
 }
 
 export {
     UIStore,
-    SavedState
+    Preferences
 }

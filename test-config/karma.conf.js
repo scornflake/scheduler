@@ -13,15 +13,12 @@ module.exports = function (config) {
         frameworks: [
             'jasmine'
         ],
+
         files: [
             {
                 pattern: 'test-config/karma-test-shim.js',
                 watched: true
             }
-            // {
-            //     pattern: 'src/tests/unit/**/*.spec.ts',
-            //     watched: false,
-            // }
         ],
 
         mime: {
@@ -30,17 +27,25 @@ module.exports = function (config) {
 
         preprocessors: {
             'test-config/karma-test-shim.js': ['webpack'],
-            // 'src/tests/unit/**/*.spec.ts': ['karma-typescript', 'webpack']
         },
 
         phantomJsLauncher: {
             exitOnResourceError: true
         },
-        karmaTypescriptConfig: {
-            bundlerOptions: {
-                entrypoints: /\.spec\.ts$/
-            },
-            tsconfig: "tsconfig.json"
+
+        coverageReporter: {
+            type: 'in-memory',
+            dir: 'coverage/',
+            instrumenterOptions: {
+                istanbul: {noCompact: true}
+            }
+        },
+
+        // define where to save final remaped coverage reports
+        remapCoverageReporter: {
+            'text-summary': null,
+            html: './coverage/html',
+            cobertura: './coverage/cobertura.xml'
         },
 
         webpack: {

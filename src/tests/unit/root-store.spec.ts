@@ -8,6 +8,7 @@ import {OrmMapper} from "../../providers/mapping/orm-mapper";
 import {SimpleCache} from "../../providers/mapping/cache";
 import {scheduler_db_map} from "../../assets/db.mapping";
 import {defaultComputerRole, defaultSaxRole, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
+import {isObservableArray} from "mobx";
 
 describe('root store', () => {
     let store;
@@ -63,5 +64,15 @@ describe('root store', () => {
                 })
             });
         });
+    });
+
+    it('items of a BaseStore should still be observable after "remove" is called', function () {
+        store.add_object_to_array(neil);
+        expect(store.length).toEqual(1);
+        expect(isObservableArray(store.items)).toBeTruthy();
+
+        store.remove_object_from_array(neil);
+        expect(store.length).toEqual(0);
+        expect(isObservableArray(store.items)).toBeTruthy();
     });
 });

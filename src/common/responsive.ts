@@ -1,11 +1,9 @@
-import {Injectable} from "@angular/core";
 import {Platform} from "ionic-angular";
 import {LoggingWrapper} from "./logging-wrapper";
 import {Logger} from "ionic-logging-service";
 
 type ContentFunction = () => any;
 
-@Injectable()
 class WidthAwareValue {
     private widthFunctions = new Map<number, ContentFunction>();
     private logger: Logger;

@@ -47,11 +47,11 @@ describe('observation', () => {
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
     });
 
-    it('can observe change to saved state', function (done) {
+    it('can observe change to prefs', function (done) {
         expect(store.ui_store).not.toBeNull();
-        expect(store.ui_store.saved_state).not.toBeNull();
+        expect(store.ui_store.preferences).not.toBeNull();
 
-        store.saved_state$.subscribe(ss => {
+        store.preferences$.subscribe(ss => {
             console.log(`subscriber got ${SafeJSON.stringify(ss)}`);
             if (ss) {
                 if (ss.selected_plan_uuid == "1234") {
@@ -59,20 +59,20 @@ describe('observation', () => {
                 }
             }
         });
-        store.ui_store.saved_state.setSelectedPlanUUID("1234");
+        store.ui_store.preferences.setSelectedPlanUUID("1234");
     });
 
     it('can observe change to selected plan', function (done) {
         let newplan = new Plan("haha", null);
         store.db.cache.saveInCache(newplan);
-        store.selected_plan$.subscribe(plan => {
+        store.selectedPlan$.subscribe(plan => {
             if (plan) {
                 if (plan.name == "haha") {
                     done();
                 }
             }
         });
-        store.ui_store.saved_state.setSelectedPlanUUID(newplan.uuid);
+        store.ui_store.preferences.setSelectedPlanUUID(newplan.uuid);
     });
 
     it('can observe change to logged in person', function (done) {
@@ -88,7 +88,7 @@ describe('observation', () => {
             }
         });
 
-        store.ui_store.saved_state.setLoggedInPersonUUID(person.uuid);
+        store.ui_store.preferences.setLoggedInPersonUUID(person.uuid);
     });
 
     it('can observe change to schedule', function (done) {
@@ -115,7 +115,7 @@ describe('observation', () => {
         });
 
         // Select the new plan!
-        store.ui_store.saved_state.setSelectedPlanUUID(newplan.uuid);
+        store.ui_store.preferences.setSelectedPlanUUID(newplan.uuid);
     });
 
     it('can observe property on class', (done) => {

@@ -1,5 +1,5 @@
 import {Availability, AvailabilityEveryNOfM} from "../scheduling/availability";
-import {SavedState} from "../store/UIState";
+import {Preferences} from "../store/UIState";
 import {Team} from "../scheduling/teams";
 import {Person} from "../scheduling/people";
 import {Plan} from "../scheduling/plan";
@@ -22,11 +22,11 @@ import {TypedObject} from "../scheduling/base-types";
 let scheduler_db_map: ClassFieldMapping = {
     classes: [
         {
-            name: 'SavedState',
+            name: 'Preferences',
             fields: [{name: '*'},],
             exclude: ['logger'],
             inherit: 'ObjectWithUUID',
-            factory: () => new SavedState('Moooo')
+            factory: () => new Preferences('Moooo')
         },
         {
             name: 'Role',
@@ -43,7 +43,8 @@ let scheduler_db_map: ClassFieldMapping = {
                 {name: 'email'},
                 {name: 'availability', type: MappingType.Reference},
                 {name: 'unavailable', type: MappingType.NestedObjectList},
-                {name: 'organization', type: MappingType.Reference}
+                {name: 'organization', type: MappingType.Reference},
+                {name: 'preferences', type: MappingType.Reference}
             ],
             inherit: 'NamedObject',
             factory: () => new Person()
