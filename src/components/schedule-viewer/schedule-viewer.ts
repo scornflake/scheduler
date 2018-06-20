@@ -11,7 +11,6 @@ import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {PageUtils} from "../../pages/page-utils";
 import {Role} from "../../scheduling/role";
-import {SafeJSON} from "../../common/json/safe-stringify";
 
 @Component({
     // changeDetection: ChangeDetectionStrategy.OnPush,

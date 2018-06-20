@@ -9,12 +9,13 @@ import {CalendarComponent} from "../calendar/calendar";
 import {csd} from "../../scheduling/common/date-utils";
 
 @Component({
-    selector: 'person-unavailble',
-    templateUrl: 'person-unavailble.html'
+    selector: 'person-unavailable',
+    templateUrl: 'person-unavailable.html'
 })
 export class PersonUnavailableComponent {
     @Input() title = 'Unavailable';
     @Input() person: Person;
+    @Input() readOnly: boolean = false;
     private logger: Logger;
 
     constructor(private popover: PopoverController) {

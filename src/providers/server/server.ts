@@ -21,7 +21,7 @@ export class RESTServer {
 
     private server_url(path): string {
         let server = this.config.getValue("server");
-        return `${server['url']}/api/${path}`;
+        return `${server['rest']}/api/${path}`;
     }
 
     isUsernameAvailableAndGood(username: string): Observable<string> {

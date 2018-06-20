@@ -1,25 +1,28 @@
 page-home {
   #planselection ion-select {
     max-width: 100% !important;
+  }
+}
 
+.notSignedIn {
+  background-image: url("../../assets/calendar-large.jpg");
+  background-size: cover;
+
+  .title {
+    font-weight: 300;
+    font-size: 4em;
+    padding-top: 100px;
   }
 
-  .notSignedIn {
-    .title {
-      font-weight: 300;
-      font-size: 4em;
-      padding-top: 100px;
-      //position: absolute;
-      //top: 50%;
-      //right: 45%;
-
-      //margin: auto;
-      //background: red;
-      //transform: translateY(-50%) ;
-    }
+  .buttons {
+    //position: relative;
+    //bottom: 0;
+    //width: 100%;
 
     .signInButton {
-      margin-top: 20px;
+      margin-top: 40px;
+      margin-bottom: calc(100% + 30px);
     }
   }
 }
+

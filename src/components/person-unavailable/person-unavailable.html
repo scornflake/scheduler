@@ -1,4 +1,4 @@
-<ion-list-header color="light">
+<ion-list-header color="light" *ngIf="!readOnly">
     {{title}}
     <button item-end ion-button clear icon-only (tap)="addUnavailability()">
         <ion-icon name="code"></ion-icon>
@@ -6,6 +6,9 @@
     <button item-end ion-button clear icon-only (tap)="addUnavailabilityRange()">
         <ion-icon name="code-working"></ion-icon>
     </button>
+</ion-list-header>
+<ion-list-header color="light" *ngIf="readOnly">
+    {{title}}
 </ion-list-header>
 <ion-item-group>
     <ion-list>

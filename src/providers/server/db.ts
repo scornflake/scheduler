@@ -43,7 +43,6 @@ class SchedulerDatabase implements IObjectLoader {
     private db: Database<{}>;
     private server_db: PouchDB.Database<{}>;
 
-    private is_ready: boolean = false;
     private current_indexes: PouchDB.Find.GetIndexesResponse<{}>;
     private db_name: string;
     private tracker: ObjectChangeTracker;
@@ -61,7 +60,7 @@ class SchedulerDatabase implements IObjectLoader {
         });
     }
 
-    constructor(configService: ConfigurationService, mapper: OrmMapper) {
+    constructor(private configService: ConfigurationService, mapper: OrmMapper) {
         let db_config = configService.getValue("database");
 
         this.mapper = mapper;
@@ -114,8 +113,6 @@ class SchedulerDatabase implements IObjectLoader {
         this.info = await this.db.info();
         this.logger.debug(`DB: ${this.info.db_name}. ${this.info.doc_count} docs.`);
         await this.setup_indexes();
-
-        this.is_ready = true;
 
         Observable.create(obs => obs.next(true)).subscribe(this.ready_event);
     }
@@ -399,11 +396,6 @@ class SchedulerDatabase implements IObjectLoader {
         }
     }
 
-    async async_load_objects_with_query(query) {
-        let docs = await this.db.find(query);
-
-    }
-
     setCache(cache: IObjectCache) {
         this.cache = cache;
         this._converter.cache = cache;
@@ -416,7 +408,15 @@ class SchedulerDatabase implements IObjectLoader {
         if (this.server_db) {
             this.logger.warn(`Replication already started, ignored`);
         }
-        this.server_db = new PouchDB(`http://localhost:5984/${remoteDBName}`);
+        let serverConf = this.configService.getValue('server');
+        if(!serverConf) {
+            throw new Error(`invalid config, no server config`);
+        }
+        let couchAddr = serverConf['couch'];
+        if(!couchAddr) {
+            throw new Error(`invalid config, no couch entry in server config`);
+        }
+        this.server_db = new PouchDB(`${couchAddr}/${remoteDBName}`);
         this.db.sync(this.server_db, {live: true, retry: true})
             .on('change', (change) => {
                 if (change.direction == 'pull') {

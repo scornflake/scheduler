@@ -1,6 +1,7 @@
 {
   "server": {
-    "url": "http://localhost:8000"
+    "couch": "http://192.168.1.168:5984",
+    "rest": "http://192.168.1.168:8000"
   },
   "database": {
     "name": "scheduler"
