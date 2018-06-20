@@ -48,17 +48,11 @@ export class HomePage {
         //     this.logger.warn(`Schedule: ${SafeJSON.stringify(ss)}`)
         // })
 
-        this.navCtrl.push('page-profile');
+        // this.navCtrl.push('page-profile');
     }
 
-    set_plan(uuid: string) {
+    selectPlan(uuid: string) {
         this.store.ui_store.saved_state.selected_plan_uuid = uuid;
-    }
-
-    @action
-    change_state() {
-        this.store.ui_store.login_token_validated = false;
-        this.store.ui_store.login_token_validated = true;
     }
 
     clear_selection() {
@@ -70,7 +64,7 @@ export class HomePage {
         return this.store.plans.plansByDateLatestFirst;
     }
 
-    plan_title(p: Plan): string {
+    planTitle(p: Plan): string {
         return `${p.name} ${p.start_date}-${p.end_date}`
     }
 
@@ -157,7 +151,11 @@ export class HomePage {
 
     logout() {
         // Throw away our login token
-        // this.rootStore.ui_store.logout();
+        this.store.logout();
         this.sheetAPI.signout();
+    }
+
+    startSignIn() {
+        this.navCtrl.push('login');
     }
 }

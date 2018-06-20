@@ -2,6 +2,7 @@ import {Component} from '@angular/core';
 import {IonicPage, NavController, NavParams} from 'ionic-angular';
 import {RootStore} from "../../store/root";
 import {PageUtils} from "../page-utils";
+import {SafeJSON} from "../../common/json/safe-stringify";
 
 @IonicPage({
     name: 'page-profile',
@@ -20,7 +21,9 @@ export class ProfilePage {
     }
 
     ngOnInit() {
-        // this.pageUtils.validateLoginAndShowPageIfNotValid(this.navCtrl);
+        // this.store.loggedInPerson$.subscribe(p => {
+        //     console.warn(`ProfilePage sees: ${SafeJSON.stringify(p)}`)
+        // })
     }
 
 }

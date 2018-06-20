@@ -12,8 +12,8 @@ import {csd} from "../../scheduling/common/date-utils";
     selector: 'person-unavailble',
     templateUrl: 'person-unavailble.html'
 })
-export class PersonUnavailbleComponent {
-    @Input() title = 'Unavailabilty';
+export class PersonUnavailableComponent {
+    @Input() title = 'Unavailable';
     @Input() person: Person;
     private logger: Logger;
 

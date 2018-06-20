@@ -293,6 +293,7 @@ class SchedulerDatabase implements IObjectLoader {
         return await this.convert_docs_to_objects_and_store_in_cache(all_objects_of_type.docs);
     }
 
+    @action
     async convert_docs_to_objects_and_store_in_cache(docs: Array<any>) {
         let list_of_new_things = [];
         for (let doc of docs) {
@@ -300,6 +301,12 @@ class SchedulerDatabase implements IObjectLoader {
             if (docId.startsWith("_design/")) {
                 continue;
             }
+
+            if (doc['_deleted']) {
+                this.logger.warn(`IDS: ${doc['_revisions'].join(",")} deleted. Not sure what to do with those...`);
+                continue;
+            }
+
             let type = doc['type'];
             if (!type) {
                 this.logger.error(`ERROR processing doc ID: ${docId}. No TYPE information. This was skipped.`);
@@ -318,6 +325,7 @@ class SchedulerDatabase implements IObjectLoader {
                 this.logger.error(`DOC was: ${SafeJSON.stringify(doc)}`);
             }
         }
+        // this.logger.info(`converted ${docs.length} docs into ${list_of_new_things.length} objects`);
         return list_of_new_things;
     }
 
@@ -331,13 +339,13 @@ class SchedulerDatabase implements IObjectLoader {
     async async_load_into_store<T extends NamedObject>(manager: GenericManager<T>, type: string, log_result: boolean = false) {
         let loaded_objects = await this.async_load_all_objects_of_type(type);
         if (log_result) {
-            this.logger.info(`Loaded ${loaded_objects.length} objects`);
+            this.logger.info(`Loaded ${loaded_objects.length} objects. # before load: ${manager.length}`);
         }
         let added: number = 0;
-        manager.addAll(loaded_objects);
         loaded_objects.forEach(o => {
             let ooo = o as T;
             if (ooo) {
+                // this adds it into the store as well, by virtue of the store being the cache
                 this.trackChanges(ooo);
                 added++;
             } else {
@@ -345,7 +353,7 @@ class SchedulerDatabase implements IObjectLoader {
             }
         });
         if (log_result) {
-            this.logger.info(`Added ${added} objects to manager`);
+            this.logger.info(`Added ${added} objects to manager # after load: ${manager.length}`);
         }
         return loaded_objects;
     }
@@ -415,7 +423,14 @@ class SchedulerDatabase implements IObjectLoader {
                     this.logger.info(`Processing incomming change: ${JSON.stringify(change)}`);
                     this.logger.debug(` ... Incomming change: ${JSON.stringify(change)}`);
                     let data = change.change;
-                    let docs = data.docs;
+                    let docs = data.docs.filter(d => {
+                        // filter out deleted docs
+                        if (d['_deleted']) {
+                            this.logger.warn(`IDS: ${d['_revisions'].join(",")} deleted. Not sure what to do with those...`);
+                            return false;
+                        }
+                        return true;
+                    });
                     // Want to update existing store using this data, as though we had read it direct from the DB
                     this.convert_docs_to_objects_and_store_in_cache(docs).then((items) => {
                         this.logger.debug(` ... incoming change (${items.length} docs) processed and stored in DB/cache`);

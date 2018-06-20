@@ -7,7 +7,8 @@
 
 
 <ion-content no-padding>
-    <person-details *ngIf="store.loggedInPerson$ | async as person"
-                    [person]="person">
-    </person-details>
+    <div *ngIf="store.loggedInPerson$ | async as person">
+        <organization-editor [organization]="person.organization"></organization-editor>
+        <person-details [person]="person"></person-details>
+    </div>
 </ion-content>

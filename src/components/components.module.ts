@@ -12,10 +12,11 @@ import {RuleDetailsComponent} from './rule-details/rule-details';
 import {PeopleComponent} from './people/people';
 import {SavingStateComponent} from './saving-state/saving-state';
 import {PersonScheduleComponent} from './person-schedule/person-schedule';
-import {PersonUnavailbleComponent} from './person-unavailble/person-unavailble';
+import {PersonUnavailableComponent} from './person-unavailble/person-unavailble';
 import {PlanDateRangeComponent} from './plan-date-range/plan-date-range';
 import {CalendarComponent} from "./calendar/calendar";
 import {CalendarModule} from "ionic3-calendar-en";
+import { OrganizationEditorComponent } from './organization-editor/organization-editor';
 
 @NgModule({
     declarations: [
@@ -30,8 +31,9 @@ import {CalendarModule} from "ionic3-calendar-en";
         PeopleComponent,
         SavingStateComponent,
         PersonScheduleComponent,
-        PersonUnavailbleComponent,
+        PersonUnavailableComponent,
         PlanDateRangeComponent,
+    OrganizationEditorComponent,
     ],
     imports: [
         IonicModule,
@@ -49,8 +51,9 @@ import {CalendarModule} from "ionic3-calendar-en";
         PeopleComponent,
         SavingStateComponent,
         PersonScheduleComponent,
-        PersonUnavailbleComponent,
+        PersonUnavailableComponent,
         PlanDateRangeComponent,
+    OrganizationEditorComponent,
     ]
 })
 export class ComponentsModule {

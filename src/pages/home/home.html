@@ -51,19 +51,22 @@
 
 
             <!--<ion-grid *ngIf="store.schedule$ | async as schedule" no-padding>-->
-                <!--<ion-row>-->
-                    <!--<ion-col *ngIf="store.ui_store.have_selection">-->
-                        <!--<person-editor></person-editor>-->
-                        <!--<reasons *ngIf="store.schedule$|async as schedule"-->
-                                 <!--[decisions]="schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"-->
-                        <!--&gt;-->
-                        <!--</reasons>-->
-                    <!--</ion-col>-->
-                <!--</ion-row>-->
+            <!--<ion-row>-->
+            <!--<ion-col *ngIf="store.ui_store.have_selection">-->
+            <!--<person-editor></person-editor>-->
+            <!--<reasons *ngIf="store.schedule$|async as schedule"-->
+            <!--[decisions]="schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"-->
+            <!--&gt;-->
+            <!--</reasons>-->
+            <!--</ion-col>-->
+            <!--</ion-row>-->
             <!--</ion-grid>-->
         </div>
         <ng-template #notSignedIn>
-            Please sign in
+            <div class="notSignedIn">
+                <div class="title" text-center>Please sign&nbsp;in</div>
+                <button class="signInButton" col-4 offset-4 ion-button (tap)="startSignIn()">Sign In</button>
+            </div>
         </ng-template>
     </div>
 </ion-content>

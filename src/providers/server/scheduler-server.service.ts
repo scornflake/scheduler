@@ -77,13 +77,12 @@ class SchedulerServer {
 
         if (good) {
             this.logger.info(`Login: setting login token to ${user.logintoken}`);
-            savedState.login_token = user.logintoken;
+            savedState.setLoginToken(user.logintoken);
             this.restAPI.loginToken = user.logintoken;
         } else {
             this.logger.error(`Login was not OK.`);
             this.logger.info(`Login: Clearing logger in person UUID`);
-            savedState.login_token = null;
-            uiStore.saved_state.logged_in_person_uuid = null;
+            savedState.clearLogin();
         }
         uiStore.setLoginTokenValidated(good);
     }
@@ -108,6 +107,9 @@ class SchedulerServer {
 
         // Tell the store to initialize on this user
         await this.store.setupAfterUserLoggedIn();
+
+        // Setup the organization that this user is a part of
+        await this.syncUserWithServer(vr.user);
 
         return vr;
     }
@@ -155,7 +157,9 @@ class SchedulerServer {
         await this.savePerson(localPerson);
         await this.ensureUserHasOrganization(serverUser, localPerson, munge);
 
-        this.store.ui_store.saved_state.logged_in_person_uuid = localPerson.uuid;
+        if(munge) {
+            this.store.ui_store.saved_state.setLoggedInPersonUUID(localPerson.uuid);
+        }
 
         return serverUser;
     }

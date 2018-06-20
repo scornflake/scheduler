@@ -3,4 +3,23 @@ page-home {
     max-width: 100% !important;
 
   }
+
+  .notSignedIn {
+    .title {
+      font-weight: 300;
+      font-size: 4em;
+      padding-top: 100px;
+      //position: absolute;
+      //top: 50%;
+      //right: 45%;
+
+      //margin: auto;
+      //background: red;
+      //transform: translateY(-50%) ;
+    }
+
+    .signInButton {
+      margin-top: 20px;
+    }
+  }
 }

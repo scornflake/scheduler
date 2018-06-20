@@ -2,7 +2,6 @@ import {SavedState, UIStore} from "./UIState";
 import {Injectable, OnDestroy} from "@angular/core";
 import {Logger} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
-import {SafeJSON} from "../common/json/safe-stringify";
 import {IReactionDisposer, observable, reaction, toJS, trace} from "mobx";
 import {Plan} from "../scheduling/plan";
 import {SchedulerDatabase} from "../providers/server/db";
@@ -20,6 +19,7 @@ import {toStream} from "mobx-utils";
 import {action} from "mobx-angular";
 import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
+import {Subscription} from "rxjs/Subscription";
 
 @Injectable()
 class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy {
@@ -38,9 +38,11 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
     private uiStoreSubject: Subject<UIStore>;
     private loggedInPersonSubject: Subject<Person>;
 
+    private spDisposer: IReactionDisposer;
     private ssDisposer: IReactionDisposer;
     private uiDisposer: IReactionDisposer;
     private lipDisposer: IReactionDisposer;
+    private scheduleSubscription: Subscription;
 
     constructor(public db: SchedulerDatabase) {
         super();
@@ -48,6 +50,12 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         this.logger = LoggingWrapper.getLogger("service.store");
         this.setUIStore(new UIStore());
         this.db.setCache(this);
+
+        this.loggedInPersonSubject = new BehaviorSubject<Person>(null);
+        this.uiStoreSubject = new BehaviorSubject<UIStore>(null);
+        this.scheduleSubject = new BehaviorSubject<ScheduleWithRules>(null);
+        this.savedStateSubject = new BehaviorSubject<SavedState>(null);
+        this.selectedPlanSubject = new BehaviorSubject<Plan>(null);
     }
 
     ngOnDestroy() {
@@ -92,13 +100,15 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
             this.logger.debug(e);
             this.logger.info("No stored saved state. Starting from fresh.");
 
+            this.ui_store.saved_state = new SavedState('saved-state');
             await this.asyncSaveOrUpdateDb(this.ui_store.saved_state);
         }
     }
 
     async setupAfterUserLoggedIn() {
+        let before = this.organizations.length;
         let items = await this.db.async_load_into_store<Organization>(this.organizations, 'Organization');
-        this.logger.info(`Loaded ${items.length} organizations...`);
+        this.logger.info(`Loaded ${items.length} organizations... before: ${before}, after: ${this.organizations.length}`);
 
         items = await this.db.async_load_into_store<Person>(this.people, 'Person');
         this.logger.info(`Loaded ${items.length} people...`);
@@ -143,11 +153,9 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
     }
 
     get schedule$(): Observable<ScheduleWithRules> {
-        if (!this.scheduleSubject) {
-            this.scheduleSubject = new BehaviorSubject<ScheduleWithRules>(null);
-
+        if (!this.scheduleSubscription) {
             // Subscribe to a change in the plan, generate a new schedule, and then broadcast that
-            this.selected_plan$.map(plan => {
+            this.scheduleSubscription = this.selected_plan$.map(plan => {
                 if (plan) {
                     this.logger.info(`Regenerating schedule`);
                     let schedule = new ScheduleWithRules(plan, this.previousSchedule);
@@ -164,9 +172,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
     }
 
     get ui_store$(): Subject<UIStore> {
-        if (!this.uiStoreSubject) {
-            this.uiStoreSubject = new BehaviorSubject<UIStore>(null);
-
+        if (!this.uiDisposer) {
             this.uiDisposer = reaction(() => {
                 // trace();
                 this.logger.info(`UI Store changed to ${this.ui_store}. Signed in: ${this.ui_store.signed_in}`);
@@ -180,9 +186,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
     }
 
     get loggedInPerson$(): Observable<Person> {
-        if (!this.loggedInPersonSubject) {
-            this.loggedInPersonSubject = new BehaviorSubject<Person>(null);
-
+        if (!this.lipDisposer) {
             this.lipDisposer = reaction(() => {
                 trace();
                 let state = this.ui_store.saved_state;
@@ -194,7 +198,6 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
                 this.logger.debug("loggedInPerson$", `state change saw: ${value}`);
                 this.lookupPersonAndTellSubscribers(value);
             }, {name: 'logged in person'});
-
             // above reaction uses default comparator, so that it only fires when the UUID CHANGES! yay.
         }
         return this.loggedInPersonSubject;
@@ -208,16 +211,14 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
             this.logger.warn(`Logged in person is None`);
             this.loggedInPerson = null;
         }
-        this.loggedInPersonSubject.next(this.loggedInPerson);
+        if (this.loggedInPersonSubject) {
+            this.loggedInPersonSubject.next(this.loggedInPerson);
+        }
     }
 
     get saved_state$(): Observable<SavedState> {
-        if (!this.savedStateSubject) {
-            // this.savedStateSubject = new BehaviorSubject<SavedState>(null);
-            this.savedStateSubject = new Subject<SavedState>();
-
+        if (!this.ssDisposer) {
             // Observe changes, and send these to the subject
-
             this.ssDisposer = reaction(() => {
                 toJS(this.ui_store.saved_state);
                 if (this.ui_store.saved_state) {
@@ -238,13 +239,12 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
     }
 
     get selected_plan$(): Observable<Plan> {
-        if (!this.selectedPlanSubject) {
-            this.selectedPlanSubject = new BehaviorSubject<Plan>(null);
+        if (!this.spDisposer) {
 
             // If the selected plan UUID changes, lookup the plan and broadcast the change
-            toStream(() => {
+            this.spDisposer = reaction(() => {
                 return this.ui_store.saved_state.selected_plan_uuid;
-            }).subscribe(uuid => {
+            }, uuid => {
                 let plan = this.plans.findOfThisTypeByUUID(uuid);
                 if (plan) {
                     this.logger.debug(`Plan changed to: ${uuid}`);
@@ -252,7 +252,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
                 } else {
                     this.logger.info(`selected_plan$ failure - can't find plan with ID: ${uuid}`);
                 }
-            });
+            }, {name: 'selected plan'});
         }
         return this.selectedPlanSubject;
     }
@@ -389,9 +389,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
     }
 
     @action logout() {
-        this.ui_store.saved_state.logged_in_person_uuid = "";
-        this.ui_store.saved_state.login_token = "";
-        this.ui_store.saved_state.setSelectedPlanUUID("");
+        this.ui_store.saved_state.clearLogin();
         this.clear();
         this.db.async_store_or_update_object(this.ui_store.saved_state).then(() => {
             location.reload();

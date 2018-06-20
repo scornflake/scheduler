@@ -29,6 +29,16 @@ class SavedState extends ObjectWithUUID {
         return this.previous_sheet_id != null && this.previous_sheet_tab_id != 0;
     }
 
+    @action clearLogin() {
+        this.login_token = null;
+        this.logged_in_person_uuid = null;
+        this.selected_plan_uuid = null;
+    }
+
+    @action setLoginToken(value: string) {
+        this.login_token = value;
+    }
+
     @action setLoggedInPersonUUID(value: string) {
         this.logged_in_person_uuid = value;
     }
@@ -83,7 +93,7 @@ class UIStore {
     }
 
     @computed get signed_in(): boolean {
-        if(!this.saved_state) {
+        if (!this.saved_state) {
             return false;
         }
         let value = this.saved_state.login_token && this.login_token_validated;
@@ -109,8 +119,8 @@ class UIStore {
         this.saved_state.clear_all_sheet_state();
     }
 
-    logout() {
-        this.saved_state.login_token = null;
+    @action logout() {
+        this.saved_state.clearLogin();
         this.signed_in_to_google = false;
     }
 }
