@@ -48,7 +48,7 @@ export class HomePage {
         //     this.logger.warn(`Schedule: ${SafeJSON.stringify(ss)}`)
         // })
 
-        // this.navCtrl.push('page-profile');
+        this.navCtrl.push('page-profile');
     }
 
     set_plan(uuid: string) {
@@ -106,7 +106,7 @@ export class HomePage {
                         this.logger.info(`Had problems: ${s}`);
                     }
                     this.logger.info("Made schedule!");
-                    this.store.set_previous_schedule(reader.schedule);
+                    this.store.setPreviousSchedule(reader.schedule);
                 });
             });
         }

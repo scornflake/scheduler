@@ -1,0 +1,23 @@
+<div *ngIf="!range; else twoCals">
+    <ion-calendar
+            [events]="existingEvents"
+            (onDaySelect)="daySelected($event)"
+            lang="en">
+    </ion-calendar>
+</div>
+<ng-template #twoCals>
+    <ion-list-header class="hidden-sm-down" text-center>From</ion-list-header>
+    <ion-list-header class="hidden-sm-up" text-center>From -> To</ion-list-header>
+    <ion-calendar
+            [events]="existingEvents"
+            (onDaySelect)="startDaySelected($event)"
+            lang="en">
+    </ion-calendar>
+    <ion-list-header class="hidden-xs-down" text-center>To</ion-list-header>
+    <ion-calendar
+            [events]="existingEvents"
+            (onDaySelect)="endDaySelected($event)"
+            lang="en">
+    </ion-calendar>
+    <button clear block ion-button (tap)="done()" [disabled]="!valid">OK</button>
+</ng-template>

@@ -23,15 +23,15 @@ describe('people', () => {
     });
 
     it('can add unavailable date', () => {
-        expect(firstPerson.is_unavailable_on(someDate)).toBeFalsy();
-        firstPerson.add_unavailable(someDate);
-        expect(firstPerson.is_unavailable_on(someDate)).toBeTruthy();
+        expect(firstPerson.isUnavailableOn(someDate)).toBeFalsy();
+        firstPerson.addUnavailable(someDate);
+        expect(firstPerson.isUnavailableOn(someDate)).toBeTruthy();
     });
 
     it('should not add same unavailability twice', function () {
-        firstPerson.add_unavailable(someDate);
+        firstPerson.addUnavailable(someDate);
         expect(firstPerson.unavailable.length).toBe(1);
-        firstPerson.add_unavailable(someDate);
+        firstPerson.addUnavailable(someDate);
         expect(firstPerson.unavailable.length).toBe(1);
     });
 
@@ -44,19 +44,19 @@ describe('people', () => {
     });
 
     it('should not add same unavailability ranges twice', function () {
-        firstPerson.add_unavailable_range(csd(2010, 5, 1), csd(2010, 11, 1));
+        firstPerson.addUnavailableRange(csd(2010, 5, 1), csd(2010, 11, 1));
         expect(firstPerson.unavailable.length).toBe(1, "expected first addition to give just one!!!");
-        firstPerson.add_unavailable_range(csd(2010, 5, 1), csd(2010, 11, 1));
+        firstPerson.addUnavailableRange(csd(2010, 5, 1), csd(2010, 11, 1));
         expect(firstPerson.unavailable.length).toBe(1, `odd: got more than 1, ${firstPerson.unavailable}`);
     });
 
     it('can add unavailability range', () => {
-        expect(firstPerson.is_unavailable_on(someDate)).toBeFalsy();
-        firstPerson.add_unavailable_range(new Date(2010, 5, 1), new Date(2010, 11, 1));
-        expect(firstPerson.is_unavailable_on(new Date(2010, 5, 1))).toBeTruthy();
+        expect(firstPerson.isUnavailableOn(someDate)).toBeFalsy();
+        firstPerson.addUnavailableRange(new Date(2010, 5, 1), new Date(2010, 11, 1));
+        expect(firstPerson.isUnavailableOn(new Date(2010, 5, 1))).toBeTruthy();
 
         console.log(`Person unavailable on: ${SafeJSON.stringify(firstPerson.unavailable)}`);
-        expect(firstPerson.is_unavailable_on(new Date(2010, 9, 1))).toBeTruthy();
+        expect(firstPerson.isUnavailableOn(new Date(2010, 9, 1))).toBeTruthy();
         // expect(firstPerson.is_unavailable_on(new Date(2011, 9, 1))).toBeFalsy();
     });
 
@@ -64,23 +64,22 @@ describe('people', () => {
         // Example from Jeremy, where he wasn't available on the 4th.
         let from = csd(2018, 1, 7);
         let to = csd(2018, 2, 4);
-        firstPerson.add_unavailable_range(from, to);
+        firstPerson.addUnavailableRange(from, to);
 
-        expect(firstPerson.is_unavailable_on(from)).toBeTruthy();
-        expect(firstPerson.is_unavailable_on(to)).toBeTruthy();
+        expect(firstPerson.isUnavailableOn(from)).toBeTruthy();
+        expect(firstPerson.isUnavailableOn(to)).toBeTruthy();
 
         // Should expect the next day to be OK
-        expect(firstPerson.is_unavailable_on(csd(2018, 2, 5))).toBeFalsy();
+        expect(firstPerson.isUnavailableOn(csd(2018, 2, 5))).toBeFalsy();
     });
 
     it('can remove unavailable date', () => {
-        firstPerson.add_unavailable(someDate);
-        expect(firstPerson.is_unavailable_on(someDate)).toBeTruthy();
+        let unavail = firstPerson.addUnavailable(someDate);
+        expect(firstPerson.isUnavailableOn(someDate)).toBeTruthy();
 
         // a new date instance
-        let recreatedDate = new Date(2010, 10, 3);
-        firstPerson.remove_unavailable(recreatedDate);
-        expect(firstPerson.is_unavailable_on(someDate)).toBeFalsy();
+        firstPerson.removeUnavailable(unavail);
+        expect(firstPerson.isUnavailableOn(someDate)).toBeFalsy();
     });
 
     it('can add to people', () => {

@@ -126,7 +126,7 @@ export class RuleFacts {
 
     has_exclusion_for(date: Date, person: Person, role: Role): any[] {
         // Is this person unavailable on this date?
-        if (person.is_unavailable_on(date)) {
+        if (person.isUnavailableOn(date)) {
             return [true, "unavailable"];
         }
 
@@ -246,7 +246,7 @@ export class RuleFacts {
 
     is_person_available(person: Person, date: Date, record_unavailability: boolean = false) {
         throwOnInvalidDate(date);
-        if (person.is_unavailable_on(date)) {
+        if (person.isUnavailableOn(date)) {
             return false;
         }
 

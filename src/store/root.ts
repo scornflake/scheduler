@@ -1,5 +1,5 @@
 import {SavedState, UIStore} from "./UIState";
-import {Injectable} from "@angular/core";
+import {Injectable, OnDestroy} from "@angular/core";
 import {Logger} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
 import {SafeJSON} from "../common/json/safe-stringify";
@@ -22,13 +22,13 @@ import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
 
 @Injectable()
-class RootStore extends SchedulerObjectStore implements IObjectCache {
+class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy {
     @observable ui_store: UIStore;
 
     loggedInPerson: Person;
 
     @observable schedule: ScheduleWithRules;
-    @observable previous_schedule: ScheduleWithRules;
+    @observable previousSchedule: ScheduleWithRules;
 
     private logger: Logger;
 
@@ -37,8 +37,10 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
     private selectedPlanSubject: Subject<Plan>;
     private uiStoreSubject: Subject<UIStore>;
     private loggedInPersonSubject: Subject<Person>;
+
     private ssDisposer: IReactionDisposer;
     private uiDisposer: IReactionDisposer;
+    private lipDisposer: IReactionDisposer;
 
     constructor(public db: SchedulerDatabase) {
         super();
@@ -48,9 +50,14 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
         this.db.setCache(this);
     }
 
-    @action
-    set_previous_schedule(schedule: ScheduleWithRules) {
-        this.previous_schedule = schedule;
+    ngOnDestroy() {
+        this.ssDisposer();
+        this.uiDisposer();
+        this.lipDisposer();
+    }
+
+    @action setPreviousSchedule(schedule: ScheduleWithRules) {
+        this.previousSchedule = schedule;
     }
 
     async singleOrgStoredInDB(): Promise<Organization> {
@@ -71,9 +78,10 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
 
         // Now load the saved state, defaults, etc
         try {
-            let saved_state = await this.db.async_load_object_with_id('saved-state');
+            let saved_state = await this.db.async_load_object_with_id('saved-state') as SavedState;
 
-            this.logger.debug(`Retrieved state successfully from store: ${SafeJSON.stringify(saved_state).substr(0, 60)}...`);
+            this.logger.info(`Login Token: ${saved_state.login_token}`);
+            this.logger.info(`Logged in person: ${saved_state.logged_in_person_uuid}`);
 
             this.ui_store.setSavedState(saved_state as SavedState);
             if (!this.ui_store.saved_state) {
@@ -102,7 +110,8 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
         this.logger.info(`Loaded ${items.length} plans...`);
 
         // Sort out who the logged in user is (plus this.organization)
-        this.setLoggedInPersonUsingSavedState();
+        // Need to kick this again, because lookup of the logged in person isn't possible until people are loaded.
+        this.lookupPersonAndTellSubscribers(this.ui_store.saved_state.logged_in_person_uuid);
 
         // We want that 'defaults' one to be alive so it triggers when we first load the state
         this.checkForDefaults();
@@ -141,7 +150,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
             this.selected_plan$.map(plan => {
                 if (plan) {
                     this.logger.info(`Regenerating schedule`);
-                    let schedule = new ScheduleWithRules(plan, this.previous_schedule);
+                    let schedule = new ScheduleWithRules(plan, this.previousSchedule);
                     schedule.create_schedule();
                     // this.scheduleSubject.next(schedule);
                     return schedule;
@@ -173,23 +182,33 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
     get loggedInPerson$(): Observable<Person> {
         if (!this.loggedInPersonSubject) {
             this.loggedInPersonSubject = new BehaviorSubject<Person>(null);
-            this.saved_state$.map(state => {
-                this.setLoggedInPersonUsingSavedState();
-                return this.loggedInPerson;
-            }).subscribe(this.loggedInPersonSubject);
+
+            this.lipDisposer = reaction(() => {
+                trace();
+                let state = this.ui_store.saved_state;
+                if (state) {
+                    return state.logged_in_person_uuid;
+                }
+                return null;
+            }, (value) => {
+                this.logger.debug("loggedInPerson$", `state change saw: ${value}`);
+                this.lookupPersonAndTellSubscribers(value);
+            }, {name: 'logged in person'});
+
+            // above reaction uses default comparator, so that it only fires when the UUID CHANGES! yay.
         }
         return this.loggedInPersonSubject;
     }
 
-    private setLoggedInPersonUsingSavedState() {
-        let state = this.ui_store.saved_state;
-        if (state.logged_in_person_uuid) {
-            this.loggedInPerson = this.people.findOfThisTypeByUUID(state.logged_in_person_uuid);
+    private lookupPersonAndTellSubscribers(uuid: string) {
+        if (uuid) {
+            this.loggedInPerson = this.people.findOfThisTypeByUUID(uuid);
             this.logger.info(`Logged in person = ${this.loggedInPerson}`);
         } else {
             this.logger.warn(`Logged in person is None`);
             this.loggedInPerson = null;
         }
+        this.loggedInPersonSubject.next(this.loggedInPerson);
     }
 
     get saved_state$(): Observable<SavedState> {
@@ -204,12 +223,10 @@ class RootStore extends SchedulerObjectStore implements IObjectCache {
                 if (this.ui_store.saved_state) {
                     let plan_uuid = this.ui_store.saved_state.selected_plan_uuid;
                     this.logger.info(`Saved state changed... (plan UUID: ${plan_uuid})`);
-                } else {
-                    this.logger.info(`Saved state is None`);
                 }
                 return this.ui_store.saved_state;
             }, savedState => {
-                this.logger.info(`firing ${savedState} to the subjects observers`);
+                // this.logger.info(`firing ${savedState} to the subjects observers`);
                 this.savedStateSubject.next(savedState);
             }, {
                 name: 'saved state',

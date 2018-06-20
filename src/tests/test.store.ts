@@ -68,32 +68,32 @@ export class NPBCStoreConstruction {
         /*
         Add unavailability here
          */
-        chris.add_unavailable(csd(2018, 7, 15));
+        chris.addUnavailable(csd(2018, 7, 15));
 
-        jeremy_selfe.add_unavailable(csd(2018, 6, 3));
-        jeremy_selfe.add_unavailable(csd(2018, 7, 1));
+        jeremy_selfe.addUnavailable(csd(2018, 6, 3));
+        jeremy_selfe.addUnavailable(csd(2018, 7, 1));
 
-        cherilyn.add_unavailable_range(csd(2018, 7, 14), csd(2018, 7, 29));
-        cherilyn.add_unavailable(csd(2018, 6, 17), 'ob meeting');
-        cherilyn.add_unavailable(csd(2018, 7, 1), 'ob meeting');
-        cherilyn.add_unavailable(csd(2018, 8, 19), 'mental health!');
+        cherilyn.addUnavailableRange(csd(2018, 7, 14), csd(2018, 7, 29));
+        cherilyn.addUnavailable(csd(2018, 6, 17), 'ob meeting');
+        cherilyn.addUnavailable(csd(2018, 7, 1), 'ob meeting');
+        cherilyn.addUnavailable(csd(2018, 8, 19), 'mental health!');
 
-        christine.add_unavailable(csd(2018, 5, 6));
-        christine.add_unavailable(csd(2018, 6, 17));
-        christine.add_unavailable(csd(2018, 7, 22));
+        christine.addUnavailable(csd(2018, 5, 6));
+        christine.addUnavailable(csd(2018, 6, 17));
+        christine.addUnavailable(csd(2018, 7, 22));
 
-        jeremy_l.add_unavailable(csd(2018, 6, 17));
+        jeremy_l.addUnavailable(csd(2018, 6, 17));
 
-        jeremy_w.add_unavailable(csd(2018, 6, 3));
-        jeremy_w.add_unavailable(csd(2018, 7, 8));
-        jeremy_w.add_unavailable(csd(2018, 7, 22));
+        jeremy_w.addUnavailable(csd(2018, 6, 3));
+        jeremy_w.addUnavailable(csd(2018, 7, 8));
+        jeremy_w.addUnavailable(csd(2018, 7, 22));
 
-        stuart.add_unavailable_range(csd(2018, 8, 12), csd(2018, 9, 9));
+        stuart.addUnavailableRange(csd(2018, 8, 12), csd(2018, 9, 9));
 
-        allie.add_unavailable(csd(2018, 6, 3));
-        allie.add_unavailable(csd(2018, 7, 22));
+        allie.addUnavailable(csd(2018, 6, 3));
+        allie.addUnavailable(csd(2018, 7, 22));
 
-        craig.add_unavailable_range(csd(2018, 8, 12), csd(2018, 9, 9));
+        craig.addUnavailableRange(csd(2018, 8, 12), csd(2018, 9, 9));
 
         /*
         Add specifics here

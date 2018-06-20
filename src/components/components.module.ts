@@ -14,6 +14,8 @@ import {SavingStateComponent} from './saving-state/saving-state';
 import {PersonScheduleComponent} from './person-schedule/person-schedule';
 import {PersonUnavailbleComponent} from './person-unavailble/person-unavailble';
 import {PlanDateRangeComponent} from './plan-date-range/plan-date-range';
+import {CalendarComponent} from "./calendar/calendar";
+import {CalendarModule} from "ionic3-calendar-en";
 
 @NgModule({
     declarations: [

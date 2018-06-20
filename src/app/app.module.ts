@@ -28,16 +28,17 @@ import {PageUtils} from "../pages/page-utils";
 import {DatabaseMaintPageModule} from "../pages/database-maint/database-maint.module";
 import {TabsPage} from "../pages/tabs/tabs";
 import {OrmMapper} from "../providers/mapping/orm-mapper";
-import {scheduler_db_map} from "../assets/db.mapping";
-import {SchedulerObjectStore} from "../scheduling/common/scheduler-store";
 import {SchedulerDatabase} from "../providers/server/db";
 import {SchedulerServer} from "../providers/server/scheduler-server.service";
 import {setupOrmMapper} from "../providers/mapping/setup";
+import {CalendarModule} from "ionic3-calendar-en";
+import {CalendarComponent} from "../components/calendar/calendar";
 
 @NgModule({
     declarations: [
         MyApp,
         TabsPage,
+        CalendarComponent
     ],
     imports: [
         HttpClientModule,
@@ -56,11 +57,13 @@ import {setupOrmMapper} from "../providers/mapping/setup";
         TeamPageModule,
         PersonAssignmentPageModule,
         DatabaseMaintPageModule,
+        CalendarModule,
     ],
     bootstrap: [IonicApp],
     entryComponents: [
         MyApp,
         TabsPage,
+        CalendarComponent
     ],
     providers: [
         {

@@ -22,25 +22,25 @@ describe('unavailability', () => {
 
     it('can model single date', () => {
         let unavil = new Unavailability(new Date(2010, 10, 1));
-        expect(unavil.matches_single_date(new Date(2010, 10, 1))).toBeTruthy();
-        expect(unavil.matches_single_date(new Date(2010, 11, 1))).toBeFalsy();
-        expect(unavil.matches_single_date(new Date(2009, 10, 1))).toBeFalsy();
+        expect(unavil.matchesSingleDate(new Date(2010, 10, 1))).toBeTruthy();
+        expect(unavil.matchesSingleDate(new Date(2010, 11, 1))).toBeFalsy();
+        expect(unavil.matchesSingleDate(new Date(2009, 10, 1))).toBeFalsy();
     });
 
     it('takes into account hours', () => {
         let unavil = new Unavailability(new Date(2010, 10, 1, 10));
-        expect(unavil.matches_single_date(new Date(2010, 10, 1, 10))).toBeTruthy();
-        expect(unavil.matches_single_date(new Date(2010, 10, 1, 10, 20))).toBeTruthy();
-        expect(unavil.matches_single_date(new Date(2010, 10, 1, 11, 20))).toBeFalsy();
+        expect(unavil.matchesSingleDate(new Date(2010, 10, 1, 10))).toBeTruthy();
+        expect(unavil.matchesSingleDate(new Date(2010, 10, 1, 10, 20))).toBeTruthy();
+        expect(unavil.matchesSingleDate(new Date(2010, 10, 1, 11, 20))).toBeFalsy();
     });
 
     it('can check for date being "in" a day', () => {
         let unavil = new Unavailability(new Date(2010, 10, 1));
-        expect(unavil.contains_date(new Date(2010, 10, 1, 10))).toBeTruthy();
+        expect(unavil.containsDate(new Date(2010, 10, 1, 10))).toBeTruthy();
 
-        expect(unavil.contains_date(new Date(2010, 10, 1))).toBeTruthy();
-        expect(unavil.contains_date(new Date(2010, 10, 0))).toBeFalsy();
-        expect(unavil.contains_date(new Date(2010, 10, 2))).toBeFalsy();
+        expect(unavil.containsDate(new Date(2010, 10, 1))).toBeTruthy();
+        expect(unavil.containsDate(new Date(2010, 10, 0))).toBeFalsy();
+        expect(unavil.containsDate(new Date(2010, 10, 2))).toBeFalsy();
     });
 
     it('can model a date range', () => {
@@ -48,15 +48,15 @@ describe('unavailability', () => {
         let to_date = new Date(2010, 11, 2);
         let unavil = new Unavailability(from_date, to_date);
 
-        expect(unavil.from_date).toEqual(from_date);
-        expect(unavil.to_date).toEqual(to_date);
+        expect(unavil.fromDate).toEqual(from_date);
+        expect(unavil.toDate).toEqual(to_date);
 
-        expect(unavil.contains_date(new Date(2010, 10, 1))).toBeTruthy();
-        expect(unavil.contains_date(new Date(2010, 10, 1, 10))).toBeTruthy();
-        expect(unavil.contains_date(new Date(2010, 11, 1))).toBeTruthy();
+        expect(unavil.containsDate(new Date(2010, 10, 1))).toBeTruthy();
+        expect(unavil.containsDate(new Date(2010, 10, 1, 10))).toBeTruthy();
+        expect(unavil.containsDate(new Date(2010, 11, 1))).toBeTruthy();
 
-        expect(unavil.contains_date(new Date(2010, 10, 0))).toBeFalsy();
-        expect(unavil.contains_date(new Date(2010, 11, 3))).toBeFalsy();
+        expect(unavil.containsDate(new Date(2010, 10, 0))).toBeFalsy();
+        expect(unavil.containsDate(new Date(2010, 11, 3))).toBeFalsy();
     });
 
     it('truncates dates to the hour', () => {

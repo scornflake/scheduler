@@ -173,7 +173,7 @@ describe('role scheduler', () => {
         neil.availability = new Availability(2, AvailabilityUnit.EVERY_N_WEEKS);
 
         // If unavailability affects exclusions we should end up with not being able to schedule on the first date
-        neil.add_unavailable(plan.start_date);
+        neil.addUnavailable(plan.start_date);
 
         schedule = new ScheduleWithRules(plan);
         expect(schedule).not.toBeNull();

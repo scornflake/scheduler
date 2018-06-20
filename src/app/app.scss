@@ -14,6 +14,9 @@
 // for the .md, .ios, or .wp mode classes. The mode class is
 // automatically applied to the <body> element in the app.
 
+// Dunno why it's not imported automatically
+@import "../../node_modules/ionic3-calendar-en/src/calendar/calendar";
+
 .invisible {
   visibility: hidden !important;
 }

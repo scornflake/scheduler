@@ -3,64 +3,76 @@ import {dayAndHourForDate} from "./common/date-utils";
 import * as moment from "moment";
 import {observable} from "mobx-angular";
 
+import Moment from "moment";
+import {extendMoment} from 'moment-range';
+
 class Unavailability extends TypedObject {
-    @observable _from_date: Date = null;
-    @observable _to_date: Date = null;
+    @observable _fromDate: Date = null;
+    @observable _toDate: Date = null;
     @observable reason: string = null;
 
     constructor(from: Date = null, to: Date = null, reason = null) {
         super();
-        this.from_date = from;
-        this.to_date = to;
+        this.fromDate = from;
+        this.toDate = to;
         this.reason = reason;
     }
 
-    get is_date_range(): boolean {
-        return this.from_date != null && this.to_date != null;
+    get isDateRange(): boolean {
+        return this.fromDate != null && this.toDate != null;
     }
 
-    get to_date() {
-        return this._to_date;
+    get dateRange(): Date[] {
+        if (!this.isDateRange) {
+            return [this.fromDate];
+        }
+        const moment = extendMoment(Moment);
+        let moments = moment.range(this.fromDate, this.toDate).by('days');
+        return Array.from(moments).map(m => m.toDate());
     }
 
-    set to_date(new_value: any) {
+    get toDate() {
+        return this._toDate;
+    }
+
+    set toDate(new_value: any) {
         if (typeof new_value === 'string') {
             new_value = moment(new_value).toDate();
         }
-        this._to_date = new_value;
+        this._toDate = new_value;
     }
 
-    get from_date() {
-        return this._from_date;
+    get fromDate() {
+        return this._fromDate;
     }
 
-    set from_date(new_value: any) {
+    set fromDate(new_value: any) {
         if (typeof new_value === 'string') {
             new_value = moment(new_value).toDate();
         }
-        this._from_date = new_value;
+        this._fromDate = new_value;
     }
 
-    matches_single_date(d: Date) {
-        if (this.to_date != null) {
+    matchesSingleDate(d: Date) {
+        if (this.toDate != null) {
             return false;
         }
-        let thisDate = dayAndHourForDate(this.from_date);
+        let thisDate = dayAndHourForDate(this.fromDate);
         let otherDate = dayAndHourForDate(d);
         return thisDate == otherDate;
     }
 
-    contains_date(date: Date) {
+    containsDate(date: Date) {
         if (date == null) {
             return false;
         }
-        let start = moment(this.from_date).startOf('day');
+        let start = moment(this.fromDate).startOf('day');
 
         // By default, be one day in length
-        let the_end_date = moment(this.from_date).endOf('day');
+        let the_end_date = moment(this.fromDate).endOf('day');
 
-        if (this.is_date_range) {
-            the_end_date = moment(this.to_date).endOf('day');
+        if (this.isDateRange) {
+            the_end_date = moment(this.toDate).endOf('day');
         }
 
         let date_as_moment = moment(date);
@@ -87,12 +99,12 @@ class Unavailability extends TypedObject {
             return false;
         }
         if (other_obj instanceof Unavailability) {
-            if (!this.isDateEqual(this.from_date, other_obj.from_date)) {
+            if (!this.isDateEqual(this.fromDate, other_obj.fromDate)) {
                 // console.log("cos d1 !=");
                 return false;
             }
 
-            if (!this.isDateEqual(this.to_date, other_obj.to_date)) {
+            if (!this.isDateEqual(this.toDate, other_obj.toDate)) {
                 // console.log("cos d2 !=");
                 return false;
             }
@@ -106,10 +118,10 @@ class Unavailability extends TypedObject {
     }
 
     toString() {
-        if(this.is_date_range) {
-            return `from ${this.from_date} -> ${this.to_date}`;
+        if (this.isDateRange) {
+            return `from ${this.fromDate} -> ${this.toDate}`;
         }
-        return `on ${this.from_date}`;
+        return `on ${this.fromDate}`;
     }
 }
 

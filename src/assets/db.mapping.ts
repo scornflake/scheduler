@@ -98,8 +98,8 @@ let scheduler_db_map: ClassFieldMapping = {
         {
             name: 'Unavailability',
             fields: [
-                {name: 'from_date', hint: PropertyHint.Date},
-                {name: 'to_date', hint: PropertyHint.Date},
+                {name: 'fromDate', hint: PropertyHint.Date},
+                {name: 'toDate', hint: PropertyHint.Date},
                 {name: 'reason'},
             ],
             inherit: 'TypedObject',

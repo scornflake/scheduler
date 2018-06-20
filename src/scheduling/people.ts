@@ -49,14 +49,13 @@ export class Person extends NamedObject {
         return words.map(w => w[0]).join(".")
     }
 
-    add_unavailable(d: Date, reason = null) {
-        let new_unavail = new Unavailability(d, null, reason);
-        this._add_unavail(new_unavail);
+    addUnavailable(d: Date, reason = null): Unavailability {
+        let unavailability = new Unavailability(d, null, reason);
+        return this._add_unavail(unavailability);
     }
 
-    add_unavailable_range(from: Date, to: Date, reason = null) {
-        let unavailablity = new Unavailability(from, to, reason);
-        this._add_unavail(unavailablity);
+    addUnavailableRange(from: Date, to: Date, reason = null) {
+        return this._add_unavail(new Unavailability(from, to, reason));
     }
 
     private _add_unavail(new_unavail: Unavailability) {
@@ -64,12 +63,14 @@ export class Person extends NamedObject {
             return;
         }
         this.unavailable.push(new_unavail);
+        return new_unavail;
     }
 
-    remove_unavailable(d: Date) {
-        this.unavailable = this.unavailable.filter(ud => {
-            return !ud.matches_single_date(d);
-        });
+    removeUnavailable(u: Unavailability) {
+        let idex = this.unavailable.indexOf(u);
+        if (idex != -1) {
+            this.unavailable.splice(idex, 1);
+        }
     }
 
     is_available(date: Date, facts: RuleFacts, record_unavailability: boolean = false) {
@@ -78,12 +79,12 @@ export class Person extends NamedObject {
         return this.availability.is_available(this, date, facts, record_unavailability);
     }
 
-    is_unavailable_on(date: Date) {
+    isUnavailableOn(date: Date) {
         // See if this date is inside the unavailable date ranges
         // console.log(`unavail on : ${date} ?`);
         for (let unavail of this.unavailable) {
             // console.log(`  - check: ${unavail}`);
-            if (unavail.contains_date(date)) {
+            if (unavail.containsDate(date)) {
                 // console.log(` - date ${date} is contained in ${unavail}, returning TRUE`);
                 return true;
             }
@@ -92,7 +93,7 @@ export class Person extends NamedObject {
     }
 
     get unavailable_by_date(): Array<Unavailability> {
-        return _.sortBy(this.unavailable, u => u.from_date);
+        return _.sortBy(this.unavailable, u => u.fromDate);
     }
 
     valueOf() {
