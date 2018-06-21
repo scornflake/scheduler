@@ -130,13 +130,13 @@ class SchedulerDatabase implements IObjectLoader {
         }
     }
 
-    async destroyDatabase() {
+    async destroyDatabase(doRefresh: boolean = true) {
         this.tracker.clearAll();
 
-        let allDocIds = await this.db.allDocs({include_docs: false});
-        let idsWithDeleted = allDocIds.rows.map(doc => {
-            return {"_id": doc.id, "_deleted": "true"}
-        });
+        // let allDocIds = await this.db.allDocs({include_docs: false});
+        // let idsWithDeleted = allDocIds.rows.map(doc => {
+        //     return {"_id": doc.id, "_deleted": "true"}
+        // });
         // await this.db.bulkDocs();
         // await this.db.compact({});
 
@@ -146,7 +146,10 @@ class SchedulerDatabase implements IObjectLoader {
         /*
         Must reload the page / app, to get a new DB.
          */
-        location.reload();
+        if(doRefresh) {
+            console.log(`starting destroy of db...`);
+            location.reload();
+        }
     }
 
     private index_exists(name: string): boolean {
