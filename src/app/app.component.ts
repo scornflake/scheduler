@@ -53,6 +53,7 @@ export class MyApp {
                     {
                         title: "Logout", function: () => {
                             this.server.logout();
+                            this.nav.popToRoot();
                         }
                     }
                 ]

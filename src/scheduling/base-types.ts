@@ -72,7 +72,7 @@ abstract class ObjectWithUUID extends TypedObject {
         return this._id;
     }
 
-    update_from_server(state) {
+    @action update_from_server(state) {
         let fields = [];
         // migrate properties to this
         if (state._id) {
@@ -85,6 +85,11 @@ abstract class ObjectWithUUID extends TypedObject {
         }
         this.is_new = false;
         return fields;
+    }
+
+    @action undefineIdAndRev() {
+        this._id = undefined;
+        this._rev = undefined;
     }
 }
 

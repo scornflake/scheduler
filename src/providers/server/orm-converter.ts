@@ -14,8 +14,9 @@ import {Logger} from "ionic-logging-service";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import * as moment from "moment";
 import {isUndefined} from "util";
-import {observable} from "mobx-angular";
+import {action, observable} from "mobx-angular";
 import {IObjectCache} from "../mapping/cache";
+import {runInAction} from "mobx";
 
 class OrmConverter {
     private mapper: OrmMapper;
@@ -48,6 +49,7 @@ class OrmConverter {
         }, object, nesting);
     }
 
+    @action
     async async_create_js_object_from_dict(dict: object, new_object_type: string, nesting: number = 0): Promise<ObjectWithUUID> {
         /*
         Assumption is that we begin with an object that has an ID and a type.
@@ -128,10 +130,13 @@ class OrmConverter {
                     continue;
                 }
 
+
+                let newValueForProperty = null;
+
                 switch (mapping.type) {
                     case MappingType.Property: {
-                        new_object[propertyName] = this.convert_from_db_value_to_js_type(dict[propertyName], mapping);
-                        this.debug(`${propertyName} = ${new_object[propertyName]}`, nesting);
+                        newValueForProperty = this.convert_from_db_value_to_js_type(dict[propertyName], mapping);
+                        this.debug(`${propertyName} = ${newValueForProperty}`, nesting);
                         break;
                     }
 
@@ -142,7 +147,7 @@ class OrmConverter {
                         let new_type = value['type'];
                         this.debug(`${propertyName} = new instance of ${new_type}`, nesting);
                         let new_object = await this.async_create_js_object_from_dict(value, new_type, nesting + 1);
-                        new_object[propertyName] = this.removeIdAndRevIfNotNeededForThis(new_object, mapping);
+                        newValueForProperty = this.removeIdAndRevIfNotNeededForThis(new_object, mapping);
                         break;
                     }
 
@@ -158,36 +163,36 @@ class OrmConverter {
                             }
                             new_objects.push(this.removeIdAndRevIfNotNeededForThis(the_item, mapping));
                         }
-                        new_object[propertyName] = new_objects;
+                        newValueForProperty = new_objects;
                         break;
                     }
 
                     case MappingType.Reference: {
                         this.debug(`${propertyName} = reference: ${value}`, nesting);
                         let ref: ObjectReference = this.parse_reference(value);
-                        new_object[propertyName] = await this._async_lookup_object_reference(ref, nesting + 1);
+                        newValueForProperty = await this._async_lookup_object_reference(ref, nesting + 1);
                         break;
                     }
 
                     case MappingType.ReferenceList: {
                         // Assume 'value' is a list of object references
                         this.debug(`${propertyName} = list of ${value.length} references`, nesting);
-                        new_object[propertyName] = await this._async_lookup_list_of_references(value, nesting + 1);
-                        this.debug(`    ... got ${new_object[propertyName]}`, nesting);
+                        newValueForProperty = await this._async_lookup_list_of_references(value, nesting + 1);
+                        this.debug(`    ... got ${newValueForProperty}`, nesting);
                         break;
                     }
 
                     case MappingType.MapWithReferenceValues: {
                         this.debug(`${propertyName} = map of ${value.size} reference (values)`, nesting);
-                        new_object[propertyName] = await this._lookup_map_of_reference_values(mapping, value, nesting + 1);
-                        this.debug(`    ... got ${new_object[propertyName]}`, nesting);
+                        newValueForProperty = await this._lookup_map_of_reference_values(mapping, value, nesting + 1);
+                        this.debug(`    ... got ${newValueForProperty}`, nesting);
                         break;
                     }
 
                     case MappingType.MapWithReferenceKeys: {
                         this.debug(`${propertyName} = map of ${value.size} reference (keys)`, nesting);
-                        new_object[propertyName] = await this._lookup_map_of_reference_keys(mapping, value, nesting + 1);
-                        this.debug(`    ... got ${new_object[propertyName]}`, nesting);
+                        newValueForProperty = await this._lookup_map_of_reference_keys(mapping, value, nesting + 1);
+                        this.debug(`    ... got ${newValueForProperty}`, nesting);
                         break;
                     }
 
@@ -195,9 +200,12 @@ class OrmConverter {
                         throw new Error(`Fail. Dunno how to handle: ${mapping.name} of type ${mapping.type}`);
                     }
                 }
+                runInAction(() => {
+                    new_object[propertyName] = newValueForProperty;
+                })
             }
         }
-        new_object.is_new = false;
+        new_object.setIsNew(false);
         return new_object;
     }
 
@@ -295,7 +303,7 @@ class OrmConverter {
     }
 
     async _convert_object_value_to_dict(mapping, value, nesting: number = 0) {
-        if(value == null) {
+        if (value == null) {
             return null;
         }
         switch (mapping.type) {

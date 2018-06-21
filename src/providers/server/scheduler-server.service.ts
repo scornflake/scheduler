@@ -32,7 +32,7 @@ interface ILifecycleCallback {
 }
 
 interface ILifecycle {
-    asyncRunStartupLifecycle(callback: ILifecycleCallback);
+    asyncRunStartupLifecycle(callback: ILifecycleCallback): Promise<boolean>;
 }
 
 
@@ -46,9 +46,7 @@ class SchedulerServer implements ILifecycle {
     constructor(@Inject(forwardRef(() => RootStore)) private store,
                 private restAPI: RESTServer,
                 private storage: Storage,
-                private db: SchedulerDatabase,
-                private navCtrl: NavController
-    ) {
+                private db: SchedulerDatabase) {
         this.logger = LoggingWrapper.getLogger('service.bridge');
         this.waitForDB();
     }
@@ -85,11 +83,7 @@ class SchedulerServer implements ILifecycle {
         this.asyncSaveState().then(() => {
             this.logger.info(`User logged out, state saved.`);
         });
-
-        // Navigate to home
-        this.navCtrl.popTo('home');
     }
-
 
     setLoginTokenFromUserResponse(good: boolean, user: UserResponse = null) {
         let uiStore = this.store.ui_store;
@@ -114,14 +108,6 @@ class SchedulerServer implements ILifecycle {
         let vr = await this.restAPI.validateLoginToken(token);
 
         this.setLoginTokenFromUserResponse(vr.ok, vr.user);
-
-        // // Tell the store to initialize on this user
-        // if (vr.ok) {
-        //     await this.store.setupAfterUserLoggedIn();
-        //
-        //     // Setup the organization that this user is a part of
-        //     await this.syncUserWithServer(vr.user);
-        // }
 
         return vr;
     }
@@ -309,20 +295,20 @@ class SchedulerServer implements ILifecycle {
         It is expected that if you have logged in in the past, the token is valid and
         the user should exist in the local DB (by uuid)
      */
-    async asyncRunStartupLifecycle(callback: ILifecycleCallback) {
+    async asyncRunStartupLifecycle(callback: ILifecycleCallback): Promise<boolean> {
         await this.asyncLoadState();
 
         if (!this.state.loginToken) {
             this.logger.debug(`Login token null, show login page`);
             callback.showLoginPage();
-            return;
+            return false;
         }
 
         let vr = await this.validateLoginToken(this.state.loginToken);
         if (!vr.ok) {
             this.logger.debug(`Login token in valid, show login page`);
             callback.showLoginPage();
-            return;
+            return false;
         }
 
         // If no person UUID, loginUser() didn't do its job.
@@ -331,14 +317,14 @@ class SchedulerServer implements ILifecycle {
         if (!this.state.lastPersonUUID) {
             this.logger.debug(`lastPersonUUID nil, show login page`);
             callback.showLoginPage();
-            return;
+            return false;
         }
 
         this.logger.debug(`Looking up user with ID: ${this.state.lastPersonUUID}`);
         let personObject = await this.db_findByUUID(this.state.lastPersonUUID);
         if (personObject == null) {
             callback.showError("E1334: Please try logging in again.");
-            return;
+            return false;
         }
 
         // Place the logged in user (person) into UI State.
@@ -350,6 +336,8 @@ class SchedulerServer implements ILifecycle {
 
         // OK. We have everything. Can now ask the store to load it's data, and we're good.
         await this.store.setupAfterUserLoggedIn();
+
+        return true;
     }
 }
 

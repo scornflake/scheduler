@@ -8,7 +8,7 @@ import {SchedulerDatabase} from "../providers/server/db";
 import {Team} from "../scheduling/teams";
 import {ObjectWithUUID} from "../scheduling/base-types";
 import {LoggingWrapper} from "../common/logging-wrapper";
-import {Preferences, Person} from "../scheduling/people";
+import {Person, Preferences} from "../scheduling/people";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import {SchedulerObjectStore} from "../scheduling/common/scheduler-store";
 import {Organization} from "../scheduling/organization";
@@ -19,7 +19,6 @@ import {action} from "mobx-angular";
 import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {Subscription} from "rxjs/Subscription";
-import {SafeJSON} from "../common/json/safe-stringify";
 
 @Injectable()
 class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy {
@@ -243,11 +242,11 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
 
     private checkForDefaults() {
         let person = this.ui_store.loggedInPerson;
-        if(!person) {
+        if (!person) {
             throw new Error('Unable to start defaults check, no person logged in');
         }
         let prefs = person.preferences;
-        if(!prefs) {
+        if (!prefs) {
             throw new Error('Unable to start defaults check, no preferences');
         }
         this.logger.info(`Checking to see if we have a default selected plan...`);
@@ -310,7 +309,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         if (!this.ssDisposer) {
             // Observe changes, and send these to the subject
             this.ssDisposer = reaction(() => {
-                if(this.loggedInPerson) {
+                if (this.loggedInPerson) {
                     let prefs = this.loggedInPerson.preferences;
                     toJS(prefs);
                     if (prefs) {
@@ -356,8 +355,10 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         if (!this.uiDisposer) {
             this.uiDisposer = reaction(() => {
                 // trace();
-                this.logger.info(`UI Store changed to ${SafeJSON.stringify(this.ui_store)}.`);
-                toJS(this.ui_store);
+                if(this.ui_store) {
+                    this.logger.info(`UI Store changed, person:${this.ui_store.loggedInPerson ? this.ui_store.loggedInPerson.name : '<no one>'}, selection: ${this.ui_store.have_selection || '<no selection>'}...`);
+                    toJS(this.ui_store);
+                }
                 return this.ui_store;
             }, () => {
                 this.uiStoreSubject.next(this.ui_store);

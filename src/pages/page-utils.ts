@@ -4,7 +4,7 @@ import {forwardRef, Inject, Injectable, Injector, OnInit} from "@angular/core";
 import deepEqual from "deep-equal";
 import {ToastOptions} from "ionic-angular/components/toast/toast-options";
 import {SafeJSON} from "../common/json/safe-stringify";
-import {SchedulerServer} from "../providers/server/scheduler-server.service";
+import {ILifecycleCallback, SchedulerServer} from "../providers/server/scheduler-server.service";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {LoginCallback} from "../common/interfaces";
@@ -41,43 +41,27 @@ class PageUtils implements OnInit {
         this.show_alert(message, {cssClass: 'success'}, false);
     }
 
-    checkLogin(callback: LoginCallback) {
-        let readyEvent = this.server.readyEvent;
-        readyEvent.subscribe(value => {
-            if (value) {
-                this._doCheckLogin(callback);
-            }
-        });
-    }
-
-    validateLoginAndShowPageIfNotValid(navCtrl: NavController) {
+    async runStartupLifecycle(navCtrl: NavController): Promise<boolean> {
         if (navCtrl == null) {
             throw new Error(`navCtrl is required`);
         }
-        this.checkLoginAndRedirect(navCtrl, 'login');
+
+        let lifecycleCallback: ILifecycleCallback = {
+            showLoginPage: () => {
+                navCtrl.push('login');
+            },
+            showCreateOrInvitePage: () => {
+                // add args to tell it to switch to create mode
+                navCtrl.push('login');
+            },
+            showError: (message) => {
+                this.show_error(message);
+            }
+        };
+
+        return await this.server.asyncRunStartupLifecycle(lifecycleCallback);
     }
 
-    checkLoginAndRedirect(navCtrl: NavController, pageToGoToIfBad: string) {
-        this.checkLogin(validationOK => {
-            if (!validationOK) {
-                // noinspection JSIgnoredPromiseFromCall
-                navCtrl.push(pageToGoToIfBad);
-            }
-        })
-    }
-
-    private _doCheckLogin(callback: LoginCallback) {
-        let validateLoginToken = this.server.validateLoginToken();
-        validateLoginToken.then(resp => {
-            if (!resp.ok) {
-                this.logger.info(`Validation returned: ${SafeJSON.stringify(resp)}`);
-                callback(true);
-            } else {
-                this.logger.info(`Validation ok: ${SafeJSON.stringify(resp)}`);
-                callback(false);
-            }
-        });
-    }
 
     private show_alert(message, more_options: ToastOptions, stay_open: boolean = false) {
         let options = {

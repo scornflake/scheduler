@@ -332,7 +332,7 @@ class SchedulerDatabase implements IObjectLoader {
                     this.storeInCache(new_object);
                 }
             } catch (err) {
-                this.logger.error(`ERROR processing doc ID: ${docId}, ${err}`);
+                this.logger.error(`ERROR create JS from dict, doc ID: ${docId}, ${err}`);
                 this.logger.error(`DOC was: ${SafeJSON.stringify(doc)}`);
             }
         }

@@ -61,7 +61,7 @@ describe('scheduler server', () => {
 
             store = new RootStore(db);
             restServer = instance(restMock);
-            server = new SchedulerServer(store, restServer, storageMock, db, NavControllerMock.instance());
+            server = new SchedulerServer(store, restServer, storageMock, db);
 
             done();
         });
@@ -113,7 +113,7 @@ describe('scheduler server', () => {
             let vr: ValidationResponse = {ok: false, detail: 'no way!', user: null};
             when(restMock.validateLoginToken(state.loginToken)).thenResolve(vr);
 
-            server = new SchedulerServer(store, restServer, storageMock, db, NavControllerMock.instance());
+            server = new SchedulerServer(store, restServer, storageMock, db);
             server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
                 expect(showedLoginPage).toBeTruthy();
                 verify(restMock.validateLoginToken(state.loginToken)).called();
@@ -134,7 +134,7 @@ describe('scheduler server', () => {
             when(restMock.validateLoginToken(state.loginToken)).thenResolve(vr);
 
             storageMock = StorageMock.instance('state', state);
-            server = new SchedulerServer(store, restServer, storageMock, db, NavControllerMock.instance());
+            server = new SchedulerServer(store, restServer, storageMock, db);
 
             server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
                 expect(showedLoginPage).toBeTruthy();
@@ -154,7 +154,7 @@ describe('scheduler server', () => {
             };
             expect(state.lastPersonUUID).not.toBeFalsy();
             storageMock = StorageMock.instance('state', state);
-            server = new SchedulerServer(store, restServer, storageMock, db, NavControllerMock.instance());
+            server = new SchedulerServer(store, restServer, storageMock, db);
 
             // Intentionally do not store.
             // This means we should get an error when it tries to lookup the object ID
@@ -180,7 +180,7 @@ describe('scheduler server', () => {
             let dbMock = mock(SchedulerDatabase);
             let dbInstance = instance(dbMock);
             storageMock = StorageMock.instance('state', state);
-            server = new SchedulerServer(store, restServer, storageMock, dbInstance, NavControllerMock.instance());
+            server = new SchedulerServer(store, restServer, storageMock, dbInstance);
 
             // mock out the db so we know for certain it's being called
             when(dbMock.readyEvent).thenReturn(new BehaviorSubject(true));

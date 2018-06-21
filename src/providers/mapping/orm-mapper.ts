@@ -5,6 +5,7 @@ import {SafeJSON} from "../../common/json/safe-stringify";
 import {ObjectWithUUID} from "../../scheduling/base-types";
 import {configure, isObservableArray, isObservableMap, isObservableObject} from "mobx";
 import {ClassFieldMapping, ClassMapping, MappingType, PropertyMapping} from "./orm-mapper-type";
+import {action} from "mobx-angular";
 
 function GetTheTypeNameOfTheObject(object: any): string {
     if (object instanceof Map) {
@@ -182,6 +183,7 @@ class OrmMapper {
         return all;
     }
 
+    @action
     createNewInstanceOfType(className: string, cm: ClassMapping = null) {
         if (cm == null) {
             cm = this.definitions.get(className);
@@ -194,8 +196,7 @@ class OrmMapper {
             let instance = cm.factory();
             if (instance instanceof ObjectWithUUID) {
                 // clear out the _id and _rev, we don't want the defaults
-                instance._id = undefined;
-                instance._rev = undefined;
+                instance.undefineIdAndRev();
             }
             return instance;
         }

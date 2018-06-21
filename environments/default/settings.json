@@ -50,7 +50,7 @@
       },
       {
         "loggerName": "db",
-        "logLevel": "INFO"
+        "logLevel": "DEBUG"
       },
       {
         "loggerName": "db.mapping",
@@ -62,7 +62,7 @@
       },
       {
         "loggerName": "db.converter",
-        "logLevel": "WARN"
+        "logLevel": "DEBUG"
       }
     ],
     "browserConsoleAppender": {

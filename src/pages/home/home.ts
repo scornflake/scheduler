@@ -36,7 +36,7 @@ export class HomePage {
     ngOnInit() {
         // this.sheetAPI.init();
 
-        // this.pageUtils.validateLoginAndShowPageIfNotValid(this.navCtrl);
+        this.pageUtils.runStartupLifecycle(this.navCtrl);
 
         // this.store.ui_store$.subscribe(ius => {
         //     this.logger.warn(`Home Says Signed In: ${ius.signed_in}`);
