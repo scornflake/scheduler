@@ -17,7 +17,7 @@ export class OrganizationResponse {
 export class UserResponse {
     id: number;
     email: string;
-    is_active: string;
+    is_active: boolean;
     first_name: string;
     last_name: string;
     logintoken: string;

@@ -34,7 +34,7 @@ export class ScheduleViewerComponent {
     }
 
     ngOnInit() {
-        this.colSelectedDate = this.store.ui_store.preferences.last_selected_date;
+        this.colSelectedDate = this.store.loggedInPerson.preferences.last_selected_date;
         if (!this.colSelectedDate) {
             if (this.schedule) {
                 this.colSelectedDate = this.schedule.dates[0].date;

@@ -130,9 +130,18 @@ class SchedulerDatabase implements IObjectLoader {
         }
     }
 
-    async delete_all() {
+    async destroyDatabase() {
         this.tracker.clearAll();
+
+        let allDocIds = await this.db.allDocs({include_docs: false});
+        let idsWithDeleted = allDocIds.rows.map(doc => {
+            return {"_id": doc.id, "_deleted": "true"}
+        });
+        // await this.db.bulkDocs();
+        // await this.db.compact({});
+
         await this.db.destroy();
+        await this.initialize();
 
         /*
         Must reload the page / app, to get a new DB.
@@ -358,7 +367,7 @@ class SchedulerDatabase implements IObjectLoader {
     }
 
     @action
-    async async_delete_object(object: ObjectWithUUID) {
+    async asyncDeleteObject(object: ObjectWithUUID) {
         if (object.is_new) {
             throw new Error("Cannot remove object that is 'new' and hasn't been saved yet");
         }

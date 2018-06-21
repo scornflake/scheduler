@@ -4,6 +4,7 @@ import {StatusBar} from '@ionic-native/status-bar';
 import {SplashScreen} from '@ionic-native/splash-screen';
 import {HomePage} from "../pages/home/home";
 import {RootStore} from "../store/root";
+import {SchedulerServer} from "../providers/server/scheduler-server.service";
 
 @Component({
     templateUrl: 'app.html'
@@ -15,7 +16,7 @@ export class MyApp {
     constructor(private platform: Platform,
                 private statusBar: StatusBar,
                 private splashScreen: SplashScreen,
-                private store: RootStore,
+                private server: SchedulerServer,
                 private menu: MenuController) {
         this.menu.enable(true, 'menu');
         platform.ready().then(() => {
@@ -51,7 +52,7 @@ export class MyApp {
                 title: "", items: [
                     {
                         title: "Logout", function: () => {
-                            this.store.logout();
+                            this.server.logout();
                         }
                     }
                 ]

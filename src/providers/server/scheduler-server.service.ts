@@ -2,7 +2,6 @@ import {RootStore} from "../../store/root";
 import {RESTServer} from "./server";
 import {LoginResponse, UserResponse, ValidationResponse} from "../../common/interfaces";
 import {SafeJSON} from "../../common/json/safe-stringify";
-import {isUndefined} from "util";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {Person} from "../../scheduling/people";
@@ -15,155 +14,167 @@ import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {action} from "mobx-angular";
 import {Storage} from '@ionic/storage';
+import {NavController} from "ionic-angular";
+
+const STATE_ROOT = 'state';
+
+interface IState {
+    loginToken: string;
+    lastPersonUUID: string;
+}
+
+interface ILifecycleCallback {
+    showLoginPage();
+
+    showCreateOrInvitePage();
+
+    showError(message: string);
+}
+
+interface ILifecycle {
+    asyncRunStartupLifecycle(callback: ILifecycleCallback);
+}
+
 
 @Injectable()
-class SchedulerServer {
+class SchedulerServer implements ILifecycle {
     readyEvent: Subject<boolean> = new BehaviorSubject(false);
 
     private logger: Logger;
+    private _state: IState;
 
     constructor(@Inject(forwardRef(() => RootStore)) private store,
                 private restAPI: RESTServer,
                 private storage: Storage,
-                private db: SchedulerDatabase) {
+                private db: SchedulerDatabase,
+                private navCtrl: NavController
+    ) {
         this.logger = LoggingWrapper.getLogger('service.bridge');
-
-
-        this.db.readyEvent.subscribe(isReady => {
-            if (isReady) {
-                this.store.load().then(() => {
-                    // If we have a login token, try to validate this and login if possible
-                    if (this.store.ui_store.preferences.login_token) {
-                        this.logger.info(`Logging in user as part of SchedulerServer init...`);
-                        this.validateLoginToken().then(vr => {
-                            this.readyEvent.next(true);
-                        });
-                    } else {
-                        this.readyEvent.next(true);
-                    }
-                })
-            }
-        })
+        this.waitForDB();
     }
 
     isUsernameAvailableAndGood(username: string): Observable<string> {
         return this.restAPI.isUsernameAvailableAndGood(username);
     }
 
+    get state(): IState {
+        return this._state;
+    }
+
     async loginUser(username: string, password: string): Promise<LoginResponse> {
         this.logger.info(`Requesting user info from server: ${username}`);
+        await this.asyncLoadState();
         let res: LoginResponse = await this.restAPI.login(username, password);
+        this.setLoginTokenFromUserResponse(res.ok, res.user || null);
 
         if (res.ok) {
-            let user = res.user;
-
-            this.setLoginTokenFromUserResponse(res.ok, user);
-
-            // Make sure user is synced with server. Return all known user info.
-            let loginResponse = new LoginResponse(true, "", await this.syncUserWithServer(res.user));
-
-            // Tell the store to initialize on this user
-            await this.store.setupAfterUserLoggedIn();
-
-            return loginResponse;
-        } else {
-            this.setLoginTokenFromUserResponse(false);
+            let person = await this.db_findByUUID(res.user.uuid);
+            if (!person) {
+                person = this.createNewPersonFromUserResponse(res.user);
+                await this.db.async_store_or_update_object(person);
+            }
         }
+
+        await this.asyncSaveState();
         return res;
     }
 
+    @action logout() {
+        this.state.lastPersonUUID = null;
+        this.state.loginToken = null;
+        this.asyncSaveState().then(() => {
+            this.logger.info(`User logged out, state saved.`);
+        });
+
+        // Navigate to home
+        this.navCtrl.popTo('home');
+    }
+
+
     setLoginTokenFromUserResponse(good: boolean, user: UserResponse = null) {
         let uiStore = this.store.ui_store;
-        let prefs = uiStore.preferences;
 
         if (good) {
-            this.logger.info(`Login: setting login token to ${user.logintoken}`);
-            prefs.setLoginToken(user.logintoken);
+            this.logger.info(`Login: setting login token to ${user.logintoken || ''}, last person to: ${user.uuid || ''}`);
             this.restAPI.loginToken = user.logintoken;
+            this.state.loginToken = user.logintoken;
+            this.state.lastPersonUUID = user.uuid;
         } else {
-            this.logger.error(`Login was not OK.`);
-            this.logger.info(`Login: Clearing logger in person UUID`);
-            prefs.clearLogin();
+            this.restAPI.loginToken = null;
+            this.logger.info(`Login: Clearing logger in person UUID (because login not OK)`);
         }
         uiStore.setLoginTokenValidated(good);
     }
 
     @action
-    async validateLoginToken(): Promise<ValidationResponse> {
+    async validateLoginToken(token: string): Promise<ValidationResponse> {
         // If no 'person uuid', need to login
-        let prefs = this.store.ui_store.preferences;
-        if (!prefs.logged_in_person_uuid) {
-            return new LoginResponse(false, 'No person uuid is defined');
-        }
-        let token = prefs.login_token;
-        if (isUndefined(token)) {
-            return new LoginResponse(false, 'No person is defined');
-        }
         this.logger.info(`Validating login token: ${SafeJSON.stringify(token)}`);
 
-        let vr = await this.restAPI.validateLoginToken(prefs.login_token);
+        let vr = await this.restAPI.validateLoginToken(token);
 
-        this.store.ui_store.setLoginTokenValidated(vr.ok);
-        this.restAPI.loginToken = prefs.login_token;
+        this.setLoginTokenFromUserResponse(vr.ok, vr.user);
 
-        // Tell the store to initialize on this user
-        await this.store.setupAfterUserLoggedIn();
-
-        // Setup the organization that this user is a part of
-        await this.syncUserWithServer(vr.user);
+        // // Tell the store to initialize on this user
+        // if (vr.ok) {
+        //     await this.store.setupAfterUserLoggedIn();
+        //
+        //     // Setup the organization that this user is a part of
+        //     await this.syncUserWithServer(vr.user);
+        // }
 
         return vr;
     }
 
-    @action
-    async syncUserWithServer(serverUser: UserResponse): Promise<UserResponse> {
-        let localPerson: Person;
-        let munge = false;
+    // @action
+    // async syncUserWithServer(serverUser: UserResponse): Promise<UserResponse> {
+    //     let localPerson: Person;
+    //     let munge = false;
+    //
+    //     if (!serverUser.uuid) {
+    //         // No UUID set. Assume this is the "munge" scenario.
+    //         // This in theory only happens when I'm testing myself, and have created user instances on the server (via createneil.py)
+    //         localPerson = await this.db_findPersonByEmail(serverUser.email);
+    //         this.logger.warn(`MUNGE: Going to create a local user in Pouch with ${serverUser.email}`);
+    //         if (localPerson == null) {
+    //             localPerson = this.createNewPersonFromUserResponse(serverUser);
+    //         } else {
+    //             if (localPerson.serverId != serverUser.id) {
+    //                 this.logger.info(`Updating local person ${localPerson.email} to have server user ID: ${serverUser.id}`);
+    //                 localPerson.serverId = serverUser.id;
+    //             }
+    //         }
+    //
+    //         // Update our local pouch store
+    //         this.logger.warn(`MUNGE: Created new local Person ${localPerson}`);
+    //
+    //         // Update the remote server (with the new users uuid)
+    //         if (serverUser.uuid != localPerson.uuid) {
+    //             serverUser.uuid = localPerson.uuid;
+    //             await this.restAPI.saveUser(serverUser);
+    //             this.logger.warn(`MUNGE Done. Falling through to rest of init.`);
+    //         }
+    //         munge = true;
+    //     } else {
+    //         // The user supplied an ID. Does that user exist here?
+    //         localPerson = await this.db_findByUUID(serverUser.uuid) as Person;
+    //         if (!localPerson) {
+    //             // This can happen, when I've deleted the local DB, but NOT the remote. So remote still references UUIDs that no longer exist,
+    //             this.logger.warn(`Server says this user has ID ${serverUser.uuid} but no such user exists in the local DB`);
+    //             localPerson = this.createNewPersonFromUserResponse(serverUser);
+    //             munge = true;
+    //         }
+    //     }
+    //
+    //     await this.savePerson(localPerson);
+    //     await this.ensureUserHasOrganization(serverUser, localPerson, munge);
+    //
+    //     this.store.ui_store.preferences.setLoggedInPersonUUID(localPerson.uuid);
+    //
+    //     return serverUser;
+    // }
 
-        if (!serverUser.uuid) {
-            // No UUID set. Assume this is the "munge" scenario.
-            // This in theory only happens when I'm testing myself, and have created user instances on the server (via createneil.py)
-            localPerson = await this.db_findPersonByEmail(serverUser.email);
-            this.logger.warn(`MUNGE: Going to create a local user in Pouch with ${serverUser.email}`);
-            if (localPerson == null) {
-                localPerson = this.createNewPersonFromUserResponse(serverUser);
-            } else {
-                if (localPerson.serverId != serverUser.id) {
-                    this.logger.info(`Updating local person ${localPerson.email} to have server user ID: ${serverUser.id}`);
-                    localPerson.serverId = serverUser.id;
-                }
-            }
-
-            // Update our local pouch store
-            this.logger.warn(`MUNGE: Created new local Person ${localPerson}`);
-
-            // Update the remote server (with the new users uuid)
-            if (serverUser.uuid != localPerson.uuid) {
-                serverUser.uuid = localPerson.uuid;
-                await this.restAPI.saveUser(serverUser);
-                this.logger.warn(`MUNGE Done. Falling through to rest of init.`);
-            }
-            munge = true;
-        } else {
-            // The user supplied an ID. Does that user exist here?
-            localPerson = await this.db_findByUUID(serverUser.uuid) as Person;
-            if (!localPerson) {
-                // This can happen, when I've deleted the local DB, but NOT the remote. So remote still references UUIDs that no longer exist,
-                this.logger.warn(`Server says this user has ID ${serverUser.uuid} but no such user exists in the local DB`);
-                localPerson = this.createNewPersonFromUserResponse(serverUser);
-                munge = true;
-            }
-        }
-
-        await this.savePerson(localPerson);
-        await this.ensureUserHasOrganization(serverUser, localPerson, munge);
-
-        this.store.ui_store.preferences.setLoggedInPersonUUID(localPerson.uuid);
-
-        return serverUser;
-    }
-
-    private createNewPersonFromUserResponse(serverUser: UserResponse) {
+    private createNewPersonFromUserResponse(serverUser: UserResponse): Person {
         let person = new Person("Your name", serverUser.uuid);
         person.email = serverUser.email;
         person.name = [serverUser.first_name, serverUser.last_name].join(" ").trim();
@@ -172,14 +183,6 @@ class SchedulerServer {
         return person;
     }
 
-    /*
-        Organizations 'source of truth' is the server. So queries START there.
-
-        An alternate way to do all this might be for the server to do it, and rely on replication
-        to bring the correct data to the client.  The client makes a single request and waits until the data
-        shows up.
-
-        */
     @action
     private async ensureUserHasOrganization(user: UserResponse, localPerson: Person, munge: boolean): Promise<Organization> {
         // Is there an org associated with us on the server?
@@ -260,7 +263,7 @@ class SchedulerServer {
         return await this.db.async_store_or_update_object(person) as Person;
     }
 
-    private async db_findPersonByEmail(email: string): Promise<Person> {
+    async db_findPersonByEmail(email: string): Promise<Person> {
         let query = {selector: {type: 'Person', email: email}};
         let all_objects_of_type = await this.db.findBySelector<Person>(query, true);
         if (all_objects_of_type && all_objects_of_type.length > 0) {
@@ -269,11 +272,91 @@ class SchedulerServer {
         return null;
     }
 
-    private async db_findByUUID<T extends ObjectWithUUID>(uuid: string): Promise<T> {
+    async db_findByUUID<T extends ObjectWithUUID>(uuid: string): Promise<T> {
         return await this.db.async_load_object_with_id(uuid) as T;
+    }
+
+    private async asyncLoadState(): Promise<object> {
+        this._state = await this.storage.get(STATE_ROOT) || {
+            lastPersonUUID: null,
+            loginToken: null,
+        };
+        this.logger.debug(`Loading state... ${JSON.stringify(this._state)}`);
+        return this.state;
+    }
+
+    private async asyncSaveState() {
+        await this.storage.set(STATE_ROOT, this._state);
+    }
+
+    protected waitForDB() {
+        this.asyncLoadState().then(() => {
+            this.db.readyEvent.subscribe(isReady => {
+                if (isReady) {
+                    this.readyEvent.next(true);
+                }
+            });
+        });
+    }
+
+    /*
+    Basic idea is that you do a this, optionally a login/create, then ALWAYS call this back.
+    This method is the one thing that does setup, in order.
+
+    This method can be used to verify that a login token is valid.
+    It will load the saved state, and:
+      - if online, try to validate the login token / load the user.
+        It is expected that if you have logged in in the past, the token is valid and
+        the user should exist in the local DB (by uuid)
+     */
+    async asyncRunStartupLifecycle(callback: ILifecycleCallback) {
+        await this.asyncLoadState();
+
+        if (!this.state.loginToken) {
+            this.logger.debug(`Login token null, show login page`);
+            callback.showLoginPage();
+            return;
+        }
+
+        let vr = await this.validateLoginToken(this.state.loginToken);
+        if (!vr.ok) {
+            this.logger.debug(`Login token in valid, show login page`);
+            callback.showLoginPage();
+            return;
+        }
+
+        // If no person UUID, loginUser() didn't do its job.
+        // Login should validate token, check for Person object locally (direct DB access)
+        // and also set this.state.lastPersonUUID.
+        if (!this.state.lastPersonUUID) {
+            this.logger.debug(`lastPersonUUID nil, show login page`);
+            callback.showLoginPage();
+            return;
+        }
+
+        this.logger.debug(`Looking up user with ID: ${this.state.lastPersonUUID}`);
+        let personObject = await this.db_findByUUID(this.state.lastPersonUUID);
+        if (personObject == null) {
+            callback.showError("E1334: Please try logging in again.");
+            return;
+        }
+
+        // Place the logged in user (person) into UI State.
+        this.store.ui_store.setLoggedInPerson(personObject);
+
+        // Make the Organization available as well
+        // Buuut - the org is ON Person. Ref it from there.
+        // Don't stick anything here, find if it's broken and fix it in right place
+
+        // OK. We have everything. Can now ask the store to load it's data, and we're good.
+        await this.store.setupAfterUserLoggedIn();
     }
 }
 
 export {
-    SchedulerServer
+    SchedulerServer,
+    IState,
+    ILifecycle,
+    ILifecycleCallback
+
 }

@@ -14,10 +14,11 @@ import {formatDateForGoogleSpreadsheet} from "../scheduling/common/date-utils";
 import {LoggingWrapper} from "./logging-wrapper";
 import {RESTServer} from "../providers/server/server";
 import {RootStore} from "../store/root";
-import {Preferences, UIStore} from "../store/UIState";
+import {UIStore} from "../store/UIState";
 import Spreadsheet = gapi.client.sheets.Spreadsheet;
 import Sheet = gapi.client.sheets.Sheet;
 import ValueRange = gapi.client.sheets.ValueRange;
+import {Preferences} from "../scheduling/people";
 
 const API_KEY = "AIzaSyCVhzG0pEB1NfZsxpdPPon3XhEK4pctEYE";
 
@@ -141,7 +142,7 @@ class GAPIS {
     }
 
     get state(): Preferences {
-        return this.rootStore.state;
+        return this.rootStore.ui_store.loggedInPerson.preferences;
     }
 
     get ui_store(): UIStore {

@@ -1,4 +1,4 @@
-import {Preferences, UIStore} from "./UIState";
+import {UIStore} from "./UIState";
 import {Injectable, OnDestroy} from "@angular/core";
 import {Logger} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
@@ -8,7 +8,7 @@ import {SchedulerDatabase} from "../providers/server/db";
 import {Team} from "../scheduling/teams";
 import {ObjectWithUUID} from "../scheduling/base-types";
 import {LoggingWrapper} from "../common/logging-wrapper";
-import {Person} from "../scheduling/people";
+import {Preferences, Person} from "../scheduling/people";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import {SchedulerObjectStore} from "../scheduling/common/scheduler-store";
 import {Organization} from "../scheduling/organization";
@@ -19,12 +19,11 @@ import {action} from "mobx-angular";
 import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {Subscription} from "rxjs/Subscription";
+import {SafeJSON} from "../common/json/safe-stringify";
 
 @Injectable()
 class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy {
     @observable ui_store: UIStore;
-
-    loggedInPerson: Person;
 
     @observable schedule: ScheduleWithRules;
     @observable previousSchedule: ScheduleWithRules;
@@ -69,40 +68,35 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         this.previousSchedule = schedule;
     }
 
-    async singleOrgStoredInDB(): Promise<Organization> {
-        let orgs = await this.db.async_load_all_objects_of_type('Organization');
-        if (orgs) {
-            // we want only one. If there's more, I think we should barf
-            if (orgs.length > 1) {
-                throw new Error(`${orgs.length} organizations. Oh no! I expected only one!`);
-            } else if (orgs.length == 1) {
-                return orgs[0] as Organization;
-            }
+    // Simple shortcut to the UIStore
+    get loggedInPerson(): Person {
+        if (this.ui_store) {
+            return this.ui_store.loggedInPerson;
         }
         return null;
     }
 
     async load() {
-        this.logger.info(`Restoring preferences...`);
-
-        try {
-            let saved_state = await this.db.async_load_object_with_id('saved-state') as Preferences;
-
-            this.logger.info(`Login Token: ${saved_state.login_token}`);
-            this.logger.info(`Logged in person: ${saved_state.logged_in_person_uuid}`);
-
-            this.ui_store.setPreferences(saved_state as Preferences);
-            if (!this.ui_store.preferences) {
-                this.logger.warn(`Oh oh, prefs wasn't restored. The returned object was a ${saved_state.constructor.name}... Maybe that's != Preferences?  Have reset it to a NEW SavedState instance.`);
-                this.ui_store.preferences = new Preferences('saved-state');
-            }
-        } catch (e) {
-            this.logger.debug(e);
-            this.logger.info("No prefs. Starting from fresh.");
-
-            this.ui_store.setPreferences(new Preferences('saved-state'));
-            await this.asyncSaveOrUpdateDb(this.ui_store.preferences);
-        }
+        // this.logger.info(`Restoring preferences...`);
+        //
+        // try {
+        //     let saved_state = await this.db.async_load_object_with_id('saved-state') as Preferences;
+        //
+        //     this.logger.info(`Login Token: ${saved_state.login_token}`);
+        //     this.logger.info(`Logged in person: ${saved_state.logged_in_person_uuid}`);
+        //
+        //     this.ui_store.setPreferences(saved_state as Preferences);
+        //     if (!this.ui_store.preferences) {
+        //         this.logger.warn(`Oh oh, prefs wasn't restored. The returned object was a ${saved_state.constructor.name}... Maybe that's != Preferences?  Have reset it to a NEW SavedState instance.`);
+        //         this.ui_store.preferences = new Preferences('saved-state');
+        //     }
+        // } catch (e) {
+        //     this.logger.debug(e);
+        //     this.logger.info("No prefs. Starting from fresh.");
+        //
+        //     this.ui_store.setPreferences(new Preferences('saved-state'));
+        //     await this.asyncSaveOrUpdateDb(this.ui_store.preferences);
+        // }
     }
 
     async setupAfterUserLoggedIn() {
@@ -118,13 +112,6 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
 
         items = await this.db.async_load_into_store<Plan>(this.plans, 'Plan');
         this.logger.info(`Loaded ${items.length} plans...`);
-
-        // Sort out who the logged in user is (plus this.organization)
-        // Need to kick this again, because lookup of the logged in person isn't possible until people are loaded.
-        if (this.ui_store.preferences.logged_in_person_uuid) {
-            this.logger.info(`Letting the app know about the person thats logged in (${this.ui_store.preferences.logged_in_person_uuid})`);
-            this.lookupPersonAndTellSubscribers(this.ui_store.preferences.logged_in_person_uuid);
-        }
 
         // We want that 'defaults' one to be alive so it triggers when we first load the state
         this.checkForDefaults();
@@ -151,30 +138,13 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         }
     }
 
-    get state(): Preferences {
-        return this.ui_store.preferences;
-    }
-
-    private lookupPersonAndTellSubscribers(uuid: string) {
-        if (uuid) {
-            this.loggedInPerson = this.people.findOfThisTypeByUUID(uuid);
-            this.logger.info(`Logged in person = ${this.loggedInPerson}`);
-        } else {
-            this.logger.warn(`Logged in person is None`);
-            this.loggedInPerson = null;
-        }
-        if (this.loggedInPersonSubject) {
-            this.loggedInPersonSubject.next(this.loggedInPerson);
-        }
-    }
-
     async asyncSaveOrUpdateDb(object: ObjectWithUUID) {
         return await this.db.async_store_or_update_object(object);
     }
 
     async async_remove_object_from_db(object: ObjectWithUUID) {
         this.logger.info(`Deleting object of type ${object.type}, id: ${object.uuid}`);
-        return await this.db.async_delete_object(object);
+        return await this.db.asyncDeleteObject(object);
     }
 
     getFromCache(uuid: string): ObjectWithUUID {
@@ -272,39 +242,38 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
     }
 
     private checkForDefaults() {
-        let state = this.ui_store.preferences;
+        let person = this.ui_store.loggedInPerson;
+        if(!person) {
+            throw new Error('Unable to start defaults check, no person logged in');
+        }
+        let prefs = person.preferences;
+        if(!prefs) {
+            throw new Error('Unable to start defaults check, no preferences');
+        }
         this.logger.info(`Checking to see if we have a default selected plan...`);
-        let planSet = state.selected_plan_uuid != null;
-        let planDoesntExist = planSet && this.plans.findOfThisTypeByUUID(state.selected_plan_uuid) == null;
-        if (!planSet || planDoesntExist) {
-            if (!planSet) {
+        let isPlanSet = prefs.selected_plan_uuid != null;
+        let planDoesntExist = isPlanSet && this.plans.findOfThisTypeByUUID(prefs.selected_plan_uuid) == null;
+        if (!isPlanSet || planDoesntExist) {
+            if (!isPlanSet) {
                 this.logger.info(`No plan set`);
             }
             if (planDoesntExist) {
-                this.logger.info(`Plan set to ${this.ui_store.preferences.selected_plan_uuid}, but I can't find that...`);
+                this.logger.info(`Plan set to ${person.preferences.selected_plan_uuid}, but I can't find that...`);
             }
             if (this.plans.plansByDateLatestFirst.length > 0) {
                 this.logger.info(`Setting default selected plan to: ${this.plans.plansByDateLatestFirst[0].name}`);
-                this.ui_store.preferences.setSelectedPlanUUID(this.plans.plansByDateLatestFirst[0].uuid);
+                person.preferences.setSelectedPlan(this.plans.plansByDateLatestFirst[0]);
             } else {
                 this.logger.info(`Tried to select a default plan, but no plans in the DB for us to choose from :(`);
             }
         } else {
-            this.logger.info(`We do... the default plan is: ${this.ui_store.preferences.selected_plan_uuid}`);
+            this.logger.info(`We do... the default plan is: ${person.preferences.selected_plan_uuid}`);
 
             // Seems we have to kick the value to make .next() fire on the plan again
-            let temp = this.ui_store.preferences.selected_plan_uuid;
-            this.ui_store.preferences.setSelectedPlanUUID(null);
-            this.ui_store.preferences.setSelectedPlanUUID(temp);
+            // let temp = this.ui_store.preferences.selected_plan_uuid;
+            // this.ui_store.preferences.setSelectedPlanUUID(null);
+            // this.ui_store.preferences.setSelectedPlanUUID(temp);
         }
-    }
-
-    @action logout() {
-        this.ui_store.preferences.clearLogin();
-        this.clear();
-        this.db.async_store_or_update_object(this.ui_store.preferences).then(() => {
-            location.reload();
-        });
     }
 
     private setUIStore(uiStore: UIStore) {
@@ -341,12 +310,16 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         if (!this.ssDisposer) {
             // Observe changes, and send these to the subject
             this.ssDisposer = reaction(() => {
-                toJS(this.ui_store.preferences);
-                if (this.ui_store.preferences) {
-                    let plan_uuid = this.ui_store.preferences.selected_plan_uuid;
-                    this.logger.info(`Preferences changed... (plan UUID: ${plan_uuid})`);
+                if(this.loggedInPerson) {
+                    let prefs = this.loggedInPerson.preferences;
+                    toJS(prefs);
+                    if (prefs) {
+                        let plan_uuid = prefs.selected_plan_uuid;
+                        this.logger.info(`Preferences changed... (plan UUID: ${plan_uuid})`);
+                    }
+                    return prefs;
                 }
-                return this.ui_store.preferences;
+                return null;
             }, prefs => {
                 this.preferencesSubject.next(prefs);
             }, {
@@ -361,8 +334,10 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         if (!this.spDisposer) {
             // If the selected plan UUID changes, lookup the plan and broadcast the change
             this.spDisposer = reaction(() => {
-                if(this.ui_store.preferences) {
-                    return this.ui_store.preferences.selected_plan_uuid;
+                if (this.loggedInPerson) {
+                    if (this.loggedInPerson.preferences) {
+                        return this.loggedInPerson.preferences.selected_plan_uuid;
+                    }
                 }
                 return null;
             }, uuid => {
@@ -381,7 +356,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         if (!this.uiDisposer) {
             this.uiDisposer = reaction(() => {
                 // trace();
-                this.logger.info(`UI Store changed to ${this.ui_store}. Signed in: ${this.ui_store.signed_in}`);
+                this.logger.info(`UI Store changed to ${SafeJSON.stringify(this.ui_store)}.`);
                 toJS(this.ui_store);
                 return this.ui_store;
             }, () => {
@@ -395,17 +370,12 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
             this.lipDisposer = reaction(() => {
                 trace();
                 if (this.ui_store) {
-                    if (this.ui_store.preferences) {
-                        let state = this.ui_store.preferences;
-                        if (state) {
-                            return state.logged_in_person_uuid;
-                        }
-                    }
+                    return this.ui_store.loggedInPerson;
                 }
                 return null;
-            }, (value) => {
-                this.logger.debug("loggedInPerson$", `state change saw: ${value}`);
-                this.lookupPersonAndTellSubscribers(value);
+            }, (person) => {
+                this.logger.debug("loggedInPerson$", `state change saw: ${person}`);
+                this.loggedInPersonSubject.next(person);
             }, {name: 'logged in person'});
             // above reaction uses default comparator, so that it only fires when the UUID CHANGES! yay.
         }

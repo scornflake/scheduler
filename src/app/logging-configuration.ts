@@ -40,9 +40,11 @@ class MockConfigurationService extends ConfigurationService {
         return this.__service;
     }
 
-    static ServiceForTests(): MockConfigurationService {
+    static ServiceForTests(db_name: string = "tests"): MockConfigurationService {
         let config = this.Service();
-        config.setVars(this.test_configuration());
+        let configuration = this.test_configuration();
+        configuration['database']['name'] = db_name;
+        config.setVars(configuration);
         return config;
     }
 

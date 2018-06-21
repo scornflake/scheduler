@@ -1,5 +1,5 @@
 import {ObjectWithUUID} from "../../scheduling/base-types";
-import {configure, getDependencyTree, getObserverTree, observe, spy, transaction} from "mobx";
+import {configure, observe} from "mobx";
 import {action, observable} from "mobx-angular";
 import {RootStore} from "../../store/root";
 import {MockConfigurationService} from "../../app/logging-configuration";
@@ -11,8 +11,6 @@ import {Team} from "../../scheduling/teams";
 import {defaultSoundRole} from "../sample-data";
 import {csd} from "../../scheduling/common/date-utils";
 import {SafeJSON} from "../../common/json/safe-stringify";
-import {printDependencyMap} from "@ionic/app-scripts";
-import {ObjectUtils} from "../../pages/page-utils";
 
 class SomeThing extends ObjectWithUUID {
     @observable some_field: string = "a value";
@@ -59,7 +57,9 @@ describe('observation', () => {
                 }
             }
         });
-        store.ui_store.preferences.setSelectedPlanUUID("1234");
+        let person = new Person("Neilos");
+        store.ui_store.setLoggedInPerson(person);
+        store.ui_store.loggedInPerson.preferences.setSelectedPlanUUID("1234");
     });
 
     it('can observe change to selected plan', function (done) {
@@ -72,7 +72,10 @@ describe('observation', () => {
                 }
             }
         });
-        store.ui_store.preferences.setSelectedPlanUUID(newplan.uuid);
+
+        let person = new Person("Neilos");
+        store.ui_store.setLoggedInPerson(person);
+        store.ui_store.loggedInPerson.preferences.setSelectedPlan(newplan);
     });
 
     it('can observe change to logged in person', function (done) {
@@ -88,7 +91,7 @@ describe('observation', () => {
             }
         });
 
-        store.ui_store.preferences.setLoggedInPersonUUID(person.uuid);
+        store.ui_store.setLoggedInPerson(person);
     });
 
     it('can observe change to schedule', function (done) {
@@ -115,7 +118,8 @@ describe('observation', () => {
         });
 
         // Select the new plan!
-        store.ui_store.preferences.setSelectedPlanUUID(newplan.uuid);
+        store.ui_store.setLoggedInPerson(person);
+        store.ui_store.loggedInPerson.preferences.setSelectedPlan(newplan);
     });
 
     it('can observe property on class', (done) => {

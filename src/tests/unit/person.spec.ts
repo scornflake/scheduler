@@ -22,6 +22,12 @@ describe('people', () => {
         person_store.add(firstPerson);
     });
 
+    it('has preferences by default', () => {
+        console.log(`person prefs: ${firstPerson.preferences}`);
+        expect(firstPerson.preferences).not.toBeNull();
+        expect(firstPerson.preferences).not.toBeUndefined();
+    });
+
     it('can add unavailable date', () => {
         expect(firstPerson.isUnavailableOn(someDate)).toBeFalsy();
         firstPerson.addUnavailable(someDate);

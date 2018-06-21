@@ -1,5 +1,5 @@
 import {Availability, AvailabilityEveryNOfM} from "../scheduling/availability";
-import {Preferences} from "../store/UIState";
+import {Preferences} from "../scheduling/people";
 import {Team} from "../scheduling/teams";
 import {Person} from "../scheduling/people";
 import {Plan} from "../scheduling/plan";

@@ -52,7 +52,7 @@ export class HomePage {
     }
 
     selectPlan(uuid: string) {
-        this.store.ui_store.preferences.selected_plan_uuid = uuid;
+        this.store.loggedInPerson.preferences.setSelectedPlanUUID(uuid);
     }
 
     clear_selection() {
@@ -69,75 +69,71 @@ export class HomePage {
     }
 
     select_previous_schedule() {
-        this.navCtrl.push(SheetSelectionPage, {
-            title: "Select sheet to use as previous schedule",
-            tab_title: "Select tab to use as previous schedule",
-            done: (spreadsheet, sheet, error) => {
-                console.log("Done. Selected sheet: " + spreadsheet.spreadsheetId + ", and tab: " + sheet.properties.title + ", " + sheet.properties.sheetId);
-                this.store.state.previous_sheet_id = spreadsheet.spreadsheetId;
-                this.store.state.previous_sheet_tab_id = sheet.properties.sheetId;
-            }
-        });
+        // this.navCtrl.push(SheetSelectionPage, {
+        //     title: "Select sheet to use as previous schedule",
+        //     tab_title: "Select tab to use as previous schedule",
+        //     done: (spreadsheet, sheet, error) => {
+        //         console.log("Done. Selected sheet: " + spreadsheet.spreadsheetId + ", and tab: " + sheet.properties.title + ", " + sheet.properties.sheetId);
+        //         this.store.state.previous_sheet_id = spreadsheet.spreadsheetId;
+        //         this.store.state.previous_sheet_tab_id = sheet.properties.sheetId;
+        //     }
+        // });
     }
 
     read_as_previous_schedule() {
-        if (this.store.ui_store.preferences.have_previous_selection) {
-            let sheet_id = this.store.ui_store.preferences.previous_sheet_id;
-            this.sheetAPI.load_sheet_with_id(sheet_id).subscribe((spreadsheet) => {
-                let sheet = spreadsheet.sheets.find(s => s.properties.sheetId == this.store.state.previous_sheet_tab_id);
-                this.sheetAPI.read_spreadsheet_data(spreadsheet, sheet).subscribe(rows => {
-
-                    let reader = new SpreadsheetReader(this.store.people);
-                    reader.parse_schedule_from_spreadsheet(rows);
-
-                    if (reader.has_problems) {
-                        let dump_map = {};
-                        for (let key of Array.from(reader.problems.keys())) {
-                            dump_map[key] = Array.from(reader.problems.get(key));
-                        }
-                        let problems = toJS(dump_map);
-                        let s = SafeJSON.stringify(problems);
-                        this.logger.info(`Had problems: ${s}`);
-                    }
-                    this.logger.info("Made schedule!");
-                    this.store.setPreviousSchedule(reader.schedule);
-                });
-            });
-        }
+        // if (this.store.ui_store.preferences.have_previous_selection) {
+        //     let sheet_id = this.store.ui_store.preferences.previous_sheet_id;
+        //     this.sheetAPI.load_sheet_with_id(sheet_id).subscribe((spreadsheet) => {
+        //         let sheet = spreadsheet.sheets.find(s => s.properties.sheetId == this.store.state.previous_sheet_tab_id);
+        //         this.sheetAPI.read_spreadsheet_data(spreadsheet, sheet).subscribe(rows => {
+        //
+        //             let reader = new SpreadsheetReader(this.store.people);
+        //             reader.parse_schedule_from_spreadsheet(rows);
+        //
+        //             if (reader.has_problems) {
+        //                 let dump_map = {};
+        //                 for (let key of Array.from(reader.problems.keys())) {
+        //                     dump_map[key] = Array.from(reader.problems.get(key));
+        //                 }
+        //                 let problems = toJS(dump_map);
+        //                 let s = SafeJSON.stringify(problems);
+        //                 this.logger.info(`Had problems: ${s}`);
+        //             }
+        //             this.logger.info("Made schedule!");
+        //             this.store.setPreviousSchedule(reader.schedule);
+        //         });
+        //     });
+        // }
     }
 
     export_as_sheets() {
-        // Get the sheet and make sure we can read it.
-        let sheet_id = this.sheetAPI.state.google_sheet_id;
-        if (sheet_id) {
-            this.sheetAPI.load_sheet_with_id(sheet_id).subscribe((spreadsheet) => {
-                console.log("Loaded the sheet!");
-                let sheet = spreadsheet.sheets.find(s => s.properties.sheetId == this.store.state.google_sheet_tab_id);
-                this.sheetAPI.clear_and_write_schedule(spreadsheet, sheet, this.store.schedule);
-            }, (error) => {
-                console.log("Error loading sheet: " + error);
-            });
-        } else {
-            console.log("No sheet selected");
-            // let popover = this.modalController.create(SheetSelectionPage);
-            // popover.present().then(() => {
-            // page is done.
-            // console.log("Done. Sheet: " + this.rootStore.ui_store.google_sheet_id);
-            // });
-            this.navCtrl.push(SheetSelectionPage, {
-                title: "Select sheet to export into",
-                tab_title: "Select tab to export into",
-                done: (spreadsheet, sheet, error) => {
-                    this.store.state.google_sheet_id = spreadsheet.spreadsheetId;
-                    this.store.state.google_sheet_tab_id = sheet.properties.sheetId;
-                    console.log("Done. Selected sheet: " + spreadsheet.spreadsheetId + ", and tab: " + sheet.properties.title);
-                }
-            });
-        }
-    }
-
-    clear_sheet_state() {
-        this.store.ui_store.clear_sheet_state();
+        // // Get the sheet and make sure we can read it.
+        // let sheet_id = this.sheetAPI.state.google_sheet_id;
+        // if (sheet_id) {
+        //     this.sheetAPI.load_sheet_with_id(sheet_id).subscribe((spreadsheet) => {
+        //         console.log("Loaded the sheet!");
+        //         let sheet = spreadsheet.sheets.find(s => s.properties.sheetId == this.store.state.google_sheet_tab_id);
+        //         this.sheetAPI.clear_and_write_schedule(spreadsheet, sheet, this.store.schedule);
+        //     }, (error) => {
+        //         console.log("Error loading sheet: " + error);
+        //     });
+        // } else {
+        //     console.log("No sheet selected");
+        //     // let popover = this.modalController.create(SheetSelectionPage);
+        //     // popover.present().then(() => {
+        //     // page is done.
+        //     // console.log("Done. Sheet: " + this.rootStore.ui_store.google_sheet_id);
+        //     // });
+        //     this.navCtrl.push(SheetSelectionPage, {
+        //         title: "Select sheet to export into",
+        //         tab_title: "Select tab to export into",
+        //         done: (spreadsheet, sheet, error) => {
+        //             this.store.state.google_sheet_id = spreadsheet.spreadsheetId;
+        //             this.store.state.google_sheet_tab_id = sheet.properties.sheetId;
+        //             console.log("Done. Selected sheet: " + spreadsheet.spreadsheetId + ", and tab: " + sheet.properties.title);
+        //         }
+        //     });
+        // }
     }
 
     export_as_csv() {
@@ -147,12 +143,6 @@ export class HomePage {
 
     login() {
         this.sheetAPI.authenticate();
-    }
-
-    logout() {
-        // Throw away our login token
-        this.store.logout();
-        this.sheetAPI.signout();
     }
 
     startSignIn() {

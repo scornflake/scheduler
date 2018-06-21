@@ -73,7 +73,7 @@ export class DatabaseMaintPage {
         alert.addButton({
             text: "Yes",
             handler: () => {
-                this.db.delete_all();
+                this.db.destroyDatabase();
 
                 // does a reload, so no need to take action after
             }
