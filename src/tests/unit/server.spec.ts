@@ -9,7 +9,7 @@ import {MockConfigurationService} from "../../app/logging-configuration";
 import {scheduler_db_map} from "../../assets/db.mapping";
 import {OrmMapper} from "../../providers/mapping/orm-mapper";
 import {IObjectCache, SimpleCache} from "../../providers/mapping/cache";
-import {LoginResponse, UserResponse, ValidationResponse} from "../../common/interfaces";
+import {LoginResponse, ServerError, UserResponse, ValidationResponse} from "../../common/interfaces";
 import {Person} from "../../scheduling/people";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
 
@@ -67,12 +67,34 @@ describe('scheduler server', () => {
         });
     });
 
+    it('should turn errors into ServerErrors', function () {
+        let aRealError = {
+            "headers": {"normalizedNames": {}, "lazyUpdate": null},
+            "status": 400,
+            "statusText": "Bad Request",
+            "url": "http://192.168.1.168:8000/api/login/",
+            "ok": false,
+            "name": "HttpErrorResponse",
+            "message": "Http failure response for http://192.168.1.168:8000/api/login/: 400 Bad Request",
+            "error": {"email": ["user with this email address already exists."]}
+        };
+
+        let se = new ServerError(aRealError);
+        expect(se).not.toBeNull();
+        expect(se.status).toEqual(400);
+        expect(se.ok).toBeFalsy();
+
+        expect(se.errors.length).toBe(1);
+        expect(se.allErrors).toBe("user with this email address already exists.");
+        console.log(`got: ${JSON.stringify(se)}`)
+    });
+
     describe('test SchedulerServer lifecycle', () => {
         let showedLoginPage: boolean = false;
         let lastShownError: string = null;
 
         let lifecycleCallback = <ILifecycleCallback>{
-            showLoginPage: () => {
+            showLoginPage: (reason:string) => {
                 showedLoginPage = true;
             },
             showError: (error) => {

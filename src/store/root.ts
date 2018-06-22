@@ -122,15 +122,16 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
 
     private startReplication() {
         if (this.loggedInPerson) {
-            if (this.loggedInPerson.organization) {
-                if (this.loggedInPerson.organization.uuid) {
-                    this.db.startReplication(`org_${this.loggedInPerson.organization.uuid}`);
-                    this.logger.info("Started replication");
+            let organization = this.loggedInPerson.organization;
+            if (organization) {
+                if (organization.uuid) {
+                    this.db.startReplication(`org_${organization.uuid}`);
+                    this.logger.info(`Started replication for ${organization.name}`);
                 } else {
-                    this.logger.warn(`Cannot start replication: Logged in person doesn't have an organization UUID`);
+                    this.logger.warn(`Cannot start replication: Logged in persons '${this.loggedInPerson}' organization doesn't have a UUID`);
                 }
             } else {
-                this.logger.warn(`Cannot start replication: Logged in person doesn't have an organization`);
+                this.logger.warn(`Cannot start replication: Logged in person '${this.loggedInPerson}' doesn't have an organization`);
             }
         } else {
             this.logger.warn(`Cannot start replication: No logged in person`);
@@ -298,7 +299,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
                     // this.scheduleSubject.next(schedule);
                     return schedule;
                 } else {
-                    this.logger.warn(`No schedule generated, the provided plan was null`);
+                    this.logger.info(`No schedule generated, the provided plan was null`);
                 }
                 return null;
             }).subscribe(this.scheduleSubject);
@@ -355,7 +356,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         if (!this.uiDisposer) {
             this.uiDisposer = reaction(() => {
                 // trace();
-                if(this.ui_store) {
+                if (this.ui_store) {
                     this.logger.info(`UI Store changed, person:${this.ui_store.loggedInPerson ? this.ui_store.loggedInPerson.name : '<no one>'}, selection: ${this.ui_store.have_selection || '<no selection>'}...`);
                     toJS(this.ui_store);
                 }

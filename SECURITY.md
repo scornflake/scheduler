@@ -1,6 +1,8 @@
 Application Server
 ===
 - https / rest
+- Check various urls.py endpoints
+- Throttling
 
 Couch
 ===

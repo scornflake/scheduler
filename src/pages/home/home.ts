@@ -48,7 +48,7 @@ export class HomePage {
         //     this.logger.warn(`Schedule: ${SafeJSON.stringify(ss)}`)
         // })
 
-        // this.navCtrl.push('page-profile');
+        // this.navCtrl.push('login', {create: true});
     }
 
     selectPlan(uuid: string) {

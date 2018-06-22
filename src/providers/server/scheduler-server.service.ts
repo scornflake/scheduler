@@ -14,7 +14,6 @@ import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {action} from "mobx-angular";
 import {Storage} from '@ionic/storage';
-import {NavController} from "ionic-angular";
 
 const STATE_ROOT = 'state';
 
@@ -24,9 +23,9 @@ interface IState {
 }
 
 interface ILifecycleCallback {
-    showLoginPage();
+    showLoginPage(reason:string);
 
-    showCreateOrInvitePage();
+    showCreateOrInvitePage(reason:string);
 
     showError(message: string);
 }
@@ -59,6 +58,15 @@ class SchedulerServer implements ILifecycle {
         return this._state;
     }
 
+    get loggedIn(): boolean {
+        // atm: this is cleared if a validate login gets 'bad'
+        // TODO: Adjust for true offline case.
+        if (this.state) {
+            return this.state.loginToken != null;
+        }
+        return false;
+    }
+
     async loginUser(username: string, password: string): Promise<LoginResponse> {
         this.logger.info(`Requesting user info from server: ${username}`);
         await this.asyncLoadState();
@@ -66,9 +74,13 @@ class SchedulerServer implements ILifecycle {
         this.setLoginTokenFromUserResponse(res.ok, res.user || null);
 
         if (res.ok) {
-            let person = await this.db_findByUUID(res.user.uuid);
-            if (!person) {
-                person = this.createNewPersonFromUserResponse(res.user);
+            let havePerson = false;
+            if(res.user.uuid) {
+                let person = await this.db_findByUUID(res.user.uuid);
+                havePerson = person != null;
+            }
+            if(!havePerson) {
+                let person = this.createNewPersonFromUserResponse(res.user);
                 await this.db.async_store_or_update_object(person);
             }
         }
@@ -95,6 +107,8 @@ class SchedulerServer implements ILifecycle {
             this.state.lastPersonUUID = user.uuid;
         } else {
             this.restAPI.loginToken = null;
+            this.state.loginToken = null;
+            this.state.lastPersonUUID = null;
             this.logger.info(`Login: Clearing logger in person UUID (because login not OK)`);
         }
         uiStore.setLoginTokenValidated(good);
@@ -110,6 +124,10 @@ class SchedulerServer implements ILifecycle {
         this.setLoginTokenFromUserResponse(vr.ok, vr.user);
 
         return vr;
+    }
+
+    async hasEmailBeenConfirmed(email: string): Promise<boolean> {
+        return this.restAPI.hasEmailBeenConfirmed(email);
     }
 
     // @action
@@ -161,9 +179,11 @@ class SchedulerServer implements ILifecycle {
     // }
 
     private createNewPersonFromUserResponse(serverUser: UserResponse): Person {
-        let person = new Person("Your name", serverUser.uuid);
+        // if (!serverUser.uuid) {
+        //     throw new Error('No UUID specified in server response. Cannot create user');
+        // }
+        let person = new Person([serverUser.first_name, serverUser.last_name].join(" ").trim(), serverUser.uuid);
         person.email = serverUser.email;
-        person.name = [serverUser.first_name, serverUser.last_name].join(" ").trim();
         person.serverId = serverUser.id;
         this.store.people.add(person);
         return person;
@@ -300,14 +320,14 @@ class SchedulerServer implements ILifecycle {
 
         if (!this.state.loginToken) {
             this.logger.debug(`Login token null, show login page`);
-            callback.showLoginPage();
+            callback.showLoginPage(`Login token null`);
             return false;
         }
 
         let vr = await this.validateLoginToken(this.state.loginToken);
         if (!vr.ok) {
-            this.logger.debug(`Login token in valid, show login page`);
-            callback.showLoginPage();
+            this.logger.debug(`Login token invalid, show login page`);
+            callback.showLoginPage(`Login token invalid: ${SafeJSON.stringify(vr)}`);
             return false;
         }
 
@@ -316,7 +336,7 @@ class SchedulerServer implements ILifecycle {
         // and also set this.state.lastPersonUUID.
         if (!this.state.lastPersonUUID) {
             this.logger.debug(`lastPersonUUID nil, show login page`);
-            callback.showLoginPage();
+            callback.showLoginPage(`lastPersonUUID is nil on server.state`);
             return false;
         }
 
@@ -338,6 +358,14 @@ class SchedulerServer implements ILifecycle {
         await this.store.setupAfterUserLoggedIn();
 
         return true;
+    }
+
+    async registerNewUser(name: string, email: string, pwd: string): Promise<Person> {
+        let lr = await this.restAPI.registerNewUser(name, email, pwd);
+        if (lr.ok) {
+            return Person.createFromUserRespose(lr.user);
+        }
+        return null;
     }
 }
 

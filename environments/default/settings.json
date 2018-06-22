@@ -37,6 +37,10 @@
         "logLevel": "INFO"
       },
       {
+        "loggerName": "page.login",
+        "logLevel": "DEBUG"
+      },
+      {
         "loggerName": "component",
         "logLevel": "INFO"
       },
@@ -50,7 +54,7 @@
       },
       {
         "loggerName": "db",
-        "logLevel": "DEBUG"
+        "logLevel": "INFO"
       },
       {
         "loggerName": "db.mapping",
@@ -62,7 +66,7 @@
       },
       {
         "loggerName": "db.converter",
-        "logLevel": "DEBUG"
+        "logLevel": "WARN"
       }
     ],
     "browserConsoleAppender": {

@@ -1,6 +1,7 @@
 import {Component, Input} from '@angular/core';
 import {FormGroup} from "@angular/forms";
 import * as to from "to-case";
+import {SafeJSON} from "../../common/json/safe-stringify";
 
 @Component({
     selector: 'show-form-errors',
@@ -11,6 +12,7 @@ export class ShowFormErrorsComponent {
 
     private errorMessages = {
         'required': (name) => `${name} is required`,
+        'inUse': (name, params) => `${params}`,
         'email': (name) => `${name} should be a valid email address`,
         'minlength': (name, params) => `${name} should be at least ${params.requiredLength} characters`,
         'maxlength': (name, params) => `${name} should be at most ${params.requiredLength} characters`,
@@ -35,7 +37,7 @@ export class ShowFormErrorsComponent {
             let ctrl = this.control.get(fieldName);
             if (ctrl && ctrl.invalid) {
                 if (ctrl.errors) {
-                    // console.log(fieldName + " has errors: " + SafeJSON.Stringify(ctrl.errors));
+                    // console.warn(`${fieldName} has errors: ${SafeJSON.stringify(ctrl.errors)}`);
                     for (let errorType of Object.keys(ctrl.errors)) {
                         let theError = ctrl.errors[errorType];
                         let message = this.getMessage(fieldName, errorType, theError);
@@ -54,6 +56,8 @@ export class ShowFormErrorsComponent {
         if (this.errorMessages[type]) {
             // console.log(`Calling func for ${type}`);
             return this.errorMessages[type](fieldName, params);
+        } else {
+            console.warn(`No error message of type: ${type}`);
         }
         return params.message;
     }

@@ -7,10 +7,16 @@
         </ion-header>
         <ion-content>
             <div *ngFor="let g of groups">
-                <ion-list-header *ngIf="g.title">{{g.title}}</ion-list-header>
-                <ion-list>
-                    <button ion-item *ngFor="let p of pagesOfGroup(g)" (tap)="openPage(p)">{{p.title}}</button>
-                </ion-list>
+                <div *ngIf="isVisible(g)">
+                    <ion-list-header *ngIf="g.title">{{g.title}}</ion-list-header>
+                    <ion-list>
+                        <div *ngIf="isVisible(p)">
+                            <button [disabled]="!isEnabled(p)" ion-item *ngFor="let p of pagesOfGroup(g)"
+                                    (tap)="openPage(p)">{{p.title}}
+                            </button>
+                        </div>
+                    </ion-list>
+                </div>
             </div>
         </ion-content>
     </ion-menu>

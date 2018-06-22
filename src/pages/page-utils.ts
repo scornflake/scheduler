@@ -47,11 +47,13 @@ class PageUtils implements OnInit {
         }
 
         let lifecycleCallback: ILifecycleCallback = {
-            showLoginPage: () => {
+            showLoginPage: (reason:string) => {
+                this.logger.info(`show login page, because: ${reason}`);
                 navCtrl.push('login');
             },
-            showCreateOrInvitePage: () => {
+            showCreateOrInvitePage: (reason:string) => {
                 // add args to tell it to switch to create mode
+                this.logger.info(`show create/invite page, because: ${reason}`);
                 navCtrl.push('login');
             },
             showError: (message) => {

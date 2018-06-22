@@ -12,6 +12,7 @@ import {action, computed, observable} from "mobx";
 import {Logger} from "ionic-logging-service";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {Plan} from "./plan";
+import {UserResponse} from "../common/interfaces";
 
 class Preferences extends ObjectWithUUID {
     @observable previous_sheet_id: string;
@@ -47,7 +48,7 @@ class Preferences extends ObjectWithUUID {
     }
 
     @action setSelectedPlan(plan: Plan) {
-        if(plan) {
+        if (plan) {
             this.selected_plan_uuid = plan.uuid;
         } else {
             this.selected_plan_uuid = "";
@@ -78,6 +79,16 @@ class Person extends NamedObject {
         this.unavailable = [];
         this.preferences = new Preferences();
         this.availability = new Availability();
+    }
+
+    @action static createFromUserRespose(lr: UserResponse) {
+        let p = new Person();
+        let name_parts = [];
+        if(lr.first_name) name_parts.push(lr.first_name);
+        if(lr.last_name) name_parts.push(lr.last_name);
+        p.name = name_parts.join(" ");
+        p.email = lr.email;
+        return p;
     }
 
     avail_every(a_number: number, unit: AvailabilityUnit): Person {

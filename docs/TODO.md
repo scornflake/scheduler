@@ -1,6 +1,10 @@
 TODO:
 -----
-- Migrate SavedState to Person
+- Migrate SavedState to Person (done)
+- Get sign in / reg lifecycle going
+- Sync
+  - Make sure if email is changed on client, its synced to the server at some point
+  - Make sure if org name is changed on client, its synced to the server at some point
 - Two clients (safari/chrome):
   - Starts going into endless update loop. Going to have to make writes much smarter. It *looks* like the change detector is seeing a change to 'rev' on SavedState
 - Rules dont appear to be persisted (see AddPeopleToPlanWithRoles for neil)

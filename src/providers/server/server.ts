@@ -1,7 +1,13 @@
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {ConfigurationService} from "ionic-configuration-service";
-import {LoginResponse, OrganizationResponse, UserResponse, ValidationResponse} from "../../common/interfaces";
+import {
+    LoginResponse,
+    OrganizationResponse,
+    ServerError,
+    UserResponse,
+    ValidationResponse
+} from "../../common/interfaces";
 import {Observable} from "rxjs/Observable";
 import "rxjs/add/operator/map";
 import {Logger, LoggingService} from "ionic-logging-service";
@@ -53,26 +59,19 @@ export class RESTServer {
         }).toPromise();
     }
 
-    // // I wonder, can the client use the servers google token to talk to it?
-    // // Unlikely?
-    // get_sheets() {
-    //     this.logger.info("Listing all sheets");
-    //     let sheets_only = {
-    //         q: "mimeType='application/vnd.google-apps.spreadsheet'"
-    //     };
-    //     return Observable.create((observable) => {
-    //         let url = this.server_url("/sheets/");
-    //         gapi.client.drive.files.list(sheets_only).then((response) => {
-    //             let files = response.result.files;
-    //             // for(let file of files) {
-    //             // this.logger.info("got: " + SafeJSON.Stringify(file));
-    //             observable.next(files);
-    //             // }
-    //             observable.complete();
-    //         });
-    //     });
-    //
-    // }
+
+    async hasEmailBeenConfirmed(email: string): Promise<boolean> {
+        let url = this.server_url(`validate_login/?email=${email}&active=1`);
+        let options = this.options;
+        return await this.http.get(url, options).map((resp: object) => {
+                if (resp['active']) {
+                    return resp['active'];
+                }
+                console.warn(`hasEmailBeenConfirmed, for ${email} received ${SafeJSON.stringify(resp)}`);
+                return false;
+            }
+        ).toPromise();
+    }
 
     get headers(): HttpHeaders {
         if (this.loginToken) {
@@ -136,4 +135,34 @@ export class RESTServer {
         return await this.http.get(url, options).toPromise() as OrganizationResponse;
     }
 
+    async registerNewUser(name: string, email: string, pwd: string): Promise<LoginResponse> {
+        if (!name || !email || !pwd) {
+            throw new Error('name, email and pwd are required');
+        }
+        let url = this.server_url(`login/`);
+        let options = this.options;
+        let body = {
+            password: pwd,
+            email: email,
+        };
+        let name_parts = name.split(' ');
+        if (name_parts.length > 0) {
+            body['fist_name'] = name_parts[0];
+        }
+        if (name_parts.length > 1) {
+            name_parts.splice(1, 1);
+            body['last_name'] = name_parts.join(' ')
+        }
+        try {
+            return await this.http.post(url, body, options).toPromise() as LoginResponse;
+        } catch (err) {
+            console.error(`Got bad response from server: ${JSON.stringify(err)}`);
+            if (err['status']) {
+                if (err['status'] == 400) {
+                    throw new ServerError(err);
+                }
+            }
+            throw err;
+        }
+    }
 }

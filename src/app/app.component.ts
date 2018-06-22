@@ -5,6 +5,7 @@ import {SplashScreen} from '@ionic-native/splash-screen';
 import {HomePage} from "../pages/home/home";
 import {RootStore} from "../store/root";
 import {SchedulerServer} from "../providers/server/scheduler-server.service";
+import {computed} from "mobx-angular";
 
 @Component({
     templateUrl: 'app.html'
@@ -27,20 +28,45 @@ export class MyApp {
         });
     }
 
+    loggedIn() {
+        if (this.server) {
+            return this.server.loggedIn;
+        }
+        return false;
+    }
+
+    isEnabled(pageOrGroup): boolean {
+        if (pageOrGroup) {
+            if (pageOrGroup.hasOwnProperty('enabled')) {
+                return pageOrGroup['enabled']();
+            }
+        }
+        return true;
+    }
+
+    isVisible(pageOrGroup): boolean {
+        if (pageOrGroup) {
+            if (pageOrGroup.hasOwnProperty('visible')) {
+                return pageOrGroup['visible']();
+            }
+        }
+        return true;
+    }
+
     get groups() {
         return [
             {
                 title: "", items: [
                     {title: "Dashboard", page: 'home'},
-                    {title: "Profile", page: 'page-profile'},
+                    {title: "Profile", page: 'page-profile', enabled: this.loggedIn},
                     {title: "About", page: 'page-about'},
                 ]
             },
             {
                 title: "Admin", items: [
-                    {title: "People", page: 'page-people'},
-                    {title: "Teams", page: 'page-teams'},
-                    {title: "Plans", page: 'page-plans'},
+                    {title: "People", page: 'page-people', enabled: this.loggedIn},
+                    {title: "Teams", page: 'page-teams', enabled: this.loggedIn},
+                    {title: "Plans", page: 'page-plans', enabled: this.loggedIn},
                 ]
             },
             {
@@ -49,12 +75,13 @@ export class MyApp {
                 ]
             },
             {
-                title: "", items: [
+                title: "", visible: this.loggedIn, items: [
                     {
-                        title: "Logout", function: () => {
+                        title: "Logout", exec: () => {
                             this.server.logout();
                             this.nav.popToRoot();
-                        }
+                        },
+                        enabled: this.loggedIn
                     }
                 ]
             },
@@ -66,8 +93,8 @@ export class MyApp {
     }
 
     openPage(p) {
-        if (p.function) {
-            p.function();
+        if (p.exec) {
+            p.exec();
         } else {
             this.nav.push(p.page);
         }
