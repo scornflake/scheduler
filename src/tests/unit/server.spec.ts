@@ -1,8 +1,8 @@
 import {ILifecycleCallback, IState, SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {RootStore} from "../../store/root";
-import {instance, mock, verify, when} from "ts-mockito";
+import {anything, instance, mock, verify, when} from "ts-mockito";
 import {RESTServer} from "../../providers/server/server";
-import {NavControllerMock, StorageMock} from "ionic-mocks";
+import {StorageMock} from "ionic-mocks";
 import {SchedulerDatabase} from "../../providers/server/db";
 import {Storage} from "@ionic/storage";
 import {MockConfigurationService} from "../../app/logging-configuration";
@@ -11,7 +11,6 @@ import {OrmMapper} from "../../providers/mapping/orm-mapper";
 import {IObjectCache, SimpleCache} from "../../providers/mapping/cache";
 import {LoginResponse, ServerError, UserResponse, ValidationResponse} from "../../common/interfaces";
 import {Person} from "../../scheduling/people";
-import {BehaviorSubject} from "rxjs/BehaviorSubject";
 
 describe('scheduler server', () => {
     let server: SchedulerServer;
@@ -31,6 +30,17 @@ describe('scheduler server', () => {
     //     });
     // });
 
+    let createServerWithStorage = (storage): SchedulerServer => {
+        server = new SchedulerServer(store, restServer, storage, mapper);
+        store = new RootStore();
+        server.setStore(store);
+        server.setDatabase(db);
+
+        // force the cache to be US not the DB
+        db.setCache(cache);
+        return server;
+    };
+
     beforeEach((done) => {
         restMock = mock(RESTServer);
 
@@ -46,7 +56,7 @@ describe('scheduler server', () => {
             id: 2,
             email: 'me@there.com',
             uuid: '123345',
-            organization_id: 0,
+            organization_uuid: null,
             logintoken: "",
             first_name: 'neil',
             last_name: 'me',
@@ -54,15 +64,10 @@ describe('scheduler server', () => {
         };
 
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
-        let config = MockConfigurationService.ServiceForTests();
-        SchedulerDatabase.ConstructAndWait(config, mapper).then(new_db => {
+        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, mapper).then(new_db => {
             db = new_db;
-            db.setCache(cache);
-
-            store = new RootStore(db);
             restServer = instance(restMock);
-            server = new SchedulerServer(store, restServer, storageMock, db);
-
+            server = createServerWithStorage(storageMock);
             done();
         });
     });
@@ -94,7 +99,8 @@ describe('scheduler server', () => {
         let lastShownError: string = null;
 
         let lifecycleCallback = <ILifecycleCallback>{
-            showLoginPage: (reason:string) => {
+            showLoginPage: (reason: string) => {
+                console.info(`test received reason: ${reason}`);
                 showedLoginPage = true;
             },
             showError: (error) => {
@@ -128,17 +134,18 @@ describe('scheduler server', () => {
         it('should direct to login page if token is bad', function (done) {
             let state: IState = {
                 loginToken: "12345",
-                lastPersonUUID: null
+                lastPersonUUID: null,
+                lastOrganizationUUID: null
             };
             storageMock = StorageMock.instance('state', state);
 
             let vr: ValidationResponse = {ok: false, detail: 'no way!', user: null};
             when(restMock.validateLoginToken(state.loginToken)).thenResolve(vr);
 
-            server = new SchedulerServer(store, restServer, storageMock, db);
+            server = createServerWithStorage(storageMock);
             server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
                 expect(showedLoginPage).toBeTruthy();
-                verify(restMock.validateLoginToken(state.loginToken)).called();
+                verify(restMock.validateLoginToken("12345")).called();
                 done();
             });
         });
@@ -146,7 +153,8 @@ describe('scheduler server', () => {
         it('should direct to login page if token is good, but no person UUID', function (done) {
             let state: IState = {
                 loginToken: "12345",
-                lastPersonUUID: null
+                lastPersonUUID: null,
+                lastOrganizationUUID: null
             };
 
             userResponse.logintoken = state.loginToken;
@@ -156,7 +164,7 @@ describe('scheduler server', () => {
             when(restMock.validateLoginToken(state.loginToken)).thenResolve(vr);
 
             storageMock = StorageMock.instance('state', state);
-            server = new SchedulerServer(store, restServer, storageMock, db);
+            server = createServerWithStorage(storageMock);
 
             server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
                 expect(showedLoginPage).toBeTruthy();
@@ -172,11 +180,12 @@ describe('scheduler server', () => {
 
             let state: IState = {
                 loginToken: userResponse.logintoken,
-                lastPersonUUID: personInDB.uuid
+                lastPersonUUID: personInDB.uuid,
+                lastOrganizationUUID: null
             };
             expect(state.lastPersonUUID).not.toBeFalsy();
             storageMock = StorageMock.instance('state', state);
-            server = new SchedulerServer(store, restServer, storageMock, db);
+            server = createServerWithStorage(storageMock);
 
             // Intentionally do not store.
             // This means we should get an error when it tries to lookup the object ID
@@ -197,16 +206,20 @@ describe('scheduler server', () => {
 
             let state: IState = {
                 loginToken: "12345",
-                lastPersonUUID: personInDB.uuid
+                lastPersonUUID: personInDB.uuid,
+                lastOrganizationUUID: null
             };
             let dbMock = mock(SchedulerDatabase);
-            let dbInstance = instance(dbMock);
-            storageMock = StorageMock.instance('state', state);
-            server = new SchedulerServer(store, restServer, storageMock, dbInstance);
 
             // mock out the db so we know for certain it's being called
-            when(dbMock.readyEvent).thenReturn(new BehaviorSubject(true));
-            when(dbMock.async_load_object_with_id(userResponse.uuid)).thenResolve(personInDB);
+            when(dbMock.setCache(anything()));
+            // Intentional, so that the test STOPS here and doesn't run the rest
+            when(dbMock.async_load_object_with_id(userResponse.uuid)).thenResolve(null);
+
+            let dbInstance = instance(dbMock);
+            storageMock = StorageMock.instance('state', state);
+            server = createServerWithStorage(storageMock);
+            server.setDatabase(dbInstance);
 
             let vr: ValidationResponse = {ok: true, detail: '', user: userResponse};
             when(restMock.validateLoginToken(state.loginToken)).thenResolve(vr);
@@ -220,7 +233,6 @@ describe('scheduler server', () => {
 
     describe('loginUser tests', () => {
         it('should create user in DB if they dont exist', (done) => {
-
             // dbl check that the DB does not contain this user
             server.db_findByUUID(userResponse.uuid).then(p => {
                 let actualTest = (done) => {

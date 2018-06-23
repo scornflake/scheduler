@@ -1,5 +1,5 @@
 import {UIStore} from "./UIState";
-import {Injectable, OnDestroy} from "@angular/core";
+import {Injectable, OnDestroy, OnInit} from "@angular/core";
 import {Logger} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
 import {IReactionDisposer, observable, reaction, toJS, trace} from "mobx";
@@ -21,7 +21,7 @@ import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {Subscription} from "rxjs/Subscription";
 
 @Injectable()
-class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy {
+class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, OnDestroy {
     @observable ui_store: UIStore;
 
     @observable schedule: ScheduleWithRules;
@@ -41,12 +41,13 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
     private lipDisposer: IReactionDisposer;
     private scheduleSubscription: Subscription;
 
-    constructor(public db: SchedulerDatabase) {
+    private db: SchedulerDatabase;
+
+    constructor() {
         super();
 
         this.logger = LoggingWrapper.getLogger("service.store");
         this.setUIStore(new UIStore());
-        this.db.setCache(this);
 
         this.loggedInPersonSubject = new BehaviorSubject<Person>(null);
         this.uiStoreSubject = new BehaviorSubject<UIStore>(null);
@@ -55,6 +56,9 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         this.selectedPlanSubject = new BehaviorSubject<Plan>(null);
 
         this.setupSubjects();
+    }
+
+    ngOnInit() {
     }
 
     ngOnDestroy() {
@@ -75,30 +79,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         return null;
     }
 
-    async load() {
-        // this.logger.info(`Restoring preferences...`);
-        //
-        // try {
-        //     let saved_state = await this.db.async_load_object_with_id('saved-state') as Preferences;
-        //
-        //     this.logger.info(`Login Token: ${saved_state.login_token}`);
-        //     this.logger.info(`Logged in person: ${saved_state.logged_in_person_uuid}`);
-        //
-        //     this.ui_store.setPreferences(saved_state as Preferences);
-        //     if (!this.ui_store.preferences) {
-        //         this.logger.warn(`Oh oh, prefs wasn't restored. The returned object was a ${saved_state.constructor.name}... Maybe that's != Preferences?  Have reset it to a NEW SavedState instance.`);
-        //         this.ui_store.preferences = new Preferences('saved-state');
-        //     }
-        // } catch (e) {
-        //     this.logger.debug(e);
-        //     this.logger.info("No prefs. Starting from fresh.");
-        //
-        //     this.ui_store.setPreferences(new Preferences('saved-state'));
-        //     await this.asyncSaveOrUpdateDb(this.ui_store.preferences);
-        // }
-    }
-
-    async setupAfterUserLoggedIn() {
+    async loadDataFromStorage() {
         let before = this.organizations.length;
         let items = await this.db.async_load_into_store<Organization>(this.organizations, 'Organization');
         this.logger.info(`Loaded ${items.length} organizations... before: ${before}, after: ${this.organizations.length}`);
@@ -112,30 +93,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
         items = await this.db.async_load_into_store<Plan>(this.plans, 'Plan');
         this.logger.info(`Loaded ${items.length} plans...`);
 
-        // We want that 'defaults' one to be alive so it triggers when we first load the state
-        this.checkForDefaults();
-
-        this.startReplication();
-
-        this.logger.info(`App ready for: ${this.loggedInPerson}`);
-    }
-
-    private startReplication() {
-        if (this.loggedInPerson) {
-            let organization = this.loggedInPerson.organization;
-            if (organization) {
-                if (organization.uuid) {
-                    this.db.startReplication(`org_${organization.uuid}`);
-                    this.logger.info(`Started replication for ${organization.name}`);
-                } else {
-                    this.logger.warn(`Cannot start replication: Logged in persons '${this.loggedInPerson}' organization doesn't have a UUID`);
-                }
-            } else {
-                this.logger.warn(`Cannot start replication: Logged in person '${this.loggedInPerson}' doesn't have an organization`);
-            }
-        } else {
-            this.logger.warn(`Cannot start replication: No logged in person`);
-        }
+        this.logger.info(`DB loaded into memory`);
     }
 
     async asyncSaveOrUpdateDb(object: ObjectWithUUID) {
@@ -401,6 +359,24 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnDestroy 
 
     get selectedPlan$(): Observable<Plan> {
         return this.selectedPlanSubject;
+    }
+
+    clearDependentState() {
+        // I *think* all the other states hang off of this one...
+        this.ui_store.setLoggedInPerson(null);
+    }
+
+    async setDatabase(db: SchedulerDatabase) {
+        if (db == null) {
+            this.logger.warn(`RootStore got new 'null' DB. Clearing items from store.`);
+            this.clear();
+        } else {
+            this.logger.info(`RootStore got new DB: ${db.name}. Clearing all items from store and setting us as the DB's cache.`);
+            this.clear();
+            this.db = db;
+            this.db.setCache(this);
+            this.logger.info(`Yay. RootStore has a new DB.`);
+        }
     }
 }
 

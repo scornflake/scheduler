@@ -110,8 +110,7 @@ describe('db', () => {
         mapper.addConfiguration(test_config);
 
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 500;
-        let config = MockConfigurationService.ServiceForTests();
-        SchedulerDatabase.ConstructAndWait(config, mapper).then(new_db => {
+        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, mapper).then(new_db => {
             db = new_db;
             db.setCache(cache);
             done();

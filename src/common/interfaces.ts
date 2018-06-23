@@ -24,7 +24,7 @@ export class UserResponse {
     last_name: string;
     logintoken: string;
     uuid: string;
-    organization_id: number;
+    organization_uuid: string;
 }
 
 export declare type FieldErrors = {

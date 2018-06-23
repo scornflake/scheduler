@@ -12,6 +12,7 @@ import {Plan} from "../../scheduling/plan";
 import {action} from "mobx-angular";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {PageUtils} from "../page-utils";
+import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 
 
 @IonicPage({
@@ -28,6 +29,7 @@ export class HomePage {
     constructor(private navCtrl: NavController,
                 private sheetAPI: GAPIS,
                 private pageUtils: PageUtils,
+                private server: SchedulerServer,
                 private store: RootStore) {
 
         this.logger = LoggingWrapper.getLogger("page.home");
@@ -36,7 +38,9 @@ export class HomePage {
     ngOnInit() {
         // this.sheetAPI.init();
 
-        this.pageUtils.runStartupLifecycle(this.navCtrl);
+        this.pageUtils.runStartupLifecycle(this.navCtrl).then(() => {
+            this.logger.info(`ngOnInit`, 'runStartupLifecycle complete');
+        })
 
         // this.store.ui_store$.subscribe(ius => {
         //     this.logger.warn(`Home Says Signed In: ${ius.signed_in}`);

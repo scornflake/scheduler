@@ -7,7 +7,7 @@ import {SchedulerDatabase} from "../../providers/server/db";
 import {OrmMapper} from "../../providers/mapping/orm-mapper";
 import {SimpleCache} from "../../providers/mapping/cache";
 import {scheduler_db_map} from "../../assets/db.mapping";
-import {defaultComputerRole, defaultSaxRole, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
+import {defaultSaxRole, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
 import {isObservableArray} from "mobx";
 
 describe('root store', () => {
@@ -32,12 +32,11 @@ describe('root store', () => {
         mapper.addConfiguration(scheduler_db_map);
 
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 4000;
-        let config = MockConfigurationService.ServiceForTests();
-        SchedulerDatabase.ConstructAndWait(config, mapper).then(new_db => {
+        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, mapper).then(new_db => {
             db = new_db;
             db.setCache(cache);
-
-            store = new RootStore(db);
+            store = new RootStore();
+            store.setDatabase(db);
             done();
         });
     });

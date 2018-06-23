@@ -1,4 +1,3 @@
-import {Injectable} from "@angular/core";
 import PouchDB from 'pouchdb';
 import PouchDBFind from 'pouchdb-find';
 import {Logger} from "ionic-logging-service";
@@ -6,12 +5,9 @@ import {NamedObject, ObjectWithUUID, TypedObject} from "../../scheduling/base-ty
 import 'reflect-metadata';
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {LoggingWrapper} from "../../common/logging-wrapper";
-import {ConfigurationService} from "ionic-configuration-service";
 import {isUndefined} from "util";
 import {ObjectChange, ObjectChangeTracker} from "../mapping/orm-change-detection";
 import {Subject} from "rxjs/Subject";
-import {Observable} from "rxjs/Rx";
-import {ReplaySubject} from "rxjs/ReplaySubject";
 import {debounceTime} from "rxjs/operators";
 import {GenericManager} from "../../scheduling/common/scheduler-store";
 import {OrmMapper,} from "../mapping/orm-mapper";
@@ -19,8 +15,10 @@ import {IObjectLoader} from "../mapping/orm-mapper-type";
 
 import {OrmConverter} from "./orm-converter";
 import {IObjectCache} from "../mapping/cache";
-import Database = PouchDB.Database;
 import {action} from "mobx-angular";
+import {Organization} from "../../scheduling/organization";
+import {ReplaySubject} from "rxjs/ReplaySubject";
+import Database = PouchDB.Database;
 
 // Put this back in when we move to v7 of Pouch.
 // import plugin from 'pouchdb-adapter-idb';
@@ -32,7 +30,6 @@ enum SavingState {
     FinishedSaving = 3, // changes completed ok!
 }
 
-@Injectable()
 class SchedulerDatabase implements IObjectLoader {
     save_notifications = new Subject<SavingState>();
     readyEvent: Subject<boolean>;
@@ -44,38 +41,25 @@ class SchedulerDatabase implements IObjectLoader {
     private server_db: PouchDB.Database<{}>;
 
     private current_indexes: PouchDB.Find.GetIndexesResponse<{}>;
-    private db_name: string;
+    private dbName: string;
     private tracker: ObjectChangeTracker;
     private mapper: OrmMapper;
     private _converter: OrmConverter;
-    private cache: IObjectCache;
+    private _cache: IObjectCache;
 
-    static ConstructAndWait(configService: ConfigurationService, mapper: OrmMapper): Promise<SchedulerDatabase> {
-        return new Promise<SchedulerDatabase>((resolve) => {
-            let instance = new SchedulerDatabase(configService, mapper);
-            // instance.logger.info("Starting DB setup for TEST");
-            instance.readyEvent.subscribe(() => {
-                resolve(instance);
-            })
-        });
-    }
-
-    constructor(private configService: ConfigurationService, mapper: OrmMapper) {
-        let db_config = configService.getValue("database");
-
+    constructor(dbName: string, mapper: OrmMapper) {
         this.mapper = mapper;
         this._converter = new OrmConverter(this.mapper, this);
-        this.db_name = db_config['name'];
+        this.dbName = dbName;
         this.logger = LoggingWrapper.getLogger("db");
         PouchDB.plugin(PouchDBFind);
 
-        this.logger.info(`Setting up database: ${this.db_name} ...`);
-
-        this.readyEvent = new ReplaySubject();
+        this.readyEvent = new ReplaySubject(1);
         this.tracker = new ObjectChangeTracker(this.mapper);
 
-        this.initialize().then(() => {
-            this.logger.debug(`DB initialize() done`);
+        this.initialize().then();
+        this.readyEvent.subscribe(r => {
+            this.logger.info(`DB ${this.dbName} ready: ${r}`);
         });
 
         // This is so we can output a single stream of 'idle, change waiting, saving/done'
@@ -88,14 +72,28 @@ class SchedulerDatabase implements IObjectLoader {
             debounceTime(1500)
         );
         changes.subscribe(this.trackerNotification.bind(this));
+    }
 
-        this.readyEvent.subscribe(val => {
-            if (val) {
-                this.logger.info("DB is ready");
-            } else {
-                this.logger.info("DB is NOT ready");
-            }
+    static ConstructAndWait(dbName: string, mapper: OrmMapper): Promise<SchedulerDatabase> {
+        return new Promise<SchedulerDatabase>((resolve) => {
+            let instance = new SchedulerDatabase(dbName, mapper);
+            // instance.logger.info("Starting DB setup for TEST");
+            instance.readyEvent.subscribe(() => {
+                resolve(instance);
+            })
         });
+    }
+
+    valueOf() {
+        return `Name:${this.dbName}`;
+    }
+
+    get name(): string {
+        return this.dbName;
+    }
+
+    get cache(): IObjectCache {
+        return this._cache;
     }
 
     get converter(): OrmConverter {
@@ -107,14 +105,16 @@ class SchedulerDatabase implements IObjectLoader {
         // let options = {adapter: 'idb'};
         // PouchDB.plugin(plugin);
         let options = {};
-        this.db = await new PouchDB(this.db_name, options);
+        this.logger.info('initialize', `Creating new DB instance: ${this.dbName} ...`);
+        this.db = await new PouchDB(this.dbName, options);
 
         this.logger.debug("Getting DB information");
         this.info = await this.db.info();
         this.logger.debug(`DB: ${this.info.db_name}. ${this.info.doc_count} docs.`);
         await this.setupIndexes();
 
-        Observable.create(obs => obs.next(true)).subscribe(this.readyEvent);
+        this.logger.info('initialize', `Initialize for ${this.dbName} done`);
+        this.readyEvent.next(true);
     }
 
     async setupIndexes() {
@@ -130,7 +130,7 @@ class SchedulerDatabase implements IObjectLoader {
         }
     }
 
-    async destroyDatabase(doRefresh: boolean = true) {
+    async destroyDatabase() {
         this.tracker.clearAll();
 
         // let allDocIds = await this.db.allDocs({include_docs: false});
@@ -142,14 +142,6 @@ class SchedulerDatabase implements IObjectLoader {
 
         await this.db.destroy();
         await this.initialize();
-
-        /*
-        Must reload the page / app, to get a new DB.
-         */
-        if(doRefresh) {
-            console.log(`starting destroy of db...`);
-            location.reload();
-        }
     }
 
     private index_exists(name: string): boolean {
@@ -162,8 +154,8 @@ class SchedulerDatabase implements IObjectLoader {
             throw new Error("load_object_with_id failed. You must pass in an id (you passed in 'undefined')");
         }
 
-        if (useCache && this.cache) {
-            let fromCache = this.cache.getFromCache(id);
+        if (useCache && this._cache) {
+            let fromCache = this._cache.getFromCache(id);
             if (fromCache) {
                 return fromCache;
             }
@@ -374,8 +366,8 @@ class SchedulerDatabase implements IObjectLoader {
         if (object.is_new) {
             throw new Error("Cannot remove object that is 'new' and hasn't been saved yet");
         }
-        if (this.cache) {
-            this.cache.evict(object);
+        if (this._cache) {
+            this._cache.evict(object);
         }
         this.tracker.untrack(object);
         return await this.db.remove({_id: object.uuid, _rev: object._rev});
@@ -390,8 +382,8 @@ class SchedulerDatabase implements IObjectLoader {
     }
 
     storeInCache(object: ObjectWithUUID) {
-        if (this.cache && object) {
-            this.cache.saveInCache(object);
+        if (this._cache && object) {
+            this._cache.saveInCache(object);
         }
     }
 
@@ -411,26 +403,42 @@ class SchedulerDatabase implements IObjectLoader {
     }
 
     setCache(cache: IObjectCache) {
-        this.cache = cache;
+        this._cache = cache;
         this._converter.cache = cache;
     }
 
-    startReplication(remoteDBName: string) {
+    async findBySelector<T extends ObjectWithUUID>(selector: any, expectOne: boolean = false): Promise<T[]> {
+        let all_objects_of_type = await this.db.find(selector);
+        if (all_objects_of_type.docs.length) {
+            if (all_objects_of_type.docs.length > 1 && expectOne) {
+                throw new Error(`Query ${JSON.stringify(selector)} returned more than one match`)
+            }
+            return await this.convert_docs_to_objects_and_store_in_cache(all_objects_of_type.docs) as T[];
+        }
+        return null;
+    }
+
+    startReplicationFor(serverUrl: string, organizationUUID: string) {
+        if (!organizationUUID || !serverUrl) {
+            throw new Error(`Cannot start replication: serverUrl/organization not provided`);
+        }
+        let remoteDBName = Organization.dbNameFor(organizationUUID);
+        this._startReplication(serverUrl, remoteDBName);
+        this.logger.info('startReplicationFor', `Started replication for ${remoteDBName}`);
+    }
+
+    private _startReplication(serverUrl: string, remoteDBName: string) {
+        if (!serverUrl) {
+            throw new Error(`Cannot begin replication without remote DB server url being specified.`);
+        }
         if (!remoteDBName) {
             throw new Error(`Cannot begin replication without remote DB name being specified.`);
         }
         if (this.server_db) {
             this.logger.warn(`Replication already started, ignored`);
         }
-        let serverConf = this.configService.getValue('server');
-        if (!serverConf) {
-            throw new Error(`invalid config, no server config`);
-        }
-        let couchAddr = serverConf['couch'];
-        if (!couchAddr) {
-            throw new Error(`invalid config, no couch entry in server config`);
-        }
-        this.server_db = new PouchDB(`${couchAddr}/${remoteDBName}`);
+
+        this.server_db = new PouchDB(`${serverUrl}/${remoteDBName}`);
         this.db.sync(this.server_db, {live: true, retry: true})
             .on('change', (change) => {
                 if (change.direction == 'pull') {
@@ -465,17 +473,6 @@ class SchedulerDatabase implements IObjectLoader {
             .on('error', (err) => {
                 this.logger.error(`Sync error: ${err}`);
             });
-    }
-
-    async findBySelector<T extends ObjectWithUUID>(selector: any, expectOne: boolean = false): Promise<T[]> {
-        let all_objects_of_type = await this.db.find(selector);
-        if (all_objects_of_type.docs.length) {
-            if (all_objects_of_type.docs.length > 1 && expectOne) {
-                throw new Error(`Query ${JSON.stringify(selector)} returned more than one match`)
-            }
-            return await this.convert_docs_to_objects_and_store_in_cache(all_objects_of_type.docs) as T[];
-        }
-        return null;
     }
 }
 

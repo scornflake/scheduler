@@ -11,6 +11,7 @@ import {Team} from "../../scheduling/teams";
 import {defaultSoundRole} from "../sample-data";
 import {csd} from "../../scheduling/common/date-utils";
 import {SafeJSON} from "../../common/json/safe-stringify";
+import {SimpleCache} from "../../providers/mapping/cache";
 
 class SomeThing extends ObjectWithUUID {
     @observable some_field: string = "a value";
@@ -32,14 +33,13 @@ describe('observation', () => {
             enforceActions: true
         });
 
-        let config = MockConfigurationService.ServiceForTests();
         let mapper = setupOrmMapper();
-        SchedulerDatabase.ConstructAndWait(config, mapper).then(new_db => {
+        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, mapper).then(new_db => {
             db = new_db;
-            store = new RootStore(db);
-            store.load().then(() => {
-                done();
-            });
+            store = new RootStore();
+            store.setDatabase(db);
+            db.setCache(new SimpleCache());
+            done();
         });
 
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
@@ -64,7 +64,7 @@ describe('observation', () => {
 
     it('can observe change to selected plan', function (done) {
         let newplan = new Plan("haha", null);
-        store.db.cache.saveInCache(newplan);
+        store.plans.add(newplan);
         store.selectedPlan$.subscribe(plan => {
             if (plan) {
                 if (plan.name == "haha") {
@@ -80,7 +80,7 @@ describe('observation', () => {
 
     it('can observe change to logged in person', function (done) {
         let person = new Person("Neilos");
-        store.db.cache.saveInCache(person);
+        db.cache.saveInCache(person);
         store.loggedInPerson$.subscribe(lip => {
             if (lip) {
                 console.log(`Saw saved: ${lip}`);
@@ -103,9 +103,9 @@ describe('observation', () => {
         newplan.start_date = csd(2018, 6, 17);
         newplan.end_date = csd(2018, 7, 17);
 
-        store.db.cache.saveInCache(person);
-        store.db.cache.saveInCache(team);
-        store.db.cache.saveInCache(newplan);
+        store.people.add(person);
+        store.teams.add(team);
+        store.plans.add(newplan);
 
         expect(store.schedule).toBeUndefined();
 

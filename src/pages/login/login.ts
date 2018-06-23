@@ -10,12 +10,13 @@ import {isUndefined} from "util";
 import {debounceTime, flatMap, map} from "rxjs/operators";
 import {Observable} from "rxjs/Observable";
 import {Subscription} from "rxjs/Subscription";
-import {SafeJSON} from "../../common/json/safe-stringify";
 import {ServerError} from "../../common/interfaces";
+import "rxjs/add/observable/timer";
 
 enum LoginPageMode {
     LoginOrCreate = 0,
     WaitForEmailConfirmation,
+    StartingReplication,
     ReadyToGo
 }
 
@@ -62,7 +63,18 @@ class LoginPage implements AfterViewInit {
                 this.setRegistrationName("Neil Clayton");
                 this.setRegistrationEmail("neil@cloudnine.net.nz");
                 this.setRegistrationPassword("testing59");
-                // this.register();
+
+                // do a login for this user
+                this.server.loginUser(this.registrationEmail, this.registrationPassword).then(lr => {
+                    if(lr.ok) {
+                        this.switchToReplication();
+                        // this.register();
+                    } else {
+                        console.error(`Arg: ${JSON.stringify(lr)}`);
+                    }
+                });
+
+
             }, 250)
         }
     }
@@ -168,12 +180,12 @@ class LoginPage implements AfterViewInit {
     }
 
     showError(error) {
-        if(this.loading) {
+        if (this.loading) {
             this.loading.dismiss();
         }
 
         let text = error;
-        if(error instanceof ServerError) {
+        if (error instanceof ServerError) {
             text = error.allErrors;
         }
 
@@ -187,32 +199,17 @@ class LoginPage implements AfterViewInit {
 
     @action
     switchModes(mode: LoginPageMode) {
-        switch (mode) {
-            case LoginPageMode.LoginOrCreate: {
-                /*
-                BUG in Ionic.
-                If you slideTo immediately the page loads, it'll die.
-                Have to wait until "something" is instantiated.
-                 */
-                let waitPeriod = this.firstSwitch ? 1000 : 0;
-                setTimeout(() => {
-                    this.slides.slideTo(0);
-                }, waitPeriod);
-                this.firstSwitch = false;
-            }
-                break;
-
-            case LoginPageMode.WaitForEmailConfirmation:
-            default: {
-                this.slides.slideTo(1);
-                break;
-            }
-
-            case LoginPageMode.ReadyToGo: {
-                this.slides.slideTo(2);
-                break;
-            }
-        }
+        // The modes are really just indexes into the slides
+        /*
+        BUG in Ionic.
+        If you slideTo immediately the page loads, it'll die.
+        Have to wait until "something" is instantiated.
+         */
+        let waitPeriod = this.firstSwitch ? 1000 : 0;
+        setTimeout(() => {
+            this.slides.slideTo(mode);
+        }, waitPeriod);
+        this.firstSwitch = false;
     }
 
     @action
@@ -253,7 +250,8 @@ class LoginPage implements AfterViewInit {
             this.confirmationSubscription = this.confirmationListener.subscribe(() => {
                 this.server.hasEmailBeenConfirmed(this.registrationEmail).then(flag => {
                     if (flag) {
-                        this.switchToReadyToUse();
+                        this.logger.info(`Email was confirmed. Wait for replication to start`);
+                        this.switchToReplication();
                     }
                 })
             })
@@ -262,14 +260,62 @@ class LoginPage implements AfterViewInit {
         }
     }
 
+    private switchToReplication() {
+        this.stopListeningForConfirmation();
+        this.switchModes(LoginPageMode.StartingReplication);
+
+        // Basically we're waiting to see if we can see ourselves + our organization in
+        // the local DB... if we can find both, and replication is started
+        // then we continue
+
+        this.pageUtils.runStartupLifecycle(this.nav);
+
+        this.confirmationListener = Observable.timer(1000, 1000);
+        console.log(`checking local DB for what we need ...`);
+        this.confirmationSubscription = this.confirmationListener.subscribe(() => {
+            if(!this.server.db) {
+                this.logger.warn(`No DB to use... waiting`);
+                return;
+            }
+            this.server.db_findPersonByEmail(this.registrationEmail).then(person => {
+                // This is done by our ORM. So it might have org from cache.
+                // Double check by going to the DB
+                if (!person) {
+                    this.logger.info(`waiting for person with email: ${this.registrationEmail}`);
+                    return;
+                }
+
+                if (!person.organization) {
+                    this.logger.info(`waiting for person to have an organization`);
+                    return;
+                }
+
+                if (!person.organization.uuid) {
+                    this.logger.info(`waiting for person to have an organization WITH a UUID`);
+                    return;
+                }
+
+                this.server.db_findByUUID(person.organization.uuid, false).then(org => {
+                    if (org) {
+                        // seems ok to me!
+                        this.logger.info(`Found person and organization in DB. Great!`);
+                        this.switchToReadyToUse();
+                    }
+                });
+            });
+        });
+    }
+
     private switchToReadyToUse() {
         this.stopListeningForConfirmation();
         this.switchModes(LoginPageMode.ReadyToGo);
     }
 
     private stopListeningForConfirmation() {
-        this.confirmationSubscription.unsubscribe();
-        this.confirmationListener = null;
+        if(this.confirmationSubscription) {
+            this.confirmationSubscription.unsubscribe();
+            this.confirmationListener = null;
+        }
     }
 
     popBackHome() {

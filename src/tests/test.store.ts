@@ -241,6 +241,7 @@ export class NPBCStoreConstruction {
 
         let neil = aint("Neil Clayton");
         neil.email = "neil@cloudnine.net.nz";
+
         let cherilyn = aint("Cherilyn Clayton");
         let kylie = aint("Kylie Welch-Herekiuha");
         let christine = aint("Christine Edlin");

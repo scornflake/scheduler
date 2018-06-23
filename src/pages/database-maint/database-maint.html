@@ -1,7 +1,6 @@
 <ion-header>
-
     <ion-navbar>
-        <ion-title>Database. Type: {{database_type}}</ion-title>
+        <ion-title>Database. Type: {{databaseType}}</ion-title>
     </ion-navbar>
     <saving-state></saving-state>
 </ion-header>
@@ -12,7 +11,7 @@
     <button ion-button color="danger" (tap)="delete_db()">Delete DB</button>
 
     <ion-list-header>DB Info</ion-list-header>
-    <ion-list>
+    <ion-list *ngIf="database_info">
         <ion-item *ngFor="let i of database_info">
             <ion-label>{{i.label}}</ion-label>
             <ion-label text-right>{{i.value}}</ion-label>
@@ -20,7 +19,7 @@
     </ion-list>
 
     <ion-list-header>Stats</ion-list-header>
-    <ion-list>
+    <ion-list  *ngIf="this.store">
         <ion-item *ngFor="let i of stats">
             <ion-label (tap)="toggleGroup(i.label)">{{i.label}}</ion-label>
             <ion-label text-right (tap)="toggleGroup(i.label)">{{i.value}}</ion-label>

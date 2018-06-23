@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {AfterViewInit, Component, Input, OnDestroy, OnInit} from '@angular/core';
 import {AlertController, IonicPage, NavController, NavParams} from 'ionic-angular';
 import {SchedulerDatabase} from "../../providers/server/db";
 import {RootStore} from "../../store/root";
@@ -13,6 +13,9 @@ import {NPBCStoreConstruction} from "../../tests/test.store";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
+import {Subscription} from "rxjs/Subscription";
+import {computed, observable} from "mobx-angular";
+import {runInAction} from "mobx";
 
 @IonicPage({
     name: 'page-db',
@@ -22,10 +25,12 @@ import {SchedulerServer} from "../../providers/server/scheduler-server.service";
     selector: 'page-database-maint',
     templateUrl: 'database-maint.html',
 })
-export class DatabaseMaintPage {
+export class DatabaseMaintPage implements OnDestroy, AfterViewInit {
+    @observable databaseType: string = "";
 
-    database_type: string = "";
     private logger: Logger;
+    private db: SchedulerDatabase;
+    private dbSubscription: Subscription;
 
     constructor(public navCtrl: NavController,
                 public alertCtrl: AlertController,
@@ -33,31 +38,49 @@ export class DatabaseMaintPage {
                 public server: SchedulerServer,
                 public mapper: OrmMapper,
                 public pageUtils: PageUtils,
-                public navParams: NavParams,
-                public db: SchedulerDatabase) {
+                public navParams: NavParams) {
         this.logger = LoggingWrapper.getLogger('page.dbmaint');
     }
 
-    ionViewDidLoad() {
-        this.db.readyEvent.subscribe(() => {
-            if (this.db.info.backend_adapter) {
-                let type = this.db.info.backend_adapter.toString();
-                if (this.db.info['sqlite_plugin']) {
-                    type += ", sqllite";
-                }
-                this.database_type = type;
-            } else {
-                this.database_type = this.db.info['adapter'] || "Unknown";
-            }
-        })
+    ngOnDestroy() {
+        if (this.dbSubscription) {
+            this.dbSubscription.unsubscribe();
+        }
     }
 
-    get database_info() {
+    ngAfterViewInit() {
+        // If no DB, kick page utils?
+        if (!this.server.db) {
+            this.pageUtils.runStartupLifecycle(this.navCtrl);
+        }
+        this.dbSubscription = this.server.db$.subscribe(db => {
+            this.db = db;
+            if (db) {
+                runInAction(() => {
+                    if (this.db.info.backend_adapter) {
+                        let type = this.db.info.backend_adapter.toString();
+                        if (this.db.info['sqlite_plugin']) {
+                            type += ", sqllite";
+                        }
+                        this.databaseType = type;
+                    } else {
+                        this.databaseType = this.db.info['adapter'] || "Unknown";
+                    }
+                });
+            } else {
+
+            }
+        });
+    }
+
+    @computed get database_info() {
         let info = [];
-        if (this.db.info) {
-            for (let key of Object.keys(this.db.info)) {
-                let value = this.db.info[key];
-                info.push({label: key, value: value})
+        if (this.db) {
+            if (this.db.info) {
+                for (let key of Object.keys(this.db.info)) {
+                    let value = this.db.info[key];
+                    info.push({label: key, value: value})
+                }
             }
         }
         return info;
@@ -73,8 +96,13 @@ export class DatabaseMaintPage {
         alert.addButton({
             text: "Yes",
             handler: () => {
-                this.db.destroyDatabase();
-
+                this.db.destroyDatabase().then(() => {
+                    /*
+                    Must reload the page / app, to get a new DB.
+                     */
+                    console.log(`starting destroy of db...`);
+                    location.reload();
+                });
                 // does a reload, so no need to take action after
             }
         });
@@ -121,13 +149,16 @@ export class DatabaseMaintPage {
     }
 
     async store_fake_data() {
+        if (!this.db) {
+            this.pageUtils.show_error('cant, no db');
+        }
         // This gets us the people.
         // NOTE: This sets up default availability. No 'unavailable' tho.
         let people_added = NPBCStoreConstruction.SetupPeople(this.store.people);
         let neil = this.store.people.findByNameFuzzy("Neil Clayton");
         if (neil) {
             if (neil.organization) {
-                if(neil.organization.name != "North Porirua Baptist Church") {
+                if (neil.organization.name != "North Porirua Baptist Church") {
                     neil.organization.name = "North Porirua Baptist Church";
                     await this.server.saveOrganization(neil.organization);
                     this.pageUtils.show_message("Updated org name");

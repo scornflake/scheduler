@@ -12,6 +12,8 @@ class MockConfigurationService extends ConfigurationService {
     private mocked_configValues: { [key: string]: any };
     private static __service: MockConfigurationService;
 
+    static dbName: string = 'tests';
+
     public getKeys(): string[] {
         const keys: string[] = [];
         // tslint:disable-next-line:forin
@@ -65,6 +67,10 @@ class MockConfigurationService extends ConfigurationService {
                     },
                     {
                         "loggerName": "service.store",
+                        "logLevel": "DEBUG"
+                    },
+                    {
+                        "loggerName": "service.bridge",
                         "logLevel": "DEBUG"
                     },
                     {

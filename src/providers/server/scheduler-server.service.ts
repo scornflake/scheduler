@@ -12,20 +12,26 @@ import {SchedulerDatabase} from "./db";
 import {ObjectWithUUID} from "../../scheduling/base-types";
 import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
-import {action} from "mobx-angular";
+import {action, computed} from "mobx-angular";
 import {Storage} from '@ionic/storage';
+import {OrmMapper} from "../mapping/orm-mapper";
+import {filter, flatMap, take} from "rxjs/operators";
+import {ConfigurationService} from "ionic-configuration-service";
+import "rxjs/add/observable/fromPromise";
+import "rxjs/add/observable/interval";
 
 const STATE_ROOT = 'state';
 
 interface IState {
     loginToken: string;
     lastPersonUUID: string;
+    lastOrganizationUUID: string;
 }
 
 interface ILifecycleCallback {
-    showLoginPage(reason:string);
+    showLoginPage(reason: string);
 
-    showCreateOrInvitePage(reason:string);
+    showCreateOrInvitePage(reason: string);
 
     showError(message: string);
 }
@@ -42,23 +48,36 @@ class SchedulerServer implements ILifecycle {
     private logger: Logger;
     private _state: IState;
 
+    private dbSubject: Subject<SchedulerDatabase>;
+    private _db: SchedulerDatabase;
+
     constructor(@Inject(forwardRef(() => RootStore)) private store,
                 private restAPI: RESTServer,
                 private storage: Storage,
-                private db: SchedulerDatabase) {
+                private ormMapper: OrmMapper,
+                private configurationService: ConfigurationService
+    ) {
         this.logger = LoggingWrapper.getLogger('service.bridge');
-        this.waitForDB();
+        this.dbSubject = new BehaviorSubject<SchedulerDatabase>(null);
     }
 
     isUsernameAvailableAndGood(username: string): Observable<string> {
         return this.restAPI.isUsernameAvailableAndGood(username);
     }
 
+    get db$(): Observable<SchedulerDatabase> {
+        return this.dbSubject;
+    }
+
+    get db(): SchedulerDatabase {
+        return this._db;
+    }
+
     get state(): IState {
         return this._state;
     }
 
-    get loggedIn(): boolean {
+    @computed get loggedIn(): boolean {
         // atm: this is cleared if a validate login gets 'bad'
         // TODO: Adjust for true offline case.
         if (this.state) {
@@ -70,26 +89,21 @@ class SchedulerServer implements ILifecycle {
     async loginUser(username: string, password: string): Promise<LoginResponse> {
         this.logger.info(`Requesting user info from server: ${username}`);
         await this.asyncLoadState();
+
         let res: LoginResponse = await this.restAPI.login(username, password);
         this.setLoginTokenFromUserResponse(res.ok, res.user || null);
 
-        if (res.ok) {
-            let havePerson = false;
-            if(res.user.uuid) {
-                let person = await this.db_findByUUID(res.user.uuid);
-                havePerson = person != null;
-            }
-            if(!havePerson) {
-                let person = this.createNewPersonFromUserResponse(res.user);
-                await this.db.async_store_or_update_object(person);
-            }
-        }
+        // as far as people + orgs existing in the DB
+        // we rely on replication to set that up.
+        // Initial people/org is done on the server. it's expected that first
+        // time replication brings that data to the client
 
         await this.asyncSaveState();
         return res;
     }
 
     @action logout() {
+        this.state.lastOrganizationUUID = null;
         this.state.lastPersonUUID = null;
         this.state.loginToken = null;
         this.asyncSaveState().then(() => {
@@ -101,15 +115,17 @@ class SchedulerServer implements ILifecycle {
         let uiStore = this.store.ui_store;
 
         if (good) {
-            this.logger.info(`Login: setting login token to ${user.logintoken || ''}, last person to: ${user.uuid || ''}`);
+            this.logger.info(`Login: set login token to ${user.logintoken || ''}, last person to: ${user.uuid || ''}`);
             this.restAPI.loginToken = user.logintoken;
             this.state.loginToken = user.logintoken;
             this.state.lastPersonUUID = user.uuid;
+            this.state.lastOrganizationUUID = user.organization_uuid;
         } else {
             this.restAPI.loginToken = null;
             this.state.loginToken = null;
             this.state.lastPersonUUID = null;
-            this.logger.info(`Login: Clearing logger in person UUID (because login not OK)`);
+            this.state.lastOrganizationUUID = null;
+            this.logger.info(`Login: Clearing state token/uuid because login not OK`);
         }
         uiStore.setLoginTokenValidated(good);
     }
@@ -117,6 +133,7 @@ class SchedulerServer implements ILifecycle {
     @action
     async validateLoginToken(token: string): Promise<ValidationResponse> {
         // If no 'person uuid', need to login
+        await this.asyncLoadState();
         this.logger.info(`Validating login token: ${SafeJSON.stringify(token)}`);
 
         let vr = await this.restAPI.validateLoginToken(token);
@@ -178,108 +195,113 @@ class SchedulerServer implements ILifecycle {
     //     return serverUser;
     // }
 
-    private createNewPersonFromUserResponse(serverUser: UserResponse): Person {
-        // if (!serverUser.uuid) {
-        //     throw new Error('No UUID specified in server response. Cannot create user');
-        // }
-        let person = new Person([serverUser.first_name, serverUser.last_name].join(" ").trim(), serverUser.uuid);
-        person.email = serverUser.email;
-        person.serverId = serverUser.id;
-        this.store.people.add(person);
-        return person;
-    }
+    // private createNewPersonFromUserResponse(serverUser: UserResponse): Person {
+    //     // if (!serverUser.uuid) {
+    //     //     throw new Error('No UUID specified in server response. Cannot create user');
+    //     // }
+    //     let person = new Person([serverUser.first_name, serverUser.last_name].join(" ").trim(), serverUser.uuid);
+    //     person.email = serverUser.email;
+    //     person.serverId = serverUser.id;
+    //     this.store.people.add(person);
+    //     return person;
+    // }
 
-    @action
-    private async ensureUserHasOrganization(user: UserResponse, localPerson: Person, munge: boolean): Promise<Organization> {
-        // Is there an org associated with us on the server?
-        if (!user.organization_id) {
-            this.logger.info(`This user doesn't have an organization on the server. Creating one.`);
-            let orgResponse = await this.restAPI.createOrganization(user);
+    // @action
+    // private async ensureUserHasOrganization(user: UserResponse, localPerson: Person, munge: boolean): Promise<Organization> {
+    //     // Is there an org associated with us on the server?
+    //     if (!user.organization_id) {
+    //         this.logger.info(`This user doesn't have an organization on the server. Creating one.`);
+    //         let orgResponse = await this.restAPI.createOrganization(user);
+    //
+    //         // Link to the user, on the server
+    //         user.organization_id = orgResponse.id;
+    //         let userSaveResp = await this.restAPI.saveUser(user);
+    //         this.logger.info(`User resp after saving with org: ${JSON.stringify(userSaveResp)}`);
+    //
+    //         // Create this here in Pouch.
+    //         let org = await this.createNewOrganizationInPouch(orgResponse.name);
+    //
+    //         // Now we have it's UUID, save that on the servers copy
+    //         orgResponse.uuid = org.uuid;
+    //         await this.restAPI.updateOrganization(orgResponse);
+    //
+    //         // Make sure our local user is pointing to this pouch org.
+    //         localPerson.organization = org;
+    //         await this.store.asyncSaveOrUpdateDb(localPerson);
+    //
+    //         return org;
+    //     } else {
+    //         // They have an org on the server. Get it.
+    //         this.logger.info(`User has organization ID: ${user.organization_id}`);
+    //         let orgResponse = await this.restAPI.getOrganization(user.organization_id);
+    //
+    //         // Wait! the org on the server isn't tied to an org in pouch.
+    //         if (!orgResponse.uuid) {
+    //             this.logger.info(`Got organization ${user.organization_id} but it has no UUID! Going to create a new pouch org and assign it`);
+    //             let pouchOrg = await this.createNewOrganizationInPouch(orgResponse.name);
+    //             orgResponse.uuid = pouchOrg.uuid;
+    //             await this.restAPI.updateOrganization(orgResponse);
+    //         }
+    //
+    //         // Find the org in pouch
+    //         let org = await this.db_findByUUID(orgResponse.uuid) as Organization;
+    //         if (!org) {
+    //             let message = `No organization exists with UUID: ${orgResponse.uuid}`;
+    //             if (munge) {
+    //                 this.logger.warn(message + " ... creating it (part of MUNGE).");
+    //                 org = new Organization(`Munged org for ${user.email}`);
+    //                 org._id = orgResponse.uuid;
+    //                 await this.saveOrganization(org);
+    //             } else {
+    //                 throw new Error(message);
+    //             }
+    //         }
+    //
+    //         // Make sure the user points at this org.
+    //         if (!localPerson.organization) {
+    //             this.logger.info(`Logged in person has no organization. Assigning: ${org.name}`);
+    //             localPerson.organization = org;
+    //         } else {
+    //             if (localPerson.organization.uuid != org.uuid) {
+    //                 this.logger.info(`Logged in person has association to wrong org. Assigning to ${org.name}`);
+    //                 localPerson.organization = org;
+    //             }
+    //         }
+    //         this.logger.info(`Person ${localPerson} with org: ${org}`);
+    //         return org as Organization;
+    //     }
+    // }
 
-            // Link to the user, on the server
-            user.organization_id = orgResponse.id;
-            let userSaveResp = await this.restAPI.saveUser(user);
-            this.logger.info(`User resp after saving with org: ${JSON.stringify(userSaveResp)}`);
-
-            // Create this here in Pouch.
-            let org = await this.createNewOrganizationInPouch(orgResponse.name);
-
-            // Now we have it's UUID, save that on the servers copy
-            orgResponse.uuid = org.uuid;
-            await this.restAPI.updateOrganization(orgResponse);
-
-            // Make sure our local user is pointing to this pouch org.
-            localPerson.organization = org;
-            await this.store.asyncSaveOrUpdateDb(localPerson);
-
-            return org;
-        } else {
-            // They have an org on the server. Get it.
-            this.logger.info(`User has organization ID: ${user.organization_id}`);
-            let orgResponse = await this.restAPI.getOrganization(user.organization_id);
-
-            // Wait! the org on the server isn't tied to an org in pouch.
-            if (!orgResponse.uuid) {
-                this.logger.info(`Got organization ${user.organization_id} but it has no UUID! Going to create a new pouch org and assign it`);
-                let pouchOrg = await this.createNewOrganizationInPouch(orgResponse.name);
-                orgResponse.uuid = pouchOrg.uuid;
-                await this.restAPI.updateOrganization(orgResponse);
-            }
-
-            // Find the org in pouch
-            let org = await this.db_findByUUID(orgResponse.uuid) as Organization;
-            if (!org) {
-                let message = `No organization exists with UUID: ${orgResponse.uuid}`;
-                if (munge) {
-                    this.logger.warn(message + " ... creating it (part of MUNGE).");
-                    org = new Organization(`Munged org for ${user.email}`);
-                    org._id = orgResponse.uuid;
-                    await this.saveOrganization(org);
-                } else {
-                    throw new Error(message);
-                }
-            }
-
-            // Make sure the user points at this org.
-            if (!localPerson.organization) {
-                this.logger.info(`Logged in person has no organization. Assigning: ${org.name}`);
-                localPerson.organization = org;
-            } else {
-                if (localPerson.organization.uuid != org.uuid) {
-                    this.logger.info(`Logged in person has association to wrong org. Assigning to ${org.name}`);
-                    localPerson.organization = org;
-                }
-            }
-            this.logger.info(`Person ${localPerson} with org: ${org}`);
-            return org as Organization;
-        }
-    }
-
-    private async createNewOrganizationInPouch(name: string): Promise<Organization> {
-        // Create this here in Pouch.
-        let org = new Organization(name);
-        return await this.db.async_store_or_update_object(org) as Organization;
-    }
+    // private async createNewOrganizationInPouch(name: string): Promise<Organization> {
+    //     // Create this here in Pouch.
+    //     let org = new Organization(name);
+    //     return await this.db.async_store_or_update_object(org) as Organization;
+    // }
 
     async saveOrganization(organization: Organization): Promise<Organization> {
-        return await this.db.async_store_or_update_object(organization) as Organization;
+        // TODO: Also update the Django server
+        return await this._db.async_store_or_update_object(organization) as Organization;
     }
 
     async savePerson(person: Person): Promise<Person> {
-        return await this.db.async_store_or_update_object(person) as Person;
+        // TODO: Also update the Django server
+        return await this._db.async_store_or_update_object(person) as Person;
     }
 
     async db_findPersonByEmail(email: string): Promise<Person> {
+        if (!this._db) {
+            throw new Error(`cannot search for person by email ${email}, no DB`);
+        }
         let query = {selector: {type: 'Person', email: email}};
-        let all_objects_of_type = await this.db.findBySelector<Person>(query, true);
+        let all_objects_of_type = await this._db.findBySelector<Person>(query, true);
         if (all_objects_of_type && all_objects_of_type.length > 0) {
             return all_objects_of_type[0];
         }
         return null;
     }
 
-    async db_findByUUID<T extends ObjectWithUUID>(uuid: string): Promise<T> {
-        return await this.db.async_load_object_with_id(uuid) as T;
+    async db_findByUUID<T extends ObjectWithUUID>(uuid: string, useCache: boolean = true): Promise<T> {
+        return await this._db.async_load_object_with_id(uuid, useCache) as T;
     }
 
     private async asyncLoadState(): Promise<object> {
@@ -295,15 +317,15 @@ class SchedulerServer implements ILifecycle {
         await this.storage.set(STATE_ROOT, this._state);
     }
 
-    protected waitForDB() {
-        this.asyncLoadState().then(() => {
-            this.db.readyEvent.subscribe(isReady => {
-                if (isReady) {
-                    this.readyEvent.next(true);
-                }
-            });
-        });
-    }
+    // protected waitForDB() {
+    //     this.asyncLoadState().then(() => {
+    //         this._db.readyEvent.subscribe(isReady => {
+    //             if (isReady) {
+    //                 this.readyEvent.next(true);
+    //             }
+    //         });
+    //     });
+    // }
 
     /*
     Basic idea is that you do a this, optionally a login/create, then ALWAYS call this back.
@@ -331,34 +353,27 @@ class SchedulerServer implements ILifecycle {
             return false;
         }
 
-        // If no person UUID, loginUser() didn't do its job.
+        // If no lastOrganizationUUID UUID, loginUser() didn't do its job.
         // Login should validate token, check for Person object locally (direct DB access)
-        // and also set this.state.lastPersonUUID.
+        // and also set this.state.lastPersonUUID and this.state.lastOrganizationUUID
+        if (!this.state.lastOrganizationUUID) {
+            this.logger.debug(`lastOrganizationUUID nil, show login page`);
+            callback.showLoginPage(`lastOrganizationUUID is nil on server.state`);
+            return false;
+        }
         if (!this.state.lastPersonUUID) {
             this.logger.debug(`lastPersonUUID nil, show login page`);
             callback.showLoginPage(`lastPersonUUID is nil on server.state`);
             return false;
         }
 
-        this.logger.debug(`Looking up user with ID: ${this.state.lastPersonUUID}`);
-        let personObject = await this.db_findByUUID(this.state.lastPersonUUID);
-        if (personObject == null) {
-            callback.showError("E1334: Please try logging in again.");
-            return false;
-        }
-
-        // Place the logged in user (person) into UI State.
-        this.store.ui_store.setLoggedInPerson(personObject);
-
-        // Make the Organization available as well
-        // Buuut - the org is ON Person. Ref it from there.
-        // Don't stick anything here, find if it's broken and fix it in right place
-
-        // OK. We have everything. Can now ask the store to load it's data, and we're good.
-        await this.store.setupAfterUserLoggedIn();
+        // OK. At this stage we are good to have the DB come up against this
+        // organization (keyed off Person).
+        await this.setupDBFromState();
 
         return true;
     }
+
 
     async registerNewUser(name: string, email: string, pwd: string): Promise<Person> {
         let lr = await this.restAPI.registerNewUser(name, email, pwd);
@@ -366,6 +381,78 @@ class SchedulerServer implements ILifecycle {
             return Person.createFromUserRespose(lr.user);
         }
         return null;
+    }
+
+    setStore(store: RootStore) {
+        this.store = store;
+    }
+
+    async setDatabase(dbInstance: SchedulerDatabase) {
+        this.logger.info(`Setting db ${dbInstance} on self and sending to store`);
+        this._db = dbInstance;
+        await this.store.setDatabase(dbInstance);
+        this.dbSubject.next(this._db);
+    }
+
+    private async setupDBFromState() {
+        let organizationUUID = this.state.lastOrganizationUUID;
+        let personUUID = this.state.lastPersonUUID;
+        if (!organizationUUID) {
+            throw new Error(`Cannot setup DB undefined/null organization. organizationUUID is required`);
+        }
+        if (!personUUID) {
+            throw new Error(`Cannot setup DB undefined/null person. personUUID is required`);
+        }
+
+        this.logger.info('setupDBFromState', `Beginning DB setup for person:${personUUID} and org:${organizationUUID}`);
+        let name = Organization.dbNameFor(organizationUUID);
+        let newDb = new SchedulerDatabase(name, this.ormMapper);
+
+        // Clear logged in person and any other 'db dependent' state
+        // This should cause the various subjects on RootStore to fire, hopefully with nulls
+        this.logger.info('setupDBFromState', `Clearing state...`);
+        this.store.clearDependentState();
+
+        // Wait until the DB is ready and set it on the rootstore
+        this.logger.info('setupDBFromState', `Waiting for DB ready...`);
+        let dbReadyResult = await newDb.readyEvent.pipe(
+            take(1) // so that the BehaviorSubject returns us something
+        ).toPromise();
+        this.logger.info('setupDBFromState', `DB ready: ${dbReadyResult}`);
+        await this.setDatabase(newDb);
+
+        // load what we have (wait while this happens)
+        this.logger.info('setupDBFromState', `Loading from DB...`);
+        await this.store.loadDataFromStorage();
+
+        // Start replication
+        let couch = this.configurationService.getValue('server')['couch'];
+        newDb.startReplicationFor(couch, organizationUUID);
+
+        // Poll until we can find the person.
+        this.logger.info('setupDBFromState', `Waiting for replication to come up and give us ${personUUID}`);
+
+        await Observable.interval(1000)
+            .pipe(
+                flatMap(() => {
+                    return Observable.from(newDb.async_does_object_with_id_exist(personUUID));
+                }),
+                filter((v: boolean) => v),
+                take(1) // take the first successful, then terminate
+            ).toPromise();
+
+        this.logger.info('setupDBFromState', `Got it! Woot!`);
+
+        // We want that 'defaults' one to be alive so it triggers when we first load the state
+        // this.checkForDefaults();
+
+        // Make sure store logged in person is set
+        // Again, causing various subjects on RootStore to fire, getting new state & objects
+        let person = await newDb.async_load_object_with_id(personUUID) as Person;
+        if (!person) {
+            throw new Error(`Cannot find person with UUID ${personUUID}, setupDBFromState failed`);
+        }
+        this.store.ui_store.setLoggedInPerson(person);
     }
 }
 

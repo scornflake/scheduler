@@ -28,7 +28,6 @@ import {PageUtils} from "../pages/page-utils";
 import {DatabaseMaintPageModule} from "../pages/database-maint/database-maint.module";
 import {TabsPage} from "../pages/tabs/tabs";
 import {OrmMapper} from "../providers/mapping/orm-mapper";
-import {SchedulerDatabase} from "../providers/server/db";
 import {SchedulerServer} from "../providers/server/scheduler-server.service";
 import {setupOrmMapper} from "../providers/mapping/setup";
 import {CalendarModule} from "ionic3-calendar-en";
@@ -81,7 +80,6 @@ import {CalendarComponent} from "../components/calendar/calendar";
         SplashScreen,
         RootStore,
         SchedulerServer,
-        SchedulerDatabase,
         ConfigurationService,
         {provide: ErrorHandler, useClass: IonicErrorHandler},
         PageUtils,
