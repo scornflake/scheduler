@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, Input, OnDestroy, OnInit} from '@angular/core';
+import {AfterViewInit, ChangeDetectionStrategy, Component, Input, OnDestroy, OnInit} from '@angular/core';
 import {AlertController, IonicPage, NavController, NavParams} from 'ionic-angular';
 import {SchedulerDatabase} from "../../providers/server/db";
 import {RootStore} from "../../store/root";
@@ -14,7 +14,7 @@ import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {Subscription} from "rxjs/Subscription";
-import {computed, observable} from "mobx-angular";
+import {action, computed, observable} from "mobx-angular";
 import {runInAction} from "mobx";
 
 @IonicPage({
@@ -24,13 +24,15 @@ import {runInAction} from "mobx";
 @Component({
     selector: 'page-database-maint',
     templateUrl: 'database-maint.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DatabaseMaintPage implements OnDestroy {
     @observable databaseType: string = "";
 
     private logger: Logger;
-    private db: SchedulerDatabase;
     private dbSubscription: Subscription;
+
+    @observable private db: SchedulerDatabase;
 
     constructor(public navCtrl: NavController,
                 public alertCtrl: AlertController,
@@ -53,9 +55,9 @@ export class DatabaseMaintPage implements OnDestroy {
         this.pageUtils.runStartupLifecycle(this.navCtrl);
 
         this.dbSubscription = this.server.db$.subscribe(db => {
-            this.db = db;
-            if (db) {
-                runInAction(() => {
+            runInAction(() => {
+                this.db = db;
+                if (db) {
                     if (this.db.info.backend_adapter) {
                         let type = this.db.info.backend_adapter.toString();
                         if (this.db.info['sqlite_plugin']) {
@@ -65,14 +67,12 @@ export class DatabaseMaintPage implements OnDestroy {
                     } else {
                         this.databaseType = this.db.info['adapter'] || "Unknown";
                     }
-                });
-            } else {
-
-            }
+                }
+            });
         });
     }
 
-    get database_info() {
+    @computed get database_info() {
         let info = [];
         if (this.db) {
             if (this.db.info) {
@@ -136,7 +136,7 @@ export class DatabaseMaintPage implements OnDestroy {
         });
     }
 
-    get stats() {
+    @computed get stats() {
         let teams = this.store.teams;
         return [
             {label: 'Num orgs', value: this.store.organizations.length},
@@ -147,6 +147,7 @@ export class DatabaseMaintPage implements OnDestroy {
         ];
     }
 
+    @action
     async store_fake_data() {
         if (!this.db) {
             this.pageUtils.showError('cant, no db');

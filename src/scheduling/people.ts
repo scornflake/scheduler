@@ -8,7 +8,7 @@ import {ObjectValidation} from "./shared";
 import {ObjectUtils} from "../pages/page-utils";
 import {NamedObject, ObjectWithUUID} from "./base-types";
 import {Organization} from "./organization";
-import {action, computed, observable} from "mobx";
+import {action, computed, observable, runInAction} from "mobx";
 import {Logger} from "ionic-logging-service";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {Plan} from "./plan";
@@ -91,12 +91,12 @@ class Person extends NamedObject {
         return p;
     }
 
-    avail_every(a_number: number, unit: AvailabilityUnit): Person {
+    @action avail_every(a_number: number, unit: AvailabilityUnit): Person {
         this.availability = new Availability(a_number, unit);
         return this;
     }
 
-    get availability() {
+    @computed get availability() {
         return this._availability;
     }
 
@@ -106,20 +106,22 @@ class Person extends NamedObject {
             return;
         }
         // console.debug(`Setting availability for ${this.name} to ${new_value}`);
-        this._availability = new_value;
+        runInAction(() => {
+            this._availability = new_value;
+        })
     }
 
-    get initials() {
+    @computed get initials() {
         let words = this.name.split(" ");
         return words.map(w => w[0]).join(".")
     }
 
-    addUnavailable(d: Date, reason = null): Unavailability {
+    @action addUnavailable(d: Date, reason = null): Unavailability {
         let unavailability = new Unavailability(d, null, reason);
         return this._add_unavail(unavailability);
     }
 
-    addUnavailableRange(from: Date, to: Date, reason = null) {
+    @action addUnavailableRange(from: Date, to: Date, reason = null) {
         return this._add_unavail(new Unavailability(from, to, reason));
     }
 

@@ -6,7 +6,7 @@
 </ion-header>
 
 
-<ion-content padding>
+<ion-content padding *mobxAutorun>
     <button ion-button (tap)="store_fake_data()">Store Fake -> DB</button>
     <button ion-button color="danger" (tap)="delete_db()">Delete DB</button>
 

@@ -394,7 +394,7 @@ class SchedulerDatabase implements IObjectLoader {
         return object;
     }
 
-    storeInCache(object: ObjectWithUUID) {
+    @action storeInCache(object: ObjectWithUUID) {
         if (this._cache && object) {
             this._cache.saveInCache(object);
         }

@@ -1,8 +1,9 @@
-import {observable} from "mobx-angular";
+import {action, computed, observable} from "mobx-angular";
 import * as _ from 'lodash';
 import {isUndefined} from "util";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {ObjectWithUUID} from "../base-types";
+import {runInAction} from "mobx";
 
 
 /*
@@ -32,10 +33,12 @@ class GenericObjectStore<T extends ObjectWithUUID> {
     @observable items: Array<T>;
 
     constructor() {
-        this.items = [];
+        runInAction(() => {
+            this.items = [];
+        });
     }
 
-    addObjectToStore(instance: T, overwrite_existing = true): T {
+    @action addObjectToStore(instance: T, overwrite_existing = true): T {
         if (!instance) {
             throw new Error(`Cannot add 'null' to this list. We are: ${this.constructor.name}s`)
         }
@@ -51,24 +54,24 @@ class GenericObjectStore<T extends ObjectWithUUID> {
         return instance;
     }
 
-    add_objects_to_array(many_items: T[]) {
+    @action add_objects_to_array(many_items: T[]) {
         if (many_items) {
             this.items.push(...many_items);
         }
     }
 
-    removeObjectFromStore(instance: T) {
+    @action removeObjectFromStore(instance: T) {
         let index = this.findIndexOfObject(instance);
         if (index != -1) {
             this.items.splice(index, 1);
         }
     }
 
-    protected clear_all_objects_from_array() {
+    @action protected clear_all_objects_from_array() {
         this.items = []
     }
 
-    get length(): number {
+    @computed get length(): number {
         return this.items.length;
     }
 
@@ -88,7 +91,7 @@ class GenericObjectStore<T extends ObjectWithUUID> {
         return this.items.find(predicate);
     }
 
-    clear() {
+    @action clear() {
         this.items = [];
     }
 }

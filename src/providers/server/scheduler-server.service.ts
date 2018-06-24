@@ -22,6 +22,7 @@ import "rxjs/add/observable/interval";
 import {ObjectUtils} from "../../pages/page-utils";
 import {isUndefined} from "util";
 import {isDefined} from "ionic-angular/util/util";
+import {runInAction} from "mobx";
 
 const STATE_ROOT = 'state';
 
@@ -113,7 +114,7 @@ class SchedulerServer implements ILifecycle {
         this.logger.info(`User logged out, state saved.`);
     }
 
-    setLoginTokenFromUserResponse(good: boolean, user: UserResponse = null) {
+    @action setLoginTokenFromUserResponse(good: boolean, user: UserResponse = null) {
         let uiStore = this.store.ui_store;
 
         if (good) {
@@ -308,10 +309,14 @@ class SchedulerServer implements ILifecycle {
 
     private async asyncLoadState(): Promise<object> {
         if (this._state == null) {
-            this._state = await this.storage.get(STATE_ROOT) || {
+            let newState = await this.storage.get(STATE_ROOT) || {
                 lastPersonUUID: null,
                 loginToken: null,
             };
+
+            runInAction(() => {
+                this._state = newState;
+            });
             this.logger.debug(`Loading state... ${JSON.stringify(this._state)}`);
         }
         return this.state;
@@ -346,7 +351,7 @@ class SchedulerServer implements ILifecycle {
 
         // If the state is the same, do nothing. As nothing has changed.
         let areSet = isDefined(this._previousState) && isDefined(this._state);
-        if(areSet) {
+        if (areSet) {
             if (ObjectUtils.deep_equal(this._previousState, this._state)) {
                 this.logger.info('asyncRunStartupLifecycle', 'Ignored - the state hasnt changed');
                 return;
