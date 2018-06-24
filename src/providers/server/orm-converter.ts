@@ -205,7 +205,10 @@ class OrmConverter {
                 })
             }
         }
-        new_object.setIsNew(false);
+
+        if(new_object instanceof ObjectWithUUID) {
+            new_object.setIsNew(false);
+        }
         return new_object;
     }
 

@@ -60,7 +60,7 @@ export class PlansPage {
                         this.show_plan_detail(plan);
                     });
                 } catch(err) {
-                    this.pageUtils.show_error(err);
+                    this.pageUtils.showError(err);
                 }
             }
         });
@@ -104,7 +104,7 @@ export class PlansPage {
                             try {
                                 this.rootStore.plans.remove(plan);
                             } catch (ex) {
-                                this.pageUtils.show_error(ex);
+                                this.pageUtils.showError(ex);
                             }
                         });
                         return false;

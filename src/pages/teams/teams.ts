@@ -52,7 +52,7 @@ export class TeamsPage {
         try {
             this.rootStore.teams.remove(team);
         } catch (ex) {
-            this.pageUtils.show_error(ex);
+            this.pageUtils.showError(ex);
         }
     }
 }

@@ -47,7 +47,7 @@ export class PeoplePage {
         try {
             this.rootStore.people.remove(person);
         } catch (er) {
-            this.pageUtils.show_error(er);
+            this.pageUtils.showError(er);
         }
     }
 }

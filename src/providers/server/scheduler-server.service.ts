@@ -12,13 +12,16 @@ import {SchedulerDatabase} from "./db";
 import {ObjectWithUUID} from "../../scheduling/base-types";
 import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
-import {action, computed} from "mobx-angular";
+import {action, computed, observable} from "mobx-angular";
 import {Storage} from '@ionic/storage';
 import {OrmMapper} from "../mapping/orm-mapper";
-import {filter, flatMap, take} from "rxjs/operators";
+import {catchError, filter, flatMap, take, timeout} from "rxjs/operators";
 import {ConfigurationService} from "ionic-configuration-service";
 import "rxjs/add/observable/fromPromise";
 import "rxjs/add/observable/interval";
+import {ObjectUtils} from "../../pages/page-utils";
+import {isUndefined} from "util";
+import {isDefined} from "ionic-angular/util/util";
 
 const STATE_ROOT = 'state';
 
@@ -43,10 +46,9 @@ interface ILifecycle {
 
 @Injectable()
 class SchedulerServer implements ILifecycle {
-    readyEvent: Subject<boolean> = new BehaviorSubject(false);
-
     private logger: Logger;
-    private _state: IState;
+    @observable private _state: IState;
+    private _previousState: IState;
 
     private dbSubject: Subject<SchedulerDatabase>;
     private _db: SchedulerDatabase;
@@ -77,7 +79,7 @@ class SchedulerServer implements ILifecycle {
         return this._state;
     }
 
-    @computed get loggedIn(): boolean {
+    get loggedIn(): boolean {
         // atm: this is cleared if a validate login gets 'bad'
         // TODO: Adjust for true offline case.
         if (this.state) {
@@ -102,13 +104,13 @@ class SchedulerServer implements ILifecycle {
         return res;
     }
 
-    @action logout() {
+    @action
+    async asyncLogout() {
         this.state.lastOrganizationUUID = null;
         this.state.lastPersonUUID = null;
         this.state.loginToken = null;
-        this.asyncSaveState().then(() => {
-            this.logger.info(`User logged out, state saved.`);
-        });
+        await this.asyncSaveState();
+        this.logger.info(`User logged out, state saved.`);
     }
 
     setLoginTokenFromUserResponse(good: boolean, user: UserResponse = null) {
@@ -305,11 +307,13 @@ class SchedulerServer implements ILifecycle {
     }
 
     private async asyncLoadState(): Promise<object> {
-        this._state = await this.storage.get(STATE_ROOT) || {
-            lastPersonUUID: null,
-            loginToken: null,
-        };
-        this.logger.debug(`Loading state... ${JSON.stringify(this._state)}`);
+        if (this._state == null) {
+            this._state = await this.storage.get(STATE_ROOT) || {
+                lastPersonUUID: null,
+                loginToken: null,
+            };
+            this.logger.debug(`Loading state... ${JSON.stringify(this._state)}`);
+        }
         return this.state;
     }
 
@@ -337,18 +341,30 @@ class SchedulerServer implements ILifecycle {
         It is expected that if you have logged in in the past, the token is valid and
         the user should exist in the local DB (by uuid)
      */
-    async asyncRunStartupLifecycle(callback: ILifecycleCallback): Promise<boolean> {
+    async asyncRunStartupLifecycle(callback: ILifecycleCallback, timeout: number = Infinity): Promise<boolean> {
         await this.asyncLoadState();
 
+        // If the state is the same, do nothing. As nothing has changed.
+        let areSet = isDefined(this._previousState) && isDefined(this._state);
+        if(areSet) {
+            if (ObjectUtils.deep_equal(this._previousState, this._state)) {
+                this.logger.info('asyncRunStartupLifecycle', 'Ignored - the state hasnt changed');
+                return;
+            }
+        } else {
+            this.logger.warn(`One or the other of state isn't set. Running lifecycle.`);
+        }
+
+
         if (!this.state.loginToken) {
-            this.logger.debug(`Login token null, show login page`);
+            this.logger.debug('asyncRunStartupLifecycle', `Login token null, show login page`);
             callback.showLoginPage(`Login token null`);
             return false;
         }
 
         let vr = await this.validateLoginToken(this.state.loginToken);
         if (!vr.ok) {
-            this.logger.debug(`Login token invalid, show login page`);
+            this.logger.debug('asyncRunStartupLifecycle', `Login token invalid, show login page`);
             callback.showLoginPage(`Login token invalid: ${SafeJSON.stringify(vr)}`);
             return false;
         }
@@ -357,20 +373,26 @@ class SchedulerServer implements ILifecycle {
         // Login should validate token, check for Person object locally (direct DB access)
         // and also set this.state.lastPersonUUID and this.state.lastOrganizationUUID
         if (!this.state.lastOrganizationUUID) {
-            this.logger.debug(`lastOrganizationUUID nil, show login page`);
+            this.logger.debug('asyncRunStartupLifecycle', `lastOrganizationUUID nil, show login page`);
             callback.showLoginPage(`lastOrganizationUUID is nil on server.state`);
             return false;
         }
         if (!this.state.lastPersonUUID) {
-            this.logger.debug(`lastPersonUUID nil, show login page`);
+            this.logger.debug('asyncRunStartupLifecycle', `lastPersonUUID nil, show login page`);
             callback.showLoginPage(`lastPersonUUID is nil on server.state`);
             return false;
         }
 
         // OK. At this stage we are good to have the DB come up against this
         // organization (keyed off Person).
-        await this.setupDBFromState();
+        try {
+            await this.setupDBFromState(timeout);
+        } catch (err) {
+            callback.showError(err);
+            return false;
+        }
 
+        this._previousState = Object.assign({}, this._state);
         return true;
     }
 
@@ -388,13 +410,18 @@ class SchedulerServer implements ILifecycle {
     }
 
     async setDatabase(dbInstance: SchedulerDatabase) {
-        this.logger.info(`Setting db ${dbInstance} on self and sending to store`);
-        this._db = dbInstance;
-        await this.store.setDatabase(dbInstance);
-        this.dbSubject.next(this._db);
+        if (dbInstance != this._db) {
+            if (this.db) {
+                await this.db.asyncStopReplication();
+            }
+            this.logger.info(`Setting db ${dbInstance} on self and sending to store`);
+            this._db = dbInstance;
+            await this.store.setDatabase(dbInstance);
+            this.dbSubject.next(this._db);
+        }
     }
 
-    private async setupDBFromState() {
+    private async setupDBFromState(responseTimeout: number = Infinity) {
         let organizationUUID = this.state.lastOrganizationUUID;
         let personUUID = this.state.lastPersonUUID;
         if (!organizationUUID) {
@@ -419,6 +446,8 @@ class SchedulerServer implements ILifecycle {
             take(1) // so that the BehaviorSubject returns us something
         ).toPromise();
         this.logger.info('setupDBFromState', `DB ready: ${dbReadyResult}`);
+
+        // Set this DB on the RootStore
         await this.setDatabase(newDb);
 
         // load what we have (wait while this happens)
@@ -428,17 +457,30 @@ class SchedulerServer implements ILifecycle {
         // Start replication
         let couch = this.configurationService.getValue('server')['couch'];
         newDb.startReplicationFor(couch, organizationUUID);
+        let person = await this.asyncWaitForDBToContainPerson(personUUID, newDb, responseTimeout);
+        this.store.ui_store.setLoggedInPerson(person);
+    }
 
+    async asyncWaitForDBToContainPerson(personUUID, newDb, responseTimeout: number) {
         // Poll until we can find the person.
         this.logger.info('setupDBFromState', `Waiting for replication to come up and give us ${personUUID}`);
 
-        await Observable.interval(1000)
+        if (responseTimeout == Infinity) {
+            responseTimeout = 15000;
+        }
+
+        await Observable.timer(250, 500)
             .pipe(
                 flatMap(() => {
+                    this.logger.debug(`Seeing if person ${personUUID} exists...`);
                     return Observable.from(newDb.async_does_object_with_id_exist(personUUID));
                 }),
                 filter((v: boolean) => v),
-                take(1) // take the first successful, then terminate
+                timeout(responseTimeout),
+                take(1), // take the first successful, then terminate
+                catchError(err => {
+                    throw new Error(`E1334: didn't find person with ID ${personUUID} within ${responseTimeout / 1000}s))`)
+                })
             ).toPromise();
 
         this.logger.info('setupDBFromState', `Got it! Woot!`);
@@ -452,7 +494,7 @@ class SchedulerServer implements ILifecycle {
         if (!person) {
             throw new Error(`Cannot find person with UUID ${personUUID}, setupDBFromState failed`);
         }
-        this.store.ui_store.setLoggedInPerson(person);
+        return person;
     }
 }
 

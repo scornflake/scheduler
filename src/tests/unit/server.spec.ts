@@ -24,21 +24,16 @@ describe('scheduler server', () => {
 
     let userResponse: UserResponse;
 
-    // afterEach((done) => {
-    //     db.destroyDatabase().then(() => {
-    //         done();
-    //     });
-    // });
-
-    let createServerWithStorage = (storage): SchedulerServer => {
-        server = new SchedulerServer(store, restServer, storage, mapper);
+    let createServerWithStorage = (storage): Promise<SchedulerServer> => {
+        server = new SchedulerServer(store, restServer, storage, mapper, MockConfigurationService.ServiceForTests());
         store = new RootStore();
         server.setStore(store);
-        server.setDatabase(db);
 
-        // force the cache to be US not the DB
-        db.setCache(cache);
-        return server;
+        return server.setDatabase(db).then(() => {
+            // force the cache to be US not the DB
+            db.setCache(cache);
+            return server;
+        });
     };
 
     beforeEach((done) => {
@@ -67,8 +62,10 @@ describe('scheduler server', () => {
         SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, mapper).then(new_db => {
             db = new_db;
             restServer = instance(restMock);
-            server = createServerWithStorage(storageMock);
-            done();
+            createServerWithStorage(storageMock).then((svr) => {
+                server = svr;
+                done();
+            })
         });
     });
 
@@ -120,6 +117,12 @@ describe('scheduler server', () => {
             })
         });
 
+        afterEach((done) => {
+            db.destroyDatabase().then(() => {
+                done();
+            });
+        });
+
         it('if no saved state, direct to login page', function (done) {
             server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
                 expect(server.state).not.toBeNull();
@@ -142,11 +145,12 @@ describe('scheduler server', () => {
             let vr: ValidationResponse = {ok: false, detail: 'no way!', user: null};
             when(restMock.validateLoginToken(state.loginToken)).thenResolve(vr);
 
-            server = createServerWithStorage(storageMock);
-            server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
-                expect(showedLoginPage).toBeTruthy();
-                verify(restMock.validateLoginToken("12345")).called();
-                done();
+            createServerWithStorage(storageMock).then(server => {
+                server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
+                    expect(showedLoginPage).toBeTruthy();
+                    verify(restMock.validateLoginToken("12345")).called();
+                    done();
+                });
             });
         });
 
@@ -164,105 +168,88 @@ describe('scheduler server', () => {
             when(restMock.validateLoginToken(state.loginToken)).thenResolve(vr);
 
             storageMock = StorageMock.instance('state', state);
-            server = createServerWithStorage(storageMock);
+            createServerWithStorage(storageMock).then(server => {
 
-            server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
-                expect(showedLoginPage).toBeTruthy();
-                verify(restMock.validateLoginToken(state.loginToken)).called();
-                done();
+                server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
+                    expect(showedLoginPage).toBeTruthy();
+                    verify(restMock.validateLoginToken(state.loginToken)).called();
+                    done();
+                });
             });
         });
 
         it('should show error if the person from the person UUID cannot be found', function (done) {
             let personInDB = new Person("Hey its ME!");
             userResponse.uuid = personInDB.uuid;
+            userResponse.organization_uuid = "abcvdh";
             userResponse.logintoken = "12345";
 
             let state: IState = {
                 loginToken: userResponse.logintoken,
                 lastPersonUUID: personInDB.uuid,
-                lastOrganizationUUID: null
+                lastOrganizationUUID: "abcdefg"
             };
+
             expect(state.lastPersonUUID).not.toBeFalsy();
             storageMock = StorageMock.instance('state', state);
-            server = createServerWithStorage(storageMock);
+            createServerWithStorage(storageMock).then(server => {
+                // Intentionally do not store.
+                // This means we should get an error when it tries to lookup the object ID
 
-            // Intentionally do not store.
-            // This means we should get an error when it tries to lookup the object ID
+                let vr: ValidationResponse = {ok: true, detail: '', user: userResponse};
+                when(restMock.validateLoginToken(state.loginToken)).thenResolve(vr);
 
-            let vr: ValidationResponse = {ok: true, detail: '', user: userResponse};
-            when(restMock.validateLoginToken(state.loginToken)).thenResolve(vr);
-
-            server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
-                expect(showedLoginPage).toBeFalsy("should not show login page");
-                expect(lastShownError).toMatch(/1334/);
-                done();
+                server.asyncRunStartupLifecycle(lifecycleCallback, 1500).then(() => {
+                    expect(showedLoginPage).toBeFalsy("should not show login page");
+                    expect(lastShownError).toMatch(/1334/);
+                    server.db.destroyDatabase().then(() => {
+                        done();
+                    })
+                });
             });
+        }, 3000);
+
+        xit('should not run cycle twice, aka: able to detect that it is ok', function () {
+            // This is a bit of a fudge.
+            // We put the server into a state where it thinks it's logged in OK.
+            // We want to ensure that it's not actually going to reload/reassign the DB
+            // if the current user token remains valid.
+
+
         });
 
         it('should lookup the person from the DB if login token and person UUID are valid', function (done) {
             let personInDB = new Person("Hey its ME!");
             userResponse.uuid = personInDB.uuid;
+            userResponse.organization_uuid = "testing9876";
 
             let state: IState = {
                 loginToken: "12345",
                 lastPersonUUID: personInDB.uuid,
-                lastOrganizationUUID: null
+                lastOrganizationUUID: "testing9876"
             };
+
             let dbMock = mock(SchedulerDatabase);
 
             // mock out the db so we know for certain it's being called
             when(dbMock.setCache(anything()));
+
             // Intentional, so that the test STOPS here and doesn't run the rest
-            when(dbMock.async_load_object_with_id(userResponse.uuid)).thenResolve(null);
+            when(dbMock.async_does_object_with_id_exist(userResponse.uuid)).thenResolve(true);
+            when(dbMock.async_load_object_with_id(userResponse.uuid)).thenResolve(personInDB);
 
             let dbInstance = instance(dbMock);
-            storageMock = StorageMock.instance('state', state);
-            server = createServerWithStorage(storageMock);
-            server.setDatabase(dbInstance);
 
-            let vr: ValidationResponse = {ok: true, detail: '', user: userResponse};
-            when(restMock.validateLoginToken(state.loginToken)).thenResolve(vr);
-
-            server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
+            server.asyncWaitForDBToContainPerson(userResponse.uuid, dbInstance, 1500).then(p => {
+                verify(dbMock.async_does_object_with_id_exist(userResponse.uuid)).called();
                 verify(dbMock.async_load_object_with_id(userResponse.uuid)).called();
+                expect(p).toBe(personInDB);
                 done();
             });
-        });
+        }, 3000);
     });
 
     describe('loginUser tests', () => {
-        it('should create user in DB if they dont exist', (done) => {
-            // dbl check that the DB does not contain this user
-            server.db_findByUUID(userResponse.uuid).then(p => {
-                let actualTest = (done) => {
-                    let lr: LoginResponse = {ok: true, detail: null, user: userResponse};
-                    when(restMock.login(userResponse.email, "1234")).thenResolve(lr);
-                    server.loginUser(userResponse.email, "1234").then(() => {
-
-                        server.db_findByUUID(userResponse.uuid).then(p => {
-                            console.log(`Hopefully new p: ${p}`);
-                            expect(p).not.toBeNull();
-
-                            expect(server.state.loginToken).toEqual(userResponse.logintoken);
-                            expect(server.state.lastPersonUUID).toEqual(userResponse.uuid);
-
-                            done();
-                        });
-                    });
-                };
-
-                // couldn't get afterAll to destroy the db
-                if (p != null) {
-                    db.asyncDeleteObject(p).then(() => {
-                        actualTest(done);
-                    })
-                } else {
-                    actualTest(done);
-                }
-            });
-        });
-
         it('good login sets both login token, and person UUID', (done) => {
             userResponse.logintoken = "424345";
             userResponse.uuid = "AmazeBalls";

@@ -1,4 +1,4 @@
-import {APP_INITIALIZER, ErrorHandler, Injector, NgModule} from '@angular/core';
+import {APP_INITIALIZER, ApplicationRef, ComponentRef, ErrorHandler, Injector, NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
 import {IonicApp, IonicErrorHandler, IonicModule} from 'ionic-angular';
 import {MyApp} from './app.component';
@@ -91,6 +91,7 @@ import {CalendarComponent} from "../components/calendar/calendar";
 
 export class AppModule {
     static injector: Injector = null;
+    static rootInjector: Injector;
 
     constructor(injector: Injector) {
         AppModule.injector = injector;

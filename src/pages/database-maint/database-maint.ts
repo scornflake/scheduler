@@ -25,7 +25,7 @@ import {runInAction} from "mobx";
     selector: 'page-database-maint',
     templateUrl: 'database-maint.html',
 })
-export class DatabaseMaintPage implements OnDestroy, AfterViewInit {
+export class DatabaseMaintPage implements OnDestroy {
     @observable databaseType: string = "";
 
     private logger: Logger;
@@ -48,11 +48,10 @@ export class DatabaseMaintPage implements OnDestroy, AfterViewInit {
         }
     }
 
-    ngAfterViewInit() {
+    ngOnInit() {
         // If no DB, kick page utils?
-        if (!this.server.db) {
-            this.pageUtils.runStartupLifecycle(this.navCtrl);
-        }
+        this.pageUtils.runStartupLifecycle(this.navCtrl);
+
         this.dbSubscription = this.server.db$.subscribe(db => {
             this.db = db;
             if (db) {
@@ -73,7 +72,7 @@ export class DatabaseMaintPage implements OnDestroy, AfterViewInit {
         });
     }
 
-    @computed get database_info() {
+    get database_info() {
         let info = [];
         if (this.db) {
             if (this.db.info) {
@@ -150,7 +149,7 @@ export class DatabaseMaintPage implements OnDestroy, AfterViewInit {
 
     async store_fake_data() {
         if (!this.db) {
-            this.pageUtils.show_error('cant, no db');
+            this.pageUtils.showError('cant, no db');
         }
         // This gets us the people.
         // NOTE: This sets up default availability. No 'unavailable' tho.
@@ -216,9 +215,5 @@ export class DatabaseMaintPage implements OnDestroy, AfterViewInit {
         }
 
         return plan;
-    }
-
-    toggleGroup(label: any) {
-
     }
 }

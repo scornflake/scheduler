@@ -33,8 +33,8 @@ class PageUtils implements OnInit {
         return this.platform.width() <= 576;
     }
 
-    public show_error(message: string) {
-        this.show_alert(message, {cssClass: 'validation'}, false);
+    public showError(message: string, stayOpen: boolean = false) {
+        this.show_alert(message, {cssClass: 'validation'}, stayOpen);
     }
 
     show_message(message: string) {
@@ -47,17 +47,17 @@ class PageUtils implements OnInit {
         }
 
         let lifecycleCallback: ILifecycleCallback = {
-            showLoginPage: (reason:string) => {
+            showLoginPage: (reason: string) => {
                 this.logger.info(`show login page, because: ${reason}`);
                 navCtrl.push('login');
             },
-            showCreateOrInvitePage: (reason:string) => {
+            showCreateOrInvitePage: (reason: string) => {
                 // add args to tell it to switch to create mode
                 this.logger.info(`show create/invite page, because: ${reason}`);
                 navCtrl.push('login');
             },
             showError: (message) => {
-                this.show_error(message);
+                this.showError(message);
             }
         };
 

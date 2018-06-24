@@ -19,10 +19,10 @@
     </ion-list>
 
     <ion-list-header>Stats</ion-list-header>
-    <ion-list  *ngIf="this.store">
+    <ion-list *ngIf="this.store">
         <ion-item *ngFor="let i of stats">
-            <ion-label (tap)="toggleGroup(i.label)">{{i.label}}</ion-label>
-            <ion-label text-right (tap)="toggleGroup(i.label)">{{i.value}}</ion-label>
+            <ion-label>{{i.label}}</ion-label>
+            <ion-label text-right>{{i.value}}</ion-label>
         </ion-item>
     </ion-list>
 

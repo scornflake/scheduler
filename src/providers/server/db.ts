@@ -19,6 +19,7 @@ import {action} from "mobx-angular";
 import {Organization} from "../../scheduling/organization";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import Database = PouchDB.Database;
+import DatabaseConfiguration = PouchDB.Configuration.DatabaseConfiguration;
 
 // Put this back in when we move to v7 of Pouch.
 // import plugin from 'pouchdb-adapter-idb';
@@ -38,7 +39,9 @@ class SchedulerDatabase implements IObjectLoader {
     logger: Logger;
 
     private db: Database<{}>;
+
     private server_db: PouchDB.Database<{}>;
+    private server_sync: PouchDB.Replication.Sync<{}>;
 
     private current_indexes: PouchDB.Find.GetIndexesResponse<{}>;
     private dbName: string;
@@ -84,9 +87,9 @@ class SchedulerDatabase implements IObjectLoader {
         });
     }
 
-    valueOf() {
-        return `Name:${this.dbName}`;
-    }
+    // valueOf() {
+    //     return `Name:${this.dbName}`;
+    // }
 
     get name(): string {
         return this.dbName;
@@ -100,13 +103,22 @@ class SchedulerDatabase implements IObjectLoader {
         return this._converter;
     }
 
+    get couchOptions(): DatabaseConfiguration {
+        return {
+            auth: {
+                username: "scheduler",
+                password: "1234"
+            }
+        };
+    }
+
     async initialize() {
         // Put this back in when we move to v7 of Pouch.
         // let options = {adapter: 'idb'};
         // PouchDB.plugin(plugin);
         let options = {};
         this.logger.info('initialize', `Creating new DB instance: ${this.dbName} ...`);
-        this.db = await new PouchDB(this.dbName, options);
+        this.db = await new PouchDB(this.dbName, this.couchOptions);
 
         this.logger.debug("Getting DB information");
         this.info = await this.db.info();
@@ -133,6 +145,8 @@ class SchedulerDatabase implements IObjectLoader {
     async destroyDatabase() {
         this.tracker.clearAll();
 
+        await this.asyncStopReplication(true);
+
         // let allDocIds = await this.db.allDocs({include_docs: false});
         // let idsWithDeleted = allDocIds.rows.map(doc => {
         //     return {"_id": doc.id, "_deleted": "true"}
@@ -141,7 +155,6 @@ class SchedulerDatabase implements IObjectLoader {
         // await this.db.compact({});
 
         await this.db.destroy();
-        await this.initialize();
     }
 
     private index_exists(name: string): boolean {
@@ -324,7 +337,7 @@ class SchedulerDatabase implements IObjectLoader {
                     this.storeInCache(new_object);
                 }
             } catch (err) {
-                this.logger.error(`ERROR create JS from dict, doc ID: ${docId}, ${err}`);
+                this.logger.error(`ERROR creating JS from dict, doc ID: ${docId}, ${err}`);
                 this.logger.error(`DOC was: ${SafeJSON.stringify(doc)}`);
             }
         }
@@ -418,6 +431,21 @@ class SchedulerDatabase implements IObjectLoader {
         return null;
     }
 
+    async asyncStopReplication(destroy: boolean = false) {
+        if (this.server_sync) {
+            this.server_sync.cancel();
+            this.server_sync = null;
+        }
+        if (this.server_db) {
+            if (destroy) {
+                await this.server_db.destroy();
+            } else {
+                await this. server_db.close();
+            }
+            this.server_db = null;
+        }
+    }
+
     startReplicationFor(serverUrl: string, organizationUUID: string) {
         if (!organizationUUID || !serverUrl) {
             throw new Error(`Cannot start replication: serverUrl/organization not provided`);
@@ -438,8 +466,8 @@ class SchedulerDatabase implements IObjectLoader {
             this.logger.warn(`Replication already started, ignored`);
         }
 
-        this.server_db = new PouchDB(`${serverUrl}/${remoteDBName}`);
-        this.db.sync(this.server_db, {live: true, retry: true})
+        this.server_db = new PouchDB(`${serverUrl}/${remoteDBName}`, this.couchOptions);
+        this.server_sync = this.db.sync(this.server_db, {live: true, retry: true})
             .on('change', (change) => {
                 if (change.direction == 'pull') {
                     this.logger.info(`Processing incomming change: ${JSON.stringify(change)}`);

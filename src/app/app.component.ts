@@ -3,7 +3,6 @@ import {MenuController, Nav, Platform} from 'ionic-angular';
 import {StatusBar} from '@ionic-native/status-bar';
 import {SplashScreen} from '@ionic-native/splash-screen';
 import {HomePage} from "../pages/home/home";
-import {RootStore} from "../store/root";
 import {SchedulerServer} from "../providers/server/scheduler-server.service";
 import {computed} from "mobx-angular";
 
@@ -28,8 +27,12 @@ export class MyApp {
         });
     }
 
+    ngOnInit() {
+    }
+
     loggedIn() {
         if (this.server) {
+            console.log(`logged in?`);
             return this.server.loggedIn;
         }
         return false;
@@ -37,7 +40,8 @@ export class MyApp {
 
     isEnabled(pageOrGroup): boolean {
         if (pageOrGroup) {
-            if (pageOrGroup.hasOwnProperty('enabled')) {
+            console.log(`enabled: ${pageOrGroup}`);
+            if (pageOrGroup['enabled']) {
                 return pageOrGroup['enabled']();
             }
         }
@@ -46,7 +50,7 @@ export class MyApp {
 
     isVisible(pageOrGroup): boolean {
         if (pageOrGroup) {
-            if (pageOrGroup.hasOwnProperty('visible')) {
+            if (pageOrGroup['visible']) {
                 return pageOrGroup['visible']();
             }
         }
@@ -54,19 +58,20 @@ export class MyApp {
     }
 
     get groups() {
+        console.log(`groups`);
         return [
             {
                 title: "", items: [
                     {title: "Dashboard", page: 'home'},
-                    {title: "Profile", page: 'page-profile', enabled: this.loggedIn},
+                    {title: "Profile", page: 'page-profile', enabled: () => this.loggedIn()},
                     {title: "About", page: 'page-about'},
                 ]
             },
             {
                 title: "Admin", items: [
-                    {title: "People", page: 'page-people', enabled: this.loggedIn},
-                    {title: "Teams", page: 'page-teams', enabled: this.loggedIn},
-                    {title: "Plans", page: 'page-plans', enabled: this.loggedIn},
+                    {title: "People", page: 'page-people', enabled: () => this.loggedIn()},
+                    {title: "Teams", page: 'page-teams', enabled: () => this.loggedIn()},
+                    {title: "Plans", page: 'page-plans', enabled: () => this.loggedIn()},
                 ]
             },
             {
@@ -75,13 +80,14 @@ export class MyApp {
                 ]
             },
             {
-                title: "", visible: this.loggedIn, items: [
+                title: "", visible: () => this.loggedIn(), items: [
                     {
                         title: "Logout", exec: () => {
-                            this.server.logout();
-                            this.nav.popToRoot();
+                            this.server.asyncLogout().then(() => {
+                                this.nav.popToRoot();
+                            });
                         },
-                        enabled: this.loggedIn
+                        enabled: () => this.loggedIn()
                     }
                 ]
             },

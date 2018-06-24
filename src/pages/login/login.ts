@@ -7,11 +7,15 @@ import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {PageUtils} from "../page-utils";
 import {action, observable} from "mobx-angular";
 import {isUndefined} from "util";
-import {debounceTime, flatMap, map} from "rxjs/operators";
+import {catchError, debounceTime, filter, flatMap, map, take, timeout} from "rxjs/operators";
 import {Observable} from "rxjs/Observable";
 import {Subscription} from "rxjs/Subscription";
 import {ServerError} from "../../common/interfaces";
+import {of} from "rxjs/observable/of";
+import {from} from "rxjs/observable/from";
+import {forkJoin} from "rxjs/observable/forkJoin";
 import "rxjs/add/observable/timer";
+import {Organization} from "../../scheduling/organization";
 
 enum LoginPageMode {
     LoginOrCreate = 0,
@@ -66,7 +70,7 @@ class LoginPage implements AfterViewInit {
 
                 // do a login for this user
                 this.server.loginUser(this.registrationEmail, this.registrationPassword).then(lr => {
-                    if(lr.ok) {
+                    if (lr.ok) {
                         this.switchToReplication();
                         // this.register();
                     } else {
@@ -270,40 +274,55 @@ class LoginPage implements AfterViewInit {
 
         this.pageUtils.runStartupLifecycle(this.nav);
 
-        this.confirmationListener = Observable.timer(1000, 1000);
         console.log(`checking local DB for what we need ...`);
-        this.confirmationSubscription = this.confirmationListener.subscribe(() => {
-            if(!this.server.db) {
-                this.logger.warn(`No DB to use... waiting`);
-                return;
-            }
-            this.server.db_findPersonByEmail(this.registrationEmail).then(person => {
-                // This is done by our ORM. So it might have org from cache.
-                // Double check by going to the DB
-                if (!person) {
-                    this.logger.info(`waiting for person with email: ${this.registrationEmail}`);
-                    return;
-                }
 
-                if (!person.organization) {
-                    this.logger.info(`waiting for person to have an organization`);
-                    return;
-                }
-
-                if (!person.organization.uuid) {
-                    this.logger.info(`waiting for person to have an organization WITH a UUID`);
-                    return;
-                }
-
-                this.server.db_findByUUID(person.organization.uuid, false).then(org => {
-                    if (org) {
-                        // seems ok to me!
-                        this.logger.info(`Found person and organization in DB. Great!`);
-                        this.switchToReadyToUse();
+        let checker = Observable.timer(1000, 1000)
+            .pipe(
+                map(() => this.server.db),
+                filter(db => db != null),
+                flatMap(() => {
+                    this.logger.info(`looking up ${this.registrationEmail}...`);
+                    return this.server.db_findPersonByEmail(this.registrationEmail)
+                }),
+                filter(person => {
+                    if (!person) {
+                        this.logger.info(`waiting for person with email: ${this.registrationEmail}`);
+                        return false;
                     }
-                });
-            });
-        });
+
+                    if (!person.organization) {
+                        this.logger.info(`waiting for person to have an organization`);
+                        return false;
+                    }
+
+                    if (!person.organization.uuid) {
+                        this.logger.info(`waiting for person to have an organization WITH a UUID`);
+                        return false;
+                    }
+                    return true;
+                }),
+                flatMap(person => this.server.db_findByUUID(person.organization.uuid)),
+                filter(org => org != null),
+                timeout(10000),
+                take(1),
+                catchError(err => {
+                    throw new Error(`Could not find ${this.registrationEmail} within 10s`);
+                })
+            );
+
+        this.confirmationSubscription = checker.subscribe(
+            (org: Organization) => {
+                this.logger.debug(`I have got a person, and org! ${org.name}`)
+            },
+            err => {
+                this.pageUtils.showError(err, true);
+                this.confirmationSubscription.unsubscribe();
+                this.popBackHome();
+            },
+            () => {
+                this.switchToReadyToUse();
+            }
+        );
     }
 
     private switchToReadyToUse() {
@@ -312,10 +331,12 @@ class LoginPage implements AfterViewInit {
     }
 
     private stopListeningForConfirmation() {
-        if(this.confirmationSubscription) {
+        if (this.confirmationSubscription) {
             this.confirmationSubscription.unsubscribe();
-            this.confirmationListener = null;
+            this.confirmationSubscription = null;
         }
+
+        this.confirmationListener = null;
     }
 
     popBackHome() {

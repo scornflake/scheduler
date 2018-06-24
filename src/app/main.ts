@@ -2,6 +2,7 @@ import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 
 import { AppModule } from './app.module';
 import {spy} from "mobx";
+import {ApplicationRef} from "@angular/core";
 
 spy((event) => {
     if (event.type === 'action') {
@@ -11,4 +12,6 @@ spy((event) => {
     }
 });
 
-platformBrowserDynamic().bootstrapModule(AppModule);
+platformBrowserDynamic().bootstrapModule(AppModule).then(module => {
+    AppModule.rootInjector = module.injector;
+});

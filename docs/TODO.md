@@ -1,6 +1,7 @@
 TODO:
 -----
 - Migrate SavedState to Person (done)
+- Find reason for performance barfness
 - Get sign in / reg lifecycle going
 - Sync
   - Make sure if email is changed on client, its synced to the server at some point
@@ -8,11 +9,13 @@ TODO:
 - Two clients (safari/chrome):
   - Starts going into endless update loop. Going to have to make writes much smarter. It *looks* like the change detector is seeing a change to 'rev' on SavedState
 - Rules dont appear to be persisted (see AddPeopleToPlanWithRoles for neil)
+- DB isn't showing an up to date version of info. Should reload this on page reload?
+- If User is activated, but I deleted the Org, validation/login still seems to return OK (and the client then goes into an endless loop)
 - Make it so scheduler tells you if a required role isn't filled
 - Regenerate the schedule on change of:
   - unavailability
   - availability
-  - schedule start/end dates
+  - schedule start/end datesf
   - adding / removing people
   - role weightings
   - changing rules

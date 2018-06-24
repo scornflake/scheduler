@@ -55,6 +55,9 @@ class MockConfigurationService extends ConfigurationService {
             "database": {
                 "name": "tests"
             },
+            "server": {
+                "couch": "http://localhost:5984"
+            },
             "logging": {
                 "logLevels": [
                     {
