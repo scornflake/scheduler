@@ -1,10 +1,11 @@
 import {ScheduleAtDate} from "../../scheduling/shared";
 import {Person} from "../../scheduling/people";
-import {defaultBass, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
+import {defaultBass, defaultKeysRole, defaultLeaderRole, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
 import {constructSensibleDate} from "../../scheduling/common/date-utils";
 import {Plan} from "../../scheduling/plan";
 import {Team} from "../../scheduling/teams";
 import {SafeJSON} from "../../common/json/safe-stringify";
+import {Role} from "../../scheduling/role";
 
 describe('schedule', () => {
     beforeEach(() => {
@@ -21,29 +22,67 @@ describe('schedule', () => {
         expect(defaultSoundRole).not.toBeNull("are roles setup?")
     });
 
-    it('can return people in a role', () => {
-        let neil = new Person("neil");
-        let daniel = new Person("daniel");
+    describe('with people', () => {
+        let neil;
+        let daniel;
 
-        let sd = new ScheduleAtDate(new Date(2000, 0, 0));
-        let team = new Team("Scud Missile");
-        team.add(neil);
-        team.add(daniel);
-        let plan = new Plan("test", team);
+        let sd;
+        let team;
+        let plan;
 
-        let neil_assignment = plan.assignmentFor(neil);
-        let daniel_assignment = plan.assignmentFor(daniel);
+        beforeEach(() => {
+            neil = new Person("neil");
+            daniel = new Person("daniel");
 
-        /*
-        intentionally have not added roles to neil, daniel at the Service level.
-        shouldn't be required for this test
-         */
+            sd = new ScheduleAtDate(new Date(2000, 0, 0));
+            team = new Team("Scud Missile");
+            team.add(neil);
+            team.add(daniel);
+            plan = new Plan("test", team);
+        });
 
-        sd.add_person(neil_assignment, defaultSoundRole);
-        expect(sd.people_in_role(defaultSoundRole)).toEqual([neil]);
+        it('can return people in a role', () => {
+            /*
+            intentionally have not added roles to neil, daniel at the Service level.
+            shouldn't be required for this test
+             */
 
-        sd.add_person(daniel_assignment, defaultBass);
-        expect(sd.people_in_role(defaultBass)).toEqual([daniel]);
+            let neil_assignment = plan.assignmentFor(neil);
+            let daniel_assignment = plan.assignmentFor(daniel);
+            sd.add_person(neil_assignment, defaultSoundRole);
+            expect(sd.people_in_role(defaultSoundRole)).toEqual([neil]);
+
+            sd.add_person(daniel_assignment, defaultBass);
+            expect(sd.people_in_role(defaultBass)).toEqual([daniel]);
+        });
+
+        it('can sort people by role layout priority', () => {
+            plan.addRole(defaultLeaderRole).layout_priority = 10;
+            plan.addRole(defaultKeysRole).layout_priority = 5;
+            let gopher = plan.addRole(new Role("Gopher"));
+
+
+            let tim = team.add(new Person("Tim"));
+            let janice = team.add(new Person("Janice"));
+
+            // Tim = Keys
+            let a2 = plan.assignmentFor(tim).addRole(defaultKeysRole);
+
+            // Janice = Gopher
+            let a3 = plan.assignmentFor(janice).addRole(gopher);
+
+            // Neil = Gopher + Leader
+            let neil_assignment = plan.assignmentFor(neil).addRole(gopher).addRole(defaultLeaderRole);
+            sd.add_person(neil_assignment, defaultSoundRole);
+
+            // Expect Neil, Tim, Janice
+            let ordered = sd.people_sorted_by_role_priority;
+            console.log(`We have: ${SafeJSON.stringify(ordered.map(p => p.name))}`);
+            expect(ordered[0]).toEqual(neil_assignment.person);
+            expect(ordered[1]).toEqual(a2.person);
+            expect(ordered[2]).toEqual(a3.person);
+        });
     });
+
 
 });

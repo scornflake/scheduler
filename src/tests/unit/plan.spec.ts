@@ -47,33 +47,6 @@ describe('service', () => {
         // We don't test that the condition has actions, or that they fire
     });
 
-    it('can sort people by role layout priority', () => {
-        // people are in roles. Get a list of people based on their max role layout priority
-        let leader = plan.addRole(defaultLeaderRole);
-        leader.layout_priority = 10;
-        let keys = plan.addRole(defaultKeysRole);
-        keys.layout_priority = 5;
-        let gopher = plan.addRole(new Role("Gopher"));
-
-        let tim = team.add(new Person("Tim"));
-        let janice = team.add(new Person("Janice"));
-
-        // Tim = Keys
-        let p2 = plan.assignmentFor(tim).addRole(keys);
-
-        // Janice = Gopher
-        let p3 = plan.assignmentFor(janice).addRole(gopher);
-
-        // Neil = Gopher + Leader
-        let neil_assignment = plan.assignmentFor(neil).addRole(gopher).addRole(leader);
-
-        // // Expect Neil, Tim, Janice
-        // let ordered = service.people();
-        // expect(ordered[0]).toEqual(p1.person);
-        // expect(ordered[1]).toEqual(p2.person);
-        // expect(ordered[2]).toEqual(p3.person);
-    });
-
     it('can return roles sorted by layout order', () => {
         let sr2 = plan.addRole(defaultSaxRole);
         let sr1 = plan.addRole(defaultLeaderRole);

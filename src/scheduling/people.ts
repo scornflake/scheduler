@@ -30,8 +30,7 @@ class Preferences extends ObjectWithUUID {
         this.logger = LoggingWrapper.getLogger('model.preferences');
     }
 
-    @computed
-    get have_previous_selection(): boolean {
+    @computed get have_previous_selection(): boolean {
         return this.previous_sheet_id != null && this.previous_sheet_tab_id != 0;
     }
 
@@ -81,11 +80,12 @@ class Person extends NamedObject {
         this.availability = new Availability();
     }
 
-    @action static createFromUserRespose(lr: UserResponse) {
+    @action
+    static createFromUserRespose(lr: UserResponse) {
         let p = new Person();
         let name_parts = [];
-        if(lr.first_name) name_parts.push(lr.first_name);
-        if(lr.last_name) name_parts.push(lr.last_name);
+        if (lr.first_name) name_parts.push(lr.first_name);
+        if (lr.last_name) name_parts.push(lr.last_name);
         p.name = name_parts.join(" ");
         p.email = lr.email;
         return p;
@@ -133,7 +133,7 @@ class Person extends NamedObject {
         return new_unavail;
     }
 
-    removeUnavailable(u: Unavailability) {
+    @action removeUnavailable(u: Unavailability) {
         let idex = this.unavailable.indexOf(u);
         if (idex != -1) {
             this.unavailable.splice(idex, 1);
@@ -159,7 +159,7 @@ class Person extends NamedObject {
         return false;
     }
 
-    get unavailable_by_date(): Array<Unavailability> {
+    @computed get unavailable_by_date(): Array<Unavailability> {
         return _.sortBy(this.unavailable, u => u.fromDate);
     }
 

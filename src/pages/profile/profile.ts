@@ -24,6 +24,7 @@ export class ProfilePage {
         // this.store.loggedInPerson$.subscribe(p => {
         //     console.warn(`ProfilePage sees: ${SafeJSON.stringify(p)}`)
         // })
+        this.pageUtils.runStartupLifecycle(this.navCtrl);
     }
 
 }
