@@ -31,7 +31,7 @@ import {OrmMapper} from "../providers/mapping/orm-mapper";
 import {SchedulerServer} from "../providers/server/scheduler-server.service";
 import {setupOrmMapper} from "../providers/mapping/setup";
 import {CalendarModule} from "ionic3-calendar-en";
-import {CalendarComponent} from "../components/calendar/calendar";
+import {CalendarComponent} from "../components/swbcalendar/swbcalendar";
 import {MobxAngularModule} from "mobx-angular";
 import {ResponsiveConfig, ResponsiveModule} from "ng2-responsive";
 

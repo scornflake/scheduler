@@ -18,6 +18,13 @@ schedule-viewer {
     box-shadow: none;
   }
 
+  .smallDate {
+    border-bottom: 1px solid #eee !important;
+    padding-bottom: 10px;
+    //margin-bottom: 10px;
+    margin-top: 8px;
+  }
+
   .horizSchedule {
 
     .horizScheduleHeading {

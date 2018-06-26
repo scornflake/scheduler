@@ -2,7 +2,6 @@ import {Component} from '@angular/core';
 import {IonicPage, NavController, NavParams} from 'ionic-angular';
 import {RootStore} from "../../store/root";
 import {PageUtils} from "../page-utils";
-import {SafeJSON} from "../../common/json/safe-stringify";
 
 @IonicPage({
     name: 'page-profile',

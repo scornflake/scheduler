@@ -1,8 +1,7 @@
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
 
-import { AppModule } from './app.module';
+import {AppModule} from './app.module';
 import {spy} from "mobx";
-import {ApplicationRef} from "@angular/core";
 
 spy((event) => {
     if (event.type === 'action') {

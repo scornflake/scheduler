@@ -1,8 +1,6 @@
 TODO:
 -----
-- Get sign in / reg lifecycle going
-  - availability not bound on reload?
-  - scheduled on not bound on reload? or at all?
+- Get sign in / reg lifecycle going (done?)
 - Sync
   - Make sure if email is changed on client, its synced to the server at some point
   - Make sure if org name is changed on client, its synced to the server at some point

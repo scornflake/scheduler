@@ -22,7 +22,9 @@
 <ng-template #colMode no-padding>
     <div class="horizSchedule">
         <!-- shows only when in small mode -->
-        <plan-date-range [plan]="store.selectedPlan$|async"></plan-date-range>
+        <div *sm>
+            <div *ngIf="store.selectedPlan$|async as plan" text-center class="smallDate">{{plan.start_date|date:'MMMM d'}} - {{plan.end_date|date:'MMMM d'}}</div>
+        </div>
 
         <ion-grid class="horizScheduleHeading" no-padding>
             <ion-row align-items-center>

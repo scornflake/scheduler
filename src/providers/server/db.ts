@@ -77,6 +77,16 @@ class SchedulerDatabase implements IObjectLoader {
         changes.subscribe(this.trackerNotification.bind(this));
     }
 
+    get changes$(): Subject<ObjectChange> {
+        if(!this.tracker) {
+            throw new Error(`cant get changes$, there's no tracker`);
+        }
+        if(!this.tracker.changes) {
+            throw new Error(`cant get changes$, there's no changes subject on the tracker`);
+        }
+        return this.tracker.changes;
+    }
+
     static ConstructAndWait(dbName: string, mapper: OrmMapper): Promise<SchedulerDatabase> {
         return new Promise<SchedulerDatabase>((resolve) => {
             let instance = new SchedulerDatabase(dbName, mapper);
@@ -440,7 +450,7 @@ class SchedulerDatabase implements IObjectLoader {
             if (destroy) {
                 await this.server_db.destroy();
             } else {
-                await this. server_db.close();
+                await this.server_db.close();
             }
             this.server_db = null;
         }

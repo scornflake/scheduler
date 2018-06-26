@@ -36,7 +36,7 @@ export class PeoplePage {
         // this.show_person_detail(this.rootStore.people_store.find_person_with_name("Stuart Campbell"));
     }
 
-    private add_person(new_person: Person) {
+    add_person(new_person: Person) {
         this.rootStore.people.add(new_person);
         this.rootStore.asyncSaveOrUpdateDb(new_person).then(() => {
             console.log("Added to DB");

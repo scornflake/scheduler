@@ -3,7 +3,6 @@ import {AlertController, IonicPage, NavController, NavParams} from 'ionic-angula
 import {Plan} from "../../scheduling/plan";
 import {dateForISODateString} from "../../scheduling/common/date-utils";
 import {Person} from "../../scheduling/people";
-import {ObjectValidation} from "../../scheduling/shared";
 import {PageUtils} from "../page-utils";
 import {NamedObject} from "../../scheduling/base-types";
 
@@ -16,7 +15,7 @@ import {NamedObject} from "../../scheduling/base-types";
     templateUrl: 'plan-details.html',
 })
 export class PlanDetailsPage {
-    private plan: Plan;
+    plan: Plan;
 
     constructor(public navCtrl: NavController,
                 public alertCtrl: AlertController,

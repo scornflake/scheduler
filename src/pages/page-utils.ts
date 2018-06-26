@@ -3,12 +3,11 @@ import {NavController, Platform, ToastController} from "ionic-angular";
 import {forwardRef, Inject, Injectable, Injector, OnInit} from "@angular/core";
 import deepEqual from "deep-equal";
 import {ToastOptions} from "ionic-angular/components/toast/toast-options";
-import {SafeJSON} from "../common/json/safe-stringify";
-import {ILifecycleCallback, SchedulerServer} from "../providers/server/scheduler-server.service";
+import {SchedulerServer} from "../providers/server/scheduler-server.service";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
-import {LoginCallback} from "../common/interfaces";
 import {IDependencyTree, IObserverTree} from "mobx";
+import {ILifecycleCallback} from "../providers/server/interfaces";
 
 
 @Injectable()

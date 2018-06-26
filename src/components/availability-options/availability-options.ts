@@ -1,12 +1,4 @@
-import {
-    ChangeDetectionStrategy,
-    ChangeDetectorRef,
-    Component,
-    EventEmitter,
-    Input,
-    OnInit,
-    Output
-} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../../scheduling/availability";
 import {clamp} from "ionic-angular/util/util";
 import {LoggingWrapper} from "../../common/logging-wrapper";
@@ -48,6 +40,7 @@ export class AvailabilityOptionsComponent implements OnInit {
                 if (this._availability.unit == AvailabilityUnit.AVAIL_ANYTIME) {
                     this.type = "anytime";
                 }
+                this.logger.warn(`Type (after set of avail) now: ${this.type}`);
                 let state = this.state;
                 state['days'] = this._availability.period.toString();
                 state['unit'] = this._availability.unit;
@@ -60,6 +53,7 @@ export class AvailabilityOptionsComponent implements OnInit {
 
     @action setType(type: string) {
         this.type = type;
+        this.build_availability();
     }
 
     @computed get state_key(): string {
@@ -129,12 +123,15 @@ export class AvailabilityOptionsComponent implements OnInit {
 
     build_availability() {
         let days_number: number = parseInt(this.state['days']) || 2;
+        this.logger.warn(`Type is ${this.type}`);
         if (this.type == "fraction") {
             // "this.unit" isn't used here
             let weeks_number: number = parseInt(this.state['weeks']) || 3;
             this.availability = new AvailabilityEveryNOfM(days_number, weeks_number)
         } else if (this.type == "regular") {
-            this.availability = new Availability(days_number, this.state['unit'])
+            let unit = this.state['unit'];
+            if (!unit) unit = AvailabilityUnit.EVERY_N_DAYS;
+            this.availability = new Availability(days_number, unit)
         } else {
             this.availability = new Availability();
         }

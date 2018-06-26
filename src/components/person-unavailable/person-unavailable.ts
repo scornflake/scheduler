@@ -5,7 +5,7 @@ import {Unavailability} from "../../scheduling/unavailability";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {PopoverController} from "ionic-angular";
-import {CalendarComponent} from "../calendar/calendar";
+import {CalendarComponent} from "../swbcalendar/swbcalendar";
 import {csd} from "../../scheduling/common/date-utils";
 
 @Component({

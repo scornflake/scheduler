@@ -13,7 +13,6 @@ import {PeopleComponent} from './people/people';
 import {SavingStateComponent} from './saving-state/saving-state';
 import {PersonScheduleComponent} from './person-schedule/person-schedule';
 import {PersonUnavailableComponent} from './person-unavailable/person-unavailable';
-import {PlanDateRangeComponent} from './plan-date-range/plan-date-range';
 import {OrganizationEditorComponent} from './organization-editor/organization-editor';
 import {MobxAngularModule} from "mobx-angular";
 import {IonSegmentHotfix} from "../common/directives";
@@ -33,7 +32,6 @@ import {ResponsiveModule} from "ng2-responsive";
         SavingStateComponent,
         PersonScheduleComponent,
         PersonUnavailableComponent,
-        PlanDateRangeComponent,
         OrganizationEditorComponent,
         IonSegmentHotfix,
     ],
@@ -56,7 +54,6 @@ import {ResponsiveModule} from "ng2-responsive";
         SavingStateComponent,
         PersonScheduleComponent,
         PersonUnavailableComponent,
-        PlanDateRangeComponent,
         OrganizationEditorComponent,
     ]
 })

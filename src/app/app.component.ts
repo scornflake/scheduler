@@ -4,7 +4,7 @@ import {StatusBar} from '@ionic-native/status-bar';
 import {SplashScreen} from '@ionic-native/splash-screen';
 import {HomePage} from "../pages/home/home";
 import {SchedulerServer} from "../providers/server/scheduler-server.service";
-import {computed, observable} from "mobx-angular";
+import {computed} from "mobx-angular";
 
 @Component({
     templateUrl: 'app.html',
@@ -34,7 +34,7 @@ export class MyApp {
         // this.groups = this.menuGroups;
     }
 
-    @computed get loggedIn() {
+    @computed get loggedIn(): boolean {
         if (this.server) {
             return this.server.loggedIn;
         }
@@ -62,7 +62,6 @@ export class MyApp {
     }
 
     @computed get groups() {
-        console.log(`groups`);
         return [
             {
                 title: "", items: [

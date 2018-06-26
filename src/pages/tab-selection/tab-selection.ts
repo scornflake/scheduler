@@ -12,12 +12,12 @@ import Sheet = gapi.client.sheets.Sheet;
 export class TabSelectionPage {
     loading: boolean = false;
 
+    title: string;
     sheets = [];
     sheet_id: string;
 
     private done: (ss: Spreadsheet, sheet: Sheet, error?) => void = null;
     private spreadsheet: gapi.client.sheets.Spreadsheet;
-    private title: string;
 
     constructor(public navCtrl: NavController,
                 public navParams: NavParams,

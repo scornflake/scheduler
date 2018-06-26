@@ -12,17 +12,18 @@ import {SchedulerDatabase} from "./db";
 import {ObjectWithUUID} from "../../scheduling/base-types";
 import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
-import {action, computed, observable} from "mobx-angular";
+import {action, observable} from "mobx-angular";
 import {Storage} from '@ionic/storage';
 import {OrmMapper} from "../mapping/orm-mapper";
-import {catchError, filter, flatMap, take, timeout} from "rxjs/operators";
+import {catchError, debounceTime, filter, flatMap, map, take, timeout} from "rxjs/operators";
 import {ConfigurationService} from "ionic-configuration-service";
 import "rxjs/add/observable/fromPromise";
 import "rxjs/add/observable/interval";
-import {ObjectUtils} from "../../pages/page-utils";
-import {isUndefined} from "util";
+import {ObjectUtils, PageUtils} from "../../pages/page-utils";
 import {isDefined} from "ionic-angular/util/util";
 import {runInAction} from "mobx";
+import {ILifecycle, ILifecycleCallback} from "./interfaces";
+import {Subscription} from "rxjs/Subscription";
 
 const STATE_ROOT = 'state';
 
@@ -30,18 +31,6 @@ interface IState {
     loginToken: string;
     lastPersonUUID: string;
     lastOrganizationUUID: string;
-}
-
-interface ILifecycleCallback {
-    showLoginPage(reason: string);
-
-    showCreateOrInvitePage(reason: string);
-
-    showError(message: string);
-}
-
-interface ILifecycle {
-    asyncRunStartupLifecycle(callback: ILifecycleCallback): Promise<boolean>;
 }
 
 
@@ -53,6 +42,7 @@ class SchedulerServer implements ILifecycle {
 
     private dbSubject: Subject<SchedulerDatabase>;
     private _db: SchedulerDatabase;
+    private dbChangeTrackingSubscription: Subscription;
 
     constructor(@Inject(forwardRef(() => RootStore)) private store,
                 private restAPI: RESTServer,
@@ -405,7 +395,7 @@ class SchedulerServer implements ILifecycle {
     async registerNewUser(name: string, email: string, pwd: string): Promise<Person> {
         let lr = await this.restAPI.registerNewUser(name, email, pwd);
         if (lr.ok) {
-            return Person.createFromUserRespose(lr.user);
+            return Person.createFromUserResponse(lr.user);
         }
         return null;
     }
@@ -419,9 +409,16 @@ class SchedulerServer implements ILifecycle {
             if (this.db) {
                 await this.db.asyncStopReplication();
             }
+
+            if (this.dbChangeTrackingSubscription) {
+                this.dbChangeTrackingSubscription.unsubscribe();
+                this.dbChangeTrackingSubscription = null;
+            }
+
             this.logger.info(`Setting db ${dbInstance} on self and sending to store`);
             this._db = dbInstance;
             await this.store.setDatabase(dbInstance);
+            this.trackChangesFromDBSoWeCanSyncToRESTServer();
             this.dbSubject.next(this._db);
         }
     }
@@ -501,12 +498,57 @@ class SchedulerServer implements ILifecycle {
         }
         return person;
     }
+
+    private trackChangesFromDBSoWeCanSyncToRESTServer() {
+        // if (this._db) {
+        //     this.dbChangeTrackingSubscription = this._db.changes$
+        //         .pipe(
+        //             // Lets look at only Organization/Person.name
+        //             filter(change => {
+        //                 let modelObject = change['owner'];
+        //                 if (modelObject) {
+        //                     let type = modelObject['type'];
+        //                     let propertyName = change['propertyName'];
+        //                     if (type == 'Person' || type == 'Organization') {
+        //                         if (propertyName == 'name') {
+        //                             // hey! we should update the server!
+        //                             return true;
+        //                         }
+        //                         // console.log(`I see a change to ${propertyName} on ${modelObject}`);
+        //                     }
+        //                 }
+        //                 return false;
+        //             }),
+        //             // output only the object fields
+        //             map(change => change['owner']),
+        //             debounceTime(1000)
+        //         ).subscribe(objectAsDict => {
+        //             let type = objectAsDict['type'];
+        //             if (type == 'Person') {
+        //                 let payload = {
+        //                     uuid: objectAsDict['_id'],
+        //                     email: objectAsDict['email']
+        //                 };
+        //                 payload = Object.assign(payload, this.restAPI.fullNameToFirstAndLast(objectAsDict['name']));
+        //                 this.restAPI.saveUser(payload).then(r => {
+        //                     this.logger.warn(`Updated person on server with: ${JSON.stringify(payload)}`);
+        //                 })
+        //             } else if (type == 'Organization') {
+        //                 let payload = {
+        //                     uuid: objectAsDict['_id'],
+        //                     name: objectAsDict['name']
+        //                 };
+        //                 this.restAPI.updateOrganization(payload).then(r => {
+        //                     this.logger.warn(`Updated org on server with: ${JSON.stringify(payload)}`);
+        //                 })
+        //             }
+        //         });
+        // }
+    }
 }
 
 export {
     SchedulerServer,
     IState,
-    ILifecycle,
-    ILifecycleCallback
 
 }

@@ -1,4 +1,4 @@
-import {ILifecycleCallback, IState, SchedulerServer} from "../../providers/server/scheduler-server.service";
+import {IState, SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {RootStore} from "../../store/root";
 import {anything, instance, mock, verify, when} from "ts-mockito";
 import {RESTServer} from "../../providers/server/server";
@@ -11,6 +11,7 @@ import {OrmMapper} from "../../providers/mapping/orm-mapper";
 import {IObjectCache, SimpleCache} from "../../providers/mapping/cache";
 import {LoginResponse, ServerError, UserResponse, ValidationResponse} from "../../common/interfaces";
 import {Person} from "../../scheduling/people";
+import {ILifecycleCallback} from "../../providers/server/interfaces";
 
 describe('scheduler server', () => {
     let server: SchedulerServer;

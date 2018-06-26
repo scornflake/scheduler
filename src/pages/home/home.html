@@ -21,59 +21,61 @@
 
 <ion-content>
     <div *ngIf="store.uiStore$|async as ui">
-        <div *ngIf="server.loggedIn; else notSignedIn">
-            <ion-grid>
-                <ion-item ion-row id="planselection" no-padding *ngIf="store.preferences$ | async as ss">
-                    <ion-label ion-col col-auto class="hidden-xs-down" padding-left>Showing Plan</ion-label>
-                    <ion-select
-                            ion-col col-sm text-center
-                            [ngModel]="ss.selected_plan_uuid"
-                            (ngModelChange)="ss.setSelectedPlanUUID($event)"
-                            placeholder="Plan"
-                    >
-                        <ion-option *ngFor="let p of plansByDateLatestFirst" value="{{p.uuid}}"
-                                    [selected]="ss.selected_plan_uuid == p.uuid">
-                            <div *ngIf="pageUtils.small; else tablets">
-                                {{p.name}}
-                            </div>
-                            <ng-template #tablets>
-                                {{p.name}}: {{p.start_date|date:'MMM d'}}-{{p.end_date|date:'MMM d'}}
-                            </ng-template>
-                        </ion-option>
-                    </ion-select>
-                    <button class="hidden-xs-down editButton" item-end ion-button (tap)="editPlan()">Edit</button>
-                </ion-item>
-            </ion-grid>
+        <div *ngIf="server">
+            <div *ngIf="server.loggedIn; else notSignedIn">
+                <ion-grid>
+                    <ion-item ion-row id="planselection" no-padding *ngIf="store.preferences$ | async as ss">
+                        <ion-label ion-col col-auto class="hidden-xs-down" padding-left>Showing Plan</ion-label>
+                        <ion-select
+                                ion-col col-sm text-center
+                                [ngModel]="ss.selected_plan_uuid"
+                                (ngModelChange)="ss.setSelectedPlanUUID($event)"
+                                placeholder="Plan"
+                        >
+                            <ion-option *ngFor="let p of plansByDateLatestFirst" value="{{p.uuid}}"
+                                        [selected]="ss.selected_plan_uuid == p.uuid">
+                                <div *ngIf="pageUtils.small; else tablets">
+                                    {{p.name}}
+                                </div>
+                                <ng-template #tablets>
+                                    {{p.name}}: {{p.start_date|date:'MMM d'}}-{{p.end_date|date:'MMM d'}}
+                                </ng-template>
+                            </ion-option>
+                        </ion-select>
+                        <button class="hidden-xs-down editButton" item-end ion-button (tap)="editPlan()">Edit</button>
+                    </ion-item>
+                </ion-grid>
 
-            <div *ngIf="store.schedule$ | async as schedule">
-                <schedule-viewer [schedule]="schedule" [me]="store.loggedInPerson$|async"></schedule-viewer>
-                <person-schedule [schedule]="schedule" [person]="store.loggedInPerson$|async"></person-schedule>
-                <person-unavailable *ngIf="store.loggedInPerson$|async as p"
-                                    [person]="p"
-                                    [readOnly]="true"></person-unavailable>
-            </div>
-
-
-            <!--<ion-grid *ngIf="store.schedule$ | async as schedule" no-padding>-->
-            <!--<ion-row>-->
-            <!--<ion-col *ngIf="store.ui_store.have_selection">-->
-            <!--<person-editor></person-editor>-->
-            <!--<reasons *ngIf="store.schedule$|async as schedule"-->
-            <!--[decisions]="schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"-->
-            <!--&gt;-->
-            <!--</reasons>-->
-            <!--</ion-col>-->
-            <!--</ion-row>-->
-            <!--</ion-grid>-->
-        </div>
-        <ng-template #notSignedIn>
-            <div class="notSignedIn">
-                <div class="title" text-center>Please sign&nbsp;in</div>
-                <div class="buttons">
-                    <button class="signInButton" col-4 offset-4 ion-button (tap)="startSignIn()">Sign In</button>
+                <div *ngIf="store.schedule$ | async as schedule">
+                    <schedule-viewer [schedule]="schedule" [me]="store.loggedInPerson$|async"></schedule-viewer>
+                    <person-schedule [schedule]="schedule" [person]="store.loggedInPerson$|async"></person-schedule>
+                    <person-unavailable *ngIf="store.loggedInPerson$|async as p"
+                                        [person]="p"
+                                        [readOnly]="true"></person-unavailable>
                 </div>
+
+
+                <!--<ion-grid *ngIf="store.schedule$ | async as schedule" no-padding>-->
+                <!--<ion-row>-->
+                <!--<ion-col *ngIf="store.ui_store.have_selection">-->
+                <!--<person-editor></person-editor>-->
+                <!--<reasons *ngIf="store.schedule$|async as schedule"-->
+                <!--[decisions]="schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"-->
+                <!--&gt;-->
+                <!--</reasons>-->
+                <!--</ion-col>-->
+                <!--</ion-row>-->
+                <!--</ion-grid>-->
             </div>
-        </ng-template>
+            <ng-template #notSignedIn>
+                <div class="notSignedIn">
+                    <div class="title" text-center>Please sign&nbsp;in</div>
+                    <div class="buttons">
+                        <button class="signInButton" col-4 offset-4 ion-button (tap)="startSignIn()">Sign In</button>
+                    </div>
+                </div>
+            </ng-template>
+        </div>
     </div>
 </ion-content>
 

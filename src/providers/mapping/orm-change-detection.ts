@@ -16,7 +16,7 @@ import {Subject} from "rxjs/Subject";
 import {GetTheTypeNameOfTheObject, OrmMapper} from "./orm-mapper";
 import {MappingType, NameForMappingPropType} from "./orm-mapper-type";
 
-type ObjectChange = { owner: ObjectWithUUID, change: IMapDidChange<any> | IArraySplice<any> | IArrayChange<any> | IObjectDidChange | IValueDidChange<any>, type: string, path: string };
+type ObjectChange = { owner: ObjectWithUUID, change: IMapDidChange<any> | IArraySplice<any> | IArrayChange<any> | IObjectDidChange | IValueDidChange<any>, type: string, path: string, propertyName: string };
 type ChangeListener = (change: ObjectChange) => void;
 
 function chainListeners(first: ChangeListener, next: ChangeListener): ChangeListener {
@@ -154,7 +154,7 @@ class ObjectChangeTracker {
         return ["type", "_id", "_rev", "rev", "id"];
     }
 
-    shouldBeIgnored(propertyName:string) {
+    shouldBeIgnored(propertyName: string) {
         return this.ignored.indexOf(propertyName) != -1;
     }
 
@@ -282,7 +282,7 @@ class ObjectChangeTracker {
             Ignore changes to _rev, _id and type
              */
             if (change['name']) {
-                if(this.shouldBeIgnored(change['name'])) {
+                if (this.shouldBeIgnored(change['name'])) {
                     return;
                 }
             }
@@ -300,7 +300,7 @@ class ObjectChangeTracker {
             }
 
             // Notify, side effect is that we emit from our subject
-            listener({owner: owner, change: change, type: "object", path: parentPath});
+            listener({owner: owner, change: change, type: "object", path: parentPath, propertyName: propertyName});
         }, false);
         disposersForInstance.set(propertyName, disposer);
 
@@ -325,7 +325,7 @@ class ObjectChangeTracker {
             Ignore changes to _rev, _id and type
              */
             if (change['name']) {
-                if(this.shouldBeIgnored(change['name'])) {
+                if (this.shouldBeIgnored(change['name'])) {
                     return;
                 }
             }
@@ -343,7 +343,7 @@ class ObjectChangeTracker {
             }
 
             // Notify, side effect is that we emit from our subject
-            listener({owner: owner, change: change, type: "object", path: parentPath});
+            listener({owner: owner, change: change, type: "object", path: parentPath, propertyName: propertyName});
         }, false);
 
         disposersForInstance.set(propertyName, disposer);

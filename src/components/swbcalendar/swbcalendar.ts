@@ -3,8 +3,8 @@ import {DaySelectedCallback, RangeSelectedCallback} from "./calendar-interface";
 import {NavParams, ViewController} from "ionic-angular";
 
 @Component({
-    selector: 'calendar',
-    templateUrl: 'calendar.html'
+    selector: 'swbcalendar',
+    templateUrl: 'swbcalendar.html'
 })
 export class CalendarComponent {
     @Input() range: boolean = false;

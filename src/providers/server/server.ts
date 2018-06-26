@@ -103,19 +103,19 @@ export class RESTServer {
     }
 
     async saveUser(user: object): Promise<UserResponse> {
-        if (!user['id']) {
-            throw new Error(`No ID specified in the user object, ${JSON.stringify(user)}`);
+        if (!user['id'] && !user['uuid']) {
+            throw new Error(`No ID/UUID specified in the user object, ${JSON.stringify(user)}`);
         }
-        let url = this.server_url(`user/${user['id']}/`);
+        let url = this.server_url(`user/${user['id'] || user['uuid']}/`);
         this.logger.info(`Updating user on server with: ${JSON.stringify(user)}`);
         return Object.assign(new UserResponse(), await this.http.patch(url, user, this.options).toPromise());
     }
 
     async updateOrganization(org: OrganizationResponse): Promise<OrganizationResponse> {
-        if (!org.id) {
-            throw new Error(`No ID specified in the organization object, ${JSON.stringify(org)}`);
+        if (!org.id && !org.uuid) {
+            throw new Error(`No ID or UUID specified in the organization object, ${JSON.stringify(org)}`);
         }
-        let url = this.server_url(`organization/${org.id}/`);
+        let url = this.server_url(`organization/${org.id || org.uuid}/`);
         this.logger.info(`Updating organization on server with: ${JSON.stringify(org)}`);
         return Object.assign(new OrganizationResponse(), await this.http.patch(url, org, this.options).toPromise());
     }
@@ -135,6 +135,23 @@ export class RESTServer {
         return await this.http.get(url, options).toPromise() as OrganizationResponse;
     }
 
+    fullNameToFirstAndLast(fullName): { first_name: string, last_name: string } {
+        let response = {
+            first_name: "",
+            last_name: ""
+        };
+        let name_parts = fullName.split(' ');
+        if (name_parts.length > 0) {
+            response.first_name = name_parts[0];
+            name_parts.splice(0, 1);
+
+            if (name_parts.length > 0) {
+                response.last_name = name_parts.join(' ')
+            }
+        }
+        return response;
+    }
+
     async registerNewUser(name: string, email: string, pwd: string): Promise<LoginResponse> {
         if (!name || !email || !pwd) {
             throw new Error('name, email and pwd are required');
@@ -145,15 +162,7 @@ export class RESTServer {
             password: pwd,
             email: email,
         };
-        let name_parts = name.split(' ');
-        if (name_parts.length > 0) {
-            body['first_name'] = name_parts[0];
-            name_parts.splice(0, 1);
-
-            if (name_parts.length > 0) {
-                body['last_name'] = name_parts.join(' ')
-            }
-        }
+        body = Object.assign(body, this.fullNameToFirstAndLast(name));
         try {
             return await this.http.post(url, body, options).toPromise() as LoginResponse;
         } catch (err) {

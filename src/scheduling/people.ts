@@ -81,7 +81,7 @@ class Person extends NamedObject {
     }
 
     @action
-    static createFromUserRespose(lr: UserResponse) {
+    static createFromUserResponse(lr: UserResponse) {
         let p = new Person();
         let name_parts = [];
         if (lr.first_name) name_parts.push(lr.first_name);

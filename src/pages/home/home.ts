@@ -24,8 +24,8 @@ export class HomePage {
     constructor(private navCtrl: NavController,
                 private sheetAPI: GAPIS,
                 private pageUtils: PageUtils,
-                private server: SchedulerServer,
-                private store: RootStore) {
+                public server:SchedulerServer,
+                public store: RootStore) {
 
         this.logger = LoggingWrapper.getLogger("page.home");
     }
@@ -50,7 +50,7 @@ export class HomePage {
         // this.navCtrl.push('login', {create: true});
     }
 
-    selectPlan(uuid: string) {
+    selectPlanw(uuid: string) {
         this.store.loggedInPerson.preferences.setSelectedPlanUUID(uuid);
     }
 
