@@ -30,8 +30,8 @@ import {TabsPage} from "../pages/tabs/tabs";
 import {OrmMapper} from "../providers/mapping/orm-mapper";
 import {SchedulerServer} from "../providers/server/scheduler-server.service";
 import {setupOrmMapper} from "../providers/mapping/setup";
-import {CalendarModule} from "ionic3-calendar-en";
-import {CalendarComponent} from "../components/swbcalendar/swbcalendar";
+// import {CalendarModule} from "ionic3-calendar-en";
+// import {CalendarComponent} from "../components/swbcalendar/swbcalendar";
 import {MobxAngularModule} from "mobx-angular";
 import {ResponsiveConfig, ResponsiveModule} from "ng2-responsive";
 
@@ -54,7 +54,7 @@ export function ResponsiveDefinition() {
     declarations: [
         MyApp,
         TabsPage,
-        CalendarComponent,
+        // CalendarComponent,
     ],
     imports: [
         MobxAngularModule,
@@ -74,14 +74,14 @@ export function ResponsiveDefinition() {
         TeamPageModule,
         PersonAssignmentPageModule,
         DatabaseMaintPageModule,
-        CalendarModule,
+        // CalendarModule,
         ResponsiveModule
     ],
     bootstrap: [IonicApp],
     entryComponents: [
         MyApp,
         TabsPage,
-        CalendarComponent
+        // CalendarComponent
     ],
     providers: [
         {
