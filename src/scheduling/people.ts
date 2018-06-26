@@ -100,6 +100,14 @@ class Person extends NamedObject {
         return this._availability;
     }
 
+    @action setEmail(email: string) {
+        this.email = email;
+    }
+
+    @action setPhone(phone: string) {
+        this.phone = phone;
+    }
+
     set availability(new_value: Availability) {
         if (ObjectUtils.deep_equal(this._availability, new_value)) {
             // console.log(`Not setting availability for ${this.name} to ${new_value}. It's the same as existing value: ${this._availability}`);

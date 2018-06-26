@@ -68,7 +68,6 @@ export class MyApp {
                 title: "", items: [
                     {title: "Dashboard", page: 'home'},
                     {title: "Profile", page: 'page-profile', enabled: () => this.loggedIn},
-                    {title: "About", page: 'page-about'},
                 ]
             },
             {
@@ -79,12 +78,7 @@ export class MyApp {
                 ]
             },
             {
-                title: "Dev", items: [
-                    {title: "DB Maint", page: 'page-db'},
-                ]
-            },
-            {
-                title: "", visible: () => this.loggedIn, items: [
+                title: "Other", visible: () => this.loggedIn, items: [
                     {
                         title: "Logout", exec: () => {
                             this.server.asyncLogout().then(() => {
@@ -92,7 +86,13 @@ export class MyApp {
                             });
                         },
                         enabled: () => this.loggedIn
-                    }
+                    },
+                    {title: "About", page: 'page-about'},
+                ]
+            },
+            {
+                title: "Dev", items: [
+                    {title: "DB Maint", page: 'page-db'},
                 ]
             },
         ]

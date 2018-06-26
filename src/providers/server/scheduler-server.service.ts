@@ -488,7 +488,7 @@ class SchedulerServer implements ILifecycle {
                 })
             ).toPromise();
 
-        this.logger.info('setupDBFromState', `Got it! Woot!`);
+        this.logger.debug('setupDBFromState', `Got it! Woot!`);
 
         // We want that 'defaults' one to be alive so it triggers when we first load the state
         // this.checkForDefaults();

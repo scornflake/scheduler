@@ -65,6 +65,7 @@
     "moment": "^2.20.1",
     "moment-range": "^4.0.1",
     "ng-circle-progress": "^0.9.9",
+    "ng2-responsive": "^0.8.4",
     "pouchdb": "^6.4.3",
     "pouchdb-find": "^6.4.3",
     "reflect-metadata": "^0.1.12",

@@ -101,6 +101,10 @@ class NamedObject extends ObjectWithUUID {
         this.name = name;
     }
 
+    @action setName(name: string) {
+        this.name = name;
+    }
+
     valueOf() {
         return this.name;
     }

@@ -5,6 +5,7 @@ import {RootStore} from "../../store/root";
 import {PageUtils} from "../page-utils";
 import {NamedObject} from "../../scheduling/base-types";
 import {Team} from "../../scheduling/teams";
+import {action, computed} from "mobx-angular";
 
 @IonicPage({
     name: 'page-plans',
@@ -22,7 +23,7 @@ export class PlansPage {
                 public navParams: NavParams) {
     }
 
-    get plans() {
+    @computed get plans() {
         return this.rootStore.plans.all;
     }
 
@@ -33,9 +34,11 @@ export class PlansPage {
         } else {
             // this.show_plan_detail(this.plans[0])
         }
+
+        this.pageUtils.runStartupLifecycle(this.navCtrl);
     }
 
-    add_plan() {
+    @action add_plan() {
         // Select a team
         let alert = this.alertCtrl.create({
             title: "Select team to use"
@@ -103,6 +106,7 @@ export class PlansPage {
                         alert.dismiss().then(() => {
                             try {
                                 this.rootStore.plans.remove(plan);
+                                this.pageUtils.showMessage(`Plan "${plan.name}" deleted`);
                             } catch (ex) {
                                 this.pageUtils.showError(ex);
                             }

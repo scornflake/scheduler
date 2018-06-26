@@ -161,7 +161,7 @@ export class DatabaseMaintPage implements OnDestroy {
                 if (neil.organization.name != "North Porirua Baptist Church") {
                     neil.organization.name = "North Porirua Baptist Church";
                     await this.server.saveOrganization(neil.organization);
-                    this.pageUtils.show_message("Updated org name");
+                    this.pageUtils.showMessage("Updated org name");
                 }
             }
         }
@@ -175,7 +175,7 @@ export class DatabaseMaintPage implements OnDestroy {
         if (!defaultTeam) {
             defaultTeam = new Team("Default", this.store.people.all);
             teamManager.add(defaultTeam);
-            this.pageUtils.show_message("Added default team");
+            this.pageUtils.showMessage("Added default team");
         }
 
         NPBCStoreConstruction.SetupTeamUnavailability(defaultTeam);
@@ -186,7 +186,7 @@ export class DatabaseMaintPage implements OnDestroy {
         }
 
         if (people_added.length > 0) {
-            this.pageUtils.show_message(`${people_added.length} people added`);
+            this.pageUtils.showMessage(`${people_added.length} people added`);
         }
 
         await this.db.async_store_or_update_object(defaultTeam);
@@ -200,7 +200,7 @@ export class DatabaseMaintPage implements OnDestroy {
         let plan = this.store.plans.firstThisTypeByName("Sunday Morning Service");
         if (plan == null) {
             plan = this.store.plans.add(new Plan("Sunday Morning Service", team));
-            this.pageUtils.show_message('Adding new default plan')
+            this.pageUtils.showMessage('Adding new default plan')
         }
         plan.start_date = csd(2018, 6, 3);
         plan.end_date = csd(2018, 9, 30);

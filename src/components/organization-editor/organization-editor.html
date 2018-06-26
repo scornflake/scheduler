@@ -3,7 +3,7 @@
   <ion-list no-padding no-margin>
     <ion-item>
       <ion-label>Name</ion-label>
-      <ion-input [(ngModel)]="organization.name"></ion-input>
+      <ion-input [ngModel]="organization.name" (ngModelChange)="organization.setName($event)"></ion-input>
     </ion-item>
   </ion-list>
 </div>

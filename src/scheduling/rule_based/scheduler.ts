@@ -9,10 +9,11 @@ import {Assignment} from "../assignment";
 import {Plan} from "../plan";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Role} from "../role";
+import {action, computed, observable} from "mobx-angular";
 
 class ScheduleWithRules {
     plan: Plan;
-    facts: RuleFacts;
+    @observable facts: RuleFacts;
     free_text: {};
 
     private logger: Logger;
@@ -32,7 +33,7 @@ class ScheduleWithRules {
         this.clear_working_state();
     }
 
-    get dates(): Array<ScheduleAtDate> {
+    @computed get dates(): Array<ScheduleAtDate> {
         return this.facts.schedule_dates;
     }
 
@@ -40,11 +41,11 @@ class ScheduleWithRules {
         return this.facts.get_schedule_for_date(date);
     }
 
-    get assignments(): Array<Assignment> {
+    @computed get assignments(): Array<Assignment> {
         return this.plan.assignments;
     }
 
-    create_schedule() {
+    @action create_schedule() {
         if (!this.plan) {
             throw new Error("No service defined, cannot create the schedule");
         }
@@ -63,7 +64,7 @@ class ScheduleWithRules {
         this.process_secondary_actions();
     }
 
-    process_role_group(role_group: Array<Role>) {
+    @action process_role_group(role_group: Array<Role>) {
         this.facts.begin_new_role_group(role_group);
 
         let current_date = this.plan.start_date;
@@ -94,7 +95,7 @@ class ScheduleWithRules {
         }
     }
 
-    layout_specific_roles(current_date: Date, role: Role): Array<Assignment> {
+    @action layout_specific_roles(current_date: Date, role: Role): Array<Assignment> {
         // Check if anyone has specifics for this date
         let placements = new Array<Assignment>();
         this.assignments.forEach(assignment => {
@@ -122,7 +123,7 @@ class ScheduleWithRules {
         return peopleInRole.length >= role.maximum_wanted;
     }
 
-    process_role(current_date: Date, role: Role, role_group: Array<Role>) {
+    @action process_role(current_date: Date, role: Role, role_group: Array<Role>) {
         if (!this.facts) {
             throw new Error("No facts defined. Cannot process role");
         }
@@ -221,7 +222,7 @@ class ScheduleWithRules {
         return next_date;
     }
 
-    private clear_working_state() {
+    @action private clear_working_state() {
         this.facts = new RuleFacts(this.plan);
         if (this.previous_scheduler) {
             this.facts.copyUsageDataFrom(this.previous_scheduler.facts);
@@ -324,7 +325,7 @@ class ScheduleWithRules {
         });
     }
 
-    private process_secondary_actions() {
+    @action private process_secondary_actions() {
         // Check everyone that has secondary actions
         this.plan.assignments.forEach(assignment => {
             let secondary_actions = assignment.secondary_actions;

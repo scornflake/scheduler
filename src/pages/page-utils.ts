@@ -37,7 +37,7 @@ class PageUtils implements OnInit {
         this.show_alert(message, {cssClass: 'validation'}, stayOpen);
     }
 
-    show_message(message: string) {
+    showMessage(message: string) {
         this.show_alert(message, {cssClass: 'success'}, false);
     }
 

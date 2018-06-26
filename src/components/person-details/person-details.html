@@ -1,24 +1,26 @@
-<div *ngIf="person">
-    <ion-list-header color="light">Details</ion-list-header>
-    <ion-list no-padding no-margin>
-        <ion-item>
-            <ion-label>Name</ion-label>
-            <ion-input placeholder="Joe" [(ngModel)]="person.name"></ion-input>
-        </ion-item>
-        <ion-item>
-            <ion-label>Email</ion-label>
-            <ion-input [(ngModel)]="person.email"></ion-input>
-        </ion-item>
-        <ion-item>
-            <ion-label>Phone</ion-label>
-            <ion-input [(ngModel)]="person.phone"></ion-input>
-        </ion-item>
-    </ion-list>
+<div *mobxAutorun>
+    <div *ngIf="person">
+        <ion-list-header color="light">Details</ion-list-header>
+        <ion-list no-padding no-margin>
+            <ion-item>
+                <ion-label>Name</ion-label>
+                <ion-input placeholder="Joe" [ngModel]="person.name" (ngModelChange)="person.setName($event)"></ion-input>
+            </ion-item>
+            <ion-item>
+                <ion-label>Email</ion-label>
+                <ion-input [ngModel]="person.email" (ngModelChange)="person.setEmail($event)"></ion-input>
+            </ion-item>
+            <ion-item>
+                <ion-label>Phone</ion-label>
+                <ion-input [ngModel]="person.phone" (ngModelChange)="person.setPhone($event)"></ion-input>
+            </ion-item>
+        </ion-list>
 
-    <ion-list-header color="light">{{availabilityTitle}}</ion-list-header>
-    <ion-item-group>
-        <availability-options [(availability)]="person.availability"></availability-options>
-    </ion-item-group>
+        <ion-list-header color="light">{{availabilityTitle}}</ion-list-header>
+        <ion-item-group>
+            <availability-options [(availability)]="person.availability"></availability-options>
+        </ion-item-group>
 
-    <person-unavailable [person]="person"></person-unavailable>
+        <person-unavailable [person]="person"></person-unavailable>
+    </div>
 </div>

@@ -32,7 +32,7 @@ enum SavingState {
 }
 
 class SchedulerDatabase implements IObjectLoader {
-    save_notifications = new Subject<SavingState>();
+    saveNotifications = new Subject<SavingState>();
     readyEvent: Subject<boolean>;
     info: PouchDB.Core.DatabaseInfo;
 
@@ -67,7 +67,7 @@ class SchedulerDatabase implements IObjectLoader {
 
         // This is so we can output a single stream of 'idle, change waiting, saving/done'
         this.tracker.changes.subscribe(() => {
-            this.save_notifications.next(SavingState.ChangeDetected);
+            this.saveNotifications.next(SavingState.ChangeDetected);
         });
 
         // This is so we can kick off a save some time after the change occurs
@@ -253,7 +253,7 @@ class SchedulerDatabase implements IObjectLoader {
         }
 
         this.tracker.disableTrackingFor(object);
-        this.save_notifications.next(SavingState.StartedSaving);
+        this.saveNotifications.next(SavingState.StartedSaving);
         try {
             let object_state = object.is_new ? "new" : "existing";
             if (object.is_new == false || force_rev_check) {
@@ -296,7 +296,7 @@ class SchedulerDatabase implements IObjectLoader {
             }
         } finally {
             this.tracker.enableTrackingFor(object);
-            this.save_notifications.next(SavingState.FinishedSaving);
+            this.saveNotifications.next(SavingState.FinishedSaving);
         }
     }
 

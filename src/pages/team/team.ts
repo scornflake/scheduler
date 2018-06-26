@@ -58,6 +58,19 @@ export class TeamPage {
         this.navCtrl.pop();
     }
 
+    get okButtonDisabled(): boolean {
+        if(!this.team) {
+            return true;
+        }
+        if(!this.team.name) {
+            return true;
+        }
+        if(this.team.name.length == 0) {
+            return true;
+        }
+        return false;
+    }
+
     add_person_to_team(person: Person) {
         this.rootStore.asyncSaveOrUpdateDb(person).then((new_person) => {
             this.rootStore.people.add(person);

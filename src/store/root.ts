@@ -301,7 +301,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
             }, uuid => {
                 let plan = this.plans.findOfThisTypeByUUID(uuid);
                 if (plan) {
-                    this.logger.warn(`Plan changed to: ${uuid}`);
+                    this.ui_store.setSelectedPlan(plan);
                     this.selectedPlanSubject.next(plan);
                 } else {
                     this.logger.warn(`selected_plan$ failure - can't find plan with ID: ${uuid}`);
@@ -328,7 +328,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
     private _createLoggedInPersonReaction() {
         if (!this.lipDisposer) {
             this.lipDisposer = reaction(() => {
-                trace();
+                // trace();
                 if (this.ui_store) {
                     return this.ui_store.loggedInPerson;
                 }

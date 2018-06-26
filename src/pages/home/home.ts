@@ -2,14 +2,9 @@ import {Component} from '@angular/core';
 import {IonicPage, NavController} from 'ionic-angular';
 import {CSVExporter} from "../../scheduling/exporter/csv.exporter";
 import {GAPIS} from "../../common/gapis-auth";
-import {SheetSelectionPage} from "../sheet-selection/sheet-selection";
 import {Logger} from "ionic-logging-service";
-import {toJS} from "mobx";
-import {SpreadsheetReader} from "../../common/spreadsheet_reader";
 import {RootStore} from "../../store/root";
-import {SafeJSON} from "../../common/json/safe-stringify";
 import {Plan} from "../../scheduling/plan";
-import {action} from "mobx-angular";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {PageUtils} from "../page-utils";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
@@ -151,5 +146,9 @@ export class HomePage {
 
     startSignIn() {
         this.navCtrl.push('login');
+    }
+
+    editPlan(plan) {
+        this.navCtrl.push('page-plan-details', {plan: this.store.ui_store.selectedPlan})
     }
 }

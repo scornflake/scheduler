@@ -5,9 +5,10 @@ import {Person} from "../people";
 import {Plan} from "../plan";
 import {Role} from "../role";
 import {NamedObject, ObjectWithUUID} from "../base-types";
+import {action, computed, observable} from "mobx-angular";
 
 abstract class GenericManager<T extends NamedObject> {
-    protected store: GenericObjectStore<T>;
+    @observable protected store: GenericObjectStore<T>;
     private type: string;
 
     constructor(store: GenericObjectStore<T>, type: string) {
@@ -15,11 +16,11 @@ abstract class GenericManager<T extends NamedObject> {
         this.type = type;
     }
 
-    get all(): T[] {
+    @computed get all(): T[] {
         return this.findAllThisType();
     }
 
-    get length(): number {
+    @computed get length(): number {
         return this.all.length;
     }
 
@@ -56,11 +57,11 @@ abstract class GenericManager<T extends NamedObject> {
         return res[0];
     }
 
-    add(item: T): T {
+    @action add(item: T): T {
         return this.store.addObjectToStore(item);
     }
 
-    addAll(objects: T[]) {
+    @action addAll(objects: T[]) {
         return this.store.add_objects_to_array(objects);
     }
 }
@@ -70,11 +71,11 @@ class RoleManager extends GenericManager<Role> {
         super(store, 'Role');
     }
 
-    get roles(): Array<Role> {
+    @computed get roles(): Array<Role> {
         return this.findAllThisType();
     }
 
-    remove(role: Role) {
+    @action remove(role: Role) {
         // noinspection SuspiciousInstanceOfGuard
         if (this.store instanceof SchedulerObjectStore) {
             this.store.removeRoleFromStoreWithRefcheck(role);
@@ -186,23 +187,23 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
         this.organizationManager = new OrganizationManager(this);
     }
 
-    get organizations(): OrganizationManager {
+    @computed get organizations(): OrganizationManager {
         return this.organizationManager;
     }
 
-    get people(): PersonManager {
+    @computed get people(): PersonManager {
         return this.peopleManager;
     }
 
-    get roles(): RoleManager {
+    @computed get roles(): RoleManager {
         return this.rolesManager;
     }
 
-    get teams(): TeamManager {
+    @computed get teams(): TeamManager {
         return this.teamManager;
     }
 
-    get plans(): PlansManager {
+    @computed get plans(): PlansManager {
         return this.plansManager;
     }
 
@@ -220,7 +221,7 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
         this.removeObjectFromStore(plan);
     }
 
-    removeRoleFromStoreWithRefcheck(role: Role) {
+    @action removeRoleFromStoreWithRefcheck(role: Role) {
         let msg = `Cannot delete role ${role.name}, `;
 
         // can't be used in role

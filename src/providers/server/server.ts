@@ -147,11 +147,12 @@ export class RESTServer {
         };
         let name_parts = name.split(' ');
         if (name_parts.length > 0) {
-            body['fist_name'] = name_parts[0];
-        }
-        if (name_parts.length > 1) {
-            name_parts.splice(1, 1);
-            body['last_name'] = name_parts.join(' ')
+            body['first_name'] = name_parts[0];
+            name_parts.splice(0, 1);
+
+            if (name_parts.length > 0) {
+                body['last_name'] = name_parts.join(' ')
+            }
         }
         try {
             return await this.http.post(url, body, options).toPromise() as LoginResponse;

@@ -14,9 +14,10 @@ import {SavingStateComponent} from './saving-state/saving-state';
 import {PersonScheduleComponent} from './person-schedule/person-schedule';
 import {PersonUnavailableComponent} from './person-unavailable/person-unavailable';
 import {PlanDateRangeComponent} from './plan-date-range/plan-date-range';
-import {CalendarComponent} from "./calendar/calendar";
-import {CalendarModule} from "ionic3-calendar-en";
-import { OrganizationEditorComponent } from './organization-editor/organization-editor';
+import {OrganizationEditorComponent} from './organization-editor/organization-editor';
+import {MobxAngularModule} from "mobx-angular";
+import {IonSegmentHotfix} from "../common/directives";
+import {ResponsiveModule} from "ng2-responsive";
 
 @NgModule({
     declarations: [
@@ -33,11 +34,14 @@ import { OrganizationEditorComponent } from './organization-editor/organization-
         PersonScheduleComponent,
         PersonUnavailableComponent,
         PlanDateRangeComponent,
-    OrganizationEditorComponent,
+        OrganizationEditorComponent,
+        IonSegmentHotfix,
     ],
     imports: [
         IonicModule,
         NgPipesModule,
+        MobxAngularModule,
+        ResponsiveModule
     ],
     exports: [
         ScheduleViewerComponent,
@@ -53,7 +57,7 @@ import { OrganizationEditorComponent } from './organization-editor/organization-
         PersonScheduleComponent,
         PersonUnavailableComponent,
         PlanDateRangeComponent,
-    OrganizationEditorComponent,
+        OrganizationEditorComponent,
     ]
 })
 export class ComponentsModule {

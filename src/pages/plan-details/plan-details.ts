@@ -62,7 +62,7 @@ export class PlanDetailsPage {
         let team = this.plan.team;
         let people_not_in_plan = team.people.filter(p => this.plan.get_assignment_for(p) == null);
         if (people_not_in_plan.length == 0) {
-            this.pageUtils.show_message("All people are already in the list");
+            this.pageUtils.showMessage("All people are already in the list");
             return;
         }
         for (let p of NamedObject.sortByName(people_not_in_plan)) {

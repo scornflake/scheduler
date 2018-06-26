@@ -1,5 +1,4 @@
 <ion-header>
-
     <ion-navbar>
         <ion-title>Plans</ion-title>
 
@@ -13,7 +12,7 @@
 </ion-header>
 
 
-<ion-content>
+<ion-content *mobxAutorun>
     <ion-list>
         <ion-item-sliding *ngFor="let plan of plans">
             <ion-item detail-push (tap)="show_plan_detail(plan)">

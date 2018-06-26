@@ -1,6 +1,7 @@
-<div class="control">
+<div class="control" *mobxAutorun>
     <ion-item no-lines>
-        <ion-segment color="primary" [(ngModel)]="type" (ionChange)="build_availability()">
+        <ion-segment color="primary" [ngModel]="type" (ngModelChange)="setType($event)" (ionChange)="build_availability()">
+            <ion-segment-button value="anytime">Anytime</ion-segment-button>
             <ion-segment-button value="regular">Regularly, Every</ion-segment-button>
             <ion-segment-button value="fraction">Every N in M</ion-segment-button>
         </ion-segment>
@@ -15,7 +16,7 @@
             </ion-item>
             <ion-item no-lines>
                 <ion-segment color="primary" [(ngModel)]="state.unit" (ionChange)="build_availability()">
-                    <ion-segment-button value="anytime">Anytime</ion-segment-button>
+                    <!--<ion-segment-button value="anytime">Anytime</ion-segment-button>-->
                     <ion-segment-button value="every_days">Days</ion-segment-button>
                     <ion-segment-button value="every_weeks">Weeks</ion-segment-button>
                 </ion-segment>

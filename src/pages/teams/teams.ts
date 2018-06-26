@@ -1,8 +1,9 @@
-import {Component} from '@angular/core';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
 import {IonicPage, NavController, NavParams} from 'ionic-angular';
 import {RootStore} from "../../store/root";
 import {Team} from "../../scheduling/teams";
 import {PageUtils} from "../page-utils";
+import {computed} from "mobx-angular";
 
 @IonicPage({
     name: 'page-teams',
@@ -11,6 +12,7 @@ import {PageUtils} from "../page-utils";
 @Component({
     selector: 'page-teams',
     templateUrl: 'teams.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TeamsPage {
 
@@ -26,25 +28,26 @@ export class TeamsPage {
         //     this.show_team_detail(the_teams[0]);
         // }
         // this.add_new_team();
+        this.pageUtils.runStartupLifecycle(this.navCtrl);
     }
 
     add_new_team() {
         let team = new Team("");
-        this.show_team_detail(team, (add: boolean) => {
+        this.showTeamDetail(team, (add: boolean) => {
             if (add) {
                 this.rootStore.teams.add(team);
                 this.rootStore.asyncSaveOrUpdateDb(team).then(() => {
-                    console.log("Added to DB")
+                    this.pageUtils.showMessage('New team added');
                 })
             }
         });
     }
 
-    show_team_detail(team, callback = null) {
+    showTeamDetail(team, callback = null) {
         this.navCtrl.push('page-team', {team: team, callback: callback})
     }
 
-    teams() {
+    @computed get teams() {
         return this.rootStore.teams.all;
     }
 

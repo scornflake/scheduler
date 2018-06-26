@@ -4720,6 +4720,10 @@ ng-circle-progress@^0.9.9:
   version "0.9.9"
   resolved "https://registry.yarnpkg.com/ng-circle-progress/-/ng-circle-progress-0.9.9.tgz#bc0d3033838cf5dcf0e18e3ce4d8d71af86f7415"
 
+ng2-responsive@^0.8.4:
+  version "0.8.4"
+  resolved "https://registry.yarnpkg.com/ng2-responsive/-/ng2-responsive-0.8.4.tgz#b99151258a981a1a41a3ec8673df0291005578cf"
+
 no-case@^2.2.0:
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/no-case/-/no-case-2.3.2.tgz#60b813396be39b3f1288a4c1ed5d1e7d28b464ac"

@@ -1,4 +1,4 @@
-import {APP_INITIALIZER, ApplicationRef, ComponentRef, ErrorHandler, Injector, NgModule} from '@angular/core';
+import {APP_INITIALIZER, ErrorHandler, Injector, NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
 import {IonicApp, IonicErrorHandler, IonicModule} from 'ionic-angular';
 import {MyApp} from './app.component';
@@ -33,12 +33,28 @@ import {setupOrmMapper} from "../providers/mapping/setup";
 import {CalendarModule} from "ionic3-calendar-en";
 import {CalendarComponent} from "../components/calendar/calendar";
 import {MobxAngularModule} from "mobx-angular";
+import {ResponsiveConfig, ResponsiveModule} from "ng2-responsive";
+
+let config = {
+    breakPoints: {
+        xs: {max: 575},
+        sm: {min: 576, max: 767},
+        md: {min: 768, max: 991},
+        lg: {min: 992, max: 1199},
+        xl: {min: 1200}
+    },
+    debounceTime: 100 // allow to debounce checking timer
+};
+
+export function ResponsiveDefinition() {
+    return new ResponsiveConfig(config);
+}
 
 @NgModule({
     declarations: [
         MyApp,
         TabsPage,
-        CalendarComponent
+        CalendarComponent,
     ],
     imports: [
         MobxAngularModule,
@@ -59,6 +75,7 @@ import {MobxAngularModule} from "mobx-angular";
         PersonAssignmentPageModule,
         DatabaseMaintPageModule,
         CalendarModule,
+        ResponsiveModule
     ],
     bootstrap: [IonicApp],
     entryComponents: [
@@ -87,7 +104,11 @@ import {MobxAngularModule} from "mobx-angular";
         PageUtils,
         LoggingService,
         GAPIS,
-        RESTServer
+        RESTServer,
+        [{
+            provide: ResponsiveConfig,
+            useFactory: ResponsiveDefinition
+        }]
     ]
 })
 

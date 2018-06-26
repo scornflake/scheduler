@@ -31,18 +31,18 @@ export class SavingStateComponent implements AfterViewInit, OnDestroy {
         this.dbSubscription = this.server.db$.subscribe(db => {
             this.db = db;
             if (this.db) {
-                this.dbSubscription = this.db.save_notifications.subscribe(state => {
+                this.dbSubscription = this.db.saveNotifications.subscribe(state => {
                     if (state == SavingState.ChangeDetected) {
                         this.savingstate = "changed";
                     } else if (state == SavingState.StartedSaving) {
                         this.savingstate = "saving";
                     } else if (state == SavingState.FinishedSaving) {
                         this.savingstate = "done";
-                        // Observable.interval(1000).pipe(
-                        //     take(1)
-                        // ).subscribe(() => {
-                        this.savingstate = "idle";
-                        // })
+                        Observable.interval(1000).pipe(
+                            take(1)
+                        ).subscribe(() => {
+                            this.savingstate = "idle";
+                        })
                     }
                 });
             }

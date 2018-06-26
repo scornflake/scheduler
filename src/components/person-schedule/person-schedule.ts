@@ -3,6 +3,8 @@ import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
 import {RootStore} from "../../store/root";
 import {Person} from "../../scheduling/people";
 import {ScheduleAtDate} from "../../scheduling/shared";
+import {SafeJSON} from "../../common/json/safe-stringify";
+import {computed, observable} from "mobx-angular";
 
 @Component({
     selector: 'person-schedule',
@@ -10,18 +12,25 @@ import {ScheduleAtDate} from "../../scheduling/shared";
 })
 export class PersonScheduleComponent {
 
-    @Input() schedule: ScheduleWithRules;
-    @Input() person: Person;
+    @observable @Input() schedule: ScheduleWithRules;
+    @observable @Input() person: Person;
 
     constructor(public store: RootStore) {
     }
 
-    get scheduled_dates(): Array<ScheduleAtDate> {
+    ngOnInit() {
+    }
+
+    @computed get scheduled_dates(): Array<ScheduleAtDate> {
         if (!this.person || !this.schedule) {
+            console.warn(`no schedule for ${this.person} so return []`);
             return [];
         }
-        return this.schedule.dates.filter(schedule => {
-            return schedule.people.indexOf(this.person) != -1;
+        return this.schedule.dates.filter(sd => {
+            let allPeople = sd.people;
+            let dump = allPeople.map(p => `${p.email}=${p.uuid}`);
+            // console.log(`people for: ${sd.date} = ${SafeJSON.stringify(dump)}`);
+            return allPeople.indexOf(this.person) != -1;
         });
     }
 }

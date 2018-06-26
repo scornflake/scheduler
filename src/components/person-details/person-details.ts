@@ -1,11 +1,12 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, Input, Output} from '@angular/core';
 import {NavController} from "ionic-angular";
 import {RootStore} from "../../store/root";
 import {Person} from "../../scheduling/people";
 
 @Component({
     selector: 'person-details',
-    templateUrl: 'person-details.html'
+    templateUrl: 'person-details.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PersonDetailsComponent {
     @Input() person: Person;
