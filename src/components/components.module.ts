@@ -17,8 +17,9 @@ import {OrganizationEditorComponent} from './organization-editor/organization-ed
 import {MobxAngularModule} from "mobx-angular";
 import {IonSegmentHotfix} from "../common/directives";
 import {ResponsiveModule} from "ng2-responsive";
-import {CalendarModule} from "ionic3-calendar-en";
 import {CalendarComponent} from "./swbcalendar/swbcalendar";
+import {Calendar} from "./ion-calendar/ion-calendar";
+import {monthName} from "../common/pipes/month-name";
 
 @NgModule({
     declarations: [
@@ -36,14 +37,15 @@ import {CalendarComponent} from "./swbcalendar/swbcalendar";
         PersonUnavailableComponent,
         OrganizationEditorComponent,
         IonSegmentHotfix,
-        CalendarComponent
+        CalendarComponent,
+        Calendar,
+        monthName
     ],
     imports: [
         IonicModule,
         NgPipesModule,
         MobxAngularModule,
         ResponsiveModule,
-        CalendarModule
     ],
     entryComponents: [
         CalendarComponent,
@@ -62,8 +64,9 @@ import {CalendarComponent} from "./swbcalendar/swbcalendar";
         PersonScheduleComponent,
         PersonUnavailableComponent,
         OrganizationEditorComponent,
-        CalendarModule,
-        CalendarComponent
+        Calendar,
+        CalendarComponent,
+        monthName
     ]
 })
 export class ComponentsModule {

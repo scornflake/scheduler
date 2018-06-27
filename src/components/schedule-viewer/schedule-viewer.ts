@@ -1,4 +1,4 @@
-import {ApplicationRef, Component, Input, ViewChild} from '@angular/core';
+import {ApplicationRef, ChangeDetectionStrategy, Component, Input, ViewChild} from '@angular/core';
 import {isArray} from "util";
 import {Person} from "../../scheduling/people";
 import {PopoverController, Slides} from "ionic-angular";

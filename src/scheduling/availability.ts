@@ -5,7 +5,6 @@ import {Logger} from "ionic-logging-service";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {ObjectWithUUID} from "./base-types";
 import {observable} from "mobx-angular";
-import {TypedObject} from "./base-types";
 
 export enum AvailabilityUnit {
     // Models availability such as "every 4 weeks".
