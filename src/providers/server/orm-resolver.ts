@@ -16,16 +16,16 @@ class StoreBasedResolver implements IReferenceResolver {
         this.utils = new OrmUtils(LoggingWrapper.getLogger('orm.resolver'));
     }
 
-    async async_lookup_list_of_references(references: Array<any>, nesting: number = 0) {
+    async async_lookupListOfReferences(references: Array<any>, nesting: number = 0) {
         let new_list = observable([]);
         for (let item of references) {
             let ref: ObjectReference = this.mapper.parse_reference(item);
-            new_list.push(await this.async_lookup_object_reference(ref, nesting + 1));
+            new_list.push(await this.async_lookupObjectReference(ref, nesting + 1));
         }
         return new_list;
     }
 
-    async async_lookup_map_of_reference_keys(mapping: PropertyMapping, value: any, nesting: number = 0) {
+    async async_lookupMapOfReferenceKeys(mapping: PropertyMapping, value: any, nesting: number = 0) {
         // So. The keys will be references.
         // For now, the values are presumed to be primitives.
         let result_map = new Map<TypedObject, any>();
@@ -35,14 +35,14 @@ class StoreBasedResolver implements IReferenceResolver {
             this.utils.debug(`_lookup_map_of_reference_keys going to try lookup on: ${reference}`, nesting);
 
             let ref: ObjectReference = this.mapper.parse_reference(reference);
-            let reference_obj = await this.async_lookup_object_reference(ref, nesting);
-            let js_value = this.mapper.convert_from_db_value_to_js_type(value[key], mapping);
+            let reference_obj = await this.async_lookupObjectReference(ref, nesting);
+            let js_value = this.mapper.convertDocValueToJSValue(value[key], mapping);
             result_map.set(reference_obj, js_value);
         }
         return result_map;
     }
 
-    async async_lookup_map_of_reference_values(mapping: PropertyMapping, mapWithReferenceValues: any, nesting: number = 0) {
+    async async_lookupMapOfReferenceValues(mapping: PropertyMapping, mapWithReferenceValues: any, nesting: number = 0) {
         let result_map = new Map<any, any>();
         this.utils.debug(`_lookup_map_of_reference_values received a value of ${SafeJSON.stringify(mapWithReferenceValues)}`, nesting);
 
@@ -51,22 +51,22 @@ class StoreBasedResolver implements IReferenceResolver {
         for (let key of reference_keys) {
             let reference = mapWithReferenceValues["" + key];
             let typeName = GetTheTypeNameOfTheObject(reference);
-            let js_key = this.mapper.convert_from_db_value_to_js_type(key, mapping);
+            let js_key = this.mapper.convertDocValueToJSValue(key, mapping);
             if (typeName == 'array') {
                 this.utils.debug(`_lookup_map_of_reference_values looking array of references: ${reference}/${typeName}`, nesting);
-                result_map.set(js_key, await this.async_lookup_list_of_references(reference, nesting + 1));
+                result_map.set(js_key, await this.async_lookupListOfReferences(reference, nesting + 1));
             } else {
                 this.utils.debug(`_lookup_map_of_reference_values going to try lookup on: ${reference}/${typeName}`, nesting);
                 let ref: ObjectReference = this.mapper.parse_reference(reference);
-                result_map.set(js_key, await this.async_lookup_object_reference(ref, nesting + 1));
+                result_map.set(js_key, await this.async_lookupObjectReference(ref, nesting + 1));
             }
         }
 
         return result_map;
     }
 
-    async async_lookup_object_reference(reference: ObjectReference, nesting: number = 0) {
-        return await this.loader.async_load_object_with_id(reference.id, true, nesting);
+    async async_lookupObjectReference(reference: ObjectReference, nesting: number = 0) {
+        return await this.loader.async_LoadObjectWithUUID(reference.id, true, nesting);
     }
 
 }

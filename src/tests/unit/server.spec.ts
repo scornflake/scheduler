@@ -236,14 +236,14 @@ describe('scheduler server', () => {
             when(dbMock.setCache(anything()));
 
             // Intentional, so that the test STOPS here and doesn't run the rest
-            when(dbMock.async_does_object_with_id_exist(userResponse.uuid)).thenResolve(true);
-            when(dbMock.async_load_object_with_id(userResponse.uuid)).thenResolve(personInDB);
+            when(dbMock.async_DoesObjectExistWithUUID(userResponse.uuid)).thenResolve(true);
+            when(dbMock.async_LoadObjectWithUUID(userResponse.uuid)).thenResolve(personInDB);
 
             let dbInstance = instance(dbMock);
 
             server.asyncWaitForDBToContainPerson(userResponse.uuid, dbInstance, 1500).then(p => {
-                verify(dbMock.async_does_object_with_id_exist(userResponse.uuid)).called();
-                verify(dbMock.async_load_object_with_id(userResponse.uuid)).called();
+                verify(dbMock.async_DoesObjectExistWithUUID(userResponse.uuid)).called();
+                verify(dbMock.async_LoadObjectWithUUID(userResponse.uuid)).called();
                 expect(p).toBe(personInDB);
                 done();
             });

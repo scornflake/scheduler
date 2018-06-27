@@ -150,7 +150,7 @@ class OrmConverter {
 
                 switch (mapping.type) {
                     case MappingType.Property: {
-                        newValueForProperty = this.mapper.convert_from_db_value_to_js_type(dict[propertyName], mapping);
+                        newValueForProperty = this.mapper.convertDocValueToJSValue(dict[propertyName], mapping);
                         this.utils.debug(`${propertyName} = ${newValueForProperty}`, nesting);
                         break;
                     }
@@ -212,28 +212,28 @@ class OrmConverter {
                     case MappingType.Reference: {
                         this.utils.debug(`${propertyName} = reference: ${value}`, nesting);
                         let ref: ObjectReference = this.mapper.parse_reference(value);
-                        newValueForProperty = await this._resolver.async_lookup_object_reference(ref, nesting + 1);
+                        newValueForProperty = await this._resolver.async_lookupObjectReference(ref, nesting + 1);
                         break;
                     }
 
                     case MappingType.ReferenceList: {
                         // Assume 'value' is a list of object references
                         this.utils.debug(`${propertyName} = list of ${value.length} references`, nesting);
-                        newValueForProperty = await this._resolver.async_lookup_list_of_references(value, nesting + 1);
+                        newValueForProperty = await this._resolver.async_lookupListOfReferences(value, nesting + 1);
                         this.utils.debug(`    ... got ${newValueForProperty}`, nesting);
                         break;
                     }
 
                     case MappingType.MapWithReferenceValues: {
                         this.utils.debug(`${propertyName} = map of ${value.size} reference (values)`, nesting);
-                        newValueForProperty = await this._resolver.async_lookup_map_of_reference_values(mapping, value, nesting + 1);
+                        newValueForProperty = await this._resolver.async_lookupMapOfReferenceValues(mapping, value, nesting + 1);
                         this.utils.debug(`    ... got ${newValueForProperty}`, nesting);
                         break;
                     }
 
                     case MappingType.MapWithReferenceKeys: {
                         this.utils.debug(`${propertyName} = map of ${value.size} reference (keys)`, nesting);
-                        newValueForProperty = await this._resolver.async_lookup_map_of_reference_keys(mapping, value, nesting + 1);
+                        newValueForProperty = await this._resolver.async_lookupMapOfReferenceKeys(mapping, value, nesting + 1);
                         this.utils.debug(`    ... got ${newValueForProperty}`, nesting);
                         break;
                     }

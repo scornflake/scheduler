@@ -175,7 +175,7 @@ class SchedulerDatabase implements IObjectStore {
     }
 
     @action
-    async async_load_object_with_id(id: string, useCache: boolean = true, nesting: number = 0): Promise<ObjectWithUUID> {
+    async async_LoadObjectWithUUID(id: string, useCache: boolean = true, nesting: number = 0): Promise<ObjectWithUUID> {
         if (isUndefined(id)) {
             throw new Error("load_object_with_id failed. You must pass in an id (you passed in 'undefined')");
         }
@@ -213,7 +213,7 @@ class SchedulerDatabase implements IObjectStore {
         this.logger.debug(`${this.gap(nesting)}${message}`);
     }
 
-    add_db_specific_properties_to_dict(dict: object, obj: any, nesting: number) {
+    addDBSpecificPropertiesToDict(dict: object, obj: any, nesting: number) {
         return this._convert_add_type_id_and_rev(dict, obj, false, nesting);
     }
 
@@ -237,7 +237,7 @@ class SchedulerDatabase implements IObjectStore {
     }
 
 
-    async async_does_object_with_id_exist(id: string): Promise<boolean> {
+    async async_DoesObjectExistWithUUID(id: string): Promise<boolean> {
         try {
             await this.db.get(id);
             return true;
@@ -259,7 +259,7 @@ class SchedulerDatabase implements IObjectStore {
     }
 
     @action
-    async async_store_or_update_object(object: ObjectWithUUID, force_rev_check: boolean = false, ignore_not_found: boolean = false): Promise<ObjectWithUUID> {
+    async async_storeOrUpdateObject(object: ObjectWithUUID, force_rev_check: boolean = false, ignore_not_found: boolean = false): Promise<ObjectWithUUID> {
         // Get the latest rev
         if (object == null || isUndefined(object)) {
             throw new Error("Trying to save nothing / undefined?");
@@ -285,7 +285,7 @@ class SchedulerDatabase implements IObjectStore {
                 }
             }
 
-            let dict_of_object = await this._converter.writer.async_create_dict_from_js_object(object);
+            let dict_of_object = await this._converter.writer.async_createDocFromJSObject(object);
             dict_of_object = this._convert_add_type_id_and_rev(dict_of_object, object, true);
             this.logger.debug(`About to 'put' dict '${dict_of_object}' from type ${object.type}`);
             try {
@@ -419,7 +419,7 @@ class SchedulerDatabase implements IObjectStore {
         for (let owner of Array.from(this.tracker.getChangedObjects().values())) {
             if (owner instanceof ObjectWithUUID) {
                 let owuid = owner as ObjectWithUUID;
-                await this.async_store_or_update_object(owuid).then(() => {
+                await this.async_storeOrUpdateObject(owuid).then(() => {
                     this.logger.info(`Save object: ${owuid.uuid}`);
                     this.tracker.clearChangesFor(owuid);
                 });

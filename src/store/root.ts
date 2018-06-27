@@ -97,7 +97,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
     }
 
     async asyncSaveOrUpdateDb(object: ObjectWithUUID) {
-        return await this.db.async_store_or_update_object(object);
+        return await this.db.async_storeOrUpdateObject(object);
     }
 
     async async_remove_object_from_db(object: ObjectWithUUID) {
@@ -177,7 +177,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
         // Not ... NICE, but doable?
         let newAssignments = [];
         for (let assign of existingPlan.assignments) {
-            let assign_dict = await this.db.converter.writer.async_create_dict_from_js_object(assign);
+            let assign_dict = await this.db.converter.writer.async_createDocFromJSObject(assign);
 
             // redo the _id, remove the _rev and make is_new = true.
             // This'll make the object appear 'new'

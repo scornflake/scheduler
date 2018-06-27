@@ -44,23 +44,23 @@ type ClassFieldMapping = {
 
 
 interface IObjectStore {
-    async_store_or_update_object(object: ObjectWithUUID, force_rev_check: boolean, ignore_not_found: boolean): Promise<ObjectWithUUID>;
+    async_storeOrUpdateObject(object: ObjectWithUUID, forceRevCheck: boolean, ignoreNotFound: boolean): Promise<ObjectWithUUID>;
 
-    async_load_object_with_id(id: string, useCache: boolean, nesting: number): Promise<TypedObject>;
+    async_LoadObjectWithUUID(id: string, useCache: boolean, nesting: number): Promise<TypedObject>;
 
-    async_does_object_with_id_exist(id: string): Promise<boolean>;
+    async_DoesObjectExistWithUUID(id: string): Promise<boolean>;
 
-    add_db_specific_properties_to_dict(dict: object, obj: any, nesting: number);
+    addDBSpecificPropertiesToDict(dict: object, obj: any, nesting: number);
 }
 
 interface IReferenceResolver {
-    async_lookup_object_reference(reference: ObjectReference, nesting: number);
+    async_lookupObjectReference(reference: ObjectReference, nesting: number);
 
-    async_lookup_list_of_references(references, nesting: number);
+    async_lookupListOfReferences(references, nesting: number);
 
-    async_lookup_map_of_reference_values(mapping: PropertyMapping, mapWithReferenceValues: any, nesting: number);
+    async_lookupMapOfReferenceValues(mapping: PropertyMapping, mapWithReferenceValues: any, nesting: number);
 
-    async_lookup_map_of_reference_keys(mapping: PropertyMapping, value: any, nesting: number);
+    async_lookupMapOfReferenceKeys(mapping: PropertyMapping, mapWithReferenceKeys: any, nesting: number);
 }
 
 

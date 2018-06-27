@@ -189,9 +189,9 @@ export class DatabaseMaintPage implements OnDestroy {
             this.pageUtils.showMessage(`${people_added.length} people added`);
         }
 
-        await this.db.async_store_or_update_object(defaultTeam);
+        await this.db.async_storeOrUpdateObject(defaultTeam);
         let plan = this.setup_fake_draft_plan(defaultTeam);
-        await this.db.async_store_or_update_object(plan);
+        await this.db.async_storeOrUpdateObject(plan);
     }
 
     private setup_fake_draft_plan(team: Team): Plan {

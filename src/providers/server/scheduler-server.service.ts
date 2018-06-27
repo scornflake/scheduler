@@ -15,11 +15,11 @@ import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {action, observable} from "mobx-angular";
 import {Storage} from '@ionic/storage';
 import {OrmMapper} from "../mapping/orm-mapper";
-import {catchError, debounceTime, filter, flatMap, map, take, timeout} from "rxjs/operators";
+import {catchError, filter, flatMap, take, timeout} from "rxjs/operators";
 import {ConfigurationService} from "ionic-configuration-service";
 import "rxjs/add/observable/fromPromise";
 import "rxjs/add/observable/interval";
-import {ObjectUtils, PageUtils} from "../../pages/page-utils";
+import {ObjectUtils} from "../../pages/page-utils";
 import {isDefined} from "ionic-angular/util/util";
 import {runInAction} from "mobx";
 import {ILifecycle, ILifecycleCallback} from "./interfaces";
@@ -273,12 +273,12 @@ class SchedulerServer implements ILifecycle {
 
     async saveOrganization(organization: Organization): Promise<Organization> {
         // TODO: Also update the Django server
-        return await this._db.async_store_or_update_object(organization) as Organization;
+        return await this._db.async_storeOrUpdateObject(organization) as Organization;
     }
 
     async savePerson(person: Person): Promise<Person> {
         // TODO: Also update the Django server
-        return await this._db.async_store_or_update_object(person) as Person;
+        return await this._db.async_storeOrUpdateObject(person) as Person;
     }
 
     async db_findPersonByEmail(email: string): Promise<Person> {
@@ -294,7 +294,7 @@ class SchedulerServer implements ILifecycle {
     }
 
     async db_findByUUID<T extends ObjectWithUUID>(uuid: string, useCache: boolean = true): Promise<T> {
-        return await this._db.async_load_object_with_id(uuid, useCache) as T;
+        return await this._db.async_LoadObjectWithUUID(uuid, useCache) as T;
     }
 
     private async asyncLoadState(): Promise<object> {
@@ -475,7 +475,7 @@ class SchedulerServer implements ILifecycle {
             .pipe(
                 flatMap(() => {
                     this.logger.debug(`Seeing if person ${personUUID} exists...`);
-                    return Observable.from(newDb.async_does_object_with_id_exist(personUUID));
+                    return Observable.from(newDb.async_DoesObjectExistWithUUID(personUUID));
                 }),
                 filter((v: boolean) => v),
                 timeout(responseTimeout),
@@ -492,7 +492,7 @@ class SchedulerServer implements ILifecycle {
 
         // Make sure store logged in person is set
         // Again, causing various subjects on RootStore to fire, getting new state & objects
-        let person = await newDb.async_load_object_with_id(personUUID) as Person;
+        let person = await newDb.async_LoadObjectWithUUID(personUUID) as Person;
         if (!person) {
             throw new Error(`Cannot find person with UUID ${personUUID}, setupDBFromState failed`);
         }

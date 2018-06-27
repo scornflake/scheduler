@@ -281,7 +281,7 @@ class OrmMapper {
         return {type: parts[1], id: parts[2]};
     }
 
-    convert_from_js_value_to_db_value(thing: any, mapping: PropertyMapping) {
+    convertJSValueToDocValue(thing: any, mapping: PropertyMapping) {
         if (mapping == null || isUndefined(mapping)) {
             throw new Error(`Trying to 'convert_from_js_value_to_db_value' but got ${mapping} for the mapping`);
         }
@@ -297,7 +297,7 @@ class OrmMapper {
         return thing;
     }
 
-    convert_from_db_value_to_js_type(value: string, mapping: PropertyMapping) {
+    convertDocValueToJSValue(value: string, mapping: PropertyMapping) {
         if (mapping == null || isUndefined(mapping)) {
             throw new Error(`Trying to 'convert_from_db_value_to_js_type' for property ${value} but got ${mapping} for the mapping`);
         }
