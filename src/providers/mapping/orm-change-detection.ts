@@ -354,15 +354,19 @@ class ObjectChangeTracker {
         this.changed_objects.delete(owner.uuid);
     }
 
-    disableTrackingFor(object: ObjectWithUUID) {
-        if (object) {
-            this.tracking_disabled.set(object.uuid, true);
+    disableTrackingFor(objectOrUUID: ObjectWithUUID | string) {
+        if (objectOrUUID instanceof ObjectWithUUID) {
+            this.tracking_disabled.set(objectOrUUID.uuid, true);
+        } else {
+            this.tracking_disabled.set(objectOrUUID, true);
         }
     }
 
-    enableTrackingFor(object: ObjectWithUUID) {
-        if (object) {
-            this.tracking_disabled.delete(object.uuid);
+    enableTrackingFor(objectOrUUID: ObjectWithUUID | string) {
+        if (objectOrUUID instanceof ObjectWithUUID) {
+            this.tracking_disabled.delete(objectOrUUID.uuid);
+        } else {
+            this.tracking_disabled.delete(objectOrUUID);
         }
     }
 }

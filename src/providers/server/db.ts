@@ -344,14 +344,18 @@ class SchedulerDatabase implements IObjectStore {
             }
             let new_object = null;
             try {
+                this.tracker.disableTrackingFor(docId);
                 new_object = await this._converter.reader.async_createJSObjectFromDoc(doc, type);
                 if (new_object) {
                     list_of_new_things.push(new_object);
+                    this.trackChanges(new_object);
                     this.storeInCache(new_object);
                 }
             } catch (err) {
                 this.logger.error(`ERROR creating JS from dict, doc ID: ${docId}, ${err}`);
                 this.logger.error(`DOC was: ${SafeJSON.stringify(doc)}`);
+            } finally {
+                this.tracker.enableTrackingFor(docId);
             }
         }
         // this.logger.info(`converted ${docs.length} docs into ${list_of_new_things.length} objects`);

@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
 import {IonicPage, NavController, NavParams} from 'ionic-angular';
 import {RootStore} from "../../store/root";
 import {PageUtils} from "../page-utils";
@@ -10,6 +10,7 @@ import {PageUtils} from "../page-utils";
 @Component({
     selector: 'page-profile',
     templateUrl: 'profile.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProfilePage {
 

@@ -2,6 +2,7 @@ import {ChangeDetectionStrategy, Component, EventEmitter, Input, Output} from '@
 import {NavController} from "ionic-angular";
 import {RootStore} from "../../store/root";
 import {Person} from "../../scheduling/people";
+import {observable} from "mobx-angular";
 
 @Component({
     selector: 'person-details',
@@ -9,7 +10,7 @@ import {Person} from "../../scheduling/people";
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PersonDetailsComponent {
-    @Input() person: Person;
+    @observable @Input() person: Person;
     @Input() availabilityTitle: string = "Availability";
     @Output() show_availability = new EventEmitter();
 

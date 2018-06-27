@@ -10,7 +10,7 @@
         <div *ngSwitchCase="'regular'">
             <ion-item *ngIf="state.unit != 'anytime'" no-lines>
                 <ion-segment color="primary" [(ngModel)]="days" (ionChange)="build_availability()">
-                    <ion-segment-button *ngFor="let num of regular_days_options()" value="{{num}}">{{num}}
+                    <ion-segment-button *ngFor="let num of regular_days_options" value="{{num}}">{{num}}
                     </ion-segment-button>
                 </ion-segment>
             </ion-item>
@@ -27,13 +27,13 @@
                 <ion-row>
                     <ion-segment col-4 item-start color="primary" [(ngModel)]="days"
                                  (ionChange)="build_availability()">
-                        <ion-segment-button *ngFor="let num of regular_days_options()" value="{{num}}">{{num}}
+                        <ion-segment-button *ngFor="let num of regular_days_options" value="{{num}}">{{num}}
                         </ion-segment-button>
                     </ion-segment>
                     <ion-label col-1 text-center>in</ion-label>
                     <ion-segment col-4 item-end color="primary" [(ngModel)]="weeks"
                                  (ionChange)="build_availability()">
-                        <ion-segment-button *ngFor="let num of regular_days_options()" value="{{num}}">{{num}}
+                        <ion-segment-button *ngFor="let num of regular_days_options" value="{{num}}">{{num}}
                         </ion-segment-button>
                     </ion-segment>
                     <ion-label col-2 text-center>weeks</ion-label>

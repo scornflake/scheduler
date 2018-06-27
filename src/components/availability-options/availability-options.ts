@@ -4,7 +4,7 @@ import {clamp} from "ionic-angular/util/util";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {action, computed, observable} from "mobx-angular";
-import {runInAction} from "mobx";
+import {ObservableMap, runInAction} from "mobx";
 
 @Component({
     selector: 'availability-options',
@@ -13,7 +13,7 @@ import {runInAction} from "mobx";
 })
 export class AvailabilityOptionsComponent implements OnInit {
     @observable _availability: Availability;
-    @observable _state = {};
+    @observable _state = new ObservableMap();
     @observable type: string;
     private logger: Logger;
 
@@ -25,6 +25,10 @@ export class AvailabilityOptionsComponent implements OnInit {
 
     ngOnInit(): void {
         // this.
+    }
+
+    @computed get avail(): Availability {
+        return this._availability;
     }
 
     get availability(): Availability {
@@ -40,7 +44,7 @@ export class AvailabilityOptionsComponent implements OnInit {
                 if (this._availability.unit == AvailabilityUnit.AVAIL_ANYTIME) {
                     this.type = "anytime";
                 }
-                this.logger.warn(`Type (after set of avail) now: ${this.type}`);
+                // this.logger.warn(`Type (after set of avail) now: ${this.type}`);
                 let state = this.state;
                 state['days'] = this._availability.period.toString();
                 state['unit'] = this._availability.unit;
@@ -63,7 +67,7 @@ export class AvailabilityOptionsComponent implements OnInit {
     @computed get state() {
         let key = this.state_key;
         if (!this._state.hasOwnProperty(key)) {
-            this._state[key] = {}
+            this._state[key] = new ObservableMap();
         }
         return this._state[key]
     }
@@ -106,8 +110,8 @@ export class AvailabilityOptionsComponent implements OnInit {
         }
     }
 
-    regular_days_options(tag = '') {
-        if (!this.availability) {
+    @computed get regular_days_options() {
+        if (!this.avail) {
             return []
         }
         let weeks = ["1", "2", "3", "4"];
@@ -115,7 +119,7 @@ export class AvailabilityOptionsComponent implements OnInit {
             return weeks
         }
 
-        if (this.availability.unit == AvailabilityUnit.EVERY_N_DAYS) {
+        if (this.avail.unit == AvailabilityUnit.EVERY_N_DAYS) {
             return ["1", "2", "3", "4", "5", "6", "7"]
         }
         return weeks
@@ -136,6 +140,6 @@ export class AvailabilityOptionsComponent implements OnInit {
             this.availability = new Availability();
         }
         // this.logger.info(`Changed avail to ${this.availability}`);
-        this.availabilityChange.emit(this.availability);
+        this.availabilityChange.emit(this.avail);
     }
 }

@@ -2,9 +2,8 @@ TODO:
 -----
 - Get sign in / reg lifecycle going (done?)
   - Don't auto sign in as me :)
-  - When logging out, clear the saved state
-- Two clients (safari/chrome):
-  - Starts going into endless update loop. Going to have to make writes much smarter. It *looks* like the change detector is seeing a change to 'rev' on SavedState
+- Sync
+  - changing the assignment on person, propagates, but 2nd client doesn't see the change in the UI. refresh works.
 - Rules dont appear to be persisted (see AddPeopleToPlanWithRoles for neil)
 - Offline. Close server. Get app to startup.
 - DB isn't showing an up to date version of info. Should reload this on page reload?
@@ -19,15 +18,10 @@ TODO:
   - changing rules
   - changing role assignments
 - Finish 'clone plan'
-- Make it possible to specify period of the plan (days in between each) and what time it starts (e.g: 10am)
-- Performance
-    - revisit mobx-angular
-    - Work out why mobx not updating in ng
-      - It's not triggering a refresh of view when UIStore.selected_person is changed
-      - Because *mobxAutorun turns OFF change detection. And expects a model change to fire a change to the 'view'. However; this doesn't happen because most of the stuff is computed.  I think perhaps I don't have enough stuff marked as @computed?
 - Work out possible hosting. Google? AWS? Cost?
   - It would be GREAT to have CI build the docker images (after running tests) and auto-deploy. At least for a test environment.
 - Add 'level' to Person, and write up about game-ifying the whole thing
+- Make it possible to specify period of the plan (days in between each) and what time it starts (e.g: 10am)
 
 
 Storing Data - Probably a good idea!
