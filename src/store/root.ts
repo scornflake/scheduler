@@ -186,7 +186,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
             assign_dict.is_new = true;
 
             // Now convert it back to an assignment, and VIOLA.
-            let newAssignment = await this.db.converter.async_create_js_object_from_dict(assign_dict, 'Assignment');
+            let newAssignment = await this.db.converter.reader.async_createJSObjectFromDoc(assign_dict, 'Assignment');
             if (newAssignment) {
                 newAssignments.push(newAssignment);
             } else {

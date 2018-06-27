@@ -1,17 +1,20 @@
 import {Availability, AvailabilityEveryNOfM} from "../scheduling/availability";
-import {Preferences} from "../scheduling/people";
+import {Person, Preferences} from "../scheduling/people";
 import {Team} from "../scheduling/teams";
-import {Person} from "../scheduling/people";
 import {Plan} from "../scheduling/plan";
 import {Organization} from "../scheduling/organization";
 import {Unavailability} from "../scheduling/unavailability";
 import {ClassFieldMapping, MappingType, PropertyHint} from "../providers/mapping/orm-mapper-type";
 import {
-    AssignedToRoleCondition, ConditionAction,
+    AssignedToRoleCondition,
+    ConditionAction,
     ConditionalRule,
     FixedRoleOnDate,
     OnThisDate,
-    Rule, ScheduleOn, SecondaryAction, TryToScheduleWith,
+    Rule,
+    ScheduleOn,
+    SecondaryAction,
+    TryToScheduleWith,
     WeightedRoles
 } from "../scheduling/rule_based/rules";
 import {csd} from "../scheduling/common/date-utils";

@@ -1,10 +1,4 @@
-import {
-    IObjectStore,
-    IReferenceResolver,
-    MappingType,
-    NameForMappingPropType,
-    PropertyMapping
-} from "../mapping/orm-mapper-type";
+import {IObjectStore, MappingType, NameForMappingPropType, PropertyMapping} from "../mapping/orm-mapper-type";
 import {ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
 import {GetTheTypeNameOfTheObject, OrmMapper} from "../mapping/orm-mapper";
 import {SafeJSON} from "../../common/json/safe-stringify";
@@ -12,22 +6,16 @@ import {OrmUtils} from "./orm-utils";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {isUndefined} from "util";
-import {IObjectCache} from "../mapping/cache";
 
 class OrmConverterWriter {
     private logger: Logger;
     private utils: OrmUtils;
 
     constructor(private mapper: OrmMapper,
-                private objectLoader: IObjectStore,
-                private cache: IObjectCache
+                private objectLoader: IObjectStore
     ) {
         this.logger = LoggingWrapper.getLogger('orm.writer');
         this.utils = new OrmUtils(this.logger);
-    }
-
-    setCache(cache: IObjectCache) {
-        this.cache = cache;
     }
 
     async async_createDocFromJSObject(object: TypedObject, nesting: number = 0) {

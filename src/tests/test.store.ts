@@ -18,7 +18,6 @@ import {
 } from "./sample-data";
 import {Plan} from "../scheduling/plan";
 import {Team} from "../scheduling/teams";
-import {Organization} from "../scheduling/organization";
 import {PersonManager} from "../scheduling/common/scheduler-store";
 
 

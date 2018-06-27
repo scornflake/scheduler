@@ -162,7 +162,7 @@ describe('db', () => {
             let simpleObj = new SimpleWithDate();
             converter.writer.async_createDocFromJSObject(simpleObj).then(dict => {
                 expect(dict.some_date).toEqual(simpleObj.some_date.toISOString());
-                converter.async_create_js_object_from_dict(dict, 'SimpleWithDate').then((newObj: SimpleWithDate) => {
+                converter.reader.async_createJSObjectFromDoc(dict, 'SimpleWithDate').then((newObj: SimpleWithDate) => {
                     expect(newObj.some_date).toEqual(simpleObj.some_date);
                     done();
                 });
@@ -178,7 +178,7 @@ describe('db', () => {
             converter.writer.async_createDocFromJSObject(role_instance).then(dict => {
                 expect(dict.name).toEqual(role_instance.name);
 
-                converter.async_create_js_object_from_dict(dict, 'Role').then((newObj: Role) => {
+                converter.reader.async_createJSObjectFromDoc(dict, 'Role').then((newObj: Role) => {
                     expect(role_instance == newObj).toBeTruthy();
                     expect(newObj == new Role(role_instance.name)).toBeFalsy();
                     done();
@@ -195,7 +195,7 @@ describe('db', () => {
             converter.cache.saveInCache(neil);
 
             converter.writer.async_createDocFromJSObject(team).then(team_dict => {
-                converter.async_create_js_object_from_dict(team_dict, 'Team').then((newTeam: Team) => {
+                converter.reader.async_createJSObjectFromDoc(team_dict, 'Team').then((newTeam: Team) => {
                     expect(team).toEqual(newTeam);
                     expect(team.people[0]).toEqual(neil);
                     expect(team.people[0] === neil).toBeTruthy();
@@ -211,7 +211,7 @@ describe('db', () => {
             cache.saveInCache(neil);
 
             converter.writer.async_createDocFromJSObject(neil).then(neil_dict => {
-                converter.async_create_js_object_from_dict(neil_dict, 'Person').then((newPerson: Person) => {
+                converter.reader.async_createJSObjectFromDoc(neil_dict, 'Person').then((newPerson: Person) => {
                     expect(neil).toEqual(newPerson);
 
                     // should be different instances
@@ -231,7 +231,7 @@ describe('db', () => {
             cache.saveInCache(plan);
 
             converter.writer.async_createDocFromJSObject(plan).then(plan_dict => {
-                converter.async_create_js_object_from_dict(plan_dict, 'Plan').then((newPlan: Plan) => {
+                converter.reader.async_createJSObjectFromDoc(plan_dict, 'Plan').then((newPlan: Plan) => {
                     expect(plan).toEqual(newPlan);
                     expect(team).toEqual(newPlan.team);
                     expect(plan.team == newPlan.team).toBeTruthy();
@@ -280,7 +280,7 @@ describe('db', () => {
                 cache.saveInCache(defaultComputerRole);
                 converter.writer.async_createDocFromJSObject(thePlan).then(dict => {
                     // console.log(`made a dict for the Plan: ${JSON.stringify(dict)}...`);
-                    converter.async_create_js_object_from_dict(dict, 'Plan').then((jsObject: Plan) => {
+                    converter.reader.async_createJSObjectFromDoc(dict, 'Plan').then((jsObject: Plan) => {
                         console.log(`Reconstruction: ${SafeJSON.stringify(jsObject)}`);
 
                         expect(jsObject.name).toEqual(thePlan.name);
@@ -367,7 +367,7 @@ describe('db', () => {
 
                 // Now, if I convert that back into an object, do I get something sensible?
                 console.log(`time to see if we can go the other way...`);
-                converter.async_create_js_object_from_dict(dict, 'MapAnyRefs').then((js_object: MapAnyRefs) => {
+                converter.reader.async_createJSObjectFromDoc(dict, 'MapAnyRefs').then((js_object: MapAnyRefs) => {
                     console.log(`we hydrated: ${JSON.stringify(js_object)}`);
 
                     let all_keys = Array.from(js_object.map_of_stuffs.keys());
@@ -705,7 +705,7 @@ describe('db', () => {
             converter.writer.async_createDocFromJSObject(me).then(dict_obj => {
                 console.log(`I made: ${SafeJSON.stringify(dict_obj)}`);
 
-                converter.async_create_js_object_from_dict(dict_obj, 'Person').then((reconstructed_js_obj: Person) => {
+                converter.reader.async_createJSObjectFromDoc(dict_obj, 'Person').then((reconstructed_js_obj: Person) => {
                     // need to make this the same this for the equal to work
                     reconstructed_js_obj['_rev'] = undefined;
 

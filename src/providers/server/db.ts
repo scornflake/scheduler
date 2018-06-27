@@ -193,7 +193,7 @@ class SchedulerDatabase implements IObjectStore {
             if (doc['type']) {
                 let object_type = doc['type'];
                 this.persistence_debug(`load object ${id}, type: ${object_type}`, nesting);
-                let instance = await this._converter.async_create_js_object_from_dict(doc, object_type, nesting);
+                let instance = await this._converter.reader.async_createJSObjectFromDoc(doc, object_type, nesting);
                 return this.trackChanges(instance);
             }
         } catch (err) {
@@ -344,7 +344,7 @@ class SchedulerDatabase implements IObjectStore {
             }
             let new_object = null;
             try {
-                new_object = await this._converter.async_create_js_object_from_dict(doc, type);
+                new_object = await this._converter.reader.async_createJSObjectFromDoc(doc, type);
                 if (new_object) {
                     list_of_new_things.push(new_object);
                     this.storeInCache(new_object);
