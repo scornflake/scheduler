@@ -91,11 +91,16 @@ export class MyApp {
                 ]
             },
             {
-                title: "Dev", items: [
+                title: "Dev", visible: () => this.devVisible, items: [
+                    {title: "Test Page", page: 'page-test-utils'},
                     {title: "DB Maint", page: 'page-db'},
                 ]
             },
         ]
+    }
+
+    get devVisible(): boolean {
+        return true;
     }
 
     pagesOfGroup(group) {

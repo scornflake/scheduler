@@ -9,8 +9,9 @@ import {Logger} from "ionic-logging-service";
 import {Team} from "./teams";
 import {Role} from "./role";
 import {NamedObject} from "./base-types";
-import {observable} from "mobx-angular";
-import {addDaysToDate} from "./common/date-utils";
+import {action, computed, observable} from "mobx-angular";
+import {addDaysToDate, dateForISODateString} from "./common/date-utils";
+import {ObservableMap} from "mobx";
 
 class Plan extends NamedObject {
     @observable start_date: Date;
@@ -73,7 +74,7 @@ class Plan extends NamedObject {
         return daysBetween(this.start_date, this.end_date);
     }
 
-    get assignments(): Array<Assignment> {
+    @computed get assignments(): Array<Assignment> {
         return this._assignments;
     }
 
@@ -96,7 +97,7 @@ class Plan extends NamedObject {
     }
 
     assignments_with_role(role: Role): Array<Assignment> {
-        return this._assignments.filter(assignment => {
+        return this.assignments.filter(assignment => {
             for (let assignmentRole of assignment.roles) {
                 if (role.uuid == assignmentRole.uuid) {
                     return true;
@@ -106,15 +107,15 @@ class Plan extends NamedObject {
         });
     }
 
-    // order_people_by_role_layout_priority() {
-    //     return this._assignments.sort((a1, a2) => {
-    //         let maxlp1 = a1.max_role_layout_priority;
-    //         let maxlp2 = a2.max_role_layout_priority;
-    //         return maxlp1 < maxlp2 ? 1 : maxlp1 > maxlp2 ? -1 : 0;
-    //     }).map(a => a.person);
-    // }
+    @action setEndDateFromISO(dateString: string) {
+        this.end_date = dateForISODateString(dateString);
+    }
 
-    get people(): Array<Person> {
+    @action setStartDateFromISO(dateString: string) {
+        this.start_date = dateForISODateString(dateString);
+    }
+
+    @computed get people(): Array<Person> {
         return this._assignments.map(a => a.person);
     }
 
@@ -151,6 +152,7 @@ class Plan extends NamedObject {
         }
     }
 
+    @computed
     get roles_in_layout_order(): Array<Role> {
         return this.roles.sort((a, b) => {
             if (a.layout_priority < b.layout_priority) {
@@ -188,6 +190,7 @@ class Plan extends NamedObject {
         });
     }
 
+    @action
     addPickRule(rule: Rule) {
         /*
         When putting rules together, user specified pick rules must come before the
@@ -198,10 +201,11 @@ class Plan extends NamedObject {
         // console.log("Rules now " + SafeJSON.stringify(this.rules));
     }
 
+    @computed
     get roles_in_layout_order_grouped(): Array<Array<Role>> {
         // Add all roles into a map
         let roles_in_order = this.roles_in_layout_order;
-        let intermediate = new Map<number, Array<Role>>();
+        let intermediate = new ObservableMap<number, Array<Role>>();
         // this.logger.info(`Sorting following roles: ${roles_in_order.join(",")}`);
         for (let role of roles_in_order) {
             if (!intermediate.has(role.layout_priority)) {
@@ -221,7 +225,7 @@ class Plan extends NamedObject {
             }
             return 0;
         });
-        let result = [];
+        let result = observable([]);
         for (let key of keys) {
             let list = intermediate.get(key);
             result.push(list);

@@ -60,7 +60,7 @@ describe('role scheduler', () => {
         plan.remove_person(neil);
         expect(() => {
             schedule = new ScheduleWithRules(plan);
-            schedule.create_schedule()
+            schedule.createSchedule()
         }).toThrow();
     });
 
@@ -71,7 +71,7 @@ describe('role scheduler', () => {
         schedule = new ScheduleWithRules(plan);
         expect(schedule).not.toBeNull();
 
-        schedule.create_schedule();
+        schedule.createSchedule();
 
         // expect to see neil on once per week, for N weeks.
         let dates = schedule.dates;
@@ -103,7 +103,7 @@ describe('role scheduler', () => {
         schedule = new ScheduleWithRules(plan);
         expect(schedule).not.toBeNull();
 
-        schedule.create_schedule();
+        schedule.createSchedule();
 
         // Find the dates that have Neil doing something. Should be two.
         let all_scheduled = Array.from(schedule.dates.values());
@@ -122,7 +122,7 @@ describe('role scheduler', () => {
 
         schedule = new ScheduleWithRules(plan);
         expect(schedule).not.toBeNull();
-        schedule.create_schedule();
+        schedule.createSchedule();
 
         console.log("Schedule: " + new CSVExporter(schedule));
     });
@@ -134,7 +134,7 @@ describe('role scheduler', () => {
          */
         schedule = new ScheduleWithRules(plan);
         expect(schedule).not.toBeNull();
-        schedule.create_schedule();
+        schedule.createSchedule();
         let facts = schedule.facts;
         console.log(`Before: ${new CSVExporter(schedule)}`);
 
@@ -177,7 +177,7 @@ describe('role scheduler', () => {
 
         schedule = new ScheduleWithRules(plan);
         expect(schedule).not.toBeNull();
-        schedule.create_schedule();
+        schedule.createSchedule();
 
         let all_scheduled = Array.from(schedule.dates.values());
         // console.log("ALL: " + SafeJSON.stringify(all_scheduled));
@@ -208,7 +208,7 @@ describe('role scheduler', () => {
         // Do a schedule. For one week.
         // We should see just ONE person on guitar.
         schedule = new ScheduleWithRules(plan);
-        schedule.create_schedule();
+        schedule.createSchedule();
 
         let firstSchedule = Array.from(schedule.dates.values())[0];
         console.log(`First Schedule is: ${firstSchedule}`);
@@ -231,7 +231,7 @@ describe('role scheduler', () => {
         plan.assignmentFor(ben).addRole(defaultSoundRole);
 
         schedule = new ScheduleWithRules(plan);
-        schedule.create_schedule();
+        schedule.createSchedule();
         let schedules = Array.from(schedule.dates.values());
 
         // console.log(schedule.jsonResult(true));

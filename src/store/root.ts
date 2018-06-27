@@ -1,8 +1,8 @@
 import {UIStore} from "./UIState";
-import {Injectable, OnDestroy, OnInit} from "@angular/core";
+import {ApplicationRef, Injectable, OnDestroy, OnInit} from "@angular/core";
 import {Logger} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
-import {IReactionDisposer, observable, reaction, toJS, trace} from "mobx";
+import {IReactionDisposer, observable, reaction, runInAction, toJS, trace} from "mobx";
 import {Plan} from "../scheduling/plan";
 import {SchedulerDatabase} from "../providers/server/db";
 import {Team} from "../scheduling/teams";
@@ -18,7 +18,6 @@ import {Assignment} from "../scheduling/assignment";
 import {action} from "mobx-angular";
 import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
-import {Subscription} from "rxjs/Subscription";
 
 @Injectable()
 class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, OnDestroy {
@@ -39,11 +38,11 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
     private ssDisposer: IReactionDisposer;
     private uiDisposer: IReactionDisposer;
     private lipDisposer: IReactionDisposer;
-    private scheduleSubscription: Subscription;
+    private scheduleDisposer: IReactionDisposer;
 
     private db: SchedulerDatabase;
 
-    constructor() {
+    constructor(private app: ApplicationRef) {
         super();
 
         this.logger = LoggingWrapper.getLogger("service.store");
@@ -62,9 +61,11 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
     }
 
     ngOnDestroy() {
-        this.ssDisposer();
-        this.uiDisposer();
-        this.lipDisposer();
+        if (this.ssDisposer) this.ssDisposer();
+        if (this.uiDisposer) this.uiDisposer();
+        if (this.lipDisposer) this.lipDisposer();
+        if (this.scheduleDisposer) this.scheduleDisposer();
+        if (this.spDisposer) this.spDisposer();
     }
 
     @action setPreviousSchedule(schedule: ScheduleWithRules) {
@@ -226,11 +227,6 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
             }
         } else {
             this.logger.info(`We do... the default plan is: ${person.preferences.selected_plan_uuid}`);
-
-            // Seems we have to kick the value to make .next() fire on the plan again
-            // let temp = this.ui_store.preferences.selected_plan_uuid;
-            // this.ui_store.preferences.setSelectedPlanUUID(null);
-            // this.ui_store.preferences.setSelectedPlanUUID(temp);
         }
     }
 
@@ -247,20 +243,30 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
     }
 
     private _createScheduleReaction() {
-        if (!this.scheduleSubscription) {
+        if (!this.scheduleDisposer) {
             // Subscribe to a change in the plan, generate a new schedule, and then broadcast that
-            this.scheduleSubscription = this.selectedPlan$.map(plan => {
+            this.scheduleDisposer = reaction(() => {
+                trace();
+                let plan = this.ui_store.selectedPlan;
                 if (plan) {
-                    this.logger.info(`Regenerating schedule`);
-                    let schedule = new ScheduleWithRules(plan, this.previousSchedule);
-                    schedule.create_schedule();
-                    // this.scheduleSubject.next(schedule);
+                    let schedule;
+                    schedule = new ScheduleWithRules(plan, this.previousSchedule);
+                    schedule.createSchedule();
+
+                    runInAction(() => {
+                        this.schedule = schedule;
+                    });
                     return schedule;
                 } else {
                     this.logger.info(`No schedule generated, the provided plan was null`);
                 }
-                return null;
-            }).subscribe(this.scheduleSubject);
+            }, schedule => {
+                this.logger.info(`Regenerating schedule for plan ${schedule.plan.name}`);
+                this.scheduleSubject.next(schedule);
+                this.app.tick();
+            }, {
+                name: 'schedule',
+            });
         }
     }
 

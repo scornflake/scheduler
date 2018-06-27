@@ -2,26 +2,23 @@ TODO:
 -----
 - Get sign in / reg lifecycle going (done?)
   - Don't auto sign in as me :)
-- Sync
-  - **** changing the assignment on person, propagates, but 2nd client doesn't see the change in the UI. refresh works.
 - Rules dont appear to be persisted (see AddPeopleToPlanWithRoles for neil)
+- Rules
+    - Are not refreshed when added/removed (in person assignment)
+    - Changes are not being seen after modification. Are rules observable?
 - Offline. Close server. Get app to startup.
 - DB isn't showing an up to date version of info. Should reload this on page reload?
 - If User is activated, but I deleted the Org, validation/login still seems to return OK (and the client then goes into an endless loop)
 - Make it so scheduler tells you if a required role isn't filled
-- Regenerate the schedule on change of:
-  - unavailability
-  - availability
-  - schedule start/end datesf
-  - adding / removing people
-  - role weightings
-  - changing rules
-  - changing role assignments
 - Finish 'clone plan'
 - Work out possible hosting. Google? AWS? Cost?
   - It would be GREAT to have CI build the docker images (after running tests) and auto-deploy. At least for a test environment.
 - Add 'level' to Person, and write up about game-ifying the whole thing
 - Make it possible to specify period of the plan (days in between each) and what time it starts (e.g: 10am)
+
+- Sync
+  - **** changing the assignment on person, propagates, but 2nd client doesn't see the change in the UI. refresh works.
+  - I think this is bauise ion-segments are very, very broken
 
 
 Storing Data - Probably a good idea!

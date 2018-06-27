@@ -12,7 +12,7 @@ import {Role} from "../role";
 import {action, computed, observable} from "mobx-angular";
 
 class ScheduleWithRules {
-    plan: Plan;
+    @observable plan: Plan;
     @observable facts: RuleFacts;
     free_text: {};
 
@@ -28,8 +28,9 @@ class ScheduleWithRules {
         this.plan.validate();
         this.free_text = {};
         if (previous) {
-            this.warmup_using(previous);
+            this.warmupSsing(previous);
         }
+
         this.clear_working_state();
     }
 
@@ -45,7 +46,7 @@ class ScheduleWithRules {
         return this.plan.assignments;
     }
 
-    @action create_schedule() {
+    createSchedule() {
         if (!this.plan) {
             throw new Error("No service defined, cannot create the schedule");
         }
@@ -64,7 +65,7 @@ class ScheduleWithRules {
         this.process_secondary_actions();
     }
 
-    @action process_role_group(role_group: Array<Role>) {
+    process_role_group(role_group: Array<Role>) {
         this.facts.begin_new_role_group(role_group);
 
         let current_date = this.plan.start_date;
@@ -95,7 +96,7 @@ class ScheduleWithRules {
         }
     }
 
-    @action layout_specific_roles(current_date: Date, role: Role): Array<Assignment> {
+    layout_specific_roles(current_date: Date, role: Role): Array<Assignment> {
         // Check if anyone has specifics for this date
         let placements = new Array<Assignment>();
         this.assignments.forEach(assignment => {
@@ -123,7 +124,7 @@ class ScheduleWithRules {
         return peopleInRole.length >= role.maximum_wanted;
     }
 
-    @action process_role(current_date: Date, role: Role, role_group: Array<Role>) {
+    process_role(current_date: Date, role: Role, role_group: Array<Role>) {
         if (!this.facts) {
             throw new Error("No facts defined. Cannot process role");
         }
@@ -137,15 +138,15 @@ class ScheduleWithRules {
         }
 
         // For this date, try to layout all people
-        let people_for_this_role = this.plan.assignments_with_role(role);
+        let assignments_for_this_role = this.plan.assignments_with_role(role);
 
         // Setup our available people (which at the beginning, is 'everyone')
-        if (people_for_this_role.length == 0) {
+        if (assignments_for_this_role.length == 0) {
             // this.logger.debug("Laying out role: " + role.name + " ... skipping (no one to do it)");
             return;
         }
 
-        let iteration_max = people_for_this_role.length;
+        let iteration_max = assignments_for_this_role.length;
         let person_placed_into_role = null;
 
         this.facts.add_decision("Role: " + role.name, false);
@@ -313,7 +314,7 @@ class ScheduleWithRules {
         return role_map[role.uuid];
     }
 
-    warmup_using(previous_schedule: ScheduleWithRules) {
+    warmupSsing(previous_schedule: ScheduleWithRules) {
         this.previous_scheduler = previous_schedule;
         this.logger.info("Warming up using a previous schedule...");
     }

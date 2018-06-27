@@ -68,6 +68,7 @@ class Assignment extends ObjectWithUUID implements IAssignment {
         return rules;
     }
 
+    @computed
     get role_names(): string {
         return this.roles.map(r => r.name).join(", ")
     }
@@ -85,10 +86,12 @@ class Assignment extends ObjectWithUUID implements IAssignment {
         }, 0);
     }
 
+    @computed
     get name(): string {
         return this.person.name;
     }
 
+    @action
     put_on_specific_role_for_date(role: Role, date: Date) {
         let key = dayAndHourForDate(date);
         if (!this.specific_roles.has(key)) {
@@ -103,20 +106,24 @@ class Assignment extends ObjectWithUUID implements IAssignment {
         return this.specific_roles.get(key);
     }
 
+    @computed
     get max_role_layout_priority(): number {
         return this.roles.reduce((prev, role) => {
             return Math.max(prev, role.layout_priority);
         }, 0);
     }
 
+    @computed
     get conditional_rules(): Array<ConditionalRule> {
         return this.condition_rules;
     }
 
+    @computed
     get secondary_actions(): Array<SecondaryAction> {
         return this.secondary_action_list;
     }
 
+    @action
     delete_rule(rule: Rule) {
         let list: Array<Rule> = this.conditional_rules;
         if (rule instanceof SecondaryAction) {
@@ -125,6 +132,7 @@ class Assignment extends ObjectWithUUID implements IAssignment {
         delete_from_array(list, rule);
     }
 
+    @action
     add_secondary_action(action: SecondaryAction) {
         if (action) {
             // Assign the owner
@@ -133,6 +141,7 @@ class Assignment extends ObjectWithUUID implements IAssignment {
         }
     }
 
+    @action
     if_assigned_to(role: Role): ConditionalRule {
         this.addRole(role);
 

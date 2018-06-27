@@ -8,7 +8,7 @@ import {daysBetween, IAssignment, ScheduleAtDate} from "../shared";
 import {ScheduleWithRules} from "./scheduler";
 import {Role} from "../role";
 import {TypedObject} from "../base-types";
-import {observable} from "mobx-angular";
+import {action, computed, observable} from "mobx-angular";
 
 
 class Rule extends TypedObject {
@@ -64,7 +64,7 @@ class FixedRoleOnDate extends Rule {
         this.role = role;
     }
 
-    execute(state: RuleFacts): Role {
+    @action execute(state: RuleFacts): Role {
         if (this.date == state.current_date) {
             return this.role;
         }
@@ -81,13 +81,13 @@ class WeightedRoles extends Rule {
         this.normalize_weights();
     }
 
-    get roles_sorted_by_weight(): Array<Role> {
+    @computed get roles_sorted_by_weight(): Array<Role> {
         return _.sortBy(Array.from(this.weightedRoles.keys()), (o) => {
             return this.weightedRoles.get(o);
         });
     }
 
-    execute(state: RuleFacts, assignment: IAssignment): Array<Role> {
+    @action execute(state: RuleFacts, assignment: IAssignment): Array<Role> {
         // sort by current score, highest first.
         let roles_in_weight_order = this.roles_sorted_by_weight;
 
@@ -135,7 +135,7 @@ class OnThisDate extends Rule {
         this.assignment = assignment;
     }
 
-    execute(state: RuleFacts): IAssignment {
+    @action execute(state: RuleFacts): IAssignment {
         let hasPrimaryRole = this.assignment.hasPrimaryRole(this.role);
         if (state.current_date == this.date && hasPrimaryRole) {
             return this.assignment;
@@ -159,7 +159,7 @@ class UsageWeightedSequential extends Rule {
         });
     }
 
-    execute(state: RuleFacts, role: Role): Array<IAssignment> {
+    @action execute(state: RuleFacts, role: Role): Array<IAssignment> {
         // Sort by number
         return Array.from(this.usages.keys()).sort((a1, a2) => {
             let usageForP1 = state.number_of_times_role_used_by_person(role, a1);
@@ -203,7 +203,7 @@ class ConditionalRule extends Rule {
         }
     }
 
-    then(action: ConditionAction) {
+    @action then(action: ConditionAction) {
         this.actions.push(action);
     }
 }
@@ -220,11 +220,11 @@ class AssignedToRoleCondition extends ConditionalRule {
         return this.role.uuid == role.uuid;
     }
 
-    get title() {
+    @computed get title() {
         return `When on ${this.role}`
     }
 
-    get description() {
+    @computed get description() {
         return this.actions.join(", ")
     }
 }
@@ -244,7 +244,7 @@ class ScheduleOn extends ConditionAction {
         this.role = role;
     }
 
-    executeAction(stat: RuleFacts, person: Person, role: Role) {
+    @action executeAction(stat: RuleFacts, person: Person, role: Role) {
         let assignment = stat.service.get_assignment_for(person);
         if (stat.place_person_in_role(assignment, this.role, stat.current_date)) {
             stat.add_decision(`${this.constructor.name} executed, adding ${this.person} to role ${this.role}`);
@@ -253,11 +253,11 @@ class ScheduleOn extends ConditionAction {
         }
     }
 
-    get title() {
+    @computed get title() {
         return `If on ${this.person}`
     }
 
-    get description() {
+    @computed get description() {
         return `Also be on ${this.role}`;
     }
 }
@@ -291,7 +291,7 @@ class TryToScheduleWith extends SecondaryAction {
         this.success_executions = 0;
     }
 
-    execute(schedule_at_date: ScheduleAtDate, schedule: ScheduleWithRules) {
+    @action execute(schedule_at_date: ScheduleAtDate, schedule: ScheduleWithRules) {
         // If this line includes a use of self, does it also include a use of the other person?
         let score_for_owner = schedule_at_date.score_for_person(this.owner);
 
@@ -332,11 +332,11 @@ class TryToScheduleWith extends SecondaryAction {
         }
     }
 
-    get title() {
+    @computed get title() {
         return `If scheduled on...`;
     }
 
-    get description() {
+    @computed get description() {
         return `Try to team with ${this.other_person.initials} within ${this.reach.description(true)}, max ${this.max_number_of_times}`;
     }
 }

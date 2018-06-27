@@ -13,7 +13,7 @@ import {PageUtils} from "../../pages/page-utils";
 import {Role} from "../../scheduling/role";
 
 @Component({
-    // changeDetection: ChangeDetectionStrategy.OnPush,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     selector: 'schedule-viewer',
     templateUrl: 'schedule-viewer.html'
 })
@@ -40,10 +40,6 @@ export class ScheduleViewerComponent {
                 this.colSelectedDate = this.schedule.dates[0].date;
             }
         }
-
-        // this.store.selected_plan$.subscribe(p => {
-        //     this.logger.info(`SVC sees: ${SafeJSON.stringify(p)}`);
-        // })
     }
 
     get roles(): Array<Role> {

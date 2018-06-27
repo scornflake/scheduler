@@ -1,0 +1,40 @@
+<ion-header>
+    <ion-navbar>
+        <ion-title>Testing Utils</ion-title>
+    </ion-navbar>
+    <saving-state></saving-state>
+</ion-header>
+
+
+<ion-content *mobxAutorun>
+
+    <div *ngIf="store.loggedInPerson$|async as p">
+        <ion-item>
+            <ion-label>Person</ion-label>
+            <ion-input [ngModel]="p.name"
+                       (ngModelChange)="p.setName($event)"></ion-input>
+        </ion-item>
+    </div>
+
+    <div *ngIf="store.selectedPlan$ | async as plan">
+        <ion-item>
+            <ion-label>Start Date</ion-label>
+            <ion-datetime [ngModel]="plan.start_date.toISOString()"
+                          (ngModelChange)="plan.setStartDateFromISO($event)"></ion-datetime>
+        </ion-item>
+        <ion-item>
+            <ion-label>End Date</ion-label>
+            <ion-datetime [ngModel]="plan.end_date.toISOString()" (ngModelChange)="plan.setEndDateFromISO($event)"></ion-datetime>
+        </ion-item>
+
+
+    </div>
+
+    <div *ngIf="store.uiStore$|async as ui">
+        <ion-item *ngIf="ui.selectedPlan">
+            <ion-label>Selected Plan UUID</ion-label>
+            <ion-input [ngModel]="ui.selectedPlan.name"
+                       (ngModelChange)="ui.selectedPlan.setName($event)"></ion-input>
+        </ion-item>
+    </div>
+</ion-content>

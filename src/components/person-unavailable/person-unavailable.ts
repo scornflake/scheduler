@@ -61,7 +61,7 @@ export class PersonUnavailableComponent {
             range: false,
             existingEvents: this.existingEvents,
             daySelectedCallback: (event) => {
-                let newDate = csd(event.year, event.month, event.date);
+                let newDate = new Date(event.year, event.month, event.date);
                 this.person.addUnavailable(newDate);
                 return true;
             }
@@ -75,8 +75,8 @@ export class PersonUnavailableComponent {
             range: true,
             existingEvents: this.existingEvents,
             rangeSelectedCallback: (from, to) => {
-                let fromDate = csd(from.year, from.month, from.date);
-                let toDate = csd(to.year, to.month, to.date);
+                let fromDate = new Date(from.year, from.month, from.date);
+                let toDate = new Date(to.year, to.month, to.date);
                 this.person.addUnavailableRange(fromDate, toDate);
                 return true;
             }

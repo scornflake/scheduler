@@ -7,6 +7,7 @@ import {isUndefined} from "ionic-angular/util/util";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Plan} from "../plan";
 import {Role} from "../role";
+import {action} from "mobx-angular";
 
 export class RuleFacts {
     current_date: Date;
@@ -82,7 +83,7 @@ export class RuleFacts {
         }
     }
 
-    begin() {
+    @action begin() {
         // This is all PickRules, for all roles
         this.all_pick_rules = this.service.pick_rules();
         this.decision_depth = 0;

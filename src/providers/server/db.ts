@@ -487,8 +487,6 @@ class SchedulerDatabase implements IObjectStore {
         this.server_sync = this.db.sync(this.server_db, {live: true, retry: true})
             .on('change', (change) => {
                 if (change.direction == 'pull') {
-                    this.logger.info(`Processing incomming change: ${JSON.stringify(change)}`);
-                    this.logger.debug(` ... Incomming change: ${JSON.stringify(change)}`);
                     let data = change.change;
                     let docs = data.docs.filter(d => {
                         // filter out deleted docs
@@ -498,6 +496,11 @@ class SchedulerDatabase implements IObjectStore {
                         }
                         return true;
                     });
+                    // remove the _revisions, so the logging doesn't SUCK
+                    for(let doc of docs) {
+                        delete doc['_revisions'];
+                    }
+                    this.logger.info(`Processing incoming change: ${JSON.stringify(change)}`);
                     // Want to update existing store using this data, as though we had read it direct from the DB
                     this.convert_docs_to_objects_and_store_in_cache(docs).then((items) => {
                         this.logger.debug(` ... incoming change (${items.length} docs) processed and stored in DB/cache`);
