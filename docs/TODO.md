@@ -1,9 +1,8 @@
 TODO:
 -----
 - Get sign in / reg lifecycle going (done?)
-- Sync
-  - Make sure if email is changed on client, its synced to the server at some point
-  - Make sure if org name is changed on client, its synced to the server at some point
+  - Don't auto sign in as me :)
+  - When logging out, clear the saved state
 - Two clients (safari/chrome):
   - Starts going into endless update loop. Going to have to make writes much smarter. It *looks* like the change detector is seeing a change to 'rev' on SavedState
 - Rules dont appear to be persisted (see AddPeopleToPlanWithRoles for neil)

@@ -6,16 +6,13 @@ import {Logger, LoggingService} from "ionic-logging-service";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {PageUtils} from "../page-utils";
 import {action, observable} from "mobx-angular";
-import {isUndefined} from "util";
 import {catchError, debounceTime, filter, flatMap, map, take, timeout} from "rxjs/operators";
 import {Observable} from "rxjs/Observable";
 import {Subscription} from "rxjs/Subscription";
 import {ServerError} from "../../common/interfaces";
-import {of} from "rxjs/observable/of";
-import {from} from "rxjs/observable/from";
-import {forkJoin} from "rxjs/observable/forkJoin";
 import "rxjs/add/observable/timer";
 import {Organization} from "../../scheduling/organization";
+import {isUndefined} from "util";
 
 enum LoginPageMode {
     LoginOrCreate = 0,
@@ -84,12 +81,12 @@ class LoginPage implements AfterViewInit {
     }
 
     ngAfterViewInit(): void {
+        this.firstSwitch = true;
         if (this.isCreateAccount) {
             this.switchToCreate();
         } else {
             this.switchToLogin();
         }
-        this.firstSwitch = true;
     }
 
     @action setRegistrationPassword(value: string) {
@@ -139,8 +136,7 @@ class LoginPage implements AfterViewInit {
         let username = this.registrationEmail;
         let password = this.registrationPassword;
 
-        // this.logger.info(`Starting login... using ${username} and ${password}`);
-        this.logger.info(`Starting login for: ${username}`);
+        this.logger.info(`Starting login with ${username}`);
         this.server.loginUser(username, password).then(({user, ok, detail}) => {
             this.logger.info(`Login completed ${ok}: ${detail}`);
             if (!ok) {
@@ -207,6 +203,7 @@ class LoginPage implements AfterViewInit {
 
     @action
     switchModes(mode: LoginPageMode) {
+        this.logger.info(`Switching to mode: ${mode}`);
         // The modes are really just indexes into the slides
         /*
         BUG in Ionic.
@@ -222,6 +219,7 @@ class LoginPage implements AfterViewInit {
 
     @action
     switchToCreate() {
+        this.logger.info(`Switching to create`);
         this.loginForm = this.formBuilder.group({
             'name': ["", [Validators.required]],
             'email': ["",
@@ -237,6 +235,7 @@ class LoginPage implements AfterViewInit {
 
     @action
     switchToLogin() {
+        this.logger.info(`Switching to login`);
         this.loginForm = this.formBuilder.group({
             'email': ["", [Validators.email, Validators.required]],
             'password': ["", [Validators.required, Validators.minLength(8)]],

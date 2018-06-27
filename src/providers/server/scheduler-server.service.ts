@@ -100,8 +100,10 @@ class SchedulerServer implements ILifecycle {
         this.state.lastOrganizationUUID = null;
         this.state.lastPersonUUID = null;
         this.state.loginToken = null;
-        await this.asyncSaveState();
-        this.logger.info(`User logged out, state saved.`);
+        this._previousState = undefined;
+        await this.asyncSaveState().then(() => {
+            this.logger.info(`User logged out, state saved.`);
+        });
     }
 
     @action setLoginTokenFromUserResponse(good: boolean, user: UserResponse = null) {
