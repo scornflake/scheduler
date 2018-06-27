@@ -11,7 +11,7 @@ import {Subject} from "rxjs/Subject";
 import {debounceTime} from "rxjs/operators";
 import {GenericManager} from "../../scheduling/common/scheduler-store";
 import {OrmMapper,} from "../mapping/orm-mapper";
-import {IObjectLoader} from "../mapping/orm-mapper-type";
+import {IObjectStore} from "../mapping/orm-mapper-type";
 
 import {OrmConverter} from "./orm-converter";
 import {IObjectCache} from "../mapping/cache";
@@ -20,6 +20,7 @@ import {Organization} from "../../scheduling/organization";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import Database = PouchDB.Database;
 import DatabaseConfiguration = PouchDB.Configuration.DatabaseConfiguration;
+import {StoreBasedResolver} from "./orm-resolver";
 
 // Put this back in when we move to v7 of Pouch.
 // import plugin from 'pouchdb-adapter-idb';
@@ -31,7 +32,7 @@ enum SavingState {
     FinishedSaving = 3, // changes completed ok!
 }
 
-class SchedulerDatabase implements IObjectLoader {
+class SchedulerDatabase implements IObjectStore {
     saveNotifications = new Subject<SavingState>();
     readyEvent: Subject<boolean>;
     info: PouchDB.Core.DatabaseInfo;
@@ -51,10 +52,12 @@ class SchedulerDatabase implements IObjectLoader {
     private _cache: IObjectCache;
 
     constructor(dbName: string, mapper: OrmMapper) {
-        this.mapper = mapper;
-        this._converter = new OrmConverter(this.mapper, this);
         this.dbName = dbName;
+        this.mapper = mapper;
         this.logger = LoggingWrapper.getLogger("db");
+
+        let resolver = new StoreBasedResolver(this, mapper);
+        this._converter = new OrmConverter(this.mapper, this, null, resolver);
         PouchDB.plugin(PouchDBFind);
 
         this.readyEvent = new ReplaySubject(1);
@@ -78,10 +81,10 @@ class SchedulerDatabase implements IObjectLoader {
     }
 
     get changes$(): Subject<ObjectChange> {
-        if(!this.tracker) {
+        if (!this.tracker) {
             throw new Error(`cant get changes$, there's no tracker`);
         }
-        if(!this.tracker.changes) {
+        if (!this.tracker.changes) {
             throw new Error(`cant get changes$, there's no changes subject on the tracker`);
         }
         return this.tracker.changes;
@@ -282,7 +285,7 @@ class SchedulerDatabase implements IObjectLoader {
                 }
             }
 
-            let dict_of_object = await this._converter.async_create_dict_from_js_object(object);
+            let dict_of_object = await this._converter.writer.async_create_dict_from_js_object(object);
             dict_of_object = this._convert_add_type_id_and_rev(dict_of_object, object, true);
             this.logger.debug(`About to 'put' dict '${dict_of_object}' from type ${object.type}`);
             try {

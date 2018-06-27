@@ -4,8 +4,16 @@ import {Logger} from "ionic-logging-service";
 import {SafeJSON} from "../../common/json/safe-stringify";
 import {ObjectWithUUID} from "../../scheduling/base-types";
 import {configure, isObservableArray, isObservableMap, isObservableObject} from "mobx";
-import {ClassFieldMapping, ClassMapping, MappingType, PropertyMapping} from "./orm-mapper-type";
+import {
+    ClassFieldMapping,
+    ClassMapping,
+    MappingType,
+    ObjectReference, PropertyHint,
+    PropertyMapping,
+    REF_PREFIX
+} from "./orm-mapper-type";
 import {action} from "mobx-angular";
+import * as moment from "moment";
 
 function GetTheTypeNameOfTheObject(object: any): string {
     if (object instanceof Map) {
@@ -253,6 +261,63 @@ class OrmMapper {
         }
         return false;
     }
+
+    reference_for_object(obj: ObjectWithUUID) {
+        return `${REF_PREFIX}:${obj.type}:${obj._id}`;
+    }
+
+    parse_reference(reference: string): ObjectReference {
+        // noinspection SuspiciousTypeOfGuard
+        if (typeof reference != 'string') {
+            throw new Error(`reference ${reference} is not a string!`);
+        }
+        let parts = reference.split(':');
+        if (parts.length != 3) {
+            throw new Error(`Invalid reference ${reference}. Expected 3 parts`);
+        }
+        if (parts[0] != REF_PREFIX) {
+            throw new Error(`Invalid reference ${reference}. Expected part[0] to be 'ref'`);
+        }
+        return {type: parts[1], id: parts[2]};
+    }
+
+    convert_from_js_value_to_db_value(thing: any, mapping: PropertyMapping) {
+        if (mapping == null || isUndefined(mapping)) {
+            throw new Error(`Trying to 'convert_from_js_value_to_db_value' but got ${mapping} for the mapping`);
+        }
+        if (thing == null || isUndefined(thing)) {
+            return thing;
+        }
+        if (mapping.hint == PropertyHint.Date) {
+            if (!(thing instanceof Date)) {
+                throw new Error(`Could not convert ${thing} into a formatted date, for property: ${mapping.name}. It's not a Date object, rather it's a ${thing}`);
+            }
+            return thing.toISOString();
+        }
+        return thing;
+    }
+
+    convert_from_db_value_to_js_type(value: string, mapping: PropertyMapping) {
+        if (mapping == null || isUndefined(mapping)) {
+            throw new Error(`Trying to 'convert_from_db_value_to_js_type' for property ${value} but got ${mapping} for the mapping`);
+        }
+        if (mapping.hint == PropertyHint.Date) {
+            let a_date = moment(value);
+            if (!a_date.isValid()) {
+                throw new Error(`Could not parse ${value} into a Date. For property: ${mapping.name}`);
+            }
+            return a_date.toDate();
+        }
+        return value;
+    }
+
+    describeHints(mapping: PropertyMapping) {
+        if (mapping.hint) {
+            return mapping.hint;
+        }
+        return "none";
+    }
+
 }
 
 export {

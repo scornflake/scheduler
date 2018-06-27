@@ -26,4 +26,5 @@ module.exports = {
         src: ['{{ROOT}}/environments/' + envDirectory + "/settings.json"],
         dest: '{{WWW}}/assets'
     }
-}
+};
+

@@ -120,7 +120,7 @@ describe('db', () => {
     it('can create reference of person object', function () {
         let person = new Person("Me!");
         expect(person.type).toBe("Person");
-        let ref = db.converter.reference_for_object(person);
+        let ref = mapper.reference_for_object(person);
         expect(ref).toBe(`rrr:Person:${person.uuid}`);
     });
 
@@ -138,8 +138,8 @@ describe('db', () => {
                 type: MappingType.Property,
                 hint: PropertyHint.Date
             };
-            expect(converter.convert_from_js_value_to_db_value(null, mapping)).toBeNull();
-            expect(converter.convert_from_js_value_to_db_value(undefined, mapping)).toBeUndefined();
+            expect(mapper.convert_from_js_value_to_db_value(null, mapping)).toBeNull();
+            expect(mapper.convert_from_js_value_to_db_value(undefined, mapping)).toBeUndefined();
         });
 
         it('should convert date fields to/from ISO strings at root level', function (done) {
@@ -160,7 +160,7 @@ describe('db', () => {
             mapper.addConfiguration(mapping);
 
             let simpleObj = new SimpleWithDate();
-            converter.async_create_dict_from_js_object(simpleObj).then(dict => {
+            converter.writer.async_create_dict_from_js_object(simpleObj).then(dict => {
                 expect(dict.some_date).toEqual(simpleObj.some_date.toISOString());
                 converter.async_create_js_object_from_dict(dict, 'SimpleWithDate').then((newObj: SimpleWithDate) => {
                     expect(newObj.some_date).toEqual(simpleObj.some_date);
@@ -175,7 +175,7 @@ describe('db', () => {
             let role_instance = new Role("Yo yo yo");
             converter.cache.saveInCache(role_instance);
 
-            converter.async_create_dict_from_js_object(role_instance).then(dict => {
+            converter.writer.async_create_dict_from_js_object(role_instance).then(dict => {
                 expect(dict.name).toEqual(role_instance.name);
 
                 converter.async_create_js_object_from_dict(dict, 'Role').then((newObj: Role) => {
@@ -194,7 +194,7 @@ describe('db', () => {
             converter.cache.saveInCache(team);
             converter.cache.saveInCache(neil);
 
-            converter.async_create_dict_from_js_object(team).then(team_dict => {
+            converter.writer.async_create_dict_from_js_object(team).then(team_dict => {
                 converter.async_create_js_object_from_dict(team_dict, 'Team').then((newTeam: Team) => {
                     expect(team).toEqual(newTeam);
                     expect(team.people[0]).toEqual(neil);
@@ -210,7 +210,7 @@ describe('db', () => {
             neil.availability = new Availability(2, AvailabilityUnit.EVERY_N_DAYS);
             cache.saveInCache(neil);
 
-            converter.async_create_dict_from_js_object(neil).then(neil_dict => {
+            converter.writer.async_create_dict_from_js_object(neil).then(neil_dict => {
                 converter.async_create_js_object_from_dict(neil_dict, 'Person').then((newPerson: Person) => {
                     expect(neil).toEqual(newPerson);
 
@@ -230,7 +230,7 @@ describe('db', () => {
             let plan = new Plan("Ta daa", team);
             cache.saveInCache(plan);
 
-            converter.async_create_dict_from_js_object(plan).then(plan_dict => {
+            converter.writer.async_create_dict_from_js_object(plan).then(plan_dict => {
                 converter.async_create_js_object_from_dict(plan_dict, 'Plan').then((newPlan: Plan) => {
                     expect(plan).toEqual(newPlan);
                     expect(team).toEqual(newPlan.team);
@@ -259,8 +259,8 @@ describe('db', () => {
                 team = new Team("My team", [neil, bob]);
                 thePlan = new Plan("Cunning", team);
 
-                soundRoleRef = converter.reference_for_object(defaultSoundRole);
-                computerRoleRef = converter.reference_for_object(defaultComputerRole);
+                soundRoleRef = mapper.reference_for_object(defaultSoundRole);
+                computerRoleRef = mapper.reference_for_object(defaultComputerRole);
 
                 thePlan.start_date = csd(2018, 1, 21);
                 thePlan.end_date = csd(2018, 3, 21);
@@ -278,7 +278,7 @@ describe('db', () => {
                 // have to do this cos at the moment, the converter does NOT add to the cache
                 cache.saveInCache(defaultSoundRole);
                 cache.saveInCache(defaultComputerRole);
-                converter.async_create_dict_from_js_object(thePlan).then(dict => {
+                converter.writer.async_create_dict_from_js_object(thePlan).then(dict => {
                     // console.log(`made a dict for the Plan: ${JSON.stringify(dict)}...`);
                     converter.async_create_js_object_from_dict(dict, 'Plan').then((jsObject: Plan) => {
                         console.log(`Reconstruction: ${SafeJSON.stringify(jsObject)}`);
@@ -303,7 +303,7 @@ describe('db', () => {
             });
 
             it('can create dict from object', function (done) {
-                converter.async_create_dict_from_js_object(thePlan).then(dict => {
+                converter.writer.async_create_dict_from_js_object(thePlan).then(dict => {
                     console.log(`We made: ${JSON.stringify(dict)}`);
 
                     expect(dict.start_date).toEqual(thePlan.start_date.toISOString());
@@ -315,13 +315,7 @@ describe('db', () => {
                     expect(roles.length).toEqual(2);
 
                     // a team would be good :)
-                    expect(dict.team).toEqual(converter.reference_for_object(team));
-
-                    // let specifics = dict.specific_role_rules;
-                    // expect(specifics).not.toBeNull();
-                    // console.log(`Specifics: ${JSON.stringify(specifics)}`);
-                    //
-                    // fail('ra');
+                    expect(dict.team).toEqual(mapper.reference_for_object(team));
 
                     // assignments, fun times!
                     // This should end up being a list of Assignment refs. We want to see 2 (one per person).
@@ -331,7 +325,7 @@ describe('db', () => {
                     // lets split them out and find the assignments for the people
                     assigns.forEach(a => {
                         console.log(`Assign: ${JSON.stringify(a)}`);
-                        let ref = converter.parse_reference(a);
+                        let ref = mapper.parse_reference(a);
                         let obj = cache.getFromCache(ref.id);
                         expect(obj).not.toBe(null);
                     });
@@ -361,12 +355,12 @@ describe('db', () => {
             let entity_two = new SomeEntity();
             ze_object.map_of_stuffs.set(entity_one, 42);
             ze_object.map_of_stuffs.set(entity_two, 5);
-            converter.async_create_dict_from_js_object(ze_object).then(dict => {
+            converter.writer.async_create_dict_from_js_object(ze_object).then(dict => {
                 // expect a map where the keys are references
                 console.log(`we created: ${JSON.stringify(dict)}`);
 
-                let ref_1 = converter.reference_for_object(entity_one);
-                let ref_2 = converter.reference_for_object(entity_two);
+                let ref_1 = mapper.reference_for_object(entity_one);
+                let ref_2 = mapper.reference_for_object(entity_two);
 
                 expect(dict.map_of_stuffs[ref_1]).toEqual(42);
                 expect(dict.map_of_stuffs[ref_2]).toEqual(5);
@@ -387,7 +381,7 @@ describe('db', () => {
 
         it('creates minimal JSON from empty object', function (done) {
             let empty = new Empty();
-            converter.async_create_dict_from_js_object(empty).then(dict => {
+            converter.writer.async_create_dict_from_js_object(empty).then(dict => {
                 console.log(`Empty JSON: ${JSON.stringify(dict)}`);
                 expect(dict.type).toBe("Empty");
                 expect(dict._id).toBe(empty.uuid);
@@ -426,7 +420,7 @@ describe('db', () => {
             mapper.addConfiguration(more_map);
 
             let simple = new ThingWithContainedObject();
-            converter.async_create_dict_from_js_object(simple).then(dict => {
+            converter.writer.async_create_dict_from_js_object(simple).then(dict => {
                 console.log(`JSON: ${JSON.stringify(dict)}`);
 
                 expect(dict.type).toBe("ThingWithContainedObject", "space!");
@@ -445,7 +439,7 @@ describe('db', () => {
         it('can convert object with UUID to a reference', function (done) {
             let simple = new ThingWithReference();
 
-            converter.async_create_dict_from_js_object(simple).then(dict => {
+            converter.writer.async_create_dict_from_js_object(simple).then(dict => {
                 expect(dict.type).toBe("ThingWithReference");
                 expect(dict.another_object).toBe(`rrr:SomeEntity:${simple.another_object.uuid}`, 'reference compare failed');
                 done();
@@ -471,11 +465,11 @@ describe('db', () => {
             mapper.addConfiguration(more_map);
 
             let instance = new ThingWithListOfReferences();
-            converter.async_create_dict_from_js_object(instance).then(dict => {
+            converter.writer.async_create_dict_from_js_object(instance).then(dict => {
                 let expected_items = [
-                    converter.reference_for_object(instance.my_list[0]),
-                    converter.reference_for_object(instance.my_list[1]),
-                    converter.reference_for_object(instance.my_list[2])
+                    mapper.reference_for_object(instance.my_list[0]),
+                    mapper.reference_for_object(instance.my_list[1]),
+                    mapper.reference_for_object(instance.my_list[2])
                 ];
                 // console.log(`JSON: ${JSON.stringify(dict)}`);
                 expect(dict.my_list).toEqual(expected_items);
@@ -500,11 +494,11 @@ describe('db', () => {
             };
             mapper.addConfiguration(more_map);
             let instance = new ThingWithListOfReferences();
-            converter.async_create_dict_from_js_object(instance).then(dict => {
+            converter.writer.async_create_dict_from_js_object(instance).then(dict => {
                 let expected_items = [
-                    converter.reference_for_object(instance.my_list[0]),
-                    converter.reference_for_object(instance.my_list[1]),
-                    converter.reference_for_object(instance.my_list[2])
+                    mapper.reference_for_object(instance.my_list[0]),
+                    mapper.reference_for_object(instance.my_list[1]),
+                    mapper.reference_for_object(instance.my_list[2])
                 ];
                 // console.log(`JSON: ${JSON.stringify(dict)}`);
                 expect(dict.my_list).toEqual(expected_items);
@@ -514,7 +508,7 @@ describe('db', () => {
 
         it('able to convert list of nested objects', function (done) {
             let instance = new ThingWithNestedObjects();
-            converter.async_create_dict_from_js_object(instance).then(dict => {
+            converter.writer.async_create_dict_from_js_object(instance).then(dict => {
                 console.log(`JSON: ${JSON.stringify(dict)}`);
                 expect(dict.my_list.length).toEqual(3);
                 expect(dict.my_list[0].some_field).toEqual('a value');
@@ -546,12 +540,12 @@ describe('db', () => {
             });
 
             it('can convert an object with a reference map', (done) => {
-                converter.async_create_dict_from_js_object(a_mappy_thing).then(dict => {
+                converter.writer.async_create_dict_from_js_object(a_mappy_thing).then(dict => {
                     console.log(`GOT: ${JSON.stringify(dict)}`);
 
                     // expect the keys on the map to be formatted to ISO date strings
-                    expect(dict['some_things'][date_one.toISOString()]).toEqual(converter.reference_for_object(someEntityOne));
-                    expect(dict['some_things'][date_two.toISOString()]).toEqual(converter.reference_for_object(someEntityTwo));
+                    expect(dict['some_things'][date_one.toISOString()]).toEqual(mapper.reference_for_object(someEntityOne));
+                    expect(dict['some_things'][date_two.toISOString()]).toEqual(mapper.reference_for_object(someEntityTwo));
                     done();
                 });
             });
@@ -658,7 +652,7 @@ describe('db', () => {
             });
 
             let little_object = new MyDateEntity();
-            converter.async_create_dict_from_js_object(little_object).then((dict) => {
+            converter.writer.async_create_dict_from_js_object(little_object).then((dict) => {
                 console.log(`The returned object that could: ${dict}`);
                 let iso_value = little_object.the_date.toISOString();
                 expect(dict['the_date']).toEqual(iso_value);
@@ -670,11 +664,11 @@ describe('db', () => {
             let neil = new Person("neil");
             let bob = new Person("bob");
             let team = new Team("My team", [neil, bob]);
-            converter.async_create_dict_from_js_object(team).then(dict => {
+            converter.writer.async_create_dict_from_js_object(team).then(dict => {
                 // console.log(`I created: ${JSON.stringify(dict)}`);
                 let refs = dict['people'];
                 expect(refs.length).toEqual(2);
-                expect(refs[1]).toEqual(converter.reference_for_object(neil));
+                expect(refs[1]).toEqual(mapper.reference_for_object(neil));
                 done();
             });
         });
@@ -708,7 +702,7 @@ describe('db', () => {
             expect(me.unavailable).not.toBeNull();
             expect(me.unavailable).toEqual([]);
 
-            converter.async_create_dict_from_js_object(me).then(dict_obj => {
+            converter.writer.async_create_dict_from_js_object(me).then(dict_obj => {
                 console.log(`I made: ${SafeJSON.stringify(dict_obj)}`);
 
                 converter.async_create_js_object_from_dict(dict_obj, 'Person').then((reconstructed_js_obj: Person) => {
@@ -747,7 +741,7 @@ describe('db', () => {
 
         it('conversion of an array of docs returns array of objects', (done) => {
             let person = new Person("Personage");
-            converter.async_create_dict_from_js_object(person).then(dict => {
+            converter.writer.async_create_dict_from_js_object(person).then(dict => {
                 let docs = [dict];
                 db.convert_docs_to_objects_and_store_in_cache(docs).then(objects => {
                     expect(objects.length).toBe(1);

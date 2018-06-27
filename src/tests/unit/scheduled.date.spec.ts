@@ -60,6 +60,7 @@ describe('schedule', () => {
             plan.addRole(defaultLeaderRole).layout_priority = 10;
             plan.addRole(defaultKeysRole).layout_priority = 5;
             let gopher = plan.addRole(new Role("Gopher"));
+            plan.addRole(gopher).layout_priority = 1;
 
 
             let tim = team.add(new Person("Tim"));
@@ -67,17 +68,22 @@ describe('schedule', () => {
 
             // Tim = Keys
             let a2 = plan.assignmentFor(tim).addRole(defaultKeysRole);
+            expect(plan.assignmentFor(tim)).not.toBeNull();
 
             // Janice = Gopher
             let a3 = plan.assignmentFor(janice).addRole(gopher);
+            expect(plan.assignmentFor(janice)).not.toBeNull();
 
             // Neil = Gopher + Leader
             let neil_assignment = plan.assignmentFor(neil).addRole(gopher).addRole(defaultLeaderRole);
             sd.add_person(neil_assignment, defaultSoundRole);
+            sd.add_person(plan.assignmentFor(tim), defaultKeysRole);
+            sd.add_person(plan.assignmentFor(janice), gopher);
 
             // Expect Neil, Tim, Janice
             let ordered = sd.people_sorted_by_role_priority;
-            console.log(`We have: ${SafeJSON.stringify(ordered.map(p => p.name))}`);
+            console.log(`We have assignments for : ${SafeJSON.stringify(sd.assignments.map(a => a.name))}`);
+            console.log(`We have ordered: ${SafeJSON.stringify(ordered.map(p => p.name))}`);
             expect(ordered[0]).toEqual(neil_assignment.person);
             expect(ordered[1]).toEqual(a2.person);
             expect(ordered[2]).toEqual(a3.person);

@@ -140,9 +140,9 @@ class ScheduleAtDate {
     get people_sorted_by_role_priority(): Array<Person> {
         return this.assignments.sort((a: IAssignment, b: IAssignment) => {
             if (a.highest_role_layout_priority > b.highest_role_layout_priority) {
-                return 1;
-            } else if (a.highest_role_layout_priority < b.highest_role_layout_priority) {
                 return -1;
+            } else if (a.highest_role_layout_priority < b.highest_role_layout_priority) {
+                return 1;
             }
             return 0;
         }).map(a => a.person);
