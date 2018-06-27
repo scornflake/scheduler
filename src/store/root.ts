@@ -315,8 +315,10 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
             this.uiDisposer = reaction(() => {
                 // trace();
                 if (this.ui_store) {
-                    this.logger.info(`UI Store changed, person:${this.ui_store.loggedInPerson ? this.ui_store.loggedInPerson.name : '<no one>'}, selection: ${this.ui_store.have_selection || '<no selection>'}...`);
-                    toJS(this.ui_store);
+                    let person = this.ui_store.loggedInPerson ? this.ui_store.loggedInPerson.name : '<no one>';
+                    let plan = this.ui_store.selectedPlan ? this.ui_store.selectedPlan.name : '<none>';
+                    let selection = this.ui_store.have_selection || '<no selection>';
+                    this.logger.info(`UI Store changed, person:${person}, plan:${plan}, selection: ${selection}`);
                 }
                 return this.ui_store;
             }, () => {

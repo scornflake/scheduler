@@ -66,6 +66,7 @@ export class MyApp {
             {
                 title: "", items: [
                     {title: "Dashboard", page: 'home'},
+                    {title: "Login", page: 'login', visible: () => !this.loggedIn},
                     {title: "Profile", page: 'page-profile', enabled: () => this.loggedIn},
                 ]
             },

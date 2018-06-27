@@ -26,15 +26,15 @@ export class NPBCStoreConstruction {
     constructor() {
     }
 
-    static SetupOrganization(org_store, name: string) {
-        let org = org_store.find_by_name(name);
-        if (!org) {
-            let organization = new Organization(name);
-            org_store.add_organisation(organization);
-            return organization;
-        }
-        return null;
-    }
+    // static SetupOrganization(org_store, name: string) {
+    //     let org = org_store.find_by_name(name);
+    //     if (!org) {
+    //         let organization = new Organization(name);
+    //         org_store.add_organisation(organization);
+    //         return organization;
+    //     }
+    //     return null;
+    // }
 
     static SetupTeamUnavailability(team: Team) {
         let neil = team.findPersonWithName("Neil Clayton");

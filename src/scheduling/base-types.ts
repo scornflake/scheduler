@@ -114,7 +114,7 @@ class NamedObject extends ObjectWithUUID {
     }
 
     static sortByName<T extends NamedObject>(list: Array<T>): Array<T> {
-        return list.sort((a, b) => {
+        return list.slice().sort((a, b) => {
             if (a.name.toLowerCase() > b.name.toLowerCase()) {
                 return 1;
             }

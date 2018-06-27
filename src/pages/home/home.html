@@ -20,7 +20,7 @@
 </ion-header>
 
 <ion-content>
-    <div *ngIf="store.uiStore$|async as ui">
+    <div *ngIf="store.uiStore$|async as ui; else startingUp">
         <div *ngIf="server">
             <div *ngIf="server.loggedIn; else notSignedIn">
                 <ion-grid>
@@ -77,6 +77,11 @@
             </ng-template>
         </div>
     </div>
+    <ng-template #startingUp>
+        <div class="notSignedIn">
+            <div class="title" text-center>Starting up ...</div>
+        </div>
+    </ng-template>
 </ion-content>
 
 <ion-footer>

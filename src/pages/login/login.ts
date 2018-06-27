@@ -68,15 +68,15 @@ class LoginPage implements AfterViewInit {
                 this.setRegistrationEmail("neil@cloudnine.net.nz");
                 this.setRegistrationPassword("testing59");
 
-                // do a login for this user
-                this.server.loginUser(this.registrationEmail, this.registrationPassword).then(lr => {
-                    if (lr.ok) {
-                        this.switchToReplication();
-                        // this.register();
-                    } else {
-                        console.error(`Arg: ${JSON.stringify(lr)}`);
-                    }
-                });
+                // // do a login for this user
+                // this.server.loginUser(this.registrationEmail, this.registrationPassword).then(lr => {
+                //     if (lr.ok) {
+                //         this.switchToReplication();
+                //         // this.register();
+                //     } else {
+                //         console.error(`Arg: ${JSON.stringify(lr)}`);
+                //     }
+                // });
 
 
             }, 250)
@@ -191,6 +191,10 @@ class LoginPage implements AfterViewInit {
         let text = error;
         if (error instanceof ServerError) {
             text = error.allErrors;
+        }
+
+        if(typeof(error) === 'object') {
+            text = JSON.stringify(error);
         }
 
         let alert = this.alertCtrl.create({

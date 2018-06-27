@@ -22,7 +22,10 @@ export class RESTServer {
     constructor(public http: HttpClient,
                 public loggingService: LoggingService,
                 public config: ConfigurationService) {
-        this.logger = this.loggingService.getLogger("service.rest")
+        this.logger = this.loggingService.getLogger("service.rest");
+
+        let server = this.config.getValue("server");
+        this.logger.info(`Server: ${JSON.stringify(server)}`);
     }
 
     private server_url(path): string {
@@ -43,7 +46,9 @@ export class RESTServer {
 
     async login(username: string, password: string): Promise<LoginResponse> {
         let url = this.server_url("login/" + `?email=${username}&password=${password}`);
+        this.logger.info(`About to: ${url}`);
         return this.http.get(url).map(r => {
+            this.logger.warn(`RESP: ${SafeJSON.stringify(r)}`);
             return Object.assign(new LoginResponse(), r)
         }).toPromise();
     }
