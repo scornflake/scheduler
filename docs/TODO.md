@@ -3,7 +3,7 @@ TODO:
 - Get sign in / reg lifecycle going (done?)
   - Don't auto sign in as me :)
 - Sync
-  - changing the assignment on person, propagates, but 2nd client doesn't see the change in the UI. refresh works.
+  - **** changing the assignment on person, propagates, but 2nd client doesn't see the change in the UI. refresh works.
 - Rules dont appear to be persisted (see AddPeopleToPlanWithRoles for neil)
 - Offline. Close server. Get app to startup.
 - DB isn't showing an up to date version of info. Should reload this on page reload?

@@ -1,10 +1,19 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    EventEmitter,
+    Input,
+    OnInit,
+    Output
+} from '@angular/core';
 import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../../scheduling/availability";
 import {clamp} from "ionic-angular/util/util";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {action, computed, observable} from "mobx-angular";
-import {ObservableMap, runInAction} from "mobx";
+import {autorun, ObservableMap, runInAction} from "mobx";
+import {Person} from "../../scheduling/people";
 
 @Component({
     selector: 'availability-options',
@@ -12,64 +21,43 @@ import {ObservableMap, runInAction} from "mobx";
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AvailabilityOptionsComponent implements OnInit {
-    @observable _availability: Availability;
     @observable _state = new ObservableMap();
     @observable type: string;
+
+    @Input('person')
+    set person(p: Person) {
+        runInAction(() => {
+            this._person = p;
+
+            autorun(() => {
+                this.logger.info(`Building new state from availability: ${p.availability}`);
+                this.updateInternalStateUsingAvailability(p.availability);
+            })
+        });
+    }
+
     private logger: Logger;
+    @observable private _person: Person;
 
     @Output() availabilityChange = new EventEmitter<Availability>();
 
-    constructor() {
+    constructor(private cf: ChangeDetectorRef) {
         this.logger = LoggingWrapper.getLogger('component.availability');
+        this._state['anytime'] = new ObservableMap();
+        this._state['regular'] = new ObservableMap();
+        this._state['fraction'] = new ObservableMap();
     }
 
     ngOnInit(): void {
-        // this.
-    }
-
-    @computed get avail(): Availability {
-        return this._availability;
-    }
-
-    get availability(): Availability {
-        return this._availability;
-    }
-
-    @Input('availability')
-    set availability(value: Availability) {
-        runInAction(() => {
-            this._availability = value;
-            if (this._availability) {
-                this.type = this._availability instanceof AvailabilityEveryNOfM ? "fraction" : "regular";
-                if (this._availability.unit == AvailabilityUnit.AVAIL_ANYTIME) {
-                    this.type = "anytime";
-                }
-                // this.logger.warn(`Type (after set of avail) now: ${this.type}`);
-                let state = this.state;
-                state['days'] = this._availability.period.toString();
-                state['unit'] = this._availability.unit;
-                if (this._availability instanceof AvailabilityEveryNOfM) {
-                    state['weeks'] = this._availability.period_to_look_at.toString();
-                }
-            }
-        });
     }
 
     @action setType(type: string) {
         this.type = type;
-        this.build_availability();
-    }
-
-    @computed get state_key(): string {
-        return this.type;
+        this.buildNewAvailability();
     }
 
     @computed get state() {
-        let key = this.state_key;
-        if (!this._state.hasOwnProperty(key)) {
-            this._state[key] = new ObservableMap();
-        }
-        return this._state[key]
+        return this._state[this.type];
     }
 
     @computed get is_regular(): boolean {
@@ -111,7 +99,7 @@ export class AvailabilityOptionsComponent implements OnInit {
     }
 
     @computed get regular_days_options() {
-        if (!this.avail) {
+        if (!this._person || !this._person.availability) {
             return []
         }
         let weeks = ["1", "2", "3", "4"];
@@ -119,27 +107,45 @@ export class AvailabilityOptionsComponent implements OnInit {
             return weeks
         }
 
-        if (this.avail.unit == AvailabilityUnit.EVERY_N_DAYS) {
+        if (this._person.availability.unit == AvailabilityUnit.EVERY_N_DAYS) {
             return ["1", "2", "3", "4", "5", "6", "7"]
         }
         return weeks
     }
 
-    build_availability() {
+    buildNewAvailability() {
         let days_number: number = parseInt(this.state['days']) || 2;
         this.logger.warn(`Type is ${this.type}`);
+        let newAvail = null;
         if (this.type == "fraction") {
             // "this.unit" isn't used here
             let weeks_number: number = parseInt(this.state['weeks']) || 3;
-            this.availability = new AvailabilityEveryNOfM(days_number, weeks_number)
+            newAvail = new AvailabilityEveryNOfM(days_number, weeks_number)
         } else if (this.type == "regular") {
             let unit = this.state['unit'];
             if (!unit) unit = AvailabilityUnit.EVERY_N_DAYS;
-            this.availability = new Availability(days_number, unit)
+            newAvail = new Availability(days_number, unit)
         } else {
-            this.availability = new Availability();
+            newAvail = new Availability();
         }
         // this.logger.info(`Changed avail to ${this.availability}`);
-        this.availabilityChange.emit(this.avail);
+        this.availabilityChange.emit(newAvail);
+    }
+
+    @action
+    private updateInternalStateUsingAvailability(avail) {
+        if (avail) {
+            this.type = avail instanceof AvailabilityEveryNOfM ? "fraction" : "regular";
+            if (avail.unit == AvailabilityUnit.AVAIL_ANYTIME) {
+                this.type = "anytime";
+            }
+            // this.logger.warn(`Type (after set of avail) now: ${this.type}`);
+            let state = this.state;
+            state['days'] = avail.period.toString();
+            state['unit'] = avail.unit;
+            if (avail instanceof AvailabilityEveryNOfM) {
+                state['weeks'] = avail.period_to_look_at.toString();
+            }
+        }
     }
 }

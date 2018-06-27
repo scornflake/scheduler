@@ -16,7 +16,7 @@
 
     <ion-list-header color="light">Availability</ion-list-header>
     <ion-item-group>
-        <availability-options [(availability)]="person.availability"></availability-options>
+        <availability-options [person]="person" (availabilityChange)="person.availability = $event"></availability-options>
     </ion-item-group>
 
     <ion-list-header color="light">

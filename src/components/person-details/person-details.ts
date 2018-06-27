@@ -7,7 +7,7 @@ import {observable} from "mobx-angular";
 @Component({
     selector: 'person-details',
     templateUrl: 'person-details.html',
-    changeDetection: ChangeDetectionStrategy.OnPush
+    // changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PersonDetailsComponent {
     @observable @Input() person: Person;

@@ -1,4 +1,4 @@
-<div class="control" *mobxAutorun>
+<div class="control">
     <ion-item no-lines>
         <ion-segment color="primary" [ngModel]="type" (ngModelChange)="setType($event)">
             <ion-segment-button value="anytime">Anytime</ion-segment-button>
@@ -9,13 +9,13 @@
     <div [ngSwitch]="type">
         <div *ngSwitchCase="'regular'">
             <ion-item *ngIf="state.unit != 'anytime'" no-lines>
-                <ion-segment color="primary" [(ngModel)]="days" (ionChange)="build_availability()">
+                <ion-segment color="primary" [(ngModel)]="days" (ionChange)="buildNewAvailability()">
                     <ion-segment-button *ngFor="let num of regular_days_options" value="{{num}}">{{num}}
                     </ion-segment-button>
                 </ion-segment>
             </ion-item>
             <ion-item no-lines>
-                <ion-segment color="primary" [(ngModel)]="state.unit" (ionChange)="build_availability()">
+                <ion-segment color="primary" [(ngModel)]="state.unit" (ionChange)="buildNewAvailability()">
                     <!--<ion-segment-button value="anytime">Anytime</ion-segment-button>-->
                     <ion-segment-button value="every_days">Days</ion-segment-button>
                     <ion-segment-button value="every_weeks">Weeks</ion-segment-button>
@@ -26,13 +26,13 @@
             <ion-grid>
                 <ion-row>
                     <ion-segment col-4 item-start color="primary" [(ngModel)]="days"
-                                 (ionChange)="build_availability()">
+                                 (ionChange)="buildNewAvailability()">
                         <ion-segment-button *ngFor="let num of regular_days_options" value="{{num}}">{{num}}
                         </ion-segment-button>
                     </ion-segment>
                     <ion-label col-1 text-center>in</ion-label>
                     <ion-segment col-4 item-end color="primary" [(ngModel)]="weeks"
-                                 (ionChange)="build_availability()">
+                                 (ionChange)="buildNewAvailability()">
                         <ion-segment-button *ngFor="let num of regular_days_options" value="{{num}}">{{num}}
                         </ion-segment-button>
                     </ion-segment>

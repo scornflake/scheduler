@@ -31,7 +31,7 @@ export class IonSegmentHotfix {
         }
     }
 
-    private onChildrenChanged() {
+    onChildrenChanged() {
         setTimeout(() => {
             this.segment.ngAfterContentInit();
             this.segment._inputUpdated();
@@ -40,7 +40,11 @@ export class IonSegmentHotfix {
             This is required because of a bug with ion-select when inside something with modified ChangeDetection
             https://forum.ionicframework.com/t/ion-segment-issues/97241/5
              */
-            this.cf.detectChanges();
+            this.doDetectChanges();
         });
+    }
+
+    doDetectChanges() {
+        this.cf.detectChanges();
     }
 }

@@ -39,15 +39,6 @@ export class PersonDetailsPage {
         }
     }
 
-
-    show_availability_popup() {
-        let popover = this.popoverCtrl.create('AvailabilityOptionsPage', {
-            'person': this.person,
-            'availability': this.person.availability,
-        });
-        popover.present({})
-    }
-
     cancel_editing() {
         this.navCtrl.pop();
     }
