@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
 import {IonicPage, NavController} from 'ionic-angular';
 import {CSVExporter} from "../../scheduling/exporter/csv.exporter";
 import {GAPIS} from "../../common/gapis-auth";
@@ -16,7 +16,8 @@ import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 })
 @Component({
     selector: 'page-home',
-    templateUrl: 'home.html'
+    templateUrl: 'home.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HomePage {
     private logger: Logger;
@@ -35,7 +36,7 @@ export class HomePage {
 
         this.pageUtils.runStartupLifecycle(this.navCtrl).then(() => {
             this.logger.info(`ngOnInit`, 'runStartupLifecycle complete');
-        })
+        });
 
         // this.store.ui_store$.subscribe(ius => {
         //     this.logger.warn(`Home Says Signed In: ${ius.signed_in}`);
@@ -44,8 +45,8 @@ export class HomePage {
         //     this.logger.warn(`Prefs: ${SafeJSON.stringify(ss)}`)
         // })
         // this.store.schedule$.subscribe(ss => {
-        //     this.logger.warn(`Schedule: ${SafeJSON.stringify(ss)}`)
-        // })
+        //     this.logger.warn(`Schedule CHANGED in HOME: ${ss ? ss.id : ''}`)
+        // });
 
         // this.navCtrl.push('login', {create: true});
     }

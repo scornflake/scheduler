@@ -1,4 +1,12 @@
-import {ApplicationRef, ChangeDetectionStrategy, Component, Input, ViewChild} from '@angular/core';
+import {
+    ApplicationRef,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    Input, OnDestroy,
+    OnInit,
+    ViewChild
+} from '@angular/core';
 import {isArray} from "util";
 import {Person} from "../../scheduling/people";
 import {PopoverController, Slides} from "ionic-angular";
@@ -11,13 +19,25 @@ import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {PageUtils} from "../../pages/page-utils";
 import {Role} from "../../scheduling/role";
+import {Subscription} from "rxjs/Subscription";
 
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,
     selector: 'schedule-viewer',
     templateUrl: 'schedule-viewer.html'
 })
-export class ScheduleViewerComponent {
+export class ScheduleViewerComponent implements OnInit, OnDestroy {
+    //
+    // get schedule(): ScheduleWithRules {
+    //     return this._s;
+    // }
+    //
+    // @Input() set schedule(s: ScheduleWithRules) {
+    //     this.logger.warn(`SET SCHEDULE`);
+    //     this._s = s;
+    // }
+    // private _s: ScheduleWithRules;
+
     @Input() schedule: ScheduleWithRules;
     @Input() me: Person;
 
@@ -28,6 +48,7 @@ export class ScheduleViewerComponent {
 
     constructor(private store: RootStore,
                 private appRef: ApplicationRef,
+                private cd: ChangeDetectorRef,
                 private pageUtils: PageUtils,
                 public popoverCtrl: PopoverController) {
         this.logger = LoggingWrapper.getLogger('component.schedule.view')
@@ -40,6 +61,9 @@ export class ScheduleViewerComponent {
                 this.colSelectedDate = this.schedule.dates[0].date;
             }
         }
+    }
+
+    ngOnDestroy() {
     }
 
     get roles(): Array<Role> {

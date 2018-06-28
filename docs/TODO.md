@@ -3,7 +3,8 @@ TODO
 - Get sign in / reg lifecycle going (done?)
   - Don't auto sign in as me :)
 - Sort out logout, stop hitting DB
-- Why is app.tick() required in RootStore, schedule, to make the app refresh on 2nd update?
+    - Doesn't seem to be any more?
+    - maybe a prob with menu, now solved?
 - When creating account first time, receiving data, done - it doesn't select the first schedule.
     - I think even if you select the schedule, it doesn't show it.
     - This may be to do with a mobx error, that we see only on Safari.

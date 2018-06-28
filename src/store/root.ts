@@ -1,5 +1,5 @@
 import {UIStore} from "./UIState";
-import {ApplicationRef, Injectable, OnDestroy, OnInit} from "@angular/core";
+import {Injectable, NgZone, OnDestroy, OnInit} from "@angular/core";
 import {Logger} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
 import {IReactionDisposer, observable, reaction, runInAction, toJS, trace} from "mobx";
@@ -42,7 +42,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
 
     private db: SchedulerDatabase;
 
-    constructor(private app: ApplicationRef) {
+    constructor(private zone: NgZone) {
         super();
 
         this.logger = LoggingWrapper.getLogger("service.store");
@@ -252,22 +252,26 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
                     let schedule;
                     schedule = new ScheduleWithRules(plan, this.previousSchedule);
                     schedule.createSchedule();
-
-                    runInAction(() => {
-                        this.schedule = schedule;
-                    });
                     return schedule;
                 } else {
                     this.logger.info(`No schedule generated, the provided plan was null`);
                 }
             }, schedule => {
                 this.logger.info(`Regenerating schedule for plan ${schedule.plan.name}`);
-                this.scheduleSubject.next(schedule);
-                if(this.app) {
-                    this.app.tick();
-                }
+                runInAction(() => {
+                    this.schedule = schedule;
+                });
+
+                /*
+                Required because if we want NG to pick up the change we have to be within a Zone
+                Because the observation could come from anywhere (including an outside Pouch change), we need to wrap it.
+                 */
+                this.executeInZone(() => {
+                    this.scheduleSubject.next(schedule);
+                });
             }, {
                 name: 'schedule',
+                delay: 200,
             });
         }
     }
@@ -287,7 +291,9 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
                 }
                 return null;
             }, prefs => {
-                this.preferencesSubject.next(prefs);
+                this.executeInZone(() => {
+                    this.preferencesSubject.next(prefs);
+                });
             }, {
                 name: 'preferences',
                 equals: (a, b) => false // so that we ALWAYS fire to the subject
@@ -310,7 +316,9 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
                 let plan = this.plans.findOfThisTypeByUUID(uuid);
                 if (plan) {
                     this.ui_store.setSelectedPlan(plan);
-                    this.selectedPlanSubject.next(plan);
+                    this.executeInZone(() => {
+                        this.selectedPlanSubject.next(plan);
+                    });
                 } else {
                     this.logger.warn(`selected_plan$ failure - can't find plan with ID: ${uuid}`);
                 }
@@ -330,7 +338,9 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
                 }
                 return this.ui_store;
             }, () => {
-                this.uiStoreSubject.next(this.ui_store);
+                this.executeInZone(() => {
+                    this.uiStoreSubject.next(this.ui_store);
+                });
             }, {name: 'ui store', equals: (a, b) => false});
         }
     }
@@ -345,7 +355,9 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
                 return null;
             }, (person) => {
                 this.logger.debug("loggedInPerson$", `state change saw: ${person}`);
-                this.loggedInPersonSubject.next(person);
+                this.executeInZone(() => {
+                    this.loggedInPersonSubject.next(person);
+                });
             }, {name: 'logged in person'});
             // above reaction uses default comparator, so that it only fires when the UUID CHANGES! yay.
         }
@@ -386,6 +398,14 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
             this.db = db;
             this.db.setCache(this);
             this.logger.info(`Yay. RootStore has a new DB.`);
+        }
+    }
+
+    private executeInZone(func) {
+        if (this.zone) {
+            this.zone.run(func);
+        } else {
+            func();
         }
     }
 }

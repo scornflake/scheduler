@@ -11,8 +11,7 @@ import {computed, observable} from "mobx-angular";
     templateUrl: 'person-schedule.html'
 })
 export class PersonScheduleComponent {
-
-    @observable @Input() schedule: ScheduleWithRules;
+    @Input() schedule: ScheduleWithRules;
     @observable @Input() person: Person;
 
     constructor(public store: RootStore) {

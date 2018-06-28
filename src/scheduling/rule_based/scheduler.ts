@@ -10,11 +10,13 @@ import {Plan} from "../plan";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Role} from "../role";
 import {action, computed, observable} from "mobx-angular";
+import {ObjectWithUUID} from "../base-types";
 
 class ScheduleWithRules {
     @observable plan: Plan;
     @observable facts: RuleFacts;
     free_text: {};
+    id: string = ObjectWithUUID.guid();
 
     private logger: Logger;
     private previous_scheduler: ScheduleWithRules;
@@ -223,7 +225,8 @@ class ScheduleWithRules {
         return next_date;
     }
 
-    @action private clear_working_state() {
+    @action
+    private clear_working_state() {
         this.facts = new RuleFacts(this.plan);
         if (this.previous_scheduler) {
             this.facts.copyUsageDataFrom(this.previous_scheduler.facts);
@@ -326,7 +329,8 @@ class ScheduleWithRules {
         });
     }
 
-    @action private process_secondary_actions() {
+    @action
+    private process_secondary_actions() {
         // Check everyone that has secondary actions
         this.plan.assignments.forEach(assignment => {
             let secondary_actions = assignment.secondary_actions;

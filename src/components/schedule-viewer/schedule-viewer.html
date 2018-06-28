@@ -1,5 +1,4 @@
 <div *mobxAutorun>
-
     <div *ngIf="rowMode; else colMode">
         <ion-grid>
             <ion-row>
@@ -22,7 +21,7 @@
         </ion-grid>
     </div>
     <ng-template #colMode no-padding>
-        <div class="horizSchedule">
+        <div class="horizSchedule" *ngIf="schedule">
             <!-- shows only when in small mode -->
             <div *xs>
                 <div *ngIf="store.selectedPlan$|async as plan" text-center class="smallDate">
