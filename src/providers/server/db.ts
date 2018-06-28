@@ -18,9 +18,10 @@ import {IObjectCache} from "../mapping/cache";
 import {action} from "mobx-angular";
 import {Organization} from "../../scheduling/organization";
 import {ReplaySubject} from "rxjs/ReplaySubject";
+import {StoreBasedResolver} from "./orm-resolver";
+import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import Database = PouchDB.Database;
 import DatabaseConfiguration = PouchDB.Configuration.DatabaseConfiguration;
-import {StoreBasedResolver} from "./orm-resolver";
 
 // Put this back in when we move to v7 of Pouch.
 // import plugin from 'pouchdb-adapter-idb';
@@ -34,6 +35,8 @@ enum SavingState {
 
 class SchedulerDatabase implements IObjectStore {
     saveNotifications = new Subject<SavingState>();
+    replicationNotifications = new BehaviorSubject<boolean>(false);
+
     readyEvent: Subject<boolean>;
     info: PouchDB.Core.DatabaseInfo;
 
@@ -499,13 +502,23 @@ class SchedulerDatabase implements IObjectStore {
                     for (let doc of docs) {
                         delete doc['_revisions'];
                     }
-                    this.logger.info(`Processing incoming change: ${JSON.stringify(change)}`);
+                    
+                    let changeInfo = {};
+                    if(docs && Array.isArray(docs)) {
+                        changeInfo['num_docs'] = docs.length;
+                    } else {
+                        changeInfo = change;
+                    }
+                    
+                    this.logger.info(`Processing incoming change: ${JSON.stringify(changeInfo)}`);
                     // Want to update existing store using this data, as though we had read it direct from the DB
                     this.saveNotifications.next(SavingState.ChangeDetected);
+                    this.replicationNotifications.next(true);
                     this.convert_docs_to_objects_and_store_in_cache(docs).then((items) => {
-                        this.logger.debug(` ... incoming change (${items.length} docs) processed and stored in DB/cache`);
+                        this.logger.info(` ... incoming change (${items.length} docs) processed and stored in DB/cache`);
                     });
                     this.saveNotifications.next(SavingState.FinishedSaving);
+                    this.replicationNotifications.next(false);
                 } else {
                     this.logger.debug(`Outgoing change: ${JSON.stringify(change)}`);
                 }

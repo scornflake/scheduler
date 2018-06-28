@@ -15,7 +15,7 @@ import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {action, computed, observable} from "mobx-angular";
 import {Storage} from '@ionic/storage';
 import {OrmMapper} from "../mapping/orm-mapper";
-import {catchError, filter, flatMap, take, timeout} from "rxjs/operators";
+import {catchError, debounceTime, filter, flatMap, map, take, timeout} from "rxjs/operators";
 import {ConfigurationService} from "ionic-configuration-service";
 import "rxjs/add/observable/fromPromise";
 import "rxjs/add/observable/interval";
@@ -450,44 +450,67 @@ class SchedulerServer implements ILifecycle {
         // Start replication
         let couch = this.configurationService.getValue('server')['couch'];
         newDb.startReplicationFor(couch, organizationUUID);
-        let person = await this.asyncWaitForDBToContainPerson(personUUID, newDb, responseTimeout);
-        this.store.ui_store.setLoggedInPerson(person);
+
+        // Wait for replication to go quiet (no updates in a bit)
+        this.logger.info('setupDBFromState', `Waiting for replication to come up`);
+        await this.waitForReplicationToQuietenDown(newDb);
+
+        this.logger.info('setupDBFromState', `Checking we can find ${personUUID}`);
+        let person = await this.asyncWaitForDBToContainObjectWithUUID(personUUID, newDb, responseTimeout);
+        if (person instanceof Person) {
+            this.store.ui_store.setLoggedInPerson(person);
+        } else {
+            throw new Error(`Object with UUID ${personUUID} was loaded, but it's not an instance of Person! It's: ${person.constructor.name}`);
+        }
+
+        // We want that 'defaults' one to be alive so it triggers when we first load the state
+        // this.checkForDefaults();
     }
 
-    async asyncWaitForDBToContainPerson(personUUID, newDb, responseTimeout: number) {
+    async asyncWaitForDBToContainObjectWithUUID(uuid, newDb, responseTimeout: number): Promise<ObjectWithUUID> {
         // Poll until we can find the person.
-        this.logger.info('setupDBFromState', `Waiting for replication to come up and give us ${personUUID}`);
+        this.logger.info('setupDBFromState', `Waiting for ${uuid}`);
 
         if (responseTimeout == Infinity) {
             responseTimeout = 15000;
         }
 
-        await Observable.timer(250, 500)
+        await Observable.timer(1000, 1500)
             .pipe(
                 flatMap(() => {
-                    this.logger.debug(`Seeing if person ${personUUID} exists...`);
-                    return Observable.from(newDb.async_DoesObjectExistWithUUID(personUUID));
+                    this.logger.debug(`Seeing if ${uuid} exists...`);
+                    return Observable.from(newDb.async_DoesObjectExistWithUUID(uuid));
                 }),
                 filter((v: boolean) => v),
                 timeout(responseTimeout),
                 take(1), // take the first successful, then terminate
                 catchError(err => {
-                    throw new Error(`E1334: didn't find person with ID ${personUUID} within ${responseTimeout / 1000}s))`)
+                    throw new Error(`E1334: didn't find ID ${uuid} within ${responseTimeout / 1000}s))`)
                 })
             ).toPromise();
 
-        this.logger.debug('setupDBFromState', `Got it! Woot!`);
-
-        // We want that 'defaults' one to be alive so it triggers when we first load the state
-        // this.checkForDefaults();
+        this.logger.info('setupDBFromState', `Woot! We can see the ${uuid} in the DB`);
 
         // Make sure store logged in person is set
         // Again, causing various subjects on RootStore to fire, getting new state & objects
-        let person = await newDb.async_LoadObjectWithUUID(personUUID) as Person;
-        if (!person) {
-            throw new Error(`Cannot find person with UUID ${personUUID}, setupDBFromState failed`);
+        let theObject = await newDb.async_LoadObjectWithUUID(uuid);
+        if (!theObject) {
+            throw new Error(`Cannot find object with UUID ${uuid}, setupDBFromState failed`);
         }
-        return person;
+        return theObject;
+    }
+
+    private async waitForReplicationToQuietenDown(newDb: SchedulerDatabase) {
+        await newDb.replicationNotifications.pipe(
+            map(v => {
+                this.logger.info(`Replication doing something: ${v}`);
+                return v;
+            }),
+            debounceTime(1000),
+            filter(v => v == false),
+            take(1)
+        ).toPromise();
+        this.logger.info('Replication has been silent for a while');
     }
 }
 

@@ -241,7 +241,7 @@ describe('scheduler server', () => {
 
             let dbInstance = instance(dbMock);
 
-            server.asyncWaitForDBToContainPerson(userResponse.uuid, dbInstance, 1500).then(p => {
+            server.asyncWaitForDBToContainObjectWithUUID(userResponse.uuid, dbInstance, 1500).then(p => {
                 verify(dbMock.async_DoesObjectExistWithUUID(userResponse.uuid)).called();
                 verify(dbMock.async_LoadObjectWithUUID(userResponse.uuid)).called();
                 expect(p).toBe(personInDB);
