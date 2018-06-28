@@ -120,8 +120,11 @@ class Person extends NamedObject {
     }
 
     @computed get initials() {
-        let words = this.name.split(" ");
-        return words.map(w => w[0]).join(".")
+        if(this.name != null) {
+            let words = this.name.split(" ");
+            return words.map(w => w[0]).join(".")
+        }
+        return "";
     }
 
     @action addUnavailable(d: Date, reason = null): Unavailability {
@@ -173,11 +176,13 @@ class Person extends NamedObject {
 
     valueOf() {
         let idents = [];
-        if (this.name) {
-            idents.push(this.name);
-        }
-        if (this.email) {
-            idents.push(this.email);
+        if (this != null) {
+            if (this.name != null) {
+                idents.push(this.name);
+            }
+            if (this.email != null) {
+                idents.push(this.email);
+            }
         }
         return idents.join(', ');
     }

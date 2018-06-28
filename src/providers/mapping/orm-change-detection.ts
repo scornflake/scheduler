@@ -104,7 +104,11 @@ class ObjectChangeTracker {
         if (propertiesMap) {
             propertiesMap.forEach((disposer, propertyName) => {
                 if (disposer) {
-                    this.tracking_trace(`Removing observer for ${object.constructor.name}.${propertyName}`);
+                    if (object) {
+                        if (object.constructor) {
+                            this.tracking_trace(`Removing observer for ${object.constructor.name}.${propertyName}`);
+                        }
+                    }
                     disposer();
                 }
             });
@@ -119,11 +123,17 @@ class ObjectChangeTracker {
         - We will ignore any field that is a a reference/reference list
          */
     track(instance: ObjectWithUUID, listener: ChangeListener = null) {
+        if (instance == null) {
+            throw new Error('Cannot track an instance == null');
+        }
         this.nesting = 0;
         if (listener == null) {
             listener = this.notification_listener;
         } else {
             listener = chainListeners(this.notification_listener, listener);
+        }
+        if (!instance.constructor) {
+            throw new Error(`Cannot find path on object, can't track properties. Instance.constructor is null. What to do?`);
         }
         this.trackPropertiesOfObject(instance, instance, instance.constructor.name, listener);
         this.tracking_debug(`Done installing change listener for ${instance.type}`);
@@ -159,6 +169,12 @@ class ObjectChangeTracker {
     }
 
     private trackFieldsOfObject(owner: ObjectWithUUID, instance: any, parent_path: string, listener: ChangeListener) {
+        if (instance == null) {
+            throw new Error('Cannot trackFieldsOfObject for instance == null');
+        }
+        if (!instance.constructor) {
+            throw new Error('Cannot trackFieldsOfObject for instance.constructor being undefined/null');
+        }
         let props = this.mapper.propertiesFor(instance.constructor.name);
         if (!props) {
             this.tracking_trace(`no further properties to track on ${parent_path}`);
@@ -185,14 +201,14 @@ class ObjectChangeTracker {
 
                 if (type == MappingType.Property || type == MappingType.Reference) {
                     // Simple property
-                    this.tracking_debug(`consider ${typeName}, ${childPath} (using ${actualPropertyName})`);
+                    this.tracking_debug(`consider property ${typeName}, ${childPath} (using ${actualPropertyName})`);
                     this.installObserverForPropertyNamed(owner, instance, parent_path, actualPropertyName, listener);
                 } else if (type == MappingType.NestedObject) {
-                    this.tracking_debug(`consider ${typeName}, ${childPath} (using ${actualPropertyName})`);
+                    this.tracking_debug(`consider nested object ${typeName}, ${childPath} (using ${actualPropertyName})`);
                     this.installObserverForPropertyNamed(owner, instance, parent_path, actualPropertyName, listener);
                     this.trackPropertiesOfObject(owner, value, childPath, listener);
                 } else if (type == MappingType.NestedObjectList || type == MappingType.ReferenceList) {
-                    this.tracking_debug(`consider ${typeName}, ${childPath} (using ${actualPropertyName})`);
+                    this.tracking_debug(`consider nested object list ${typeName}, ${childPath} (using ${actualPropertyName})`);
 
                     // Track the members of the list
                     if (type == MappingType.NestedObjectList) {
@@ -253,6 +269,9 @@ class ObjectChangeTracker {
     }
 
     private installObserverDirectlyOn(owner: ObjectWithUUID, instance: any, parentPath: string, listener: ChangeListener) {
+        if (instance == null) {
+            throw new Error('Cannt install a change listener on null!');
+        }
         let nameOfTheObject = GetTheTypeNameOfTheObject(instance);
         if (nameOfTheObject == 'array') {
             this.tracking_trace(`Install change listener for: ${parentPath} (Array of ${instance.length})`);
@@ -262,7 +281,11 @@ class ObjectChangeTracker {
         } else if (nameOfTheObject == 'map') {
             this.tracking_trace(`Install change listener for: ${parentPath} (Map of ${instance.size})`);
         } else {
-            this.tracking_trace(`Install change listener for: ${parentPath} (${instance}/${instance.constructor.name})`);
+            if (instance.constructor) {
+                this.tracking_trace(`Install change listener for: ${parentPath} (${instance}/${instance.constructor.name})`);
+            } else {
+                this.tracking_trace(`Install change listener for: ${parentPath} (${instance}/<dunno>)`);
+            }
         }
 
         let propertyName = 'items';
@@ -277,37 +300,30 @@ class ObjectChangeTracker {
             this.tracked_object_disposers.set(instance, disposersForInstance);
         }
 
-        let disposer = observe(instance, (change) => {
-            /*
-            Ignore changes to _rev, _id and type
-             */
-            if (change['name']) {
-                if (this.shouldBeIgnored(change['name'])) {
-                    return;
-                }
-            }
-
-            if (this.tracking_disabled.get(owner.uuid)) {
-                this.tracking_trace(`ignore change for ${owner.uuid}, tracking disabled`);
-                return;
-            }
-
-            // Record that this object has changed (doesn't record the ACTUAL change, but the root owner)
-            // Intention is that if you wanted, you can get all changed objects and save them. You'd be saving each ROOT object, which would save it's nested objects
-            // thus picking up all changes
-            if (owner) {
-                this.changed_objects.set(owner.uuid, owner);
-            }
-
-            // Notify, side effect is that we emit from our subject
-            listener({owner: owner, change: change, type: "object", path: parentPath, propertyName: propertyName});
-        }, false);
+        let disposer = observe(instance, this.changeListenerFor.bind(this)(owner, parentPath, propertyName, listener), false);
         disposersForInstance.set(propertyName, disposer);
 
         this.tracked_objects_by_uuid.set(owner.uuid, owner);
     }
 
+    getNameForInstance(instance) {
+        if (typeof instance === 'object') {
+            let parts = [];
+            if (instance != null) {
+                parts.push(instance);
+                if (instance.constructor != null) {
+                    parts.push(instance.constructor.name);
+                }
+            }
+            return parts.join("/");
+        }
+        return "<dunno>";
+    }
+
     private installObserverForPropertyNamed(owner: ObjectWithUUID, instance: any, parentPath: string, propertyName: string, listener: ChangeListener) {
+        if (instance == null) {
+            throw new Error('Cannot installObserverForPropertyNamed for instance == null');
+        }
         let disposersForInstance = this.tracked_object_disposers.get(instance);
         if (disposersForInstance) {
             if (disposersForInstance.get(propertyName)) {
@@ -319,14 +335,23 @@ class ObjectChangeTracker {
             this.tracked_object_disposers.set(instance, disposersForInstance);
         }
 
-        this.tracking_trace(`install change listener for: ${parentPath}.${propertyName} (${instance}/${instance.constructor.name})`);
-        let disposer = observe(instance, propertyName, (change) => {
+        this.tracking_trace(`install change listener for: ${parentPath}.${propertyName} (${this.getNameForInstance(instance)})`);
+
+        let disposer = observe(instance, this.changeListenerFor.bind(this)(owner, parentPath, propertyName, listener), false);
+        disposersForInstance.set(propertyName, disposer);
+        this.tracked_objects_by_uuid.set(owner.uuid, owner);
+    }
+
+    private changeListenerFor(owner, parentPath, propertyName, listener) {
+        return (change) => {
             /*
             Ignore changes to _rev, _id and type
              */
-            if (change['name']) {
-                if (this.shouldBeIgnored(change['name'])) {
-                    return;
+            if (change) {
+                if (change['name']) {
+                    if (this.shouldBeIgnored(change['name'])) {
+                        return;
+                    }
                 }
             }
 
@@ -344,10 +369,7 @@ class ObjectChangeTracker {
 
             // Notify, side effect is that we emit from our subject
             listener({owner: owner, change: change, type: "object", path: parentPath, propertyName: propertyName});
-        }, false);
-
-        disposersForInstance.set(propertyName, disposer);
-        this.tracked_objects_by_uuid.set(owner.uuid, owner);
+        };
     }
 
     clearChangesFor(owner: ObjectWithUUID) {

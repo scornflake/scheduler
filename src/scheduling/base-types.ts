@@ -106,7 +106,10 @@ class NamedObject extends ObjectWithUUID {
     }
 
     valueOf() {
-        return this.name;
+        if (this != null) {
+            return this.name;
+        }
+        return "";
     }
 
     toString() {

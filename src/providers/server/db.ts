@@ -428,7 +428,6 @@ class SchedulerDatabase implements IObjectStore {
                     this.tracker.clearChangesFor(owuid);
                 });
             }
-            // console.log(`XXXXXXXXX: ${SafeJSON.stringify(owner['uuid'])}`);
         }
     }
 

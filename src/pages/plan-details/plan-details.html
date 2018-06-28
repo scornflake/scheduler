@@ -17,7 +17,7 @@
     <ion-list no-padding no-margin>
         <ion-item>
             <ion-label>Name</ion-label>
-            <ion-input text-right placeholder="Plan name" [(ngModel)]="plan.name"></ion-input>
+            <ion-input text-right placeholder="Plan name" [ngModel]="plan.name" (ngModelChange)="plan.setName($event)"></ion-input>
         </ion-item>
         <ion-item>
             <ion-label>Start Date</ion-label>

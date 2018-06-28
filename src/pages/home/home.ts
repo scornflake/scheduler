@@ -17,7 +17,6 @@ import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 @Component({
     selector: 'page-home',
     templateUrl: 'home.html',
-    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HomePage {
     private logger: Logger;

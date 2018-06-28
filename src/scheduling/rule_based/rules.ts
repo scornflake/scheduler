@@ -345,7 +345,10 @@ class TryToScheduleWith extends SecondaryAction {
     }
 
     @computed get description() {
-        return `Try to team with ${this.other_person.initials} within ${this.reach.description(true)}, max ${this.max_number_of_times}`;
+        if(this.other_person != null && this.reach != null) {
+            return `Try to team with ${this.other_person.initials} within ${this.reach.description(true)}, max ${this.max_number_of_times}`;
+        }
+        return `Try to team with 'null person' (good luck with that)`;
     }
 }
 

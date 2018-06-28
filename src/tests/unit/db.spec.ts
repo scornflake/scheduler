@@ -21,6 +21,7 @@ import {defaultComputerRole, defaultSoundRole, SetupDefaultRoles} from "../sampl
 import {IObjectCache, SimpleCache} from "../../providers/mapping/cache";
 import {Role} from "../../scheduling/role";
 import {Availability, AvailabilityUnit} from "../../scheduling/availability";
+import {Assignment} from "../../scheduling/assignment";
 
 class SomeEntity extends ObjectWithUUID {
     @observable some_field: string = "a value";
@@ -67,7 +68,7 @@ class ThingWithMapOfReferenceKeys extends ObjectWithUUID {
 }
 
 describe('db', () => {
-    let db;
+    let db: SchedulerDatabase;
     let mapper: OrmMapper;
     let cache: IObjectCache;
     let test_config: ClassFieldMapping = {
@@ -750,7 +751,7 @@ describe('db', () => {
             let nested_three = instance.my_list[2];
             db.async_storeOrUpdateObject(instance).then(() => {
                 // load it and check we get it back
-                db.async_LoadObjectWithUUID(instance.uuid).then(loaded_instance => {
+                db.async_LoadObjectWithUUID(instance.uuid).then((loaded_instance: ThingWithNestedObjects) => {
                     console.log(`Got back a loaded object: ${SafeJSON.stringify(loaded_instance)}`);
                     expect(loaded_instance.uuid).toEqual(instance.uuid);
                     expect(loaded_instance.my_list.length).toEqual(3);
@@ -883,5 +884,50 @@ describe('db', () => {
                 });
             });
         });
-    })
+    });
+
+    it('should load from doc and track objects OK', function (done) {
+        let neil = new Person("Neilos", "6b73f6d4-f07c-4e17-ae28-85bf4563492d");
+        let cherilyn = new Person("Cher", "6f420d68-3e45-b686-bc68-9fc81ca7b44f");
+        let someRole1 = new Role("Baking");
+        someRole1._id = "e6885123-1998-88c1-9af0-07c232583c47";
+        let someRole2 = new Role("Flying");
+        someRole1._id = "48622369-6852-bfe8-1e5e-d49dbb1ffb2b";
+
+        cache.saveInCache(neil);
+        cache.saveInCache(cherilyn);
+        cache.saveInCache(someRole1);
+        cache.saveInCache(someRole2);
+
+        let doc = {
+            "_id": "70922145-cd52-5d97-3c56-0ae95c3a9f33",
+            "_rev": "1-1c5f06f16dcf46da906aab97a537bfac",
+            "type": "Assignment",
+            "person": "rrr:Person:6b73f6d4-f07c-4e17-ae28-85bf4563492d",
+            "role_weightings": {
+                "rrr:Role:e6885123-1998-88c1-9af0-07c232583c47": 1,
+                "rrr:Role:48622369-6852-bfe8-1e5e-d49dbb1ffb2b": 3
+            },
+            "specific_roles": {},
+            "condition_rules": [],
+            "secondary_action_list": [
+                {
+                    "type": "TryToScheduleWith",
+                    "priority": 0,
+                    "owner": "rrr:Person:6b73f6d4-f07c-4e17-ae28-85bf4563492d",
+                    "other_person": "rrr:Person:6f420d68-3e45-b686-bc68-9fc81ca7b44f",
+                    "reach": "rrr:Availability:5068ceed-98bc-63aa-3ebb-06cdf430baf8",
+                    "max_number_of_times": 2
+                }
+            ]
+        };
+        db.convert_docs_to_objects_and_store_in_cache([doc]).then(arrayOfObjs => {
+            console.log(`well, we got: ${SafeJSON.stringify(arrayOfObjs)}`);
+            expect(arrayOfObjs.length).toBe(1);
+            let firstAssign = arrayOfObjs[0] as Assignment;
+            expect(firstAssign.person).not.toBeFalsy();
+            expect(firstAssign.secondary_actions.length).toBe(1);
+            done();
+        })
+    });
 });

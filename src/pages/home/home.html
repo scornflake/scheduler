@@ -19,7 +19,7 @@
     <saving-state></saving-state>
 </ion-header>
 
-<ion-content>
+<ion-content *mobxAutorun>
     <div *ngIf="store.uiStore$|async as ui; else notSignedIn">
         <div *ngIf="server">
             <div *ngIf="server.loggedIn; else notSignedIn">
