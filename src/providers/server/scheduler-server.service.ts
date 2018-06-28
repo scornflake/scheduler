@@ -512,6 +512,38 @@ class SchedulerServer implements ILifecycle {
         ).toPromise();
         this.logger.info('Replication has been silent for a while');
     }
+
+    private checkForDefaults(store: RootStore) {
+        let theStore = this.store;
+        let person = theStore.ui_store.loggedInPerson;
+        if (!person) {
+            throw new Error('Unable to start defaults check, no person logged in');
+        }
+        let prefs = person.preferences;
+        if (!prefs) {
+            throw new Error('Unable to start defaults check, no preferences');
+        }
+        this.logger.info(`Checking to see if we have a default selected plan...`);
+        let isPlanSet = prefs.selected_plan_uuid != null;
+        let plansMgr = theStore.plans;
+        let planDoesntExist = isPlanSet && plansMgr.findOfThisTypeByUUID(prefs.selected_plan_uuid) == null;
+        if (!isPlanSet || planDoesntExist) {
+            if (!isPlanSet) {
+                this.logger.info(`No plan set`);
+            }
+            if (planDoesntExist) {
+                this.logger.info(`Plan set to ${person.preferences.selected_plan_uuid}, but I can't find that...`);
+            }
+            if (plansMgr.plansByDateLatestFirst.length > 0) {
+                this.logger.info(`Setting default selected plan to: ${plansMgr.plansByDateLatestFirst[0].name}`);
+                person.preferences.setSelectedPlan(plansMgr.plansByDateLatestFirst[0]);
+            } else {
+                this.logger.info(`Tried to select a default plan, but no plans in the DB for us to choose from :(`);
+            }
+        } else {
+            this.logger.info(`We do... the default plan is: ${person.preferences.selected_plan_uuid}`);
+        }
+    }
 }
 
 export {

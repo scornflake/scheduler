@@ -1,6 +1,6 @@
 import {ObjectValidation} from "../scheduling/shared";
 import {NavController, Platform, ToastController} from "ionic-angular";
-import {forwardRef, Inject, Injectable, Injector, OnInit} from "@angular/core";
+import {forwardRef, Inject, Injectable, OnInit} from "@angular/core";
 import deepEqual from "deep-equal";
 import {ToastOptions} from "ionic-angular/components/toast/toast-options";
 import {SchedulerServer} from "../providers/server/scheduler-server.service";
@@ -15,7 +15,6 @@ class PageUtils implements OnInit {
     private logger: Logger;
 
     constructor(private toastController: ToastController,
-                private injector: Injector,
                 @Inject(forwardRef(() => SchedulerServer)) private server,
                 private platform: Platform) {
         this.logger = LoggingWrapper.getLogger('page.utils');

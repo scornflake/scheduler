@@ -1,4 +1,4 @@
-import {action, observable} from "mobx-angular";
+import {observable} from "mobx-angular";
 import {runInAction} from "mobx";
 import {IReferenceResolver, MappingType, ObjectReference, PropertyMapping} from "../mapping/orm-mapper-type";
 import {ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
@@ -100,7 +100,7 @@ class OrmConverterReader {
 
         // Now we need to go through the properties, and hydrate each and assign
         let allProperties = Array.from(targetProperties.keys());
-        let counter = 1;
+        // let counter = 1;
         // this.utils.debug(`Will examine ${allProperties.length} properties, ${JSON.stringify(allProperties)}`, nesting);
         for (let propertyName of allProperties) {
             let mapping: PropertyMapping = targetProperties.get(propertyName);
@@ -108,7 +108,7 @@ class OrmConverterReader {
 
             // this.utils.debug(`Next property (${counter}/${allProperties.length}): ${propertyName}`, nesting);
 
-            counter++;
+            // counter++;
             if (propertyName == 'type') {
                 // No reason why this shouldn't be the case, but you know, paranoia
                 if (new_object.type != dict['type']) {

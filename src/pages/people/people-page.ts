@@ -3,7 +3,6 @@ import {IonicPage, NavController} from 'ionic-angular';
 import {Person} from "../../scheduling/people";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {RootStore} from "../../store/root";
-import {NamedObject} from "../../scheduling/base-types";
 import {PageUtils} from "../page-utils";
 
 @IonicPage({
@@ -16,6 +15,7 @@ import {PageUtils} from "../page-utils";
 })
 export class PeoplePage {
     @ViewChild('personlist') pc;
+
     private logger: Logger;
 
     constructor(public navCtrl: NavController,
@@ -39,7 +39,7 @@ export class PeoplePage {
     add_person(new_person: Person) {
         this.rootStore.people.add(new_person);
         this.rootStore.asyncSaveOrUpdateDb(new_person).then(() => {
-            console.log("Added to DB");
+            this.logger.info("Added to DB");
         });
     }
 

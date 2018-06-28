@@ -2,11 +2,8 @@ import {Component, Input} from '@angular/core';
 import {Person} from "../../scheduling/people";
 
 import {Unavailability} from "../../scheduling/unavailability";
-import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Logger} from "ionic-logging-service";
 import {PopoverController} from "ionic-angular";
 import {CalendarComponent} from "../swbcalendar/swbcalendar";
-import {csd} from "../../scheduling/common/date-utils";
 
 @Component({
     selector: 'person-unavailable',
@@ -16,10 +13,11 @@ export class PersonUnavailableComponent {
     @Input() title = 'Unavailable';
     @Input() person: Person;
     @Input() readOnly: boolean = false;
-    private logger: Logger;
+
+    // private logger: Logger;
 
     constructor(private popover: PopoverController) {
-        this.logger = LoggingWrapper.getLogger(`component.unavailable`);
+        // this.logger = LoggingWrapper.getLogger(`component.unavailable`);
     }
 
     get unavailability() {

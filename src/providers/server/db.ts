@@ -132,7 +132,6 @@ class SchedulerDatabase implements IObjectStore {
         // Put this back in when we move to v7 of Pouch.
         // let options = {adapter: 'idb'};
         // PouchDB.plugin(plugin);
-        let options = {};
         this.logger.info('initialize', `Creating new DB instance: ${this.dbName} ...`);
         this.db = await new PouchDB(this.dbName, this.couchOptions);
 

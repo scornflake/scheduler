@@ -36,6 +36,7 @@ export class NPBCStoreConstruction {
     // }
 
     static SetupTeamUnavailability(team: Team) {
+        // noinspection JSUnusedLocalSymbols
         let neil = team.findPersonWithName("Neil Clayton");
         let cherilyn = team.findPersonWithName("Cherilyn Clayton");
         let kylie = team.findPersonWithName("Kylie Welch-Herekiuha");

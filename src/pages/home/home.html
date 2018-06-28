@@ -23,7 +23,7 @@
     <div *ngIf="store.uiStore$|async as ui; else notSignedIn">
         <div *ngIf="server">
             <div *ngIf="server.loggedIn; else notSignedIn">
-                <ion-grid>
+                <ion-grid no-padding>
                     <ion-item ion-row id="planselection" no-padding *ngIf="store.preferences$ | async as ss">
                         <ion-label ion-col col-auto class="hidden-xs-down" padding-left>Showing Plan</ion-label>
                         <ion-select

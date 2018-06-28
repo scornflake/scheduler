@@ -24,15 +24,22 @@ export class MyApp {
                 private server: SchedulerServer,
                 private menu: MenuController) {
         this.menu.enable(true, 'menu');
-        platform.ready().then(() => {
+        this.frozenGroups = [];
+
+        this.platform.ready().then(() => {
             // Okay, so the platform is ready and our plugins are available.
             // Here you can do any higher level native things you might need.
-            statusBar.styleDefault();
-            splashScreen.hide();
+            this.statusBar.styleDefault();
+            this.splashScreen.hide();
+
         });
     }
 
     ngOnInit() {
+        this.rebuildGroupsOnChange();
+    }
+
+    private rebuildGroupsOnChange() {
         // Work out the groups, based on current state.
         // If the logged in state changes, autorun should re-work out the groups
         autorun(() => {

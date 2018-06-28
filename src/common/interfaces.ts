@@ -1,6 +1,4 @@
-import {ValidationErrors} from "@angular/forms/src/directives/validators";
-
-export type LoginCallback = (loginTokenValid: boolean) => void;
+// export type LoginCallback = (loginTokenValid: boolean) => void;
 
 export interface ValidationResponse {
     user?: UserResponse,

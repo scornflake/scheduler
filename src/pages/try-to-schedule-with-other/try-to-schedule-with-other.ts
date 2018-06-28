@@ -1,6 +1,5 @@
 import {Component} from '@angular/core';
 import {IonicPage, NavController, NavParams} from 'ionic-angular';
-import {RootStore} from "../../store/root";
 import {Person} from "../../scheduling/people";
 import {ObjectValidation} from "../../scheduling/shared";
 import {PageUtils} from "../page-utils";

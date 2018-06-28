@@ -1,12 +1,4 @@
-import {
-    ChangeDetectionStrategy,
-    ChangeDetectorRef,
-    Component,
-    EventEmitter,
-    Input,
-    OnInit,
-    Output
-} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../../scheduling/availability";
 import {clamp} from "ionic-angular/util/util";
 import {LoggingWrapper} from "../../common/logging-wrapper";
@@ -41,7 +33,7 @@ export class AvailabilityOptionsComponent implements OnInit {
 
     @Output() availabilityChange = new EventEmitter<Availability>();
 
-    constructor(private cf: ChangeDetectorRef) {
+    constructor() {
         this.logger = LoggingWrapper.getLogger('component.availability');
         this._state['anytime'] = new ObservableMap();
         this._state['regular'] = new ObservableMap();

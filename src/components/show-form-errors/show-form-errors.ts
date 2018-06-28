@@ -1,7 +1,6 @@
 import {Component, Input} from '@angular/core';
 import {FormGroup} from "@angular/forms";
 import * as to from "to-case";
-import {SafeJSON} from "../../common/json/safe-stringify";
 
 @Component({
     selector: 'show-form-errors',

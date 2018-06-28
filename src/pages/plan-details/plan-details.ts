@@ -1,7 +1,6 @@
 import {Component} from '@angular/core';
 import {AlertController, IonicPage, NavController, NavParams} from 'ionic-angular';
 import {Plan} from "../../scheduling/plan";
-import {dateForISODateString} from "../../scheduling/common/date-utils";
 import {Person} from "../../scheduling/people";
 import {PageUtils} from "../page-utils";
 import {NamedObject} from "../../scheduling/base-types";

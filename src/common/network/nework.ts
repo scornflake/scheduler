@@ -8,6 +8,7 @@ import {Logger} from "ionic-logging-service";
 
 @Injectable()
 class NetworkUtils {
+    private connected: boolean;
     private networkSubject: Subject<boolean>;
     private logger: Logger;
 
@@ -18,10 +19,12 @@ class NetworkUtils {
         if (this.network) {
             this.network.onConnect().subscribe(() => {
                 this.logger.info(`Network Connected`);
+                this.connected = true;
                 this.networkSubject.next(true);
             });
             this.network.onDisconnect().subscribe(() => {
                 this.logger.info(`Network Disconnected`);
+                this.connected = false;
                 this.networkSubject.next(false);
             });
             // this.network.onchange().subscribe(change => {
@@ -35,7 +38,10 @@ class NetworkUtils {
     }
 
     get isOnline(): boolean {
-        return true;
+        if (this.isBrowser) {
+            // can't use network I don't think?
+        }
+        return this.connected;
     }
 
     get haveCordova(): boolean {

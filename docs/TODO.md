@@ -3,6 +3,8 @@ TODO
 - Offline. Close server. Get app to startup.
     - How to detect?
     - Cases:
+        - Start app first time, *must* be connected
+        - Start app after logged in, *can be disconnected, entirely*
         - Start app
             - Check tokens, if don't have, go to login/sign up, at this point MUST be online
             - If have, then:
@@ -32,6 +34,7 @@ TODO
 - Remove 'pull to refresh' style action on home page (it doesn't do anything)
 - If User is activated, but I deleted the Org, validation/login still seems to return OK (and the client then goes into an endless loop)
 - Finish 'clone plan'
+  - Then update     duplicate_plan(plan: Plan)
 - Make it possible to specify period of the plan (days in between each) and what time it starts (e.g: 10am)
 - DB isn't showing an up to date version of info. Should reload this on page reload?
 - Add 'level' to Person, and write up about game-ifying the whole thing
