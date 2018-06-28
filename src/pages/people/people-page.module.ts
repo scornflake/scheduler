@@ -2,6 +2,7 @@ import {NgModule} from '@angular/core';
 import {IonicPageModule} from 'ionic-angular';
 import {ComponentsModule} from "../../components/components.module";
 import {PeoplePage} from "./people-page";
+import {MobxAngularModule} from "mobx-angular";
 
 @NgModule({
     declarations: [
@@ -9,6 +10,7 @@ import {PeoplePage} from "./people-page";
     ],
     imports: [
         ComponentsModule,
+        MobxAngularModule,
         IonicPageModule.forChild(PeoplePage),
     ],
 })

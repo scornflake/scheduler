@@ -11,6 +11,7 @@ page-home {
 .notSignedIn {
   background-image: url("../../assets/calendar-large.jpg");
   background-size: cover;
+  height: 100%;
 
   .title {
     font-weight: 300;
@@ -19,10 +20,6 @@ page-home {
   }
 
   .buttons {
-    //position: relative;
-    //bottom: 0;
-    //width: 100%;
-
     .signInButton {
       margin-top: 40px;
       margin-bottom: calc(100% + 30px);

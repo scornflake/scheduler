@@ -160,6 +160,7 @@ export class PersonAssignmentPage {
 
     private add_try_to_be_on_with_rule() {
         let popover = this.popoverCtrl.create('TryToScheduleWithOtherPage', {
+            'people': this.plan.team.people,
             'callback': (person, distance, max) => {
                 let availability = new Availability(distance, AvailabilityUnit.EVERY_N_WEEKS);
                 let schedule = new TryToScheduleWith(person, availability, max);

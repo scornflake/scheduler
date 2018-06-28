@@ -12,7 +12,7 @@ import {SchedulerDatabase} from "./db";
 import {ObjectWithUUID} from "../../scheduling/base-types";
 import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
-import {action, observable} from "mobx-angular";
+import {action, computed, observable} from "mobx-angular";
 import {Storage} from '@ionic/storage';
 import {OrmMapper} from "../mapping/orm-mapper";
 import {catchError, filter, flatMap, take, timeout} from "rxjs/operators";
@@ -70,7 +70,7 @@ class SchedulerServer implements ILifecycle {
         return this._state;
     }
 
-    get loggedIn(): boolean {
+    @computed get loggedIn(): boolean {
         // atm: this is cleared if a validate login gets 'bad'
         // TODO: Adjust for true offline case.
         if (this.state) {
@@ -318,16 +318,6 @@ class SchedulerServer implements ILifecycle {
         await this.storage.set(STATE_ROOT, this._state);
     }
 
-    // protected waitForDB() {
-    //     this.asyncLoadState().then(() => {
-    //         this._db.readyEvent.subscribe(isReady => {
-    //             if (isReady) {
-    //                 this.readyEvent.next(true);
-    //             }
-    //         });
-    //     });
-    // }
-
     /*
     Basic idea is that you do a this, optionally a login/create, then ALWAYS call this back.
     This method is the one thing that does setup, in order.
@@ -420,7 +410,6 @@ class SchedulerServer implements ILifecycle {
             this.logger.info(`Setting db ${dbInstance} on self and sending to store`);
             this._db = dbInstance;
             await this.store.setDatabase(dbInstance);
-            this.trackChangesFromDBSoWeCanSyncToRESTServer();
             this.dbSubject.next(this._db);
         }
     }
@@ -499,53 +488,6 @@ class SchedulerServer implements ILifecycle {
             throw new Error(`Cannot find person with UUID ${personUUID}, setupDBFromState failed`);
         }
         return person;
-    }
-
-    private trackChangesFromDBSoWeCanSyncToRESTServer() {
-        // if (this._db) {
-        //     this.dbChangeTrackingSubscription = this._db.changes$
-        //         .pipe(
-        //             // Lets look at only Organization/Person.name
-        //             filter(change => {
-        //                 let modelObject = change['owner'];
-        //                 if (modelObject) {
-        //                     let type = modelObject['type'];
-        //                     let propertyName = change['propertyName'];
-        //                     if (type == 'Person' || type == 'Organization') {
-        //                         if (propertyName == 'name') {
-        //                             // hey! we should update the server!
-        //                             return true;
-        //                         }
-        //                         // console.log(`I see a change to ${propertyName} on ${modelObject}`);
-        //                     }
-        //                 }
-        //                 return false;
-        //             }),
-        //             // output only the object fields
-        //             map(change => change['owner']),
-        //             debounceTime(1000)
-        //         ).subscribe(objectAsDict => {
-        //             let type = objectAsDict['type'];
-        //             if (type == 'Person') {
-        //                 let payload = {
-        //                     uuid: objectAsDict['_id'],
-        //                     email: objectAsDict['email']
-        //                 };
-        //                 payload = Object.assign(payload, this.restAPI.fullNameToFirstAndLast(objectAsDict['name']));
-        //                 this.restAPI.saveUser(payload).then(r => {
-        //                     this.logger.warn(`Updated person on server with: ${JSON.stringify(payload)}`);
-        //                 })
-        //             } else if (type == 'Organization') {
-        //                 let payload = {
-        //                     uuid: objectAsDict['_id'],
-        //                     name: objectAsDict['name']
-        //                 };
-        //                 this.restAPI.updateOrganization(payload).then(r => {
-        //                     this.logger.warn(`Updated org on server with: ${JSON.stringify(payload)}`);
-        //                 })
-        //             }
-        //         });
-        // }
     }
 }
 

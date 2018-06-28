@@ -5,6 +5,8 @@ import {SplashScreen} from '@ionic-native/splash-screen';
 import {HomePage} from "../pages/home/home";
 import {SchedulerServer} from "../providers/server/scheduler-server.service";
 import {computed} from "mobx-angular";
+import {autorun, trace} from "mobx";
+import {isUndefined} from "util";
 
 @Component({
     templateUrl: 'app.html',
@@ -14,7 +16,7 @@ export class MyApp {
     rootPage: any = HomePage;
     @ViewChild(Nav) nav: Nav;
 
-    // @observable public groups: {};
+    frozenGroups: any;
 
     constructor(private platform: Platform,
                 private statusBar: StatusBar,
@@ -31,7 +33,14 @@ export class MyApp {
     }
 
     ngOnInit() {
-        // this.groups = this.menuGroups;
+        // Work out the groups, based on current state.
+        // If the logged in state changes, autorun should re-work out the groups
+        autorun(() => {
+            trace();
+            this.frozenGroups = this.evaluateGroups(this.groups);
+        }, {
+            name: 'work out the menus'
+        })
     }
 
     @computed get loggedIn(): boolean {
@@ -41,27 +50,7 @@ export class MyApp {
         return false;
     }
 
-    isEnabled(pageOrGroup): boolean {
-        if (pageOrGroup) {
-            // console.log(`enabled: ${JSON.stringify(pageOrGroup)}`);
-            if (pageOrGroup['enabled']) {
-                return pageOrGroup['enabled']();
-            }
-        }
-        return true;
-    }
-
-    isVisible(pageOrGroup): boolean {
-        if (pageOrGroup) {
-            // console.log(`visible: ${JSON.stringify(pageOrGroup)}`);
-            if (pageOrGroup['visible']) {
-                return pageOrGroup['visible']();
-            }
-        }
-        return true;
-    }
-
-    @computed get groups() {
+    get groups() {
         return [
             {
                 title: "", items: [
@@ -71,7 +60,7 @@ export class MyApp {
                 ]
             },
             {
-                title: "Admin", items: [
+                title: "Admin", visible: () => this.loggedIn, items: [
                     {title: "People", page: 'page-people', enabled: () => this.loggedIn},
                     {title: "Teams", page: 'page-teams', enabled: () => this.loggedIn},
                     {title: "Plans", page: 'page-plans', enabled: () => this.loggedIn},
@@ -103,10 +92,6 @@ export class MyApp {
         return true;
     }
 
-    pagesOfGroup(group) {
-        return group.items;
-    }
-
     openPage(p) {
         if (p.exec) {
             p.exec();
@@ -114,5 +99,29 @@ export class MyApp {
             this.nav.push(p.page);
         }
         this.menu.close();
+    }
+
+    private evalFunc(group, key: string, defaultValue) {
+        if (isUndefined(group[key])) {
+            return defaultValue;
+        }
+        if (typeof group[key] === 'function') {
+            let flag = group[key]();
+            // console.log(`eval ${group[key]} = ${flag}`);
+            return flag;
+        }
+        return group[key];
+    }
+
+    private evaluateGroups(groups) {
+        return groups.map(grp => {
+            grp['visible'] = this.evalFunc(grp, 'visible', true);
+            grp['enabled'] = this.evalFunc(grp, 'enabled', true);
+            if (grp['items']) {
+                grp['items'] = this.evaluateGroups(grp['items']);
+            }
+            // console.log(`eval: ${grp.title}, visible: ${grp.visible}, enabled: ${grp.enabled}`);
+            return grp;
+        })
     }
 }

@@ -5,7 +5,7 @@ import {dateForISODateString} from "../../scheduling/common/date-utils";
 import {Person} from "../../scheduling/people";
 import {PageUtils} from "../page-utils";
 import {NamedObject} from "../../scheduling/base-types";
-import {action, computed} from "mobx-angular";
+import {action, computed, observable} from "mobx-angular";
 
 @IonicPage({
     name: 'page-plan-details',
@@ -17,6 +17,7 @@ import {action, computed} from "mobx-angular";
 })
 export class PlanDetailsPage {
     plan: Plan;
+    @observable name_filter: string;
 
     constructor(public navCtrl: NavController,
                 public alertCtrl: AlertController,
@@ -26,7 +27,12 @@ export class PlanDetailsPage {
     }
 
     @computed get sorted_people(): Array<Person> {
-        return NamedObject.sortByName(this.plan.people);
+        return NamedObject.sortByName(this.plan.people).filter(p => {
+            if (this.name_filter) {
+                return p.name.toLowerCase().indexOf(this.name_filter.toLowerCase()) >= 0;
+            }
+            return true;
+        })
     }
 
     description_for_person(p: Person) {

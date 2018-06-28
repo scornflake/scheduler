@@ -4,6 +4,7 @@ import {RootStore} from "../../store/root";
 import {Person} from "../../scheduling/people";
 import {ObjectValidation} from "../../scheduling/shared";
 import {PageUtils} from "../page-utils";
+import {NamedObject} from "../../scheduling/base-types";
 
 @IonicPage()
 @Component({
@@ -14,10 +15,10 @@ export class TryToScheduleWithOtherPage {
     person_uuid: string;
     distance: number = 1;
     max: number = 2;
+    people: Array<Person>;
     private callback: (person, distance, max) => void;
 
     constructor(public navCtrl: NavController,
-                public rootStore: RootStore,
                 public pageUtils: PageUtils,
                 public navParams: NavParams) {
         this.callback = this.navParams.get('callback');
@@ -25,10 +26,7 @@ export class TryToScheduleWithOtherPage {
             this.callback = (p, d, m) => {
             }
         }
-    }
-
-    get people(): Array<Person> {
-        return this.rootStore.people.all;
+        this.people = NamedObject.sortByName(this.navParams.get('people'));
     }
 
     dismiss() {
@@ -40,7 +38,8 @@ export class TryToScheduleWithOtherPage {
             this.pageUtils.show_validation_error(ObjectValidation.simple("Person is required"));
             return;
         }
-        let person = this.rootStore.findByUUID(this.person_uuid);
+
+        let person = this.people.find(p => p.uuid == this.person_uuid);
         this.callback(person, this.distance, this.max);
         this.navCtrl.pop();
     }

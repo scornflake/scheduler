@@ -24,7 +24,7 @@
     <ng-template #colMode no-padding>
         <div class="horizSchedule">
             <!-- shows only when in small mode -->
-            <div *sm>
+            <div *xs>
                 <div *ngIf="store.selectedPlan$|async as plan" text-center class="smallDate">
                     {{plan.start_date|date:'MMMM d'}} - {{plan.end_date|date:'MMMM d'}}
                 </div>

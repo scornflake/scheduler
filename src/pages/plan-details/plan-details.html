@@ -26,13 +26,15 @@
         </ion-item>
         <ion-item>
             <ion-label>End Date</ion-label>
-            <ion-datetime [ngModel]="plan.end_date.toISOString()" (ngModelChange)="plan.setEndDateFromISO($event)"></ion-datetime>
+            <ion-datetime [ngModel]="plan.end_date.toISOString()"
+                          (ngModelChange)="plan.setEndDateFromISO($event)"></ion-datetime>
         </ion-item>
-
     </ion-list>
+
     <ion-list-header color="primary">
         Role Assignment
     </ion-list-header>
+    <ion-searchbar [(ngModel)]="name_filter"></ion-searchbar>
     <ion-list>
         <ion-item-sliding *ngFor="let p of sorted_people">
             <ion-item (tap)="show_assignment(p)" text-wrap>

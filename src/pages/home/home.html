@@ -20,7 +20,7 @@
 </ion-header>
 
 <ion-content>
-    <div *ngIf="store.uiStore$|async as ui; else startingUp">
+    <div *ngIf="store.uiStore$|async as ui; else notSignedIn">
         <div *ngIf="server">
             <div *ngIf="server.loggedIn; else notSignedIn">
                 <ion-grid>
@@ -66,19 +66,14 @@
                 <!--</ion-row>-->
                 <!--</ion-grid>-->
             </div>
-            <ng-template #notSignedIn>
-                <div class="notSignedIn">
-                    <div class="title" text-center>Please sign&nbsp;in</div>
-                    <div class="buttons">
-                        <button class="signInButton" col-4 offset-4 ion-button (tap)="startSignIn()">Sign In</button>
-                    </div>
-                </div>
-            </ng-template>
         </div>
     </div>
-    <ng-template #startingUp>
+    <ng-template #notSignedIn>
         <div class="notSignedIn">
-            <div class="title" text-center>Starting up ...</div>
+            <div class="title" text-center>Please sign&nbsp;in</div>
+            <div class="buttons">
+                <button class="signInButton" col-4 offset-4 ion-button (tap)="startSignIn()">Sign In</button>
+            </div>
         </div>
     </ng-template>
 </ion-content>

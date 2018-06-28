@@ -1,7 +1,8 @@
 <ion-header>
 
-    <ion-navbar>
-        <ion-title>Person Assignment</ion-title>
+    <ion-navbar *ngIf="person">
+        <ion-title *showItBootstrap="['sm','md','lg','xl']">Assignment for {{person_name_details}}</ion-title>
+        <ion-title *xs>{{person.name}}</ion-title>
     </ion-navbar>
     <saving-state></saving-state>
 </ion-header>
@@ -9,11 +10,11 @@
 
 <ion-content *mobxAutorun>
     <div *ngIf="person">
-        <ion-list no-padding no-margin>
-            <ion-item>
-                <ion-label>{{person_name_details}}</ion-label>
-            </ion-item>
-        </ion-list>
+        <!--<ion-list no-padding no-margin>-->
+            <!--<ion-item>-->
+                <!--<ion-label text-center>{{person_name_details}}</ion-label>-->
+            <!--</ion-item>-->
+        <!--</ion-list>-->
 
         <ion-list-header color="light">Availability</ion-list-header>
         <ion-item-group>

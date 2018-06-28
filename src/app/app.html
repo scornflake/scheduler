@@ -7,16 +7,14 @@
     </ion-header>
     <ion-content>
         <div *mobxAutorun>
-            <div *ngFor="let g of groups">
-                <div *ngIf="isVisible(g)">
+            <div *ngFor="let g of frozenGroups">
+                <div *ngIf="g.visible">
                     <ion-list-header color="light" *ngIf="g.title">{{g.title}}</ion-list-header>
-                    <!--<ion-list>-->
-                        <div *ngIf="isVisible(p)">
-                            <button [disabled]="!isEnabled(p)" ion-item *ngFor="let p of pagesOfGroup(g)" no-lines
-                                    (tap)="openPage(p)">{{p.title}}
-                            </button>
-                        </div>
-                    <!--</ion-list>-->
+                    <div *ngFor="let p of g.items">
+                        <button *ngIf="p.visible" [disabled]="!p.enabled" ion-item no-lines (tap)="openPage(p)">
+                            {{p.title}}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
