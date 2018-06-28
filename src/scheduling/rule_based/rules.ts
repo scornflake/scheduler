@@ -26,11 +26,11 @@ class Rule extends TypedObject {
     public prepare_for_execution() {
     }
 
-    get title() {
+    @computed get title() {
         return "title";
     }
 
-    get description() {
+    @computed get description() {
         return "description";
     }
 
@@ -188,7 +188,7 @@ class ConditionalRule extends Rule {
 
     constructor() {
         super();
-        this.actions = [];
+        this.actions = new Array<ConditionAction>();
     }
 
     condition(stat: RuleFacts, person: Person, role: Role) {
@@ -203,7 +203,7 @@ class ConditionalRule extends Rule {
         }
     }
 
-    @action then(action: ConditionAction) {
+    @action thenDo(action: ConditionAction) {
         this.actions.push(action);
     }
 }
@@ -213,11 +213,16 @@ class AssignedToRoleCondition extends ConditionalRule {
 
     constructor(role: Role) {
         super();
-        this.role = role;
+        if (role) {
+            this.role = role;
+        }
     }
 
     condition(stat: RuleFacts, person: Person, role: Role): boolean {
-        return this.role.uuid == role.uuid;
+        if (this.role) {
+            return this.role.uuid == role.uuid;
+        }
+        return false;
     }
 
     @computed get title() {
@@ -225,7 +230,10 @@ class AssignedToRoleCondition extends ConditionalRule {
     }
 
     @computed get description() {
-        return this.actions.join(", ")
+        if (this.actions) {
+            return this.actions.join(", ")
+        }
+        return "";
     }
 }
 
@@ -271,9 +279,9 @@ class SecondaryAction extends Rule {
 }
 
 class TryToScheduleWith extends SecondaryAction {
-    @observable private readonly other_person: Person;
-    @observable private readonly max_number_of_times: number;
-    @observable private reach: Availability;
+    @observable readonly other_person: Person;
+    @observable readonly max_number_of_times: number;
+    @observable reach: Availability;
 
     private success_executions: number = 0;
     private logger: Logger;

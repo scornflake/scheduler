@@ -69,12 +69,16 @@ class MockConfigurationService extends ConfigurationService {
                         "logLevel": "INFO"
                     },
                     {
-                        "loggerName": "service.store",
+                        "loggerName": "orm",
                         "logLevel": "DEBUG"
                     },
                     {
+                        "loggerName": "service.store",
+                        "logLevel": "INFO"
+                    },
+                    {
                         "loggerName": "service.bridge",
-                        "logLevel": "DEBUG"
+                        "logLevel": "INFO"
                     },
                     {
                         "loggerName": "db.mapping",

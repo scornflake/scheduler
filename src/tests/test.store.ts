@@ -138,7 +138,7 @@ export class NPBCStoreConstruction {
 
         service.assignmentFor(cherilyn)
             .addRole(defaultKeysRole)
-            .if_assigned_to(defaultLeaderRole).then(new ScheduleOn(cherilyn, defaultKeysRole));
+            .if_assigned_to(defaultLeaderRole).thenDo(new ScheduleOn(cherilyn, defaultKeysRole));
 
         service.assignmentFor(christine)
             .addRole(defaultVocalsRole);
@@ -148,21 +148,21 @@ export class NPBCStoreConstruction {
         stuart_assignment
             .addRole(defaultAcousticGuitar)
             .addRole(defaultVocalsRole)
-            .if_assigned_to(defaultLeaderRole).then(new ScheduleOn(stuart, defaultAcousticGuitar));
-        stuart_assignment.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(stuart, defaultVocalsRole));
+            .if_assigned_to(defaultLeaderRole).thenDo(new ScheduleOn(stuart, defaultAcousticGuitar));
+        stuart_assignment.if_assigned_to(defaultLeaderRole).thenDo(new ScheduleOn(stuart, defaultVocalsRole));
 
         service.assignmentFor(kylie)
             .addRole(defaultAcousticGuitar)
-            .if_assigned_to(defaultAcousticGuitar).then(new ScheduleOn(kylie, defaultVocalsRole));
+            .if_assigned_to(defaultAcousticGuitar).thenDo(new ScheduleOn(kylie, defaultVocalsRole));
 
         service.assignmentFor(jeremy_selfe)
             .addRole(defaultLeaderRole, 2)
             .addRole(defaultElectricGuitar)
-            .if_assigned_to(defaultLeaderRole).then(new ScheduleOn(jeremy_selfe, defaultElectricGuitar));
+            .if_assigned_to(defaultLeaderRole).thenDo(new ScheduleOn(jeremy_selfe, defaultElectricGuitar));
 
         service.assignmentFor(ralph)
             .addRole(defaultAcousticGuitar)
-            .if_assigned_to(defaultAcousticGuitar).then(new ScheduleOn(anita, defaultVocalsRole));
+            .if_assigned_to(defaultAcousticGuitar).thenDo(new ScheduleOn(anita, defaultVocalsRole));
 
         service.assignmentFor(daniel)
             .addRole(defaultDrumsRole, 3)
@@ -187,7 +187,7 @@ export class NPBCStoreConstruction {
         service.assignmentFor(dave)
             .addRole(defaultAcousticGuitar)
             .addRole(defaultVocalsRole)
-            .if_assigned_to(defaultAcousticGuitar).then(new ScheduleOn(dave, defaultVocalsRole));
+            .if_assigned_to(defaultAcousticGuitar).thenDo(new ScheduleOn(dave, defaultVocalsRole));
 
         service.assignmentFor(anita)
             .addRole(defaultVocalsRole);

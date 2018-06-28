@@ -27,7 +27,7 @@ describe('scheduler server', () => {
 
     let createServerWithStorage = (storage): Promise<SchedulerServer> => {
         server = new SchedulerServer(store, restServer, storage, mapper, MockConfigurationService.ServiceForTests());
-        store = new RootStore();
+        store = new RootStore(null);
         server.setStore(store);
 
         return server.setDatabase(db).then(() => {

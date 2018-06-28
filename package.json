@@ -72,7 +72,7 @@
     "short-unique-id": "^1.1.0",
     "sw-toolbox": "3.6.0",
     "to-case": "^2.0.0",
-    "typescript": "~2.6.2",
+    "typescript": "^2.9.2",
     "zone.js": "^0.8.26"
   },
   "devDependencies": {

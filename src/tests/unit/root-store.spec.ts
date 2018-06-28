@@ -35,7 +35,7 @@ describe('root store', () => {
         SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, mapper).then(new_db => {
             db = new_db;
             db.setCache(cache);
-            store = new RootStore();
+            store = new RootStore(null);
             store.setDatabase(db).then(() => {
                 done();
             });

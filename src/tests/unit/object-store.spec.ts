@@ -116,7 +116,7 @@ describe('object store', () => {
 
             it('cannot be removed if used in ScheduleOn', () => {
                 let neil_assign = plan.assignmentFor(neil);
-                neil_assign.if_assigned_to(defaultSoundRole).then(new ScheduleOn(neil, role));
+                neil_assign.if_assigned_to(defaultSoundRole).thenDo(new ScheduleOn(neil, role));
 
                 // so that this test doesn't pass because the role is part of other
                 // role based integrity tests

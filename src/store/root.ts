@@ -263,7 +263,9 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
             }, schedule => {
                 this.logger.info(`Regenerating schedule for plan ${schedule.plan.name}`);
                 this.scheduleSubject.next(schedule);
-                this.app.tick();
+                if(this.app) {
+                    this.app.tick();
+                }
             }, {
                 name: 'schedule',
             });

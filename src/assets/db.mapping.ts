@@ -69,7 +69,6 @@ let scheduler_db_map: ClassFieldMapping = {
                 {name: 'roles', type: MappingType.ReferenceList},
                 {name: 'team', type: MappingType.Reference},
                 {name: 'assignments', type: MappingType.ReferenceList},
-                // {name: 'specific_role_rules', type: MappingType.NestedObjectList}
             ],
             inherit: 'NamedObject',
             factory: () => new Plan("New Plan", null)
@@ -119,6 +118,8 @@ let scheduler_db_map: ClassFieldMapping = {
                     type: MappingType.MapWithReferenceValues,
                     hint: PropertyHint.String
                 },
+                {name: 'condition_rules', type: MappingType.NestedObjectList},
+                {name: 'secondary_action_list', type: MappingType.NestedObjectList}
             ],
             inherit: 'ObjectWithUUID',
             factory: () => new Assignment()

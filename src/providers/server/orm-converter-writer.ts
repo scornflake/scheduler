@@ -19,7 +19,7 @@ class OrmConverterWriter {
     }
 
     async async_createDocFromJSObject(object: TypedObject, nesting: number = 0) {
-        this.utils.debug(`Persisting object: ${object.type}, ${SafeJSON.stringify(object)}`, nesting);
+        // this.utils.debug(`Persisting object: ${object.type}, ${SafeJSON.stringify(object)}`, nesting);
         // At this level, if we're given an ObjectWithUUID, we don't want a reference.
         // So we tell the converter it's a nested object (it'll output id/rev/type)
         return await this._convertObjectValueToDict({
@@ -62,7 +62,7 @@ class OrmConverterWriter {
     }
 
     async async_getReferenceForObjectAndStoreIfItDoesntExist(obj: ObjectWithUUID, nesting: number = 0): Promise<string> {
-        let reference = this.mapper.reference_for_object(obj);
+        let reference = this.mapper.referenceForObject(obj);
         let exists = await this.objectLoader.async_DoesObjectExistWithUUID(obj.uuid);
         if (!exists) {
             // If the doc was NOT new, it means we have an 'old/existing' object that no longer exists.

@@ -34,7 +34,7 @@ describe('service', () => {
 
     it('can add dependent roles', () => {
         let cher_assignment = plan.assignmentFor(cherilyn);
-        cher_assignment.if_assigned_to(defaultLeaderRole).then(new ScheduleOn(cherilyn, defaultKeysRole));
+        cher_assignment.if_assigned_to(defaultLeaderRole).thenDo(new ScheduleOn(cherilyn, defaultKeysRole));
 
         expect(cher_assignment.roles.length).toEqual(1);
         let rules = cher_assignment.conditional_rules;

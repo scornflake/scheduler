@@ -145,7 +145,7 @@ class Plan extends NamedObject {
         return this.get_or_create_assignment_for(person)
     }
 
-    remove_person(person: Person) {
+    @action remove_person(person: Person) {
         let assign = this.get_assignment_for(person);
         if (assign) {
             delete_from_array(this._assignments, assign);

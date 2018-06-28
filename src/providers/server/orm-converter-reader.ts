@@ -1,7 +1,7 @@
 import {action, observable} from "mobx-angular";
 import {runInAction} from "mobx";
 import {IReferenceResolver, MappingType, ObjectReference, PropertyMapping} from "../mapping/orm-mapper-type";
-import {ObjectWithUUID} from "../../scheduling/base-types";
+import {ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
 import {OrmUtils} from "./orm-utils";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {OrmMapper} from "../mapping/orm-mapper";
@@ -39,8 +39,7 @@ class OrmConverterReader {
         return null;
     }
 
-    @action
-    async async_createJSObjectFromDoc(dict: object, new_object_type: string, nesting: number = 0): Promise<ObjectWithUUID> {
+    async async_createJSObjectFromDoc(dict: object, new_object_type: string, nesting: number = 0): Promise<TypedObject> {
         /*
         Assumption is that we begin with an object that has an ID and a type.
          */
@@ -77,11 +76,7 @@ class OrmConverterReader {
         } else {
             this.utils.debug(`Not using cache for ${new_object_type}. No cache configured.`, nesting);
         }
-        return await this.async_createJSObjectFromDocUsing(dict, new_object, new_object_type, nesting);
-    }
 
-    @action
-    async async_createJSObjectFromDocUsing(dict: object, new_object: ObjectWithUUID, new_object_type: string, nesting: number = 0): Promise<ObjectWithUUID> {
         if (!new_object) {
             this.utils.debug(`Creating new object of type: ${new_object_type}`, nesting);
             new_object = this.mapper.createNewInstanceOfType(new_object_type);
@@ -104,10 +99,16 @@ class OrmConverterReader {
         }
 
         // Now we need to go through the properties, and hydrate each and assign
-        for (let propertyName of Array.from(targetProperties.keys())) {
+        let allProperties = Array.from(targetProperties.keys());
+        let counter = 1;
+        // this.utils.debug(`Will examine ${allProperties.length} properties, ${JSON.stringify(allProperties)}`, nesting);
+        for (let propertyName of allProperties) {
             let mapping: PropertyMapping = targetProperties.get(propertyName);
             let value = dict[propertyName];
 
+            // this.utils.debug(`Next property (${counter}/${allProperties.length}): ${propertyName}`, nesting);
+
+            counter++;
             if (propertyName == 'type') {
                 // No reason why this shouldn't be the case, but you know, paranoia
                 if (new_object.type != dict['type']) {
@@ -118,7 +119,6 @@ class OrmConverterReader {
                     this.utils.debug(`Skipping ${propertyName}, its null`, nesting);
                     continue;
                 }
-
 
                 let newValueForProperty = null;
 
@@ -142,12 +142,13 @@ class OrmConverterReader {
 
                     case MappingType.NestedObjectList: {
                         let new_objects = observable([]);
-                        this.utils.debug(`${propertyName} = list of ${value.length} objects ...`, nesting);
+                        this.utils.debug(`${propertyName} = nested list of ${value.length} objects ...`, nesting);
                         this.utils.debug(`  - ${JSON.stringify(value)}`, nesting);
                         for (let v of value) {
                             let new_type = v['type'];
 
-                            let the_item = await this.async_createJSObjectFromDoc(v, new_type, nesting + 2);
+                            let the_item = await this.async_createJSObjectFromDoc(v, new_type, nesting + 1);
+
                             if (the_item == null) {
                                 throw new Error(`Odd. Converting an instance of ${v} to object, but got 'nothing' back`);
                             }
@@ -157,35 +158,13 @@ class OrmConverterReader {
                             new_objects.push(item);
                         }
                         newValueForProperty = new_objects;
-                        // let usingExistingArray = new_object[propertyName] != null && new_object[propertyName] != 'undefined';
-                        // let new_objects = new_object[propertyName] || observable([]);
-                        // this.utils.debug(`${propertyName} = list of ${value.length} objects ...`, nesting);
-                        // this.utils.debug(`  - ${JSON.stringify(value)}`, nesting);
-                        // for (let v of value) {
-                        //     let new_type = v['type'];
-                        //
-                        //     // can we already find this in the array?
-                        //     let existing_item = new_objects.findIndex(o => o.uuid = v['_id']);
-                        //     let the_item = await this.async_create_js_object_from_dict_using(v, existing_item, new_type, nesting + 2);
-                        //     if (the_item == null) {
-                        //         throw new Error(`Odd. Converting an instance of ${v} to object, but got 'nothing' back`);
-                        //     }
-                        //
-                        //     // If the item wasn't found, it'll be being added. So, push it on.
-                        //     let item = this.removeIdAndRevIfNotNeededForThis(the_item, mapping);
-                        //     if (existing_item == null) {
-                        //         new_objects.push(item);
-                        //     }
-                        // }
-                        // if (usingExistingArray) {
-                        //     newValueForProperty = new_objects;
-                        // }
+                        // this.utils.debug(`Done with list of ${value.length} objects.`, nesting);
                         break;
                     }
 
                     case MappingType.Reference: {
                         this.utils.debug(`${propertyName} = reference: ${value}`, nesting);
-                        let ref: ObjectReference = this.mapper.parse_reference(value);
+                        let ref: ObjectReference = this.mapper.parseReference(value);
                         newValueForProperty = await this._resolver.async_lookupObjectReference(ref, nesting + 1);
                         break;
                     }
@@ -213,18 +192,21 @@ class OrmConverterReader {
                     }
 
                     default: {
-                        throw new Error(`Fail. Dunno how to handle: ${mapping.name} of type ${mapping.type}`);
+                        // throw new Error(`Fail. Dunno how to handle: ${mapping.name} of type ${mapping.type}`);
                     }
                 }
                 runInAction(() => {
+                    // this.utils.debug(`Set ${propertyName} = ${SafeJSON.stringify(newValueForProperty)}`, nesting);
                     new_object[propertyName] = newValueForProperty;
                 })
             }
         }
+        // this.utils.debug(`Finished ${allProperties.length} properties`, nesting);
 
         if (new_object instanceof ObjectWithUUID) {
             new_object.setIsNew(false);
         }
+        // this.utils.debug(`Return ${new_object.constructor.name}`, nesting);
         return new_object;
     }
 

@@ -6,7 +6,7 @@ class OrmUtils {
     }
 
     gap(width: number): string {
-        return " ".repeat(width);
+        return " ".repeat(width * 4);
     }
 
     debug(message, nesting) {

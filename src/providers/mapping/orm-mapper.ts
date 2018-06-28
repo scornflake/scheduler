@@ -262,11 +262,11 @@ class OrmMapper {
         return false;
     }
 
-    reference_for_object(obj: ObjectWithUUID) {
+    referenceForObject(obj: ObjectWithUUID) {
         return `${REF_PREFIX}:${obj.type}:${obj._id}`;
     }
 
-    parse_reference(reference: string): ObjectReference {
+    parseReference(reference: string): ObjectReference {
         // noinspection SuspiciousTypeOfGuard
         if (typeof reference != 'string') {
             throw new Error(`reference ${reference} is not a string!`);

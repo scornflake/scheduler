@@ -25,6 +25,11 @@ import {Availability, AvailabilityUnit} from "../../scheduling/availability";
 class SomeEntity extends ObjectWithUUID {
     @observable some_field: string = "a value";
 
+    constructor(field_name = "a value") {
+        super();
+        this.some_field = field_name;
+    }
+
     toString() {
         return this.some_field;
     }
@@ -49,6 +54,15 @@ class ThingWithMapOfReferences extends ObjectWithUUID {
     constructor() {
         super();
         this.some_things = new Map<Date, SomeEntity>();
+    }
+}
+
+class ThingWithMapOfReferenceKeys extends ObjectWithUUID {
+    @observable some_things: Map<SomeEntity, number>;
+
+    constructor() {
+        super();
+        this.some_things = new Map<SomeEntity, number>();
     }
 }
 
@@ -95,6 +109,14 @@ describe('db', () => {
                 ],
                 inherit: 'ObjectWithUUID',
                 factory: () => new ThingWithMapOfReferences()
+            },
+            {
+                name: 'ThingWithMapOfReferenceKeys',
+                fields: [
+                    {name: 'some_things', type: MappingType.MapWithReferenceKeys, hint: PropertyHint.Number}
+                ],
+                inherit: 'ObjectWithUUID',
+                factory: () => new ThingWithMapOfReferenceKeys()
             }
         ]
     };
@@ -120,7 +142,7 @@ describe('db', () => {
     it('can create reference of person object', function () {
         let person = new Person("Me!");
         expect(person.type).toBe("Person");
-        let ref = mapper.reference_for_object(person);
+        let ref = mapper.referenceForObject(person);
         expect(ref).toBe(`rrr:Person:${person.uuid}`);
     });
 
@@ -142,31 +164,50 @@ describe('db', () => {
             expect(mapper.convertJSValueToDocValue(undefined, mapping)).toBeUndefined();
         });
 
-        it('should convert date fields to/from ISO strings at root level', function (done) {
+        describe('date test', () => {
             class SimpleWithDate extends ObjectWithUUID {
                 some_date: Date = csd(1992, 11, 9);
             }
 
-            let mapping: ClassFieldMapping = {
-                classes: [
-                    {
-                        name: 'SimpleWithDate',
-                        fields: [{name: "some_date", hint: PropertyHint.Date}],
-                        inherit: 'ObjectWithUUID',
-                        factory: () => new SimpleWithDate()
-                    }
-                ]
-            };
-            mapper.addConfiguration(mapping);
+            beforeEach(() => {
+                let mapping: ClassFieldMapping = {
+                    classes: [
+                        {
+                            name: 'SimpleWithDate',
+                            fields: [{name: "some_date", hint: PropertyHint.Date}],
+                            inherit: 'ObjectWithUUID',
+                            factory: () => new SimpleWithDate()
+                        }
+                    ]
+                };
+                mapper.addConfiguration(mapping);
+            });
 
-            let simpleObj = new SimpleWithDate();
-            converter.writer.async_createDocFromJSObject(simpleObj).then(dict => {
-                expect(dict.some_date).toEqual(simpleObj.some_date.toISOString());
+            it('should convert date fields to/from ISO strings at root level', function (done) {
+                let simpleObj = new SimpleWithDate();
+                converter.writer.async_createDocFromJSObject(simpleObj).then(dict => {
+                    console.log(`Got: ${JSON.stringify(dict)}`);
+                    expect(dict.some_date).toEqual(simpleObj.some_date.toISOString());
+                    converter.reader.async_createJSObjectFromDoc(dict, 'SimpleWithDate').then((newObj: SimpleWithDate) => {
+                        expect(newObj.some_date).toEqual(simpleObj.some_date);
+                        done();
+                    });
+                })
+            });
+
+            it('should convert date ISO strings in dict to JS Date objects', function (done) {
+                let dict = {
+                    "type": "SimpleWithDate",
+                    "_id": "525a621d-ec84-8428-6dc7-ef8dec37b079",
+                    "_rev": null,
+                    "some_date": "1992-11-08T11:00:00.000Z"
+                };
                 converter.reader.async_createJSObjectFromDoc(dict, 'SimpleWithDate').then((newObj: SimpleWithDate) => {
-                    expect(newObj.some_date).toEqual(simpleObj.some_date);
+                    expect(newObj.some_date).toEqual(csd(1992, 11, 9));
+                    console.log(`Got object: ${SafeJSON.stringify(newObj)}`);
                     done();
                 });
-            })
+            });
         });
 
         it('should use the cache when creating from a dict', function (done) {
@@ -259,8 +300,8 @@ describe('db', () => {
                 team = new Team("My team", [neil, bob]);
                 thePlan = new Plan("Cunning", team);
 
-                soundRoleRef = mapper.reference_for_object(defaultSoundRole);
-                computerRoleRef = mapper.reference_for_object(defaultComputerRole);
+                soundRoleRef = mapper.referenceForObject(defaultSoundRole);
+                computerRoleRef = mapper.referenceForObject(defaultComputerRole);
 
                 thePlan.start_date = csd(2018, 1, 21);
                 thePlan.end_date = csd(2018, 3, 21);
@@ -302,6 +343,7 @@ describe('db', () => {
                 });
             });
 
+
             it('can create dict from object', function (done) {
                 converter.writer.async_createDocFromJSObject(thePlan).then(dict => {
                     console.log(`We made: ${JSON.stringify(dict)}`);
@@ -315,7 +357,7 @@ describe('db', () => {
                     expect(roles.length).toEqual(2);
 
                     // a team would be good :)
-                    expect(dict.team).toEqual(mapper.reference_for_object(team));
+                    expect(dict.team).toEqual(mapper.referenceForObject(team));
 
                     // assignments, fun times!
                     // This should end up being a list of Assignment refs. We want to see 2 (one per person).
@@ -325,7 +367,7 @@ describe('db', () => {
                     // lets split them out and find the assignments for the people
                     assigns.forEach(a => {
                         console.log(`Assign: ${JSON.stringify(a)}`);
-                        let ref = mapper.parse_reference(a);
+                        let ref = mapper.parseReference(a);
                         let obj = cache.getFromCache(ref.id);
                         expect(obj).not.toBe(null);
                     });
@@ -359,8 +401,8 @@ describe('db', () => {
                 // expect a map where the keys are references
                 console.log(`we created: ${JSON.stringify(dict)}`);
 
-                let ref_1 = mapper.reference_for_object(entity_one);
-                let ref_2 = mapper.reference_for_object(entity_two);
+                let ref_1 = mapper.referenceForObject(entity_one);
+                let ref_2 = mapper.referenceForObject(entity_two);
 
                 expect(dict.map_of_stuffs[ref_1]).toEqual(42);
                 expect(dict.map_of_stuffs[ref_2]).toEqual(5);
@@ -467,9 +509,9 @@ describe('db', () => {
             let instance = new ThingWithListOfReferences();
             converter.writer.async_createDocFromJSObject(instance).then(dict => {
                 let expected_items = [
-                    mapper.reference_for_object(instance.my_list[0]),
-                    mapper.reference_for_object(instance.my_list[1]),
-                    mapper.reference_for_object(instance.my_list[2])
+                    mapper.referenceForObject(instance.my_list[0]),
+                    mapper.referenceForObject(instance.my_list[1]),
+                    mapper.referenceForObject(instance.my_list[2])
                 ];
                 // console.log(`JSON: ${JSON.stringify(dict)}`);
                 expect(dict.my_list).toEqual(expected_items);
@@ -496,9 +538,9 @@ describe('db', () => {
             let instance = new ThingWithListOfReferences();
             converter.writer.async_createDocFromJSObject(instance).then(dict => {
                 let expected_items = [
-                    mapper.reference_for_object(instance.my_list[0]),
-                    mapper.reference_for_object(instance.my_list[1]),
-                    mapper.reference_for_object(instance.my_list[2])
+                    mapper.referenceForObject(instance.my_list[0]),
+                    mapper.referenceForObject(instance.my_list[1]),
+                    mapper.referenceForObject(instance.my_list[2])
                 ];
                 // console.log(`JSON: ${JSON.stringify(dict)}`);
                 expect(dict.my_list).toEqual(expected_items);
@@ -509,11 +551,102 @@ describe('db', () => {
         it('able to convert list of nested objects', function (done) {
             let instance = new ThingWithNestedObjects();
             converter.writer.async_createDocFromJSObject(instance).then(dict => {
-                console.log(`JSON: ${JSON.stringify(dict)}`);
+                // console.log(`JSON: ${JSON.stringify(dict)}`);
                 expect(dict.my_list.length).toEqual(3);
                 expect(dict.my_list[0].some_field).toEqual('a value');
                 expect(dict.my_list[1].some_field).toEqual('a value');
                 expect(dict.my_list[2].some_field).toEqual('a value');
+                done();
+            });
+        });
+
+        it('should be able to convert map with reference keys -> numbers to dict', (done) => {
+            let theThing = new ThingWithMapOfReferenceKeys();
+            let someEntity = new SomeEntity();
+            let someEntity1 = new SomeEntity();
+            let someEntity2 = new SomeEntity();
+
+            theThing.some_things.set(someEntity, 1);
+            theThing.some_things.set(someEntity1, 2);
+            theThing.some_things.set(someEntity2, 3);
+
+            converter.writer.async_createDocFromJSObject(theThing).then(doc => {
+                // console.log(`JSON: ${JSON.stringify(doc)}`);
+                expect(doc['type']).toBe('ThingWithMapOfReferenceKeys');
+
+                let refKeys = doc['some_things'];
+                expect(refKeys).not.toBeFalsy();
+                expect(refKeys[mapper.referenceForObject(someEntity)]).toBe(1);
+                expect(refKeys[mapper.referenceForObject(someEntity1)]).toBe(2);
+                expect(refKeys[mapper.referenceForObject(someEntity2)]).toBe(3);
+                done();
+            });
+        });
+
+        it('should be able to convert doc with map of reference keys to an object', function (done) {
+            let someEntity = new SomeEntity("foo");
+            let someEntity1 = new SomeEntity("bar");
+            let someEntity2 = new SomeEntity("scud");
+
+            cache.saveInCache(someEntity);
+            cache.saveInCache(someEntity1);
+            cache.saveInCache(someEntity2);
+
+            let doc = {
+                "type": "ThingWithMapOfReferenceKeys",
+                "_id": "6864e247-01f3-8fe4-6280-5315f9e8dc00",
+                "_rev": null,
+                "some_things": {}
+            };
+            let someThingsMap = doc['some_things'];
+            someThingsMap[mapper.referenceForObject(someEntity)] = 1;
+            someThingsMap[mapper.referenceForObject(someEntity1)] = 2;
+            someThingsMap[mapper.referenceForObject(someEntity2)] = 3;
+
+            converter.reader.async_createJSObjectFromDoc(doc, doc['type']).then((js: ThingWithMapOfReferenceKeys) => {
+                console.log(`JS Object: ${SafeJSON.stringify(js)}`);
+                expect(js.type).toBe('ThingWithMapOfReferenceKeys');
+                let someThings = js.some_things;
+
+                let theKeys = Array.from(someThings.keys());
+                console.log(`JS Things: ${SafeJSON.stringify(someThings)}. Length: ${theKeys.length}`);
+                expect(theKeys.length).toBe(3);
+
+                expect(someThings.get(someEntity)).toBe(1);
+                expect(someThings.get(someEntity1)).toBe(2);
+                expect(someThings.get(someEntity2)).toBe(3);
+
+                done();
+            });
+        });
+
+        it('should be able to convert dict of nestedobjects back to an object', function (done) {
+            let dict = {
+                "type": "ThingWithNestedObjects",
+                "_id": "9b3007b6-90bf-9ed1-af49-1adeb8cdcccf",
+                "_rev": null,
+                "my_list": [{
+                    "type": "SomeEntity",
+                    "_id": "fb4e0b63-62e8-f81b-834a-74ac3298dc7a",
+                    "_rev": null,
+                    "some_field": "a value"
+                }, {
+                    "type": "SomeEntity",
+                    "_id": "af90d6a9-9c61-3593-5ab0-9f658dde1316",
+                    "_rev": null,
+                    "some_field": "a value"
+                }, {
+                    "type": "SomeEntity",
+                    "_id": "8c4a5115-d760-924e-ddc1-c84bf755805e",
+                    "_rev": null,
+                    "some_field": "a value"
+                }]
+            };
+            converter.reader.async_createJSObjectFromDoc(dict, 'ThingWithNestedObjects').then((js: ThingWithNestedObjects) => {
+                console.log(`Got back obj: ${JSON.stringify(js)}`);
+                expect(js.my_list.length).toEqual(3);
+                expect(js.my_list[0].some_field).toEqual('a value');
+                expect(js.my_list[0].uuid).toBeUndefined(); // because its a nestedobject
                 done();
             });
         });
@@ -544,8 +677,8 @@ describe('db', () => {
                     console.log(`GOT: ${JSON.stringify(dict)}`);
 
                     // expect the keys on the map to be formatted to ISO date strings
-                    expect(dict['some_things'][date_one.toISOString()]).toEqual(mapper.reference_for_object(someEntityOne));
-                    expect(dict['some_things'][date_two.toISOString()]).toEqual(mapper.reference_for_object(someEntityTwo));
+                    expect(dict['some_things'][date_one.toISOString()]).toEqual(mapper.referenceForObject(someEntityOne));
+                    expect(dict['some_things'][date_two.toISOString()]).toEqual(mapper.referenceForObject(someEntityTwo));
                     done();
                 });
             });
@@ -668,7 +801,7 @@ describe('db', () => {
                 // console.log(`I created: ${JSON.stringify(dict)}`);
                 let refs = dict['people'];
                 expect(refs.length).toEqual(2);
-                expect(refs[1]).toEqual(mapper.reference_for_object(neil));
+                expect(refs[1]).toEqual(mapper.referenceForObject(neil));
                 done();
             });
         });
@@ -721,7 +854,7 @@ describe('db', () => {
 
         it('_deleted are not accepted into store', function (done) {
             let docs = [
-                {"_id": "12346", "_rev": "2-1823773772", "name": "foo", "_deleted":{}}
+                {"_id": "12346", "_rev": "2-1823773772", "name": "foo", "_deleted": {}}
             ];
             db.convert_docs_to_objects_and_store_in_cache(docs).then(objects => {
                 expect(objects.length).toBe(0);
@@ -750,11 +883,5 @@ describe('db', () => {
                 });
             });
         });
-
-        xit('should store references to role_weightings on an Assignment', function () {
-
-        });
-
-
     })
 });

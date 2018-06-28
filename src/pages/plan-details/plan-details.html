@@ -22,11 +22,11 @@
         <ion-item>
             <ion-label>Start Date</ion-label>
             <ion-datetime [ngModel]="plan.start_date.toISOString()"
-                          (ngModelChange)="set_start_date($event)"></ion-datetime>
+                          (ngModelChange)="plan.setStartDateFromISO($event)"></ion-datetime>
         </ion-item>
         <ion-item>
             <ion-label>End Date</ion-label>
-            <ion-datetime [ngModel]="plan.end_date.toISOString()" (ngModelChange)="set_end_date($event)"></ion-datetime>
+            <ion-datetime [ngModel]="plan.end_date.toISOString()" (ngModelChange)="plan.setEndDateFromISO($event)"></ion-datetime>
         </ion-item>
 
     </ion-list>

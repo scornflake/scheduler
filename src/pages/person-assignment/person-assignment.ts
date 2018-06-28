@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
 import {AlertController, IonicPage, NavController, NavParams, PopoverController, ViewController} from 'ionic-angular';
 import {Assignment} from "../../scheduling/assignment";
 import {ScheduleOn, TryToScheduleWith} from "../../scheduling/rule_based/rules";
@@ -7,6 +7,7 @@ import {Person} from "../../scheduling/people";
 import {RootStore} from "../../store/root";
 import {Role} from "../../scheduling/role";
 import {Plan} from "../../scheduling/plan";
+import {computed, observable} from "mobx-angular";
 
 @IonicPage({
     name: 'page-person-assignment',
@@ -15,10 +16,11 @@ import {Plan} from "../../scheduling/plan";
 @Component({
     selector: 'page-person-assignment',
     templateUrl: 'person-assignment.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PersonAssignmentPage {
-    assignment: Assignment;
-    plan: Plan;
+    @observable person: Person;
+    @observable plan: Plan;
     private active: ViewController;
 
     constructor(public navCtrl: NavController,
@@ -28,7 +30,14 @@ export class PersonAssignmentPage {
                 public navParams: NavParams) {
 
         this.plan = navParams.get('plan');
-        this.assignment = navParams.get('assignment');
+        this.person = navParams.get('person');
+    }
+
+    @computed get assignment(): Assignment {
+        if (this.plan && this.person) {
+            return this.plan.assignmentFor(this.person);
+        }
+        return null;
     }
 
     ionViewDidLoad() {
@@ -37,15 +46,7 @@ export class PersonAssignmentPage {
         }
     }
 
-    get person(): Person {
-        if (this.assignment) {
-            // console.log(`PROVIDE PERSON ${this.assignment.person.name}`);
-            return this.assignment.person;
-        }
-        return null;
-    }
-
-    get person_name_details(): string {
+    @computed get person_name_details(): string {
         if (this.person) {
             let list = [];
             if (this.person.name) {
@@ -183,8 +184,8 @@ export class PersonAssignmentPage {
                 if (this.active) {
                     this.navCtrl.popTo(this.active);
 
-                    let new_role = new ScheduleOn(this.assignment.person, item);
-                    this.assignment.if_assigned_to(if_in_this_role).then(new_role)
+                    let new_role = new ScheduleOn(this.person, item);
+                    this.assignment.if_assigned_to(if_in_this_role).thenDo(new_role)
                 }
             },
             'show-push': true

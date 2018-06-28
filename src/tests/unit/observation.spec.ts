@@ -36,7 +36,7 @@ describe('observation', () => {
         let mapper = setupOrmMapper();
         SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, mapper).then(new_db => {
             db = new_db;
-            store = new RootStore();
+            store = new RootStore(null);
             store.setDatabase(db);
             db.setCache(new SimpleCache());
             done();

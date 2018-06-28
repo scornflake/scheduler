@@ -5,6 +5,7 @@ import {dateForISODateString} from "../../scheduling/common/date-utils";
 import {Person} from "../../scheduling/people";
 import {PageUtils} from "../page-utils";
 import {NamedObject} from "../../scheduling/base-types";
+import {action, computed} from "mobx-angular";
 
 @IonicPage({
     name: 'page-plan-details',
@@ -24,7 +25,7 @@ export class PlanDetailsPage {
         this.plan = this.navParams.get('plan');
     }
 
-    get sorted_people(): Array<Person> {
+    @computed get sorted_people(): Array<Person> {
         return NamedObject.sortByName(this.plan.people);
     }
 
@@ -43,16 +44,7 @@ export class PlanDetailsPage {
         }
     }
 
-    set_end_date($event) {
-        this.plan.end_date = dateForISODateString($event);
-
-    }
-
-    set_start_date($event) {
-        this.plan.start_date = dateForISODateString($event);
-    }
-
-    add_assignment() {
+    @action add_assignment() {
         // Choose a person
         // Show a selection of people, with add/cancel button
         let alert = this.alertCtrl.create({
@@ -97,7 +89,7 @@ export class PlanDetailsPage {
         alert.present();
     }
 
-    delete_assignment_for_person(person) {
+    @action delete_assignment_for_person(person) {
         this.plan.remove_person(person);
     }
 
@@ -107,7 +99,7 @@ export class PlanDetailsPage {
             console.log(`Showing assignment for ${assignment.person.name} and plan ${this.plan.name}`);
             this.navCtrl.push('page-person-assignment', {
                 plan: this.plan,
-                assignment: assignment
+                person: person
             })
         }
     }

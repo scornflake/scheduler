@@ -19,7 +19,7 @@ class StoreBasedResolver implements IReferenceResolver {
     async async_lookupListOfReferences(references: Array<any>, nesting: number = 0) {
         let new_list = observable([]);
         for (let item of references) {
-            let ref: ObjectReference = this.mapper.parse_reference(item);
+            let ref: ObjectReference = this.mapper.parseReference(item);
             new_list.push(await this.async_lookupObjectReference(ref, nesting + 1));
         }
         return new_list;
@@ -34,7 +34,7 @@ class StoreBasedResolver implements IReferenceResolver {
             let reference = key.toString();
             this.utils.debug(`_lookup_map_of_reference_keys going to try lookup on: ${reference}`, nesting);
 
-            let ref: ObjectReference = this.mapper.parse_reference(reference);
+            let ref: ObjectReference = this.mapper.parseReference(reference);
             let reference_obj = await this.async_lookupObjectReference(ref, nesting);
             let js_value = this.mapper.convertDocValueToJSValue(value[key], mapping);
             result_map.set(reference_obj, js_value);
@@ -57,7 +57,7 @@ class StoreBasedResolver implements IReferenceResolver {
                 result_map.set(js_key, await this.async_lookupListOfReferences(reference, nesting + 1));
             } else {
                 this.utils.debug(`_lookup_map_of_reference_values going to try lookup on: ${reference}/${typeName}`, nesting);
-                let ref: ObjectReference = this.mapper.parse_reference(reference);
+                let ref: ObjectReference = this.mapper.parseReference(reference);
                 result_map.set(js_key, await this.async_lookupObjectReference(ref, nesting + 1));
             }
         }

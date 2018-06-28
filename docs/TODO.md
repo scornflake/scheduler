@@ -1,8 +1,10 @@
 TODO:
 -----
+- Rules (condition_rules and secondary) dont appear to be persisted (see AddPeopleToPlanWithRoles for neil)
+  - add tests!
 - Get sign in / reg lifecycle going (done?)
   - Don't auto sign in as me :)
-- Rules dont appear to be persisted (see AddPeopleToPlanWithRoles for neil)
+- Remove 'pull to refresh' style action on home page (it doesn't do anything)
 - Rules
     - Are not refreshed when added/removed (in person assignment)
     - Changes are not being seen after modification. Are rules observable?
