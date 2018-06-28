@@ -2,7 +2,6 @@ import {APP_INITIALIZER, ErrorHandler, Injector, NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
 import {IonicApp, IonicErrorHandler, IonicModule} from 'ionic-angular';
 import {MyApp} from './app.component';
-
 import {StatusBar} from '@ionic-native/status-bar';
 import {SplashScreen} from '@ionic-native/splash-screen';
 import {ComponentsModule} from "../components/components.module";
@@ -32,6 +31,8 @@ import {SchedulerServer} from "../providers/server/scheduler-server.service";
 import {setupOrmMapper} from "../providers/mapping/setup";
 import {MobxAngularModule} from "mobx-angular";
 import {ResponsiveConfig, ResponsiveModule} from "ng2-responsive";
+import {NetworkUtils} from "../common/network/nework";
+import {Network} from "@ionic-native/network";
 
 let config = {
     breakPoints: {
@@ -91,6 +92,7 @@ export function ResponsiveDefinition() {
             multi: true
         },
         StatusBar,
+        Network,
         SplashScreen,
         RootStore,
         SchedulerServer,
@@ -98,6 +100,7 @@ export function ResponsiveDefinition() {
         {provide: ErrorHandler, useClass: IonicErrorHandler},
         PageUtils,
         LoggingService,
+        NetworkUtils,
         GAPIS,
         RESTServer,
         [{

@@ -5,7 +5,6 @@ import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {Subject} from "rxjs/Subject";
 import {LoggingWrapper} from "../logging-wrapper";
 import {Logger} from "ionic-logging-service";
-import {SafeJSON} from "../json/safe-stringify";
 
 @Injectable()
 class NetworkUtils {
@@ -18,16 +17,16 @@ class NetworkUtils {
 
         if (this.network) {
             this.network.onConnect().subscribe(() => {
-                this.logger.info(`Network Connecteds`);
+                this.logger.info(`Network Connected`);
                 this.networkSubject.next(true);
             });
             this.network.onDisconnect().subscribe(() => {
                 this.logger.info(`Network Disconnected`);
                 this.networkSubject.next(false);
             });
-            this.network.onchange().subscribe(change => {
-                this.logger.info(`Network changed: ${SafeJSON.stringify(change)}`)
-            })
+            // this.network.onchange().subscribe(change => {
+            //     this.logger.info(`Network changed: ${SafeJSON.stringify(change)}`)
+            // })
         }
     }
 

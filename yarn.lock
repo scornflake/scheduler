@@ -66,6 +66,10 @@
   version "4.7.0"
   resolved "https://registry.yarnpkg.com/@ionic-native/core/-/core-4.7.0.tgz#9e7c13db9f18f454d7a31a5d61d369a7db3f338c"
 
+"@ionic-native/network@^4.8.0":
+  version "4.8.0"
+  resolved "https://registry.yarnpkg.com/@ionic-native/network/-/network-4.8.0.tgz#ccc4aaca43fd9b73a21b9440a339f6444fb849c5"
+
 "@ionic-native/splash-screen@4.7.0":
   version "4.7.0"
   resolved "https://registry.yarnpkg.com/@ionic-native/splash-screen/-/splash-screen-4.7.0.tgz#e22c41e986cfc5e8ff12db7fc464c2daf9206037"
@@ -1692,6 +1696,10 @@ cordova-plugin-device@^1.1.4:
 cordova-plugin-ionic-webview@^1.1.16:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/cordova-plugin-ionic-webview/-/cordova-plugin-ionic-webview-1.2.0.tgz#83a3a7743422833899d623c074d8a0e39d36a6a1"
+
+cordova-plugin-network-information@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/cordova-plugin-network-information/-/cordova-plugin-network-information-2.0.1.tgz#e90421f430c6ab76d409223f25fcefbbbce17690"
 
 cordova-plugin-splashscreen@^4.0.3:
   version "4.1.0"

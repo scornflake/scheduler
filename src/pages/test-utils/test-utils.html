@@ -7,34 +7,57 @@
 
 
 <ion-content *mobxAutorun>
-
-    <div *ngIf="store.loggedInPerson$|async as p">
-        <ion-item>
-            <ion-label>Person</ion-label>
-            <ion-input [ngModel]="p.name"
-                       (ngModelChange)="p.setName($event)"></ion-input>
-        </ion-item>
+    <div *ngIf="netUtil">
+        <ion-list>
+            <ion-list-header color="light">Network</ion-list-header>
+            <ion-item>
+                <ion-label>Online</ion-label>
+                <ion-toggle [ngModel]="netUtil.isOnline"></ion-toggle>
+            </ion-item>
+            <ion-item>
+                <ion-label>Network Type</ion-label>
+                <ion-input text-right [ngModel]="netUtil.networkType"></ion-input>
+            </ion-item>
+            <ion-item>
+                <ion-label>
+                    Browser
+                    <p class="crowded">aka we're <b>not native</b>?</p>
+                </ion-label>
+                <ion-toggle [ngModel]="netUtil.isBrowser"></ion-toggle>
+            </ion-item>
+            <ion-item>
+                <h2>Platforms</h2>
+                <p>{{netUtil.platforms}}</p>
+            </ion-item>
+        </ion-list>
     </div>
 
-    <div *ngIf="store.selectedPlan$ | async as plan">
-        <ion-item>
-            <ion-label>Start Date</ion-label>
-            <ion-datetime [ngModel]="plan.start_date.toISOString()"
-                          (ngModelChange)="plan.setStartDateFromISO($event)"></ion-datetime>
-        </ion-item>
-        <ion-item>
-            <ion-label>End Date</ion-label>
-            <ion-datetime [ngModel]="plan.end_date.toISOString()" (ngModelChange)="plan.setEndDateFromISO($event)"></ion-datetime>
+    <ion-list>
+        <ion-list-header color="light">State</ion-list-header>
+        <ion-item *ngIf="store.loggedInPerson$|async as p">
+            <ion-label stacked>Logged in person name</ion-label>
+            <ion-input [ngModel]="p.name" (ngModelChange)="p.setName($event)"></ion-input>
         </ion-item>
 
+        <div *ngIf="store.selectedPlan$ | async as plan">
+            <ion-item>
+                <ion-label stacked>Plan Start Date</ion-label>
+                <ion-datetime [ngModel]="plan.start_date.toISOString()"
+                              (ngModelChange)="plan.setStartDateFromISO($event)"></ion-datetime>
+            </ion-item>
+            <ion-item>
+                <ion-label stacked>Plan End Date</ion-label>
+                <ion-datetime [ngModel]="plan.end_date.toISOString()"
+                              (ngModelChange)="plan.setEndDateFromISO($event)"></ion-datetime>
+            </ion-item>
+        </div>
 
-    </div>
-
-    <div *ngIf="store.uiStore$|async as ui">
-        <ion-item *ngIf="ui.selectedPlan">
-            <ion-label>Selected Plan UUID</ion-label>
-            <ion-input [ngModel]="ui.selectedPlan.name"
-                       (ngModelChange)="ui.selectedPlan.setName($event)"></ion-input>
-        </ion-item>
-    </div>
+        <div *ngIf="store.uiStore$|async as ui">
+            <ion-item *ngIf="ui.selectedPlan">
+                <ion-label stacked>Selected Plan</ion-label>
+                <ion-input [ngModel]="ui.selectedPlan.name"
+                           (ngModelChange)="ui.selectedPlan.setName($event)"></ion-input>
+            </ion-item>
+        </div>
+    </ion-list>
 </ion-content>
