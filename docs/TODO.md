@@ -1,15 +1,17 @@
 TODO
 ====
-- Sort out why saved state isnt going green, then off
 - Get sign in / reg lifecycle going (done?)
   - Don't auto sign in as me :)
 - Sort out logout, stop hitting DB
+- Why is app.tick() required in RootStore, schedule, to make the app refresh on 2nd update?
 - When creating account first time, receiving data, done - it doesn't select the first schedule.
     - I think even if you select the schedule, it doesn't show it.
     - This may be to do with a mobx error, that we see only on Safari.
 - When restoring a lot of state, the schedule is kicked off. That's kinda bad.
     - We want to delay the schedule computation until the incoming state change is done.
     - Incoming is processed in batches. How do we know when we're done?
+    - Maaaaaye: I think actions are supposed to take care of this. and 'convert_docs_to_objects_and_store_in_cache' is an @action.
+
 - Remove 'pull to refresh' style action on home page (it doesn't do anything)
 - Offline. Close server. Get app to startup.
 - If User is activated, but I deleted the Org, validation/login still seems to return OK (and the client then goes into an endless loop)

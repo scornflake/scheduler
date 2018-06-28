@@ -497,14 +497,16 @@ class SchedulerDatabase implements IObjectStore {
                         return true;
                     });
                     // remove the _revisions, so the logging doesn't SUCK
-                    for(let doc of docs) {
+                    for (let doc of docs) {
                         delete doc['_revisions'];
                     }
                     this.logger.info(`Processing incoming change: ${JSON.stringify(change)}`);
                     // Want to update existing store using this data, as though we had read it direct from the DB
+                    this.saveNotifications.next(SavingState.ChangeDetected);
                     this.convert_docs_to_objects_and_store_in_cache(docs).then((items) => {
                         this.logger.debug(` ... incoming change (${items.length} docs) processed and stored in DB/cache`);
-                    })
+                    });
+                    this.saveNotifications.next(SavingState.FinishedSaving);
                 } else {
                     this.logger.debug(`Outgoing change: ${JSON.stringify(change)}`);
                 }
