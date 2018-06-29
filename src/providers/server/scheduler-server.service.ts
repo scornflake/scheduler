@@ -21,9 +21,10 @@ import "rxjs/add/observable/fromPromise";
 import "rxjs/add/observable/interval";
 import {ObjectUtils} from "../../pages/page-utils";
 import {isDefined} from "ionic-angular/util/util";
-import {runInAction} from "mobx";
+import {reaction, runInAction} from "mobx";
 import {ILifecycle, ILifecycleCallback} from "./interfaces";
 import {Subscription} from "rxjs/Subscription";
+import {ConnectivityService} from "../../common/network/connectivity";
 
 const STATE_ROOT = 'state';
 
@@ -31,6 +32,7 @@ interface IState {
     loginToken: string;
     lastPersonUUID: string;
     lastOrganizationUUID: string;
+    isForcedOffline: boolean;
 }
 
 
@@ -47,6 +49,7 @@ class SchedulerServer implements ILifecycle {
     constructor(@Inject(forwardRef(() => RootStore)) private store,
                 private restAPI: RESTServer,
                 private storage: Storage,
+                private connectivity: ConnectivityService,
                 private ormMapper: OrmMapper,
                 private configurationService: ConfigurationService
     ) {
@@ -303,13 +306,29 @@ class SchedulerServer implements ILifecycle {
         if (this._state == null) {
             let newState = await this.storage.get(STATE_ROOT) || {
                 lastPersonUUID: null,
+                lastOrganizationUUID: null,
                 loginToken: null,
+                isForcedOffline: false,
             };
 
             runInAction(() => {
                 this._state = newState;
             });
+
             this.logger.debug(`Loading state... ${JSON.stringify(this._state)}`);
+
+            // Restore current state to the object
+            this.connectivity.overrideEnabled = this.state.isForcedOffline;
+
+            // Listen to the connectivity service. If the flag to force it changes, save that here.
+            reaction(() => {
+                return this.connectivity.overrideEnabled;
+            }, (value) => {
+                this._state.isForcedOffline = value;
+                this.asyncSaveState().then(() => {
+                    this.logger.info(`Saved state because 'forced' flag changed`);
+                });
+            })
         }
         return this.state;
     }

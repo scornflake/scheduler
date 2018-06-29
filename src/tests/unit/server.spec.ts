@@ -12,6 +12,7 @@ import {IObjectCache, SimpleCache} from "../../providers/mapping/cache";
 import {LoginResponse, ServerError, UserResponse, ValidationResponse} from "../../common/interfaces";
 import {Person} from "../../scheduling/people";
 import {ILifecycleCallback} from "../../providers/server/interfaces";
+import {ConnectivityService} from "../../common/network/connectivity";
 
 describe('scheduler server', () => {
     let server: SchedulerServer;
@@ -26,7 +27,10 @@ describe('scheduler server', () => {
     let userResponse: UserResponse;
 
     let createServerWithStorage = (storage): Promise<SchedulerServer> => {
-        server = new SchedulerServer(store, restServer, storage, mapper, MockConfigurationService.ServiceForTests());
+
+        let connectivityServiceMock = mock(ConnectivityService);
+
+        server = new SchedulerServer(store, restServer, storage, instance(connectivityServiceMock), mapper, MockConfigurationService.ServiceForTests());
         store = new RootStore(null);
         server.setStore(store);
 
