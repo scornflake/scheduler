@@ -8,7 +8,7 @@ import {Person} from "../../scheduling/people";
 import {Observable} from "rxjs/Observable";
 import {forwardRef, Inject, Injectable} from "@angular/core";
 import {Organization} from "../../scheduling/organization";
-import {SchedulerDatabase} from "./db";
+import {ReplicationStatus, SchedulerDatabase} from "./db";
 import {ObjectWithUUID} from "../../scheduling/base-types";
 import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
@@ -540,13 +540,15 @@ class SchedulerServer implements ILifecycle {
     }
 
     private async waitForReplicationToQuietenDown(newDb: SchedulerDatabase) {
-        await newDb.replicationNotifications.pipe(
+        await newDb.replicationNotifications$.pipe(
             map(v => {
                 this.logger.info(`Replication doing something: ${v}`);
                 return v;
             }),
             debounceTime(1000),
-            filter(v => v == false),
+            filter((v: ReplicationStatus) => {
+                return v == ReplicationStatus.Idle || v == ReplicationStatus.Paused;
+            }),
             take(1)
         ).toPromise();
         this.logger.info('Replication has been silent for a while');

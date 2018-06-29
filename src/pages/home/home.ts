@@ -24,7 +24,7 @@ export class HomePage {
     constructor(private navCtrl: NavController,
                 private sheetAPI: GAPIS,
                 private pageUtils: PageUtils,
-                public server:SchedulerServer,
+                public server: SchedulerServer,
                 public store: RootStore) {
 
         this.logger = LoggingWrapper.getLogger("page.home");

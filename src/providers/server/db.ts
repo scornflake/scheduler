@@ -33,9 +33,16 @@ enum SavingState {
     FinishedSaving = 3, // changes completed ok!
 }
 
+enum ReplicationStatus {
+    Unknown = 0,
+    ProcessingPull,
+    Paused,
+    Idle
+}
+
 class SchedulerDatabase implements IObjectStore {
-    saveNotifications = new Subject<SavingState>();
-    replicationNotifications = new BehaviorSubject<boolean>(false);
+    saveNotifications$ = new Subject<SavingState>();
+    replicationNotifications$ = new BehaviorSubject<ReplicationStatus>(ReplicationStatus.Unknown);
 
     readyEvent: Subject<boolean>;
     info: PouchDB.Core.DatabaseInfo;
@@ -53,6 +60,7 @@ class SchedulerDatabase implements IObjectStore {
     private mapper: OrmMapper;
     private _converter: OrmConverter;
     private _cache: IObjectCache;
+    lastSeenReplicationStatus: ReplicationStatus = ReplicationStatus.Unknown;
 
     constructor(dbName: string, mapper: OrmMapper) {
         this.dbName = dbName;
@@ -73,7 +81,7 @@ class SchedulerDatabase implements IObjectStore {
 
         // This is so we can output a single stream of 'idle, change waiting, saving/done'
         this.tracker.changes.subscribe(() => {
-            this.saveNotifications.next(SavingState.ChangeDetected);
+            this.saveNotifications$.next(SavingState.ChangeDetected);
         });
 
         // This is so we can kick off a save some time after the change occurs
@@ -268,7 +276,7 @@ class SchedulerDatabase implements IObjectStore {
         }
 
         this.tracker.disableTrackingFor(object);
-        this.saveNotifications.next(SavingState.StartedSaving);
+        this.saveNotifications$.next(SavingState.StartedSaving);
         try {
             let object_state = object.is_new ? "new" : "existing";
             if (object.is_new == false || force_rev_check) {
@@ -311,7 +319,7 @@ class SchedulerDatabase implements IObjectStore {
             }
         } finally {
             this.tracker.enableTrackingFor(object);
-            this.saveNotifications.next(SavingState.FinishedSaving);
+            this.saveNotifications$.next(SavingState.FinishedSaving);
         }
     }
 
@@ -487,6 +495,8 @@ class SchedulerDatabase implements IObjectStore {
         this.server_db = new PouchDB(`${serverUrl}/${remoteDBName}`, this.couchOptions);
         this.server_sync = this.db.sync(this.server_db, {live: true, retry: true})
             .on('change', (change) => {
+                this.lastSeenReplicationStatus = ReplicationStatus.ProcessingPull;
+                this.saveNotifications$.next(SavingState.FinishedSaving);
                 if (change.direction == 'pull') {
                     let data = change.change;
                     let docs = data.docs.filter(d => {
@@ -501,43 +511,50 @@ class SchedulerDatabase implements IObjectStore {
                     for (let doc of docs) {
                         delete doc['_revisions'];
                     }
-                    
+
                     let changeInfo = {};
-                    if(docs && Array.isArray(docs)) {
+                    if (docs && Array.isArray(docs)) {
                         changeInfo['num_docs'] = docs.length;
                     } else {
                         changeInfo = change;
                     }
-                    
+
                     this.logger.info(`Processing incoming change: ${JSON.stringify(changeInfo)}`);
                     // Want to update existing store using this data, as though we had read it direct from the DB
-                    this.saveNotifications.next(SavingState.ChangeDetected);
-                    this.replicationNotifications.next(true);
+                    this.saveNotifications$.next(SavingState.ChangeDetected);
+
                     this.convert_docs_to_objects_and_store_in_cache(docs).then((items) => {
                         this.logger.info(` ... incoming change (${items.length} docs) processed and stored in DB/cache`);
                     });
-                    this.saveNotifications.next(SavingState.FinishedSaving);
-                    this.replicationNotifications.next(false);
+                    this.saveNotifications$.next(SavingState.FinishedSaving);
+                    this.replicationNotifications$.next(this.lastSeenReplicationStatus);
                 } else {
                     this.logger.debug(`Outgoing change: ${JSON.stringify(change)}`);
                 }
             })
             .on('paused', (info) => {
-                this.logger.debug(`Sync paused`);
+                this.logger.debug(`Replication paused`);
+                this.lastSeenReplicationStatus = ReplicationStatus.Paused;
+                this.replicationNotifications$.next(this.lastSeenReplicationStatus);
             })
             .on('complete', (info) => {
-                this.logger.debug(`Sync complete, ${JSON.stringify(info)}`);
+                this.logger.debug(`Replication complete, ${JSON.stringify(info)}`);
+                this.lastSeenReplicationStatus = ReplicationStatus.Idle;
+                this.replicationNotifications$.next(this.lastSeenReplicationStatus);
             })
             .on('denied', (info) => {
-                this.logger.warn(`Sync denied! ${JSON.stringify(info)}`);
+                this.logger.error(`Replication denied! ${JSON.stringify(info)}`);
             })
             .on('error', (err) => {
-                this.logger.error(`Sync error: ${err}`);
+                this.logger.error(`Replication error: ${err}`);
             });
+        this.lastSeenReplicationStatus = ReplicationStatus.Idle;
+        this.replicationNotifications$.next(this.lastSeenReplicationStatus);
     }
 }
 
 export {
     SchedulerDatabase,
-    SavingState
+    SavingState,
+    ReplicationStatus
 }

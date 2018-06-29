@@ -33,7 +33,7 @@ export class SavingStateComponent implements AfterViewInit, OnDestroy {
         this.dbSubscription = this.server.db$.subscribe(db => {
             this.db = db;
             if (this.db) {
-                this.dbSubscription = this.db.saveNotifications.subscribe(state => {
+                this.dbSubscription = this.db.saveNotifications$.subscribe(state => {
                     runInAction(() => {
                         if (state == SavingState.ChangeDetected) {
                             this.savingstate = "changed";
