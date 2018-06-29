@@ -11,7 +11,6 @@ import {ConnectivityService} from "../../common/network/connectivity";
 @Component({
     selector: 'page-test-utils',
     templateUrl: 'test-utils.html',
-    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TestUtilsPage {
 

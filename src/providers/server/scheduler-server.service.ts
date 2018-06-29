@@ -82,9 +82,17 @@ class SchedulerServer implements ILifecycle {
         return false;
     }
 
+    raiseExceptionIfNotOnline(method: string) {
+        if (!this.connectivity.isOnline) {
+            throw new Error(`Cannot perform operation ${method}, we are not online`);
+        }
+    }
+
     async loginUser(username: string, password: string): Promise<LoginResponse> {
         this.logger.info(`Requesting user info from server: ${username}`);
         await this.asyncLoadState();
+
+        this.raiseExceptionIfNotOnline('loginUser');
 
         let res: LoginResponse = await this.restAPI.login(username, password);
         this.setLoginTokenFromUserResponse(res.ok, res.user || null);
@@ -134,6 +142,7 @@ class SchedulerServer implements ILifecycle {
         await this.asyncLoadState();
         this.logger.info(`Validating login token: ${SWBSafeJSON.stringify(token)}`);
 
+        this.raiseExceptionIfNotOnline('validateLoginToken');
         let vr = await this.restAPI.validateLoginToken(token);
 
         this.setLoginTokenFromUserResponse(vr.ok, vr.user);
@@ -142,6 +151,7 @@ class SchedulerServer implements ILifecycle {
     }
 
     async hasEmailBeenConfirmed(email: string): Promise<boolean> {
+        this.raiseExceptionIfNotOnline('hasEmailBeenConfirmed');
         return this.restAPI.hasEmailBeenConfirmed(email);
     }
 
@@ -326,7 +336,7 @@ class SchedulerServer implements ILifecycle {
             }, (value) => {
                 this._state.isForcedOffline = value;
                 this.asyncSaveState().then(() => {
-                    this.logger.info(`Saved state because 'forced' flag changed`);
+                    this.logger.debug(`Saved state because 'forced' flag changed`);
                 });
             })
         }
@@ -353,7 +363,11 @@ class SchedulerServer implements ILifecycle {
         // If the state is the same, do nothing. As nothing has changed.
         let areSet = isDefined(this._previousState) && isDefined(this._state);
         if (areSet) {
-            if (ObjectUtils.deep_equal(this._previousState, this._state)) {
+            // Only want to compare some fields, not all
+            let orgSame = this._state.lastOrganizationUUID == this._previousState.lastOrganizationUUID;
+            let personSame = this._state.lastPersonUUID == this._previousState.lastPersonUUID;
+            let tokenSame = this._state.loginToken == this._previousState.loginToken;
+            if (orgSame && personSame && tokenSame) {
                 this.logger.info('asyncRunStartupLifecycle', 'Ignored - the state hasnt changed');
                 return;
             }
@@ -368,11 +382,16 @@ class SchedulerServer implements ILifecycle {
             return false;
         }
 
-        let vr = await this.validateLoginToken(this.state.loginToken);
-        if (!vr.ok) {
-            this.logger.debug('asyncRunStartupLifecycle', `Login token invalid, show login page`);
-            callback.showLoginPage(`Login token invalid: ${SWBSafeJSON.stringify(vr)}`);
-            return false;
+        // Are we online? can we validate?
+        if (this.connectivity.isOnline) {
+            let vr = await this.validateLoginToken(this.state.loginToken);
+            if (!vr.ok) {
+                this.logger.debug('asyncRunStartupLifecycle', `Login token invalid, show login page`);
+                callback.showLoginPage(`Login token invalid: ${SWBSafeJSON.stringify(vr)}`);
+                return false;
+            }
+        } else {
+            this.logger.warn(`We're offline. We have a token and we're gonna assume it is OK.`);
         }
 
         // If no lastOrganizationUUID UUID, loginUser() didn't do its job.
@@ -404,6 +423,7 @@ class SchedulerServer implements ILifecycle {
 
 
     async registerNewUser(name: string, email: string, pwd: string): Promise<Person> {
+        this.raiseExceptionIfNotOnline('registerNewUser');
         let lr = await this.restAPI.registerNewUser(name, email, pwd);
         if (lr.ok) {
             return Person.createFromUserResponse(lr.user);

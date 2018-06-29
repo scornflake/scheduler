@@ -20,23 +20,24 @@ class ConnectivityService implements OnDestroy {
     private disconnectionSubscription: Subscription;
 
     @observable private _navigatorOnline: boolean;
-    @observable private _overrideEnabled: boolean;
+    @observable private _overrideEnabled: boolean = false;
 
     constructor(private platform: Platform, private network: Network, private zone: NgZone) {
         this.networkSubject = new BehaviorSubject<boolean>(false);
         this.logger = LoggingWrapper.getLogger('network');
 
-        if (!this.onBrowser) {
+        if (this.onDevice) {
             this.connectionSubscription = this.network.onConnect().subscribe(() => {
                 this.logger.info(`Network Connected`);
-                this.networkSubject.next(true);
+                this.sendNetworkChange();
             });
             this.disconnectionSubscription = this.network.onDisconnect().subscribe(() => {
                 this.logger.info(`Network Disconnected`);
-                this.networkSubject.next(false);
+                this.sendNetworkChange();
             });
             this.network.onchange().subscribe(change => {
-                this.logger.info(`Network changed: ${SWBSafeJSON.stringify(change)}`)
+                this.logger.info(`Network changed: ${SWBSafeJSON.stringify(change)}`);
+                this.sendNetworkChange();
             });
         } else {
             // If running in browser, poll the flag on the navigator
@@ -48,9 +49,9 @@ class ConnectivityService implements OnDestroy {
             ).subscribe((value) => {
                 runInAction(() => {
                     this._navigatorOnline = value;
-                });
-                this.zone.run(() => {
-                    this.sendNetworkChange();
+                    this.zone.run(() => {
+                        this.sendNetworkChange();
+                    });
                 });
             })
         }
@@ -73,13 +74,13 @@ class ConnectivityService implements OnDestroy {
         runInAction(() => {
             this._overrideEnabled = value;
         });
-        this.logger.info(`'Online' override active: ${this._overrideEnabled}`);
+        this.logger.debug(`'Online' override active: ${this._overrideEnabled}`);
         this.sendNetworkChange();
     }
 
     private sendNetworkChange() {
         let value = this.isOnline;
-        // this.logger.warn(`Online: ${value} - sending this to the network$`);
+        this.logger.debug(`Online: ${value} - sending this to the network$`);
         this.networkSubject.next(value);
     }
 
@@ -92,7 +93,7 @@ class ConnectivityService implements OnDestroy {
 
     @computed get isOnline(): boolean {
         if (this.overrideEnabled) {
-            this.logger.info(`Online override active, return false for 'online'`);
+            this.logger.debug(`Online override active, return false for 'online'`);
             return false;
         }
 
