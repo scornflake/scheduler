@@ -4,7 +4,7 @@ import {defaultBass, defaultKeysRole, defaultLeaderRole, defaultSoundRole, Setup
 import {constructSensibleDate} from "../../scheduling/common/date-utils";
 import {Plan} from "../../scheduling/plan";
 import {Team} from "../../scheduling/teams";
-import {SafeJSON} from "../../common/json/safe-stringify";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {Role} from "../../scheduling/role";
 
 describe('schedule', () => {
@@ -82,8 +82,8 @@ describe('schedule', () => {
 
             // Expect Neil, Tim, Janice
             let ordered = sd.people_sorted_by_role_priority;
-            console.log(`We have assignments for : ${SafeJSON.stringify(sd.assignments.map(a => a.name))}`);
-            console.log(`We have ordered: ${SafeJSON.stringify(ordered.map(p => p.name))}`);
+            console.log(`We have assignments for : ${SWBSafeJSON.stringify(sd.assignments.map(a => a.name))}`);
+            console.log(`We have ordered: ${SWBSafeJSON.stringify(ordered.map(p => p.name))}`);
             expect(ordered[0]).toEqual(neil_assignment.person);
             expect(ordered[1]).toEqual(a2.person);
             expect(ordered[2]).toEqual(a3.person);

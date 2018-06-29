@@ -11,7 +11,7 @@ import {
 import {Observable} from "rxjs/Observable";
 import "rxjs/add/operator/map";
 import {Logger, LoggingService} from "ionic-logging-service";
-import {SafeJSON} from "../../common/json/safe-stringify";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import "rxjs/add/observable/from";
 
 @Injectable()
@@ -25,7 +25,13 @@ export class RESTServer {
         this.logger = this.loggingService.getLogger("service.rest");
 
         let server = this.config.getValue("server");
-        this.logger.info(`Server: ${JSON.stringify(server)}`);
+        if (!server['couch']) {
+            throw new Error(`settings.json needs a server.couch entry (${SWBSafeJSON.stringify(server)})`);
+        }
+        if (!server['rest']) {
+            throw new Error(`settings.json needs a server.rest entry (${SWBSafeJSON.stringify(server)})`);
+        }
+        this.logger.info(`Server - Couch: ${server['couch']}, REST: ${server['rest']}. `);
     }
 
     private server_url(path): string {
@@ -48,7 +54,7 @@ export class RESTServer {
         let url = this.server_url("login/" + `?email=${username}&password=${password}`);
         this.logger.info(`About to: ${url}`);
         return this.http.get(url).map(r => {
-            this.logger.warn(`RESP: ${SafeJSON.stringify(r)}`);
+            // this.logger.warn(`RESP: ${SafeJSON.stringify(r)}`);
             return Object.assign(new LoginResponse(), r)
         }).toPromise();
     }
@@ -72,7 +78,7 @@ export class RESTServer {
                 if (resp['active']) {
                     return resp['active'];
                 }
-                console.warn(`hasEmailBeenConfirmed, for ${email} received ${SafeJSON.stringify(resp)}`);
+                console.warn(`hasEmailBeenConfirmed, for ${email} received ${SWBSafeJSON.stringify(resp)}`);
                 return false;
             }
         ).toPromise();
@@ -102,7 +108,7 @@ export class RESTServer {
             if (r.hasOwnProperty('ok') && r['ok']) {
                 return new LoginResponse(true);
             }
-            this.logger.info(`Token store returned: ${SafeJSON.stringify(r)}`);
+            this.logger.info(`Token store returned: ${SWBSafeJSON.stringify(r)}`);
             return new LoginResponse(false, r['detail']);
         })
     }

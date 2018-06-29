@@ -4,7 +4,7 @@ import {Plan} from "../../scheduling/plan";
 import {Team} from "../../scheduling/teams";
 import {PersonManager, SchedulerObjectStore} from "../../scheduling/common/scheduler-store";
 import {AvailabilityEveryNOfM} from "../../scheduling/availability";
-import {SafeJSON} from "../../common/json/safe-stringify";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 
 describe('people', () => {
     let schedulerObjectStore: SchedulerObjectStore;
@@ -61,7 +61,7 @@ describe('people', () => {
         firstPerson.addUnavailableRange(new Date(2010, 5, 1), new Date(2010, 11, 1));
         expect(firstPerson.isUnavailableOn(new Date(2010, 5, 1))).toBeTruthy();
 
-        console.log(`Person unavailable on: ${SafeJSON.stringify(firstPerson.unavailable)}`);
+        console.log(`Person unavailable on: ${SWBSafeJSON.stringify(firstPerson.unavailable)}`);
         expect(firstPerson.isUnavailableOn(new Date(2010, 9, 1))).toBeTruthy();
         // expect(firstPerson.is_unavailable_on(new Date(2011, 9, 1))).toBeFalsy();
     });

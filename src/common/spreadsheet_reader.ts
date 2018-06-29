@@ -5,7 +5,7 @@ import * as moment from "moment";
 import {Moment} from "moment";
 import {Logger} from "ionic-logging-service";
 import {LoggingWrapper} from "./logging-wrapper";
-import {SafeJSON} from "./json/safe-stringify";
+import {SWBSafeJSON} from "./json/safe-stringify";
 import {Plan} from "../scheduling/plan";
 import {Team} from "../scheduling/teams";
 import {PersonManager} from "../scheduling/common/scheduler-store";
@@ -89,7 +89,7 @@ export class SpreadsheetReader {
                         this.logger.info(` - Role: ${role}`);
 
                         let peoples_names = col.split(",").map(v => v.trim());
-                        this.logger.info(`   - people: ${SafeJSON.stringify(peoples_names)}`);
+                        this.logger.info(`   - people: ${SWBSafeJSON.stringify(peoples_names)}`);
 
                         if (for_this_date) {
                             // Go through people and add them to this role

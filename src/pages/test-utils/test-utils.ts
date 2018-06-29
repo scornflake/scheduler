@@ -1,8 +1,8 @@
-import {Component} from '@angular/core';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
 import {IonicPage, NavController, NavParams} from 'ionic-angular';
 import {RootStore} from "../../store/root";
 import {PageUtils} from "../page-utils";
-import {NetworkUtils} from "../../common/network/nework";
+import {ConnectivityService} from "../../common/network/connectivity";
 
 @IonicPage({
     name: 'page-test-utils',
@@ -11,15 +11,17 @@ import {NetworkUtils} from "../../common/network/nework";
 @Component({
     selector: 'page-test-utils',
     templateUrl: 'test-utils.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TestUtilsPage {
 
     constructor(public navCtrl: NavController,
                 public store: RootStore,
-                public netUtil: NetworkUtils,
+                public netUtil: ConnectivityService,
                 public pageUtils: PageUtils,
                 public navParams: NavParams) {
     }
+
 
     ionViewDidLoad() {
     }

@@ -1,7 +1,7 @@
 import {action, computed, observable} from "mobx-angular";
 import * as _ from 'lodash';
 import {isUndefined} from "util";
-import {SafeJSON} from "../../common/json/safe-stringify";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {ObjectWithUUID} from "../base-types";
 import {runInAction} from "mobx";
 
@@ -106,7 +106,7 @@ function try_find_single_person_with(list, name: string, callback) {
     let results = list.filter(callback);
     if (results.length) {
         if (results.length > 1) {
-            throw new Error(`Searching for ${name} returns more than one thing. Returns: ${SafeJSON.stringify(results)}`);
+            throw new Error(`Searching for ${name} returns more than one thing. Returns: ${SWBSafeJSON.stringify(results)}`);
         }
         return results[0];
     }

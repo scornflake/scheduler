@@ -4,7 +4,7 @@ import * as _ from 'lodash';
 import {Logger} from "ionic-logging-service";
 import {dayAndHourForDate} from "../common/date-utils";
 import {RuleFacts} from "./rule-facts";
-import {SafeJSON} from "../../common/json/safe-stringify";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {Assignment} from "../assignment";
 import {Plan} from "../plan";
 import {LoggingWrapper} from "../../common/logging-wrapper";
@@ -57,8 +57,8 @@ class ScheduleWithRules {
         this.logger.debug("Schedule is " + schedule_duration + " days long");
 
         let role_groups = this.plan.roles_in_layout_order_grouped;
-        let role_names = role_groups.map(g => SafeJSON.stringify(g.map(r => r.name)));
-        this.logger.debug("Roles (in order of importance): " + SafeJSON.stringify(role_names));
+        let role_names = role_groups.map(g => SWBSafeJSON.stringify(g.map(r => r.name)));
+        this.logger.debug("Roles (in order of importance): " + SWBSafeJSON.stringify(role_names));
 
         this.facts.begin();
 
@@ -71,7 +71,7 @@ class ScheduleWithRules {
         this.facts.begin_new_role_group(role_group);
 
         let current_date = this.plan.start_date;
-        this.logger.debug("\r\nNext group: " + SafeJSON.stringify(role_group.map(r => r.name)));
+        this.logger.debug("\r\nNext group: " + SWBSafeJSON.stringify(role_group.map(r => r.name)));
 
         // Iterate through all dates
         let iterations = 0;

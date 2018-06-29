@@ -1,7 +1,7 @@
 import {FixedRoleOnDate, OnThisDate, UsageWeightedSequential, WeightedRoles} from "../../scheduling/rule_based/rules";
 import {Person} from "../../scheduling/people";
 import {RuleFacts} from "../../scheduling/rule_based/rule-facts";
-import {SafeJSON} from "../../common/json/safe-stringify";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {defaultSoundRole, SetupDefaultRoles} from "../sample-data";
 import {Plan} from "../../scheduling/plan";
 import {Assignment} from "../../scheduling/assignment";
@@ -59,7 +59,7 @@ describe('rules', () => {
         state.place_person_in_role(neil_assign, defaultSoundRole, next_date);
 
         let dates = state.schedule_dates;
-        console.log("Have: " + SafeJSON.stringify(dates));
+        console.log("Have: " + SWBSafeJSON.stringify(dates));
         for (let schedule of dates) {
             console.log(`${schedule.date.toDateString()} - ${schedule.valueOf()}`);
         }

@@ -1,4 +1,4 @@
-import {Component, Input} from '@angular/core';
+import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
 import {Person} from "../../scheduling/people";
 
 import {Unavailability} from "../../scheduling/unavailability";
@@ -7,7 +7,8 @@ import {CalendarComponent} from "../swbcalendar/swbcalendar";
 
 @Component({
     selector: 'person-unavailable',
-    templateUrl: 'person-unavailable.html'
+    templateUrl: 'person-unavailable.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PersonUnavailableComponent {
     @Input() title = 'Unavailable';

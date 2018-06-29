@@ -5,7 +5,7 @@ import {GetTheTypeNameOfTheObject, OrmMapper} from "../mapping/orm-mapper";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {observable} from "mobx-angular";
 import {TypedObject} from "../../scheduling/base-types";
-import {SafeJSON} from "../../common/json/safe-stringify";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 
 @Injectable()
 class StoreBasedResolver implements IReferenceResolver {
@@ -44,10 +44,10 @@ class StoreBasedResolver implements IReferenceResolver {
 
     async async_lookupMapOfReferenceValues(mapping: PropertyMapping, mapWithReferenceValues: any, nesting: number = 0) {
         let result_map = new Map<any, any>();
-        this.utils.debug(`_lookup_map_of_reference_values received a value of ${SafeJSON.stringify(mapWithReferenceValues)}`, nesting);
+        this.utils.debug(`_lookup_map_of_reference_values received a value of ${SWBSafeJSON.stringify(mapWithReferenceValues)}`, nesting);
 
         let reference_keys = Object.keys(mapWithReferenceValues);
-        this.utils.debug(`_lookup_map_of_reference_values keys ${SafeJSON.stringify(reference_keys)}`, nesting);
+        this.utils.debug(`_lookup_map_of_reference_values keys ${SWBSafeJSON.stringify(reference_keys)}`, nesting);
         for (let key of reference_keys) {
             let reference = mapWithReferenceValues["" + key];
             let typeName = GetTheTypeNameOfTheObject(reference);

@@ -5,7 +5,7 @@ import {SplashScreen} from '@ionic-native/splash-screen';
 import {HomePage} from "../pages/home/home";
 import {SchedulerServer} from "../providers/server/scheduler-server.service";
 import {computed} from "mobx-angular";
-import {autorun, trace} from "mobx";
+import {autorun} from "mobx";
 import {isUndefined} from "util";
 
 @Component({
@@ -31,7 +31,6 @@ export class MyApp {
             // Here you can do any higher level native things you might need.
             this.statusBar.styleDefault();
             this.splashScreen.hide();
-
         });
     }
 
@@ -43,7 +42,7 @@ export class MyApp {
         // Work out the groups, based on current state.
         // If the logged in state changes, autorun should re-work out the groups
         autorun(() => {
-            trace();
+            // trace();
             this.frozenGroups = this.evaluateGroups(this.groups);
         }, {
             name: 'work out the menus'

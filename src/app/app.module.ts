@@ -31,7 +31,7 @@ import {SchedulerServer} from "../providers/server/scheduler-server.service";
 import {setupOrmMapper} from "../providers/mapping/setup";
 import {MobxAngularModule} from "mobx-angular";
 import {ResponsiveConfig, ResponsiveModule} from "ng2-responsive";
-import {NetworkUtils} from "../common/network/nework";
+import {ConnectivityService} from "../common/network/connectivity";
 import {Network} from "@ionic-native/network";
 
 let config = {
@@ -100,7 +100,7 @@ export function ResponsiveDefinition() {
         {provide: ErrorHandler, useClass: IonicErrorHandler},
         PageUtils,
         LoggingService,
-        NetworkUtils,
+        ConnectivityService,
         GAPIS,
         RESTServer,
         [{

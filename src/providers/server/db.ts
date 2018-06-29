@@ -3,7 +3,7 @@ import PouchDBFind from 'pouchdb-find';
 import {Logger} from "ionic-logging-service";
 import {NamedObject, ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
 import 'reflect-metadata';
-import {SafeJSON} from "../../common/json/safe-stringify";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {isUndefined} from "util";
 import {ObjectChange, ObjectChangeTracker} from "../mapping/orm-change-detection";
@@ -191,7 +191,7 @@ class SchedulerDatabase implements IObjectStore {
 
         try {
             let doc = await this.db.get(id);
-            this.logger.debug(`Doc for loaded object: ${SafeJSON.stringify(doc)}`);
+            this.logger.debug(`Doc for loaded object: ${SWBSafeJSON.stringify(doc)}`);
             if (doc['type']) {
                 let object_type = doc['type'];
                 this.persistence_debug(`load object ${id}, type: ${object_type}`, nesting);
@@ -306,7 +306,7 @@ class SchedulerDatabase implements IObjectStore {
                 this.trackChanges(object);
                 return object;
             } catch (err) {
-                this.logger.debug(`Failed to store entity. Err: ${err}. Data: ${SafeJSON.stringify(dict_of_object)}`);
+                this.logger.debug(`Failed to store entity. Err: ${err}. Data: ${SWBSafeJSON.stringify(dict_of_object)}`);
                 throw Error(`Exception while storing ${object_state} ${object.type}. ${err}. id: ${object.uuid}. Tried to store: ${JSON.stringify(dict_of_object)}`);
             }
         } finally {
@@ -341,7 +341,7 @@ class SchedulerDatabase implements IObjectStore {
             let type = doc['type'];
             if (!type) {
                 this.logger.error(`ERROR processing doc ID: ${docId}. No TYPE information. This was skipped.`);
-                this.logger.error(`DOC was: ${SafeJSON.stringify(doc)}`);
+                this.logger.error(`DOC was: ${SWBSafeJSON.stringify(doc)}`);
                 continue;
             }
             let new_object = null;
@@ -355,7 +355,7 @@ class SchedulerDatabase implements IObjectStore {
                 }
             } catch (err) {
                 this.logger.error(`ERROR creating JS from dict, doc ID: ${docId}, ${err}`);
-                this.logger.error(`DOC was: ${SafeJSON.stringify(doc)}`);
+                this.logger.error(`DOC was: ${SWBSafeJSON.stringify(doc)}`);
             } finally {
                 this.tracker.enableTrackingFor(docId);
             }

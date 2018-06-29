@@ -11,7 +11,7 @@ import {ObjectWithUUID} from "../../scheduling/base-types";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {isUndefined} from "util";
-import {SafeJSON} from "../../common/json/safe-stringify";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {Subject} from "rxjs/Subject";
 import {GetTheTypeNameOfTheObject, OrmMapper} from "./orm-mapper";
 import {MappingType, NameForMappingPropType} from "./orm-mapper-type";
@@ -53,7 +53,7 @@ const defaultLoggingChangeListener: ChangeListener = (aChange) => {
             break;
         }
         default: {
-            msg += ` UNKNOWN TYPE - Change is: ${SafeJSON.stringify(change)}`;
+            msg += ` UNKNOWN TYPE - Change is: ${SWBSafeJSON.stringify(change)}`;
         }
     }
     console.debug(msg);

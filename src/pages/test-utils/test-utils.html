@@ -1,6 +1,6 @@
 <ion-header>
     <ion-navbar>
-        <ion-title>Testing Utils</ion-title>
+        <ion-title>Various Things</ion-title>
     </ion-navbar>
     <saving-state></saving-state>
 </ion-header>
@@ -11,8 +11,17 @@
         <ion-list>
             <ion-list-header color="light">Network</ion-list-header>
             <ion-item>
-                <ion-label>Online</ion-label>
-                <ion-toggle [ngModel]="netUtil.isOnline"></ion-toggle>
+                <ion-label>
+                    Online <p class="crowded">Read only</p>
+                </ion-label>
+                <ion-toggle [ngModel]="netUtil.network$|async"></ion-toggle>
+            </ion-item>
+            <ion-item>
+                <ion-label>
+                    Force 'offline'
+                    <p class="crowded">Force the app to think its offline</p>
+                </ion-label>
+                <ion-toggle [(ngModel)]="netUtil.overrideEnabled"></ion-toggle>
             </ion-item>
             <ion-item>
                 <ion-label>Network Type</ion-label>
@@ -23,7 +32,7 @@
                     Browser
                     <p class="crowded">aka we're <b>not native</b>?</p>
                 </ion-label>
-                <ion-toggle [ngModel]="netUtil.isBrowser"></ion-toggle>
+                <ion-toggle [ngModel]="netUtil.onBrowser"></ion-toggle>
             </ion-item>
             <ion-item>
                 <h2>Platforms</h2>

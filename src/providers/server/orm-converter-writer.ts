@@ -1,7 +1,7 @@
 import {IObjectStore, MappingType, NameForMappingPropType, PropertyMapping} from "../mapping/orm-mapper-type";
 import {ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
 import {GetTheTypeNameOfTheObject, OrmMapper} from "../mapping/orm-mapper";
-import {SafeJSON} from "../../common/json/safe-stringify";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {OrmUtils} from "./orm-utils";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
@@ -108,7 +108,7 @@ class OrmConverterWriter {
 
 
     private async _asyncConvertToNestedObjectListOfDict(mapping: any, value: any, nesting: number = 0) {
-        this.utils.debug(`_convert_to_nested_object_list_of_dict: Nested object list: ${SafeJSON.stringify(value)}`, nesting);
+        this.utils.debug(`_convert_to_nested_object_list_of_dict: Nested object list: ${SWBSafeJSON.stringify(value)}`, nesting);
         if (GetTheTypeNameOfTheObject(value) == "array") {
             let type_names = Array.from(new Set(value.map(v => v.constructor.name))).join(",");
             this.utils.debug(`convert nested list of ${value.length} items, types: ${type_names}`, nesting);
@@ -168,7 +168,7 @@ class OrmConverterWriter {
             for (let mapKey of jsMapKeys) {
                 let db_key = this.mapper.convertJSValueToDocValue(mapKey, mapping);
                 if (isUndefined(db_key) || db_key == null || db_key == "") {
-                    throw new Error(`Cannot convert key:${mapKey} to db key (came back ${db_key}). Mapping is: ${JSON.stringify(mapping)}. The keys were: ${SafeJSON.stringify(jsMapKeys)}`);
+                    throw new Error(`Cannot convert key:${mapKey} to db key (came back ${db_key}). Mapping is: ${JSON.stringify(mapping)}. The keys were: ${SWBSafeJSON.stringify(jsMapKeys)}`);
                 }
                 let value = jsMapObject.get(mapKey);
 

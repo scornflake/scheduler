@@ -3,8 +3,7 @@ import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
 import {RootStore} from "../../store/root";
 import {Person} from "../../scheduling/people";
 import {ScheduleAtDate} from "../../scheduling/shared";
-import {SafeJSON} from "../../common/json/safe-stringify";
-import {computed, observable} from "mobx-angular";
+import {computed} from "mobx-angular";
 
 @Component({
     selector: 'person-schedule',
@@ -12,7 +11,7 @@ import {computed, observable} from "mobx-angular";
 })
 export class PersonScheduleComponent {
     @Input() schedule: ScheduleWithRules;
-    @observable @Input() person: Person;
+    @Input() person: Person;
 
     constructor(public store: RootStore) {
     }

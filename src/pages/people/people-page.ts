@@ -30,6 +30,7 @@ export class PeoplePage {
         this.navCtrl.push('PersonDetailsPage', {person: person})
     }
 
+
     ngAfterViewInit() {
         // for debug
         // this.add_new_person();

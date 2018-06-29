@@ -10,7 +10,7 @@ import {Plan} from "../../scheduling/plan";
 import {Team} from "../../scheduling/teams";
 import {defaultSoundRole} from "../sample-data";
 import {csd} from "../../scheduling/common/date-utils";
-import {SafeJSON} from "../../common/json/safe-stringify";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {SimpleCache} from "../../providers/mapping/cache";
 
 class SomeThing extends ObjectWithUUID {
@@ -50,7 +50,7 @@ describe('observation', () => {
         expect(store.ui_store.preferences).not.toBeNull();
 
         store.preferences$.subscribe(ss => {
-            console.log(`subscriber got ${SafeJSON.stringify(ss)}`);
+            console.log(`subscriber got ${SWBSafeJSON.stringify(ss)}`);
             if (ss) {
                 if (ss.selected_plan_uuid == "1234") {
                     done();

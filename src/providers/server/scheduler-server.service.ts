@@ -1,7 +1,7 @@
 import {RootStore} from "../../store/root";
 import {RESTServer} from "./server";
 import {LoginResponse, UserResponse, ValidationResponse} from "../../common/interfaces";
-import {SafeJSON} from "../../common/json/safe-stringify";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {Person} from "../../scheduling/people";
@@ -129,7 +129,7 @@ class SchedulerServer implements ILifecycle {
     async validateLoginToken(token: string): Promise<ValidationResponse> {
         // If no 'person uuid', need to login
         await this.asyncLoadState();
-        this.logger.info(`Validating login token: ${SafeJSON.stringify(token)}`);
+        this.logger.info(`Validating login token: ${SWBSafeJSON.stringify(token)}`);
 
         let vr = await this.restAPI.validateLoginToken(token);
 
@@ -352,7 +352,7 @@ class SchedulerServer implements ILifecycle {
         let vr = await this.validateLoginToken(this.state.loginToken);
         if (!vr.ok) {
             this.logger.debug('asyncRunStartupLifecycle', `Login token invalid, show login page`);
-            callback.showLoginPage(`Login token invalid: ${SafeJSON.stringify(vr)}`);
+            callback.showLoginPage(`Login token invalid: ${SWBSafeJSON.stringify(vr)}`);
             return false;
         }
 

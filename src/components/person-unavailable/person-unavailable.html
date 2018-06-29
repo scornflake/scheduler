@@ -11,7 +11,7 @@
     {{title}}
 </ion-list-header>
 
-<ion-item-group>
+<ion-item-group *mobxAutorun>
     <ion-list>
         <ion-item-sliding *ngFor="let u of unavailability">
             <ion-item *xs>

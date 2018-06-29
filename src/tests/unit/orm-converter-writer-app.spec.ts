@@ -5,7 +5,7 @@ import {
     ScheduleOn,
     TryToScheduleWith
 } from "../../scheduling/rule_based/rules";
-import {SafeJSON} from "../../common/json/safe-stringify";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {csd} from "../../scheduling/common/date-utils";
 import {Team} from "../../scheduling/teams";
 import {Plan} from "../../scheduling/plan";

@@ -1,7 +1,7 @@
 import {isArray, isUndefined} from "util";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
-import {SafeJSON} from "../../common/json/safe-stringify";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {ObjectWithUUID} from "../../scheduling/base-types";
 import {configure, isObservableArray, isObservableMap, isObservableObject} from "mobx";
 import {
@@ -115,7 +115,7 @@ class OrmMapper {
                         if (cm.inherit) {
                             let inheritedProps = this.propertiesFor(cm.inherit);
                             inherited = Array.from(inheritedProps.keys());
-                            this.logger.debug(`Inherited properties: ${SafeJSON.stringify(inherited)}`);
+                            this.logger.debug(`Inherited properties: ${SWBSafeJSON.stringify(inherited)}`);
                         }
                         actual_properties.forEach((key: string) => {
                             // If it starts with an _, assume it is private. Take it out (we'll discover private as part of sanitize_field)
@@ -136,7 +136,7 @@ class OrmMapper {
                                 fields.push(this.sanitize_field(cm, field, actual_properties, verify_property_names));
                             }
                         });
-                        this.logger.debug(`Fields = '*', discovered: ${SafeJSON.stringify(field)}`);
+                        this.logger.debug(`Fields = '*', discovered: ${SWBSafeJSON.stringify(field)}`);
                         cm.fields = fields;
                     } else {
                         this.logger.debug(` prop ${cm.name}.${field.name}`);

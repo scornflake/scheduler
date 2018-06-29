@@ -2,7 +2,7 @@ import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../../sched
 import includes from 'lodash/includes';
 import {CSVExporter} from "../../scheduling/exporter/csv.exporter";
 import {addDaysToDate, constructSensibleDate} from "../../scheduling/common/date-utils";
-import {SafeJSON} from "../../common/json/safe-stringify";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {Person} from "../../scheduling/people";
 import {
     defaultAcousticGuitar,
@@ -182,7 +182,7 @@ describe('role scheduler', () => {
         let all_scheduled = Array.from(schedule.dates.values());
         // console.log("ALL: " + SafeJSON.stringify(all_scheduled));
         let dates_with_neil = all_scheduled.filter(sad => {
-            console.log("Check: " + SafeJSON.stringify(sad));
+            console.log("Check: " + SWBSafeJSON.stringify(sad));
             return includes(sad.people, neil);
         });
 

@@ -3,7 +3,7 @@ import {Person} from "../../scheduling/people";
 import {ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
 import {MockConfigurationService} from "../../app/logging-configuration";
 import {observable} from "mobx";
-import {SafeJSON} from "../../common/json/safe-stringify";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {scheduler_db_map} from "../../assets/db.mapping";
 import {
     ClassFieldMapping,
@@ -205,7 +205,7 @@ describe('db', () => {
                 };
                 converter.reader.async_createJSObjectFromDoc(dict, 'SimpleWithDate').then((newObj: SimpleWithDate) => {
                     expect(newObj.some_date).toEqual(csd(1992, 11, 9));
-                    console.log(`Got object: ${SafeJSON.stringify(newObj)}`);
+                    console.log(`Got object: ${SWBSafeJSON.stringify(newObj)}`);
                     done();
                 });
             });
@@ -323,7 +323,7 @@ describe('db', () => {
                 converter.writer.async_createDocFromJSObject(thePlan).then(dict => {
                     // console.log(`made a dict for the Plan: ${JSON.stringify(dict)}...`);
                     converter.reader.async_createJSObjectFromDoc(dict, 'Plan').then((jsObject: Plan) => {
-                        console.log(`Reconstruction: ${SafeJSON.stringify(jsObject)}`);
+                        console.log(`Reconstruction: ${SWBSafeJSON.stringify(jsObject)}`);
 
                         expect(jsObject.name).toEqual(thePlan.name);
                         expect(jsObject.uuid).toEqual(thePlan.uuid);
@@ -605,12 +605,12 @@ describe('db', () => {
             someThingsMap[mapper.referenceForObject(someEntity2)] = 3;
 
             converter.reader.async_createJSObjectFromDoc(doc, doc['type']).then((js: ThingWithMapOfReferenceKeys) => {
-                console.log(`JS Object: ${SafeJSON.stringify(js)}`);
+                console.log(`JS Object: ${SWBSafeJSON.stringify(js)}`);
                 expect(js.type).toBe('ThingWithMapOfReferenceKeys');
                 let someThings = js.some_things;
 
                 let theKeys = Array.from(someThings.keys());
-                console.log(`JS Things: ${SafeJSON.stringify(someThings)}. Length: ${theKeys.length}`);
+                console.log(`JS Things: ${SWBSafeJSON.stringify(someThings)}. Length: ${theKeys.length}`);
                 expect(theKeys.length).toBe(3);
 
                 expect(someThings.get(someEntity)).toBe(1);
@@ -690,7 +690,7 @@ describe('db', () => {
                         expect(loaded_object).not.toBeNull();
 
                         // should have a map, with dates
-                        console.log(`Got back loaded mappy thing: ${SafeJSON.stringify(loaded_object)}`);
+                        console.log(`Got back loaded mappy thing: ${SWBSafeJSON.stringify(loaded_object)}`);
                         expect(loaded_object.some_things.size).toEqual(2);
 
                         // expect the field to be a Map object instance
@@ -732,12 +732,12 @@ describe('db', () => {
         it('can load a simple single object with uuid', (done) => {
             let an_entity = new SomeEntity();
             db.async_storeOrUpdateObject(an_entity).then((saved_object) => {
-                console.log(`Response from store: ${SafeJSON.stringify(saved_object)}`);
+                console.log(`Response from store: ${SWBSafeJSON.stringify(saved_object)}`);
                 let obj_id = saved_object._id;
                 console.log(`ID should be: ${obj_id}, with returned type: ${saved_object.constructor.name}`);
 
                 db.async_LoadObjectWithUUID(obj_id).then(loaded_entity => {
-                    console.log(`Response from load: ${SafeJSON.stringify(loaded_entity)}`);
+                    console.log(`Response from load: ${SWBSafeJSON.stringify(loaded_entity)}`);
                     expect(loaded_entity.uuid).toEqual(an_entity.uuid);
                     done();
                 });
@@ -752,7 +752,7 @@ describe('db', () => {
             db.async_storeOrUpdateObject(instance).then(() => {
                 // load it and check we get it back
                 db.async_LoadObjectWithUUID(instance.uuid).then((loaded_instance: ThingWithNestedObjects) => {
-                    console.log(`Got back a loaded object: ${SafeJSON.stringify(loaded_instance)}`);
+                    console.log(`Got back a loaded object: ${SWBSafeJSON.stringify(loaded_instance)}`);
                     expect(loaded_instance.uuid).toEqual(instance.uuid);
                     expect(loaded_instance.my_list.length).toEqual(3);
 
@@ -818,7 +818,7 @@ describe('db', () => {
                     db.async_storeOrUpdateObject(team).then(() => {
 
                         db.async_LoadObjectWithUUID(team.uuid).then((loaded_team: Team) => {
-                            console.log(`Got back team: ${SafeJSON.stringify(loaded_team)}`);
+                            console.log(`Got back team: ${SWBSafeJSON.stringify(loaded_team)}`);
                             expect(loaded_team.people.length).toEqual(2);
                             expect(['neil', 'bob']).toContain(loaded_team.people[0].name);
                             expect(['neil', 'bob']).toContain(loaded_team.people[1].name);
@@ -837,13 +837,13 @@ describe('db', () => {
             expect(me.unavailable).toEqual([]);
 
             converter.writer.async_createDocFromJSObject(me).then(dict_obj => {
-                console.log(`I made: ${SafeJSON.stringify(dict_obj)}`);
+                console.log(`I made: ${SWBSafeJSON.stringify(dict_obj)}`);
 
                 converter.reader.async_createJSObjectFromDoc(dict_obj, 'Person').then((reconstructed_js_obj: Person) => {
                     // need to make this the same this for the equal to work
                     reconstructed_js_obj['_rev'] = undefined;
 
-                    console.log(`I loaded: ${SafeJSON.stringify(reconstructed_js_obj)}`);
+                    console.log(`I loaded: ${SWBSafeJSON.stringify(reconstructed_js_obj)}`);
                     // noinspection SuspiciousInstanceOfGuard
                     expect(reconstructed_js_obj instanceof Person).toBeTruthy();
                     expect(reconstructed_js_obj.name).toEqual(me.name);
@@ -922,7 +922,7 @@ describe('db', () => {
             ]
         };
         db.convert_docs_to_objects_and_store_in_cache([doc]).then(arrayOfObjs => {
-            console.log(`well, we got: ${SafeJSON.stringify(arrayOfObjs)}`);
+            console.log(`well, we got: ${SWBSafeJSON.stringify(arrayOfObjs)}`);
             expect(arrayOfObjs.length).toBe(1);
             let firstAssign = arrayOfObjs[0] as Assignment;
             expect(firstAssign.person).not.toBeFalsy();
