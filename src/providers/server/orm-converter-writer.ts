@@ -8,6 +8,8 @@ import {Logger} from "ionic-logging-service";
 import {isUndefined} from "util";
 
 class OrmConverterWriter {
+    ignoreOldObjectsWhenUpdating: boolean = false;
+
     private logger: Logger;
     private utils: OrmUtils;
 
@@ -65,9 +67,14 @@ class OrmConverterWriter {
         let reference = this.mapper.referenceForObject(obj);
         let exists = await this.objectLoader.async_DoesObjectExistWithUUID(obj.uuid);
         if (!exists) {
-            // If the doc was NOT new, it means we have an 'old/existing' object that no longer exists.
+            // If the doc was NOT new, it means we have an 'old/existing' object that isn't in the DB.
+            //
+            // For tests, this is possible because an object such as a role could be created, used across a few tests (where the test deletes the DB)
+            // but is still in memory (with is_new === false) for the next test.
+            // The 'ignoreOldObjectsWhenUpdating' flag is here JUST for this reason.
+            //
             // At this present time, fail, and we'll see what this means later (with more use)
-            if (!obj.is_new) {
+            if (!obj.is_new && !this.ignoreOldObjectsWhenUpdating) {
                 throw new Error(`The referenced object ${obj.type}/${obj} was not new, it means you have an 'old/existing' object in your graph that no longer exists in the DB.`);
             }
 

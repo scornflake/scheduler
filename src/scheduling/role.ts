@@ -1,5 +1,5 @@
 import {NamedObject} from "./base-types";
-import {observable} from "mobx-angular";
+import {action, observable} from "mobx-angular";
 
 class Role extends NamedObject {
     @observable minimum_needed: number;
@@ -14,6 +14,10 @@ class Role extends NamedObject {
         this.maximum_wanted = maximum;
         this.layout_priority = layout_priority;
         this.display_order = layout_priority;
+    }
+
+    @action setLayoutPriority(val: number) {
+        this.layout_priority = val;
     }
 
     get required(): boolean {

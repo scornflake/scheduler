@@ -8,6 +8,7 @@ import {LoggingWrapper} from "../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {IDependencyTree, IObserverTree} from "mobx";
 import {ILifecycleCallback} from "../providers/server/interfaces";
+import {ServerError} from "../common/interfaces";
 
 
 @Injectable()
@@ -31,7 +32,7 @@ class PageUtils implements OnInit {
         return this.platform.width() <= 576;
     }
 
-    public showError(message: string, stayOpen: boolean = false) {
+    public showError(message: string | ServerError, stayOpen: boolean = false) {
         this.show_alert(message, {cssClass: 'validation'}, stayOpen);
     }
 
@@ -63,7 +64,10 @@ class PageUtils implements OnInit {
     }
 
 
-    private show_alert(message, more_options: ToastOptions, stay_open: boolean = false) {
+    private show_alert(message: string | ServerError, more_options: ToastOptions, stay_open: boolean = false) {
+        if (message instanceof ServerError) {
+            message = message.humanReadable;
+        }
         let options = {
             message: message,
             showCloseButton: stay_open

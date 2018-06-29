@@ -1,20 +1,8 @@
 TODO
 ====
 - Offline. Close server. Get app to startup.
-    - How to detect?
-    - Cases:
-        - Start app first time, *must* be connected
-        - Start app after logged in, *can be disconnected, entirely*
-        - Start app
-            - Check tokens, if don't have, go to login/sign up, at this point MUST be online
-            - If have, then:
-                - if offline can't validate the token. Assume it's OK.
-                - load pouch db.
-                - do stuff. assume all is Ok.
-                - Variant on this is that if we have the token, load immediately. Validation should occur in the background.
-                    - If validation fails for real, ok, fault
-                    - If it fails because of no connection, then shrug shoulders and continue
-        - Using app
+    - How to detect? [done]
+    - Case where have connection, but server is offline. That 'known' error should result in continue...
 - Get sign in / reg lifecycle going (done?)
   - Don't auto sign in as me :)
   - The various pages should be nicer

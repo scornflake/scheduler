@@ -29,6 +29,7 @@ describe('scheduler server', () => {
     let createServerWithStorage = (storage): Promise<SchedulerServer> => {
 
         let connectivityServiceMock = mock(ConnectivityService);
+        when(connectivityServiceMock.isOnline).thenReturn(true);
 
         server = new SchedulerServer(store, restServer, storage, instance(connectivityServiceMock), mapper, MockConfigurationService.ServiceForTests());
         store = new RootStore(null);
@@ -74,6 +75,27 @@ describe('scheduler server', () => {
         });
     });
 
+    it('ServerError for no-HTTP should say so', function () {
+        let err = {
+            "headers": {
+                "normalizedNames": {},
+                "lazyUpdate": null,
+                "headers": {}
+            },
+            "status": 0,
+            "statusText": "Unknown Error",
+            "url": null,
+            "ok": false,
+            "name": "HttpErrorResponse",
+            "message": "Http failure response for (unknown url): 0 Unknown Error",
+            "error": {
+                "isTrusted": true
+            }
+        };
+        let se = new ServerError(err);
+        expect(se.isHTTPServerNotThere).toBeTruthy();
+    });
+
     it('should turn errors into ServerErrors', function () {
         let aRealError = {
             "headers": {"normalizedNames": {}, "lazyUpdate": null},
@@ -98,7 +120,7 @@ describe('scheduler server', () => {
 
     describe('test SchedulerServer lifecycle', () => {
         let showedLoginPage: boolean = false;
-        let lastShownError: string = null;
+        let lastShownError = null;
 
         let lifecycleCallback = <ILifecycleCallback>{
             showLoginPage: (reason: string) => {
@@ -134,6 +156,7 @@ describe('scheduler server', () => {
                 expect(server.state).not.toBeUndefined();
                 expect(server.state.loginToken).toBeNull();
                 expect(server.state.lastPersonUUID).toBeNull();
+                expect(server.state.isForcedOffline).toBeFalsy();
                 expect(showedLoginPage).toBeTruthy();
                 done();
             })
@@ -143,7 +166,8 @@ describe('scheduler server', () => {
             let state: IState = {
                 loginToken: "12345",
                 lastPersonUUID: null,
-                lastOrganizationUUID: null
+                lastOrganizationUUID: null,
+                isForcedOffline: false
             };
             storageMock = StorageMock.instance('state', state);
 
@@ -163,7 +187,8 @@ describe('scheduler server', () => {
             let state: IState = {
                 loginToken: "12345",
                 lastPersonUUID: null,
-                lastOrganizationUUID: null
+                lastOrganizationUUID: null,
+                isForcedOffline: false
             };
 
             userResponse.logintoken = state.loginToken;
@@ -192,7 +217,8 @@ describe('scheduler server', () => {
             let state: IState = {
                 loginToken: userResponse.logintoken,
                 lastPersonUUID: personInDB.uuid,
-                lastOrganizationUUID: "abcdefg"
+                lastOrganizationUUID: "abcdefg",
+                isForcedOffline: false
             };
 
             expect(state.lastPersonUUID).not.toBeFalsy();
@@ -214,25 +240,40 @@ describe('scheduler server', () => {
             });
         }, 3000);
 
-        xit('should not run cycle twice, aka: able to detect that it is ok', function () {
+        it('should not run cycle twice, aka: able to detect that it is ok', function (done) {
             // This is a bit of a fudge.
             // We put the server into a state where it thinks it's logged in OK.
             // We want to ensure that it's not actually going to reload/reassign the DB
             // if the current user token remains valid.
 
+            let state: IState = {
+                loginToken: userResponse.logintoken,
+                lastPersonUUID: "!2345",
+                lastOrganizationUUID: "abcdefg",
+                isForcedOffline: false
+            };
 
+            expect(state.lastPersonUUID).not.toBeFalsy();
+            storageMock = StorageMock.instance('state', state);
+            createServerWithStorage(storageMock).then(server => {
+                server.asyncLoadState().then(() => {
+                    expect(server.hasStateChangedSinceLastLifecycleRun()).toBeTruthy();
+                    server.captureStateAsPrevious();
+                    expect(server.hasStateChangedSinceLastLifecycleRun()).toBeFalsy();
+
+                    // if we change the force flag, that shouldnt affect the comparison.
+                    server.state.isForcedOffline = true;
+                    expect(server.hasStateChangedSinceLastLifecycleRun()).toBeFalsy();
+
+                    done();
+                });
+            });
         });
 
         it('should lookup the person from the DB if login token and person UUID are valid', function (done) {
             let personInDB = new Person("Hey its ME!");
             userResponse.uuid = personInDB.uuid;
             userResponse.organization_uuid = "testing9876";
-
-            let state: IState = {
-                loginToken: "12345",
-                lastPersonUUID: personInDB.uuid,
-                lastOrganizationUUID: "testing9876"
-            };
 
             let dbMock = mock(SchedulerDatabase);
 

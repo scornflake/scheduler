@@ -31,21 +31,11 @@ export declare type FieldErrors = {
 };
 
 export class ServerError {
-    status: number;
-    ok: number;
-    message: string;
     errors: FieldErrors[];
+    originalError: any;
 
     constructor(serverError: any) {
-        if (serverError['status']) {
-            this.status = serverError['status'];
-        }
-        if (serverError['ok']) {
-            this.ok = serverError['ok'];
-        }
-        if (serverError['message']) {
-            this.message = serverError['message'];
-        }
+        this.originalError = serverError;
         if (serverError['error']) {
             this.errors = [];
             for (let key of Object.keys(serverError['error'])) {
@@ -54,6 +44,51 @@ export class ServerError {
             }
         }
     }
+
+    returnNamedField(fieldName: string, defaultValue: any = null) {
+        let names: string[] = Object.getOwnPropertyNames(this.originalError);
+        if (names.find(v => v == fieldName)) {
+            return this.originalError[fieldName];
+        }
+        // console.log(`No field named ${fieldName} in [${names}], returning default value: ${defaultValue}`);
+        return defaultValue;
+    }
+
+    get name(): string {
+        return this.returnNamedField('name')
+    }
+
+    get status(): number {
+        return this.returnNamedField('status')
+    }
+
+    get ok(): boolean {
+        return this.returnNamedField('ok')
+    }
+
+    get message(): string {
+        return this.returnNamedField('message')
+    }
+
+    get isHTTPServerNotThere(): boolean {
+        return !this.ok && this.status === 0;
+    }
+
+    get humanReadable(): string {
+        let parts = [];
+        if (this.message) {
+            parts.push(this.message)
+        } else {
+            if (this.name) {
+                parts.push(this.name);
+            }
+        }
+        if (this.status) {
+            parts.push(`(status ${this.status})`)
+        }
+        return parts.join(", ")
+    }
+
 
     get allErrors(): string {
         let all = "";
@@ -64,6 +99,10 @@ export class ServerError {
             all += err.errors.join(", ");
         }
         return all;
+    }
+
+    valueOf() {
+        return this.humanReadable;
     }
 }
 

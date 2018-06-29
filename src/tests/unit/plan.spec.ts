@@ -66,9 +66,9 @@ describe('service', () => {
         plan.assignmentFor(tim).addRole(defaultAcousticGuitar);
         plan.assignmentFor(cherilyn).addRole(defaultLeaderRole);
 
-        defaultSoundRole.layout_priority = 1;
-        defaultAcousticGuitar.layout_priority = 1;
-        defaultLeaderRole.layout_priority = 2;
+        defaultSoundRole.setLayoutPriority(1);
+        defaultAcousticGuitar.setLayoutPriority(1);
+        defaultLeaderRole.setLayoutPriority(2);
         plan.addRole(defaultSoundRole);
         plan.addRole(defaultAcousticGuitar);
         plan.addRole(defaultLeaderRole);

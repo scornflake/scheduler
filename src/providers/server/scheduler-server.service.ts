@@ -1,6 +1,6 @@
 import {RootStore} from "../../store/root";
 import {RESTServer} from "./server";
-import {LoginResponse, UserResponse, ValidationResponse} from "../../common/interfaces";
+import {LoginResponse, ServerError, UserResponse, ValidationResponse} from "../../common/interfaces";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
@@ -19,7 +19,6 @@ import {catchError, debounceTime, filter, flatMap, map, take, timeout} from "rxj
 import {ConfigurationService} from "ionic-configuration-service";
 import "rxjs/add/observable/fromPromise";
 import "rxjs/add/observable/interval";
-import {ObjectUtils} from "../../pages/page-utils";
 import {isDefined} from "ionic-angular/util/util";
 import {reaction, runInAction} from "mobx";
 import {ILifecycle, ILifecycleCallback} from "./interfaces";
@@ -34,7 +33,6 @@ interface IState {
     lastOrganizationUUID: string;
     isForcedOffline: boolean;
 }
-
 
 @Injectable()
 class SchedulerServer implements ILifecycle {
@@ -143,11 +141,13 @@ class SchedulerServer implements ILifecycle {
         this.logger.info(`Validating login token: ${SWBSafeJSON.stringify(token)}`);
 
         this.raiseExceptionIfNotOnline('validateLoginToken');
-        let vr = await this.restAPI.validateLoginToken(token);
-
-        this.setLoginTokenFromUserResponse(vr.ok, vr.user);
-
-        return vr;
+        try {
+            let vr = await this.restAPI.validateLoginToken(token);
+            this.setLoginTokenFromUserResponse(vr.ok, vr.user);
+            return vr;
+        } catch (e) {
+            throw new ServerError(e);
+        }
     }
 
     async hasEmailBeenConfirmed(email: string): Promise<boolean> {
@@ -312,7 +312,7 @@ class SchedulerServer implements ILifecycle {
         return await this._db.async_LoadObjectWithUUID(uuid, useCache) as T;
     }
 
-    private async asyncLoadState(): Promise<object> {
+    async asyncLoadState(): Promise<object> {
         if (this._state == null) {
             let newState = await this.storage.get(STATE_ROOT) || {
                 lastPersonUUID: null,
@@ -328,7 +328,7 @@ class SchedulerServer implements ILifecycle {
             this.logger.debug(`Loading state... ${JSON.stringify(this._state)}`);
 
             // Restore current state to the object
-            this.connectivity.overrideEnabled = this.state.isForcedOffline;
+            this.connectivity.setOverrideEnabled(this.state.isForcedOffline);
 
             // Listen to the connectivity service. If the flag to force it changes, save that here.
             reaction(() => {
@@ -347,6 +347,24 @@ class SchedulerServer implements ILifecycle {
         await this.storage.set(STATE_ROOT, this._state);
     }
 
+    hasStateChangedSinceLastLifecycleRun(): boolean {
+        let areSet = isDefined(this._previousState) && isDefined(this._state);
+        if (areSet) {
+            // Only want to compare some fields, not all
+            let orgSame = this._state.lastOrganizationUUID == this._previousState.lastOrganizationUUID;
+            let personSame = this._state.lastPersonUUID == this._previousState.lastPersonUUID;
+            let tokenSame = this._state.loginToken == this._previousState.loginToken;
+            if (orgSame && personSame && tokenSame) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    captureStateAsPrevious() {
+        this._previousState = Object.assign({}, this._state);
+    }
+
     /*
     Basic idea is that you do a this, optionally a login/create, then ALWAYS call this back.
     This method is the one thing that does setup, in order.
@@ -361,20 +379,9 @@ class SchedulerServer implements ILifecycle {
         await this.asyncLoadState();
 
         // If the state is the same, do nothing. As nothing has changed.
-        let areSet = isDefined(this._previousState) && isDefined(this._state);
-        if (areSet) {
-            // Only want to compare some fields, not all
-            let orgSame = this._state.lastOrganizationUUID == this._previousState.lastOrganizationUUID;
-            let personSame = this._state.lastPersonUUID == this._previousState.lastPersonUUID;
-            let tokenSame = this._state.loginToken == this._previousState.loginToken;
-            if (orgSame && personSame && tokenSame) {
-                this.logger.info('asyncRunStartupLifecycle', 'Ignored - the state hasnt changed');
-                return;
-            }
-        } else {
-            this.logger.warn(`One or the other of state isn't set. Running lifecycle.`);
+        if (this.hasStateChangedSinceLastLifecycleRun() === false) {
+            this.logger.info('asyncRunStartupLifecycle', 'Ignored - the state hasnt changed');
         }
-
 
         if (!this.state.loginToken) {
             this.logger.debug('asyncRunStartupLifecycle', `Login token null, show login page`);
@@ -384,12 +391,26 @@ class SchedulerServer implements ILifecycle {
 
         // Are we online? can we validate?
         if (this.connectivity.isOnline) {
-            let vr = await this.validateLoginToken(this.state.loginToken);
-            if (!vr.ok) {
-                this.logger.debug('asyncRunStartupLifecycle', `Login token invalid, show login page`);
-                callback.showLoginPage(`Login token invalid: ${SWBSafeJSON.stringify(vr)}`);
-                return false;
+            try {
+                let vr = await this.validateLoginToken(this.state.loginToken);
+                if (!vr.ok) {
+                    this.logger.debug('asyncRunStartupLifecycle', `Login token invalid, show login page`);
+                    callback.showLoginPage(`Login token invalid: ${SWBSafeJSON.stringify(vr)}`);
+                    return false;
+                }
+            } catch (err) {
+                if (err instanceof ServerError) {
+                    if (err.isHTTPServerNotThere) {
+                        this.logger.warn(`Assume server is toast (got back: ${err}`);
+                        // fall through and continue
+                    } else {
+                        callback.showError(err);
+                    }
+                } else {
+                    callback.showError(err);
+                }
             }
+
         } else {
             this.logger.warn(`We're offline. We have a token and we're gonna assume it is OK.`);
         }
@@ -417,7 +438,7 @@ class SchedulerServer implements ILifecycle {
             return false;
         }
 
-        this._previousState = Object.assign({}, this._state);
+        this.captureStateAsPrevious();
         return true;
     }
 
@@ -585,6 +606,7 @@ class SchedulerServer implements ILifecycle {
             this.logger.info(`We do... the default plan is: ${person.preferences.selected_plan_uuid}`);
         }
     }
+
 }
 
 export {

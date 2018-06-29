@@ -9,7 +9,7 @@ import {SWBSafeJSON} from "../json/safe-stringify";
 import {Observable} from "rxjs/Observable";
 import {distinctUntilChanged, map} from "rxjs/operators";
 import {Network} from "@ionic-native/network";
-import {computed, observable} from "mobx-angular";
+import {action, computed, observable} from "mobx-angular";
 import {runInAction} from "mobx";
 
 @Injectable()
@@ -19,11 +19,11 @@ class ConnectivityService implements OnDestroy {
     private connectionSubscription: Subscription;
     private disconnectionSubscription: Subscription;
 
-    @observable private _navigatorOnline: boolean;
+    @observable private _navigatorOnline: boolean = true;
     @observable private _overrideEnabled: boolean = false;
 
     constructor(private platform: Platform, private network: Network, private zone: NgZone) {
-        this.networkSubject = new BehaviorSubject<boolean>(false);
+        this.networkSubject = new BehaviorSubject<boolean>(true);
         this.logger = LoggingWrapper.getLogger('network');
 
         if (this.onDevice) {
@@ -70,10 +70,8 @@ class ConnectivityService implements OnDestroy {
         return this._overrideEnabled;
     }
 
-    set overrideEnabled(value: boolean) {
-        runInAction(() => {
-            this._overrideEnabled = value;
-        });
+    @action setOverrideEnabled(value: boolean) {
+        this._overrideEnabled = value;
         this.logger.debug(`'Online' override active: ${this._overrideEnabled}`);
         this.sendNetworkChange();
     }

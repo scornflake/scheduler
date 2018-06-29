@@ -56,6 +56,7 @@ describe('app based tests', () => {
             db.setCache(cache);
 
             converter = db.converter;
+            converter.writer.ignoreOldObjectsWhenUpdating = true;
 
             soundRoleRef = mapper.referenceForObject(defaultSoundRole);
             computerRoleRef = mapper.referenceForObject(defaultComputerRole);
@@ -208,6 +209,18 @@ describe('app based tests', () => {
             }]
         };
 
+        /*
+        Put some data in place for the resolver
+         */
+
+        let firstPerson = new Person('first', "a70093d6-72e0-5fa0-cfd1-83b39958e7a9");
+        cache.saveInCache(firstPerson);
+        let secondPerson = new Person('second', "ba331384-eb7e-00de-5d2d-5c54329654ff");
+        cache.saveInCache(secondPerson);
+        let reach = new Availability(3, AvailabilityUnit.EVERY_N_DAYS);
+        reach._id = "9763b892-438a-a664-7fe4-a09e21542b00";
+        cache.saveInCache(reach);
+
         converter.reader.async_createJSObjectFromDoc(dict, 'Assignment').then((assign: Assignment) => {
             let secondaries = assign.secondary_actions;
             expect(assign.type).toBe('Assignment');
@@ -216,10 +229,10 @@ describe('app based tests', () => {
             expect(tryTo.type).toBe('TryToScheduleWith');
             expect(tryTo.owner).not.toBeFalsy();
             expect(tryTo.max_number_of_times).toBe(2);
-            expect(tryTo.other_person).not.toBeFalsy();
-            expect(tryTo.reach).not.toBeFalsy();
-            expect(tryTo.reach.period).toBe(1);
-            expect(tryTo.reach.unit).toBe(AvailabilityUnit.EVERY_N_WEEKS);
+            expect(tryTo.other_person).not.toBeFalsy("other person not rhere?");
+            expect(tryTo.reach).not.toBeFalsy('reach is null, why?');
+            expect(tryTo.reach.period).toBe(3, "incorrect period on reach");
+            expect(tryTo.reach.unit).toBe(AvailabilityUnit.EVERY_N_DAYS);
             // console.warn(`Created Object: ${SafeJSON.stringify(tryTo)}`);
             done();
         });
