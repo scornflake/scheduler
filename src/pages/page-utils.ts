@@ -40,15 +40,22 @@ class PageUtils implements OnInit {
         this.show_alert(message, {cssClass: 'success'}, false);
     }
 
-    async runStartupLifecycle(navCtrl: NavController): Promise<boolean> {
+    lifecycleCallback(navCtrl: NavController): ILifecycleCallback {
         if (navCtrl == null) {
             throw new Error(`navCtrl is required`);
         }
-
-        let lifecycleCallback: ILifecycleCallback = {
+        return {
             showLoginPage: (reason: string) => {
                 this.logger.info(`show login page, because: ${reason}`);
                 navCtrl.push('login');
+            },
+            applicationIsStarting: () => {
+            },
+            applicationHasStarted: (ok: boolean) => {
+                // if it started ok, go to the dashboard
+                // Using this rather that this.nav.pop(), so it works
+                // when the page is hit directly as a deep link
+                navCtrl.setRoot('home')
             },
             showCreateOrInvitePage: (reason: string) => {
                 // add args to tell it to switch to create mode
@@ -58,11 +65,16 @@ class PageUtils implements OnInit {
             showError: (message) => {
                 this.showError(message);
             }
-        };
-
-        return await this.server.asyncRunStartupLifecycle(lifecycleCallback);
+        } as ILifecycleCallback;
     }
 
+    async runStartupLifecycle(navCtrl: NavController): Promise<boolean> {
+        return await this.server.asyncRunStartupLifecycle(this.lifecycleCallback(navCtrl));
+    }
+
+    async runStartupLifecycleAfterLogin(navCtrl: NavController): Promise<boolean> {
+        return await this.server.asyncRunStartupLifecycleAfterLogin(this.lifecycleCallback(navCtrl));
+    }
 
     private show_alert(message: string | ServerError, more_options: ToastOptions, stay_open: boolean = false) {
         if (message instanceof ServerError) {

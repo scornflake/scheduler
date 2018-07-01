@@ -18,6 +18,7 @@ import {Assignment} from "../scheduling/assignment";
 import {action} from "mobx-angular";
 import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
+import {SWBSafeJSON} from "../common/json/safe-stringify";
 
 @Injectable()
 class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, OnDestroy {
@@ -97,7 +98,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
         this.logger.info(`DB loaded into memory`);
     }
 
-    async asyncSaveOrUpdateDb(object: ObjectWithUUID) {
+    async asyncSaveOrUpdateDb(object: ObjectWithUUID): Promise<ObjectWithUUID> {
         return await this.db.async_storeOrUpdateObject(object);
     }
 
@@ -178,17 +179,20 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
         // Not ... NICE, but doable?
         let newAssignments = [];
         for (let assign of existingPlan.assignments) {
+            this.logger.warn(`Copying assignment: ${assign}...`);
             let assign_dict = await this.db.converter.writer.async_createDocFromJSObject(assign);
 
-            // redo the _id, remove the _rev and make is_new = true.
-            // This'll make the object appear 'new'
+            // Provide a new object _id, remove the _rev and make is_new = true.
+            // This'll make the Assignment appear 'new'
             assign_dict._id = ObjectWithUUID.guid();
             assign_dict._rev = null;
             assign_dict.is_new = true;
 
             // Now convert it back to an assignment, and VIOLA.
-            let newAssignment = await this.db.converter.reader.async_createJSObjectFromDoc(assign_dict, 'Assignment');
+            let newAssignment = await this.db.converter.reader.async_createJSObjectFromDoc(assign_dict, 'Assignment') as ObjectWithUUID;
             if (newAssignment) {
+                // The async_createJSObjectFromDoc sets is_new to be false. We need it to be true, as it's a copy.
+                newAssignment.setIsNew(true);
                 newAssignments.push(newAssignment);
             } else {
                 throw new Error(`Couldn't duplicate assignment, got back nothing for async_create_js_object_from_dict`);

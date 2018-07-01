@@ -127,6 +127,12 @@ describe('scheduler server', () => {
                 console.info(`test received reason: ${reason}`);
                 showedLoginPage = true;
             },
+            showCreateOrInvitePage: (reason => {
+            }),
+            applicationHasStarted: () => {
+            },
+            applicationIsStarting: () => {
+            },
             showError: (error) => {
                 lastShownError = error;
             }

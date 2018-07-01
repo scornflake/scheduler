@@ -31,15 +31,16 @@ export declare type FieldErrors = {
 };
 
 export class ServerError {
-    errors: FieldErrors[];
+    errors: FieldErrors[] = [];
     originalError: any;
 
     constructor(serverError: any) {
         this.originalError = serverError;
-        if (serverError['error']) {
+        let errorElement = serverError['error'];
+        if (errorElement) {
             this.errors = [];
-            for (let key of Object.keys(serverError['error'])) {
-                let value: string[] = serverError['error'][key];
+            for (let key of Object.keys(errorElement)) {
+                let value: string[] = errorElement[key];
                 this.errors.push({key: key, errors: value})
             }
         }
@@ -89,14 +90,15 @@ export class ServerError {
         return parts.join(", ")
     }
 
-
     get allErrors(): string {
         let all = "";
         for (let err of this.errors) {
             if (all.length > 0) {
                 all += ", ";
             }
-            all += err.errors.join(", ");
+            if(Array.isArray(err.errors)) {
+                all += err.errors.join(", ");
+            }
         }
         return all;
     }

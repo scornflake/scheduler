@@ -2,11 +2,15 @@ TODO
 ====
 - Offline. Close server. Get app to startup.
     - How to detect? [done]
-    - Case where have connection, but server is offline. That 'known' error should result in continue...
+    - Case where have connection, but server is offline. That 'known' error should result in continue... [done]
 - Get sign in / reg lifecycle going (done?)
   - Don't auto sign in as me :)
-  - The various pages should be nicer
-    - replication starting (should have a nice indeterminate progress)
+  - The various pages:
+    - should flow nicer
+    - replication starting (or whatever we're gonna call it...), should wait for
+        - Replication
+        - Schedule
+        - SelectedPlan
     - login, should fade to actual page
     - everything is too quick right now, and "waits" for data with a white page
 - Sort out logout, stop hitting DB
@@ -17,8 +21,9 @@ TODO
     - This may be to do with a mobx error, that we see only on Safari.
 - Daniel Gibbs 'avail' shows as nothing, doesn't pick up the 'Anytime'
 - Daniel Gibbs: no email
+- Search for usages (writes) of layout_priority that don't go through an @action
 - Add roles editing
-- Add a way to add 'default roles'
+- Add a way to add 'default roles' (these sets should come from the server)
 - Remove 'pull to refresh' style action on home page (it doesn't do anything)
 - If User is activated, but I deleted the Org, validation/login still seems to return OK (and the client then goes into an endless loop)
 - Finish 'clone plan'

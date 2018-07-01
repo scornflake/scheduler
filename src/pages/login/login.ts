@@ -142,11 +142,22 @@ class LoginPage implements AfterViewInit {
             if (!ok) {
                 this.showError(detail);
             } else {
-                // Using this rather that this.nav.pop(), so it works
-                // when the page is hit directly as a deep link
-                this.nav.setRoot('home')
+                // If it's good, we start the lifecycle.
+                // That'll load all the data and kick us back to home
+                this.pageUtils.runStartupLifecycleAfterLogin(this.nav);
+
+                // OLD OLD
+                // // Using this rather that this.nav.pop(), so it works
+                // // when the page is hit directly as a deep link
+                // this.nav.setRoot('home')
             }
         }, (error) => {
+            if (error instanceof ServerError) {
+                if (error.isHTTPServerNotThere) {
+                    this.showError('Server cannot be contacted. Are you online?');
+                    return;
+                }
+            }
             console.error(`got login error: ${JSON.stringify(error)}`);
             this.showError(error);
         });
@@ -189,7 +200,7 @@ class LoginPage implements AfterViewInit {
             text = error.allErrors;
         }
 
-        if(typeof(error) === 'object') {
+        if (typeof(error) === 'object') {
             text = JSON.stringify(error);
         }
 
@@ -198,7 +209,7 @@ class LoginPage implements AfterViewInit {
             subTitle: text,
             buttons: ['OK']
         });
-        alert.present(error);
+        alert.present();
     }
 
     @action

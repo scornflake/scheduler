@@ -1,12 +1,15 @@
-import {ObjectWithUUID} from "../../scheduling/base-types";
 import {ServerError} from "../../common/interfaces";
 
 interface ILifecycleCallback {
     showLoginPage(reason: string);
 
+    applicationIsStarting();
+
+    applicationHasStarted(ok: boolean);
+
     showCreateOrInvitePage(reason: string);
 
-    showError(message: string|ServerError);
+    showError(message: string | ServerError);
 }
 
 interface ILifecycle {

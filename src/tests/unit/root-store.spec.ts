@@ -56,10 +56,13 @@ describe('root store', () => {
                     console.log(`Got back a duplicated plan!`);
                     expect(duplicated.name).toEqual('New Plan');
                     expect(duplicated.uuid).not.toEqual(plan.uuid);
-                        store.asyncSaveOrUpdateDb(duplicated).then(() => {
-                            console.log(`Stored the duplicated plan`);
-                            done();
-                        });
+
+                    // Should be able to save this to the DB
+                    store.asyncSaveOrUpdateDb(duplicated).then((savedObject) => {
+                        console.log(`Stored the duplicated plan`);
+                        expect(savedObject).not.toBeFalsy();
+                        done();
+                    });
                     // done();
                 })
             });
