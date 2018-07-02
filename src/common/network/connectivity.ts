@@ -1,4 +1,4 @@
-import {Injectable, NgZone, OnDestroy} from "@angular/core";
+import {Injectable, Injector, NgZone, OnDestroy} from "@angular/core";
 import {Platform} from "ionic-angular";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {Subject} from "rxjs/Subject";
@@ -26,7 +26,7 @@ class ConnectivityService implements OnDestroy {
         this.networkSubject = new BehaviorSubject<boolean>(true);
         this.logger = LoggingWrapper.getLogger('network');
 
-        if (this.onDevice) {
+        if (this.onDevice && this.network) {
             this.connectionSubscription = this.network.onConnect().subscribe(() => {
                 this.logger.info(`Network Connected`);
                 this.sendNetworkChange();
@@ -86,7 +86,10 @@ class ConnectivityService implements OnDestroy {
         if (this.onBrowser) {
             return "browser";
         }
-        return this.network.type;
+        if (this.network) {
+            return this.network.type;
+        }
+        return "unknown";
     }
 
     @computed get isOnline(): boolean {

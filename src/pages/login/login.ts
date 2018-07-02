@@ -158,7 +158,7 @@ class LoginPage implements AfterViewInit {
                     return;
                 }
             }
-            console.error(`got login error: ${JSON.stringify(error)}`);
+            console.error(`Got login error: ${JSON.stringify(error)}`);
             this.showError(error);
         });
     }
