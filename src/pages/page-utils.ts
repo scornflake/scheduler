@@ -9,6 +9,7 @@ import {Logger} from "ionic-logging-service";
 import {IDependencyTree, IObserverTree} from "mobx";
 import {ILifecycleCallback} from "../providers/server/interfaces";
 import {ServerError} from "../common/interfaces";
+import {NativePageTransitions} from "@ionic-native/native-page-transitions";
 
 
 @Injectable()
@@ -16,6 +17,7 @@ class PageUtils implements OnInit {
     private logger: Logger;
 
     constructor(private toastController: ToastController,
+                private nativeTransitions: NativePageTransitions,
                 @Inject(forwardRef(() => SchedulerServer)) private server,
                 private platform: Platform) {
         this.logger = LoggingWrapper.getLogger('page.utils');
@@ -55,11 +57,12 @@ class PageUtils implements OnInit {
                 // if it started ok, go to the dashboard
                 // Using this rather that this.nav.pop(), so it works
                 // when the page is hit directly as a deep link
-                navCtrl.setRoot('home')
+                navCtrl.setRoot('home', {})
             },
             showCreateOrInvitePage: (reason: string) => {
                 // add args to tell it to switch to create mode
                 this.logger.info(`show create/invite page, because: ${reason}`);
+                this.nativeTransitions.fade({duration: 1000});
                 navCtrl.push('login');
             },
             showError: (message) => {

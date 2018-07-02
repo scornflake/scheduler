@@ -33,6 +33,7 @@ import {MobxAngularModule} from "mobx-angular";
 import {ResponsiveConfig, ResponsiveModule} from "ng2-responsive";
 import {ConnectivityService} from "../common/network/connectivity";
 import {Network} from "@ionic-native/network";
+import {NativePageTransitions} from "@ionic-native/native-page-transitions";
 
 let config = {
     breakPoints: {
@@ -100,6 +101,7 @@ export function ResponsiveDefinition() {
         {provide: ErrorHandler, useClass: IonicErrorHandler},
         PageUtils,
         LoggingService,
+        NativePageTransitions,
         ConnectivityService,
         GAPIS,
         RESTServer,

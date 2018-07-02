@@ -145,7 +145,8 @@ export class HomePage {
     }
 
     startSignIn() {
-        this.navCtrl.push('login');
+        /* We do this because then whatever transitions we have in place will be the same */
+        this.pageUtils.runStartupLifecycle(this.navCtrl);
     }
 
     editPlan(plan) {

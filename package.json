@@ -9,8 +9,8 @@
     "build": "ionic-app-scripts build --copy ./config/copy.config.js --prod",
     "lint": "ionic-app-scripts lint",
     "ionic:build": "ionic-app-scripts build --copy ./config/copy.config.js",
-    "ionic:serve": "ionic-app-scripts serve --copy ./config/copy.config.js",
-    "ionic:prod": "ionic-app-scripts serve --copy ./config/copy.config.js --prod",
+    "ionic:serve": "ionic-app-scripts serve --copy ./config/copy.config.js -c",
+    "ionic:prod": "ionic-app-scripts serve --copy ./config/copy.config.js --prod -c",
     "test": "karma start ./test-config/karma.conf.js",
     "tsc": "tsc",
     "tsc:w": "tsc -w"
@@ -25,6 +25,7 @@
     "@angular/platform-browser": "5.2.11",
     "@angular/platform-browser-dynamic": "5.2.11",
     "@ionic-native/core": "4.7.0",
+    "@ionic-native/native-page-transitions": "^4.9.0",
     "@ionic-native/network": "^4.8.0",
     "@ionic-native/splash-screen": "4.7.0",
     "@ionic-native/status-bar": "4.7.0",
@@ -38,6 +39,7 @@
     "@types/pouchdb": "^6.3.2",
     "@types/pouchdb-find": "^6.3.2",
     "angular-pipes": "^6.5.3",
+    "com.telerik.plugins.nativepagetransitions": "^0.6.5",
     "cordova-android": "^6.3.0",
     "cordova-browser": "5.0.1",
     "cordova-ios": "^4.5.4",
@@ -112,7 +114,8 @@
       "cordova-plugin-splashscreen": {},
       "cordova-sqlite-storage": {},
       "cordova-plugin-network-information": {},
-      "cordova-plugin-ionic-webview": {}
+      "cordova-plugin-ionic-webview": {},
+      "com.telerik.plugins.nativepagetransitions": {}
     },
     "platforms": [
       "browser",

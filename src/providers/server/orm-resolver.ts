@@ -7,7 +7,6 @@ import {observable} from "mobx-angular";
 import {TypedObject} from "../../scheduling/base-types";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 
-@Injectable()
 class StoreBasedResolver implements IReferenceResolver {
     private utils: OrmUtils;
 

@@ -1,8 +1,20 @@
 TODO
 ====
+
+- Use 'prod' Ionic env to test talking to new server
+    - Configure proxy to do HTTPS
+    - Can we use proxy to do HTTPS to couch on 5984? Yes, but couch doesn't rewrite. So, at the mo, nope.
+- FIX THE COUCH SECURITY!!!
+    - One admin account (for django)
+    - One admin account (for me)
+    - Account per Organization. Where the pwd to that account is sent with Organization. That limits abuse to per-Org.
+        - That means Django has to modify/add/remove users/permissions @ Couch
+- scheduler-redis | 1:M 01 Jul 23:30:33.030 # WARNING you have Transparent Huge Pages (THP) support enabled in your kernel. This will create latency and memory usage issues with Redis. To fix this issue run the command 'echo never > /sys/kernel/mm/transparent_hugepage/enabled' as root, and add it to your /etc/rc.local in order to retain the setting after a reboot. Redis must be restarted after THP is disabled.
+
 - Offline. Close server. Get app to startup.
     - How to detect? [done]
     - Case where have connection, but server is offline. That 'known' error should result in continue... [done]
+    - Restart app from sleep, without network, does it work?
 - Get sign in / reg lifecycle going (done?)
   - Don't auto sign in as me :)
   - The various pages:

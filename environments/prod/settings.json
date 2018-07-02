@@ -42,7 +42,7 @@
       },
       {
         "loggerName": "page.login",
-        "logLevel": "DEBUG"
+        "logLevel": "INFO"
       },
       {
         "loggerName": "component",
