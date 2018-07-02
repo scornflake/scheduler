@@ -26,35 +26,37 @@ class ConnectivityService implements OnDestroy {
         this.networkSubject = new BehaviorSubject<boolean>(true);
         this.logger = LoggingWrapper.getLogger('network');
 
-        if (this.onDevice && this.network) {
-            this.connectionSubscription = this.network.onConnect().subscribe(() => {
-                this.logger.info(`Network Connected`);
-                this.sendNetworkChange();
-            });
-            this.disconnectionSubscription = this.network.onDisconnect().subscribe(() => {
-                this.logger.info(`Network Disconnected`);
-                this.sendNetworkChange();
-            });
-            this.network.onchange().subscribe(change => {
-                this.logger.info(`Network changed: ${SWBSafeJSON.stringify(change)}`);
-                this.sendNetworkChange();
-            });
-        } else {
-            // If running in browser, poll the flag on the navigator
-            this.connectionSubscription = Observable.timer(200, 1000).pipe(
-                map(() => {
-                    return window.navigator.onLine;
-                }),
-                distinctUntilChanged()
-            ).subscribe((value) => {
-                runInAction(() => {
-                    this._navigatorOnline = value;
-                    this.zone.run(() => {
-                        this.sendNetworkChange();
-                    });
+        this.platform.ready().then(() => {
+            if (this.onDevice && this.network) {
+                this.connectionSubscription = this.network.onConnect().subscribe(() => {
+                    this.logger.info(`Network Connected`);
+                    this.sendNetworkChange();
                 });
-            })
-        }
+                this.disconnectionSubscription = this.network.onDisconnect().subscribe(() => {
+                    this.logger.info(`Network Disconnected`);
+                    this.sendNetworkChange();
+                });
+                this.network.onchange().subscribe(change => {
+                    this.logger.info(`Network changed: ${SWBSafeJSON.stringify(change)}`);
+                    this.sendNetworkChange();
+                });
+            } else {
+                // If running in browser, poll the flag on the navigator
+                this.connectionSubscription = Observable.timer(200, 1000).pipe(
+                    map(() => {
+                        return window.navigator.onLine;
+                    }),
+                    distinctUntilChanged()
+                ).subscribe((value) => {
+                    runInAction(() => {
+                        this._navigatorOnline = value;
+                        this.zone.run(() => {
+                            this.sendNetworkChange();
+                        });
+                    });
+                })
+            }
+        });
     }
 
     ngOnDestroy() {
@@ -86,7 +88,7 @@ class ConnectivityService implements OnDestroy {
         if (this.onBrowser) {
             return "browser";
         }
-        if (this.network) {
+        if (this.network != null) {
             return this.network.type;
         }
         return "unknown";

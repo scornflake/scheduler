@@ -35,6 +35,7 @@ import {ConnectivityService} from "../common/network/connectivity";
 import {Network} from "@ionic-native/network";
 import {NativePageTransitions} from "@ionic-native/native-page-transitions";
 
+
 let config = {
     breakPoints: {
         xs: {max: 575},
