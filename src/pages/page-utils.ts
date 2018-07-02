@@ -30,10 +30,6 @@ class PageUtils implements OnInit {
         this.show_alert(validation.errors.join(", "), {cssClass: 'validation'}, stay_open);
     }
 
-    get small(): boolean {
-        return this.platform.width() <= 576;
-    }
-
     public showError(message: string | ServerError, stayOpen: boolean = false) {
         this.show_alert(message, {cssClass: 'validation'}, stayOpen);
     }
