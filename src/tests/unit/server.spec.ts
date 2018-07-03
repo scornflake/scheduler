@@ -27,7 +27,6 @@ describe('scheduler server', () => {
     let userResponse: UserResponse;
 
     let createServerWithStorage = (storage): Promise<SchedulerServer> => {
-
         let connectivityServiceMock = mock(ConnectivityService);
         when(connectivityServiceMock.isOnline).thenReturn(true);
 
@@ -58,6 +57,7 @@ describe('scheduler server', () => {
             email: 'me@there.com',
             uuid: '123345',
             organization_uuid: null,
+            organization_token: null,
             logintoken: "",
             first_name: 'neil',
             last_name: 'me',
@@ -65,13 +65,19 @@ describe('scheduler server', () => {
         };
 
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
-        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, mapper).then(new_db => {
+        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, "1234", mapper).then(new_db => {
             db = new_db;
             restServer = instance(restMock);
             createServerWithStorage(storageMock).then((svr) => {
                 server = svr;
                 done();
             })
+        });
+    });
+
+    afterEach((done) => {
+        db.destroyDatabase().then(() => {
+            done();
         });
     });
 
@@ -148,12 +154,6 @@ describe('scheduler server', () => {
                     done();
                 }
             })
-        });
-
-        afterEach((done) => {
-            db.destroyDatabase().then(() => {
-                done();
-            });
         });
 
         it('if no saved state, direct to login page', function (done) {

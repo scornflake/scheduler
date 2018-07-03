@@ -404,7 +404,7 @@ class SchedulerServer implements ILifecycle {
         if (person instanceof Person) {
             this.store.ui_store.setLoggedInPerson(person);
         } else {
-            throw new Error(`Object with UUID ${personUUID} was loaded, but it's not an instance of Person! It's: ${person.constructor.name}`);
+            throw new Error(`Object with UUID ${personUUID} was loaded, but it's not an instance of Person! It's: ${SWBSafeJSON.stringify(person)}`);
         }
 
         // We want that 'defaults' one to be alive so it triggers when we first load the state

@@ -6,14 +6,20 @@
   "private": true,
   "scripts": {
     "clean": "ionic-app-scripts clean",
-    "build": "ionic-app-scripts build --copy ./config/copy.config.js --prod",
+    "build": "ionic-app-scripts build",
+    "build:prod": "ionic-app-scripts build --prod",
+    "build:ios": "ionic cordova build ios --prod --release",
     "lint": "ionic-app-scripts lint",
-    "ionic:build": "ionic-app-scripts build --copy ./config/copy.config.js",
-    "ionic:serve": "ionic-app-scripts serve --copy ./config/copy.config.js -c",
-    "ionic:prod": "ionic-app-scripts serve --copy ./config/copy.config.js --prod -c",
+    "ionic:build": "ionic-app-scripts build",
+    "ionic:serve": "ionic-app-scripts serve -c",
+    "ionic:prod": "ionic-app-scripts serve --prod -c",
     "test": "karma start ./test-config/karma.conf.js",
     "tsc": "tsc",
     "tsc:w": "tsc -w"
+  },
+  "config": {
+    "ionic_copy": "./config/copy.config.js",
+    "ionic_uglifyjs": "./config/uglify.config.js"
   },
   "dependencies": {
     "@angular/common": "5.2.11",
@@ -78,7 +84,6 @@
     "short-unique-id": "^1.1.0",
     "sw-toolbox": "3.6.0",
     "to-case": "^2.0.0",
-    "typescript": "^2.9.2",
     "zone.js": "^0.8.26"
   },
   "devDependencies": {
@@ -105,6 +110,7 @@
     "ts-loader": "^4.2.0",
     "ts-mockito": "^2.3.0",
     "ts-node": "4.1.0",
+    "typescript": "~2.6.2",
     "webpack": "^4.6.0"
   },
   "description": "Scheduler",

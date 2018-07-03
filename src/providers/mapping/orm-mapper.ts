@@ -2,13 +2,14 @@ import {isArray, isUndefined} from "util";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
-import {ObjectWithUUID} from "../../scheduling/base-types";
+import {ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
 import {configure, isObservableArray, isObservableMap, isObservableObject} from "mobx";
 import {
     ClassFieldMapping,
     ClassMapping,
     MappingType,
-    ObjectReference, PropertyHint,
+    ObjectReference,
+    PropertyHint,
     PropertyMapping,
     REF_PREFIX
 } from "./orm-mapper-type";
@@ -20,8 +21,8 @@ function GetTheTypeNameOfTheObject(object: any): string {
         return "map";
     }
     if (typeof object !== "object" || !object || !object.constructor) return "";
-    if (object.constructor.name === "ObservableMap" || isObservableMap(object)) return isObservableMap(object) ? "map" : "";
-    else if (object.constructor.name === "ObservableArray") return isObservableArray(object) ? "array" : "";
+    if (isObservableMap(object)) return isObservableMap(object) ? "map" : "";
+    else if (isObservableArray(object)) return isObservableArray(object) ? "array" : "";
     else if (isArray(object)) return "array";
     else return isObservableObject(object) ? "object" : "";
 }
@@ -122,8 +123,8 @@ class OrmMapper {
                             if (key.startsWith("_")) {
                                 key = key.substr(1);
                             }
-                            if(cm.exclude) {
-                                if(cm.exclude.indexOf(key) != -1) {
+                            if (cm.exclude) {
+                                if (cm.exclude.indexOf(key) != -1) {
                                     this.logger.debug(`Ignore ${key}, it's excluded`);
                                     return;
                                 }
@@ -151,7 +152,7 @@ class OrmMapper {
                 });
             }
             let names = "";
-            if(cm.fields) {
+            if (cm.fields) {
                 names = cm.fields.map(f => f.name).join(", ");
             }
             this.logger.debug(`Add mapping for ${cm.name} (${verify_property_names ? "verified" : "non-verified"}) (${names})`);
@@ -167,13 +168,17 @@ class OrmMapper {
         this.logger.debug(`${this.gap(nesting)}Getting properties for class: ${class_name}`);
         let cm = this.definitions.get(class_name);
         if (cm == null) {
-            throw new Error(`No properties defined for ${class_name}, is the mapping complete?`);
+            throw new Error(`No properties defined for class_name: ${class_name}, nesting: ${nesting}, is the mapping complete?`);
         }
         let all = new Map<string, PropertyMapping>();
         if (cm) {
             // Add inherited first
             if (cm.inherit) {
-                all = this.propertiesFor(cm.inherit, nesting + 1);
+                try {
+                    all = this.propertiesFor(cm.inherit, nesting + 1);
+                } catch (err) {
+                    throw new Error(`Cannot get inherited properties for: ${cm.name}, inherit: ${cm.inherit}, fields: ${cm.fields.join(",")}. Original: ${err}`);
+                }
             }
 
             if (cm.fields) {

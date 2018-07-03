@@ -30,7 +30,7 @@ class OrmConverterWriter {
         }, object, nesting);
     }
 
-    async _convertObjectValueToDict(mapping, value, nesting: number = 0) {
+    async _convertObjectValueToDict(mapping, value: TypedObject, nesting: number = 0) {
         if (value == null) {
             return null;
         }
@@ -52,12 +52,12 @@ class OrmConverterWriter {
         }
     }
 
-    private async _convertToReference(mapping: PropertyMapping, value: any, nesting: number = 0): Promise<string> {
+    private async _convertToReference(mapping: PropertyMapping, value: TypedObject, nesting: number = 0): Promise<string> {
         if (GetTheTypeNameOfTheObject(value) == "array") {
             throw new Error(`REF: Cannot convert ${mapping.name} to ${NameForMappingPropType(mapping.type)}, it is an array`)
         }
         if (!(value instanceof ObjectWithUUID)) {
-            throw new Error(`REF: Cannot convert ${mapping.name} to ${NameForMappingPropType(mapping.type)}, it is an ${value.constructor.name}. Needs to be a ObjectWithUUID`);
+            throw new Error(`REF: Cannot convert ${mapping.name} to ${NameForMappingPropType(mapping.type)}, it is an ${value.type}. Needs to be a ObjectWithUUID`);
         }
         this.utils.debug(`Convert ${value} to reference`, nesting);
         return await this.async_getReferenceForObjectAndStoreIfItDoesntExist(value, nesting);
@@ -85,16 +85,21 @@ class OrmConverterWriter {
         return reference;
     }
 
-    private async _asyncConvertToNestedObjectDict(mapping: PropertyMapping, value: any, nesting: number = 0) {
+    private async _asyncConvertToNestedObjectDict(mapping: PropertyMapping, value: TypedObject, nesting: number = 0) {
         this._check_value_is_typedObject("_asyncConvertToNestedObjectDict", value, mapping);
-        this.utils.debug(`Converting ${value.constructor.name} by iterating its properties...`, nesting);
+        this.utils.debug(`Converting ${value.type} by iterating its properties...`, nesting);
         let dict = await this._convert_by_iterating_persistable_properties(value, nesting + 1);
         return this.objectLoader.addDBSpecificPropertiesToDict(dict, value, nesting);
     }
 
-    private async _convert_by_iterating_persistable_properties(origin: object, nesting: number = 0): Promise<object> {
-        let className = origin.constructor.name;
-        const props = this.mapper.propertiesFor(origin.constructor.name);
+    private async _convert_by_iterating_persistable_properties(origin: TypedObject, nesting: number = 0): Promise<object> {
+        let className = origin.type;
+        let props: Map<string, PropertyMapping>;
+        try {
+            props = this.mapper.propertiesFor(className);
+        } catch (err) {
+            throw new Error(`Cannot get properties for iteration: ${className}, nesting: ${nesting}. Original: ${err}.`);
+        }
         const result = {};
         if (props) {
             let propertyNames = Array.from(props.keys());
@@ -117,8 +122,13 @@ class OrmConverterWriter {
     private async _asyncConvertToNestedObjectListOfDict(mapping: any, value: any, nesting: number = 0) {
         this.utils.debug(`_convert_to_nested_object_list_of_dict: Nested object list: ${SWBSafeJSON.stringify(value)}`, nesting);
         if (GetTheTypeNameOfTheObject(value) == "array") {
-            let type_names = Array.from(new Set(value.map(v => v.constructor.name))).join(",");
-            this.utils.debug(`convert nested list of ${value.length} items, types: ${type_names}`, nesting);
+            let typeNames = Array.from(new Set(value.map(v => {
+                if(!(v instanceof TypedObject)) {
+                    throw new Error(`Items of a nested object list must derive from TypedObject. Got: ${SWBSafeJSON.stringify(v)}`);
+                }
+                return v.type;
+            }))).join(",");
+            this.utils.debug(`convert nested list of ${value.length} items, types: ${typeNames}`, nesting);
 
             let resulting_list = [];
             for (let index of Array.from<string>(value.keys())) {
@@ -198,11 +208,14 @@ class OrmConverterWriter {
 
     private async _asyncConvertToReferenceList(mapping: any, value: any, nesting: number = 0) {
         if (GetTheTypeNameOfTheObject(value) == "array") {
-            let type_names = Array.from(new Set(value.map(v => {
+            let typeNames = Array.from(new Set(value.map(v => {
+                if(!(v instanceof TypedObject)) {
+                    throw new Error(`Items of a reference list must derive from TypedObject. Got: ${SWBSafeJSON.stringify(v)}`);
+                }
                 return v.constructor.name;
             }))).join(",");
 
-            this.utils.debug(`convert list of ${value.length} items, types: ${type_names}`, nesting);
+            this.utils.debug(`convert list of ${value.length} items, types: ${typeNames}`, nesting);
             let new_reference_list = [];
             let index = 0;
             for (let key of Array.from<string>(value.keys())) {

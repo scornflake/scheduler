@@ -4,6 +4,24 @@ abstract class TypedObject {
     @observable type: string;
 
     constructor() {
+        /*
+        Note: this fails if uglify 'keep_fnames' is false (the default).
+        While a workaround might be to have createNewInstanceOfType forcibly set the type
+        after instantiation, this doesn't work for newly instantiated types.
+
+        Solution: Use a custom Uglify.config.js.
+        for Ionic, this can be setup as part of the "config" in package.json.
+        e.g:
+          "config": {
+            "ionic_copy": "./config/copy.config.js",
+            "ionic_uglifyjs": "./config/uglify.config.js"
+          }
+
+        And then have:
+            keep_fnames: true
+
+        at the root level of uglify.config.js
+         */
         this.type = this.constructor.name;
     }
 

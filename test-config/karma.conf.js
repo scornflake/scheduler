@@ -1,5 +1,5 @@
-var webpack = require('webpack');
-var path = require('path');
+const webpack = require('webpack');
+const path = require('path');
 
 function root(localPath) {
     return path.resolve(__dirname, localPath);
@@ -26,7 +26,7 @@ module.exports = function (config) {
         },
 
         preprocessors: {
-            'test-config/karma-test-shim.js': ['webpack'],
+            'test-config/karma-test-shim.js': ['webpack', 'sourcemap'],
         },
 
         phantomJsLauncher: {
@@ -52,18 +52,23 @@ module.exports = function (config) {
             mode: "development",
             // devtool: 'eval',
             devtool: 'eval-source-map',
+            // devtool: 'cheap-module-source-map',
+            // devtool: 'inline-source-map',
             // devtool: 'source-map',
             // target: 'node',
             resolve: {
                 extensions: ['.ts', '.js']
             },
             module: {
-                rules: [{
-                    test: /\.ts$/,
-                    loaders: [{
-                        loader: 'ts-loader'
-                    }, 'angular2-template-loader']
-                },
+                rules: [
+                    {
+                        test: /\.ts$/,
+                        loaders: [
+                            {
+                                loader: 'ts-loader'
+                            }, 'angular2-template-loader'
+                        ]
+                    },
                     {
                         test: /\.html$/,
                         loader: 'html-loader?attrs=false'

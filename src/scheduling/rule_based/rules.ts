@@ -255,7 +255,7 @@ class ScheduleOn extends ConditionAction {
     @action executeAction(stat: RuleFacts, person: Person, role: Role) {
         let assignment = stat.service.get_assignment_for(person);
         if (stat.place_person_in_role(assignment, this.role, stat.current_date)) {
-            stat.add_decision(`${this.constructor.name} executed, adding ${this.person} to role ${this.role}`);
+            stat.add_decision(`ScheduleOn executed, adding ${this.person} to role ${this.role}`);
         } else {
             stat.add_decision(`Couldn't place ${this.person} in role, the role is full`);
         }

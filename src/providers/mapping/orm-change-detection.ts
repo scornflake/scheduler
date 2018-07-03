@@ -7,14 +7,14 @@ import {
     IValueDidChange,
     observe
 } from "mobx";
-import {ObjectWithUUID} from "../../scheduling/base-types";
+import {ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {isUndefined} from "util";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {Subject} from "rxjs/Subject";
 import {GetTheTypeNameOfTheObject, OrmMapper} from "./orm-mapper";
-import {MappingType, NameForMappingPropType} from "./orm-mapper-type";
+import {MappingType, NameForMappingPropType, PropertyMapping} from "./orm-mapper-type";
 
 type ObjectChange = { owner: ObjectWithUUID, change: IMapDidChange<any> | IArraySplice<any> | IArrayChange<any> | IObjectDidChange | IValueDidChange<any>, type: string, path: string, propertyName: string };
 type ChangeListener = (change: ObjectChange) => void;
@@ -104,10 +104,8 @@ class ObjectChangeTracker {
         if (propertiesMap) {
             propertiesMap.forEach((disposer, propertyName) => {
                 if (disposer) {
-                    if (object) {
-                        if (object.constructor) {
-                            this.tracking_trace(`Removing observer for ${object.constructor.name}.${propertyName}`);
-                        }
+                    if (object instanceof TypedObject) {
+                        this.tracking_trace(`Removing observer for ${object.type}.${propertyName}`);
                     }
                     disposer();
                 }
@@ -135,7 +133,7 @@ class ObjectChangeTracker {
         if (!instance.constructor) {
             throw new Error(`Cannot find path on object, can't track properties. Instance.constructor is null. What to do?`);
         }
-        this.trackPropertiesOfObject(instance, instance, instance.constructor.name, listener);
+        this.trackPropertiesOfObject(instance, instance, instance.type, listener);
         this.tracking_debug(`Done installing change listener for ${instance.type}`);
     }
 
@@ -175,10 +173,19 @@ class ObjectChangeTracker {
         if (!instance.constructor) {
             throw new Error('Cannot trackFieldsOfObject for instance.constructor being undefined/null');
         }
-        let props = this.mapper.propertiesFor(instance.constructor.name);
-        if (!props) {
-            this.tracking_trace(`no further properties to track on ${parent_path}`);
-            return;
+        if (!(instance instanceof TypedObject)) {
+            throw new Error('Cannot trackFieldsOfObject for instance that doesnt derive from TypedObject');
+        }
+
+        let props: Map<string, PropertyMapping>;
+        try {
+            props = this.mapper.propertiesFor(instance.type);
+            if (!props) {
+                this.tracking_trace(`no further properties to track on ${parent_path}`);
+                return;
+            }
+        } catch (err) {
+            throw new Error(`Cannot get properties in order to track object. Owner ID ${owner.uuid}, parent: ${parent_path}. Original error: ${err}`);
         }
 
         // Right, if any of these properties change, that means 'owner' has changed.
@@ -270,7 +277,7 @@ class ObjectChangeTracker {
 
     private installObserverDirectlyOn(owner: ObjectWithUUID, instance: any, parentPath: string, listener: ChangeListener) {
         if (instance == null) {
-            throw new Error('Cannt install a change listener on null!');
+            throw new Error('Cant install a change listener on null!');
         }
         let nameOfTheObject = GetTheTypeNameOfTheObject(instance);
         if (nameOfTheObject == 'array') {
@@ -281,11 +288,13 @@ class ObjectChangeTracker {
         } else if (nameOfTheObject == 'map') {
             this.tracking_trace(`Install change listener for: ${parentPath} (Map of ${instance.size})`);
         } else {
-            if (instance.constructor) {
-                this.tracking_trace(`Install change listener for: ${parentPath} (${instance}/${instance.constructor.name})`);
-            } else {
-                this.tracking_trace(`Install change listener for: ${parentPath} (${instance}/<dunno>)`);
+            // Right now this is ONLY here so we can put in some decent logging for trace.
+            // We can actually, I think, track non-TypedObjects, just we cannot refer to constructor.name when --prod --aot in place
+            // Uglify will change the constructor names.
+            if (!(instance instanceof TypedObject)) {
+                throw new Error(`Cannot installObserverDirectlyOn for instance that doesn't derive from TypedObject`);
             }
+            this.tracking_trace(`Install change listener for: ${parentPath} (${instance}/${instance.type})`);
         }
 
         let propertyName = 'items';
@@ -311,8 +320,11 @@ class ObjectChangeTracker {
             let parts = [];
             if (instance != null) {
                 parts.push(instance);
-                if (instance.constructor != null) {
-                    parts.push(instance.constructor.name);
+                if (instance instanceof TypedObject) {
+                    parts.push(instance.type)
+                } else if (instance.constructor != null) {
+                    throw new Error(`Trying to get type using instance.constructor.name isnt supported. --prod/--aot will munge the names.`);
+                    // parts.push(instance.constructor.name);
                 }
             }
             return parts.join("/");

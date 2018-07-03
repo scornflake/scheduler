@@ -6,6 +6,8 @@ import {OrmUtils} from "./orm-utils";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {OrmMapper} from "../mapping/orm-mapper";
 import {IObjectCache} from "../mapping/cache";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
+import {instance} from "ts-mockito";
 
 class OrmConverterReader {
     private utils: OrmUtils;
@@ -46,9 +48,13 @@ class OrmConverterReader {
         if (!new_object_type) {
             // Can we guess it?
             if (dict['type']) {
-                if (this.mapper.propertiesFor(dict['type']) != null) {
-                    new_object_type = dict['type'];
-                    this.utils.debug(`new_object_type not specified, Ive guessed that it is: ${new_object_type}`, nesting);
+                try {
+                    if (this.mapper.propertiesFor(dict['type']) != null) {
+                        new_object_type = dict['type'];
+                        this.utils.debug(`new_object_type not specified, I've guessed that it is: ${new_object_type}`, nesting);
+                    }
+                } catch (err) {
+                    throw new Error(`Cannot get properties for: ${dict['type']}. Original: ${err}. Full dict: ${SWBSafeJSON.stringify(dict)}`);
                 }
             }
             if (!new_object_type) {
@@ -80,13 +86,23 @@ class OrmConverterReader {
         if (!new_object) {
             this.utils.debug(`Creating new object of type: ${new_object_type}`, nesting);
             new_object = this.mapper.createNewInstanceOfType(new_object_type);
+            if(new_object instanceof ObjectWithUUID) {
+                if(new_object.type != new_object_type) {
+                    throw new Error(`Newly created object supposed to have type: ${new_object_type} but instead has type: ${new_object.type}`);
+                }
+            }
         }
 
         if (new_object == null) {
             throw new Error(`Failed to instantiate new object of type ${new_object_type}. Is the mapper configured with the right factories?`);
         }
 
-        const targetProperties = this.mapper.propertiesFor(new_object.constructor.name);
+        let targetProperties: Map<string, PropertyMapping>;
+        try {
+            targetProperties = this.mapper.propertiesFor(new_object_type);
+        } catch (err) {
+            throw new Error(`Cannot get target properties for type: ${new_object_type}. Original: ${err}.`);
+        }
         if (targetProperties.size == 0) {
             throw new Error(`Cannot hydrate ${dict['type']} because we don't know what it's mapped properties are`)
         }
@@ -112,7 +128,7 @@ class OrmConverterReader {
             if (propertyName == 'type') {
                 // No reason why this shouldn't be the case, but you know, paranoia
                 if (new_object.type != dict['type']) {
-                    throw new Error(`Unable to hydrate ${dict} into object. Type ${new_object.type} != ${dict['type']}`);
+                    throw new Error(`Unable to hydrate ${JSON.stringify(dict)} into object. Type ${new_object.type} != ${dict['type']}`);
                 }
             } else {
                 if (value == null) {

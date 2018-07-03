@@ -51,7 +51,7 @@ describe('app based tests', () => {
 
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 1500;
 
-        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, mapper).then(new_db => {
+        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, "1234", mapper).then(new_db => {
             db = new_db;
             db.setCache(cache);
 

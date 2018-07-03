@@ -27,6 +27,10 @@
       "./src/common/fix.broken.gapi.types.d.ts"
     ]
   },
+  "angularCompilerOptions": {
+    "strictInjectionParameters": true,
+    "fullTemplateTypeCheck": true
+  },
   "compileOnSave": false,
   "atom": {
     "rewriteTsconfig": false
