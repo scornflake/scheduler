@@ -1,5 +1,6 @@
-var envDirectory = process.env.env || "default";
-process.stdout.write("using environment '" + envDirectory + "'\n");
+var envDirectory = process.env['IONIC_ENV'] || "default";
+// process.stdout.write(`Process env: '${JSON.stringify(process.env)}'`);
+process.stdout.write("Using environment '" + envDirectory + "'\n");
 
 module.exports = {
     copyAssets: {
