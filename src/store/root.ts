@@ -225,14 +225,15 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
                 if (plan) {
                     let schedule;
                     schedule = new ScheduleWithRules(plan, this.previousSchedule);
+                    this.logger.info(`Regenerating schedule for plan ${plan.name}`);
                     schedule.createSchedule();
                     return schedule;
                 } else {
                     this.logger.info(`No schedule generated, the provided plan was null`);
                 }
             }, schedule => {
-                this.logger.info(`Regenerating schedule for plan ${schedule.plan.name}`);
                 runInAction(() => {
+                    this.logger.debug(`Assigning recently created schedule to this.schedule`);
                     this.schedule = schedule;
                 });
 

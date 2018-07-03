@@ -194,6 +194,7 @@ export class DatabaseMaintPage implements OnDestroy {
         await this.db.async_storeOrUpdateObject(plan);
     }
 
+    @action
     private setup_fake_draft_plan(team: Team): Plan {
         // make up a default team
         // for testing, create some fake

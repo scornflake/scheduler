@@ -1,5 +1,6 @@
 import PouchDB from 'pouchdb';
 import PouchDBFind from 'pouchdb-find';
+import PouchAuthentication from 'pouchdb-authentication';
 import {Logger} from "ionic-logging-service";
 import {NamedObject, ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
 import 'reflect-metadata';
@@ -22,6 +23,7 @@ import {StoreBasedResolver} from "./orm-resolver";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import Database = PouchDB.Database;
 import DatabaseConfiguration = PouchDB.Configuration.DatabaseConfiguration;
+import Options = PouchDB.Core.Options;
 
 // Put this back in when we move to v7 of Pouch.
 // import plugin from 'pouchdb-adapter-idb';
@@ -56,20 +58,24 @@ class SchedulerDatabase implements IObjectStore {
 
     private current_indexes: PouchDB.Find.GetIndexesResponse<{}>;
     private dbName: string;
+    private couchUsername: string;
+    private couchCredentials: string;
     private tracker: ObjectChangeTracker;
     private mapper: OrmMapper;
     private _converter: OrmConverter;
     private _cache: IObjectCache;
     lastSeenReplicationStatus: ReplicationStatus = ReplicationStatus.Unknown;
 
-    constructor(dbName: string, mapper: OrmMapper) {
+    constructor(dbName: string, credentials: string, mapper: OrmMapper) {
         this.dbName = dbName;
         this.mapper = mapper;
+        this.couchCredentials = credentials;
         this.logger = LoggingWrapper.getLogger("db");
 
         let resolver = new StoreBasedResolver(this, mapper);
         this._converter = new OrmConverter(this.mapper, this, null, resolver);
         PouchDB.plugin(PouchDBFind);
+        PouchDB.plugin(PouchAuthentication);
 
         this.readyEvent = new ReplaySubject(1);
         this.tracker = new ObjectChangeTracker(this.mapper);
@@ -101,9 +107,9 @@ class SchedulerDatabase implements IObjectStore {
         return this.tracker.changes;
     }
 
-    static ConstructAndWait(dbName: string, mapper: OrmMapper): Promise<SchedulerDatabase> {
+    static ConstructAndWait(dbName: string, credentials: string, mapper: OrmMapper): Promise<SchedulerDatabase> {
         return new Promise<SchedulerDatabase>((resolve) => {
-            let instance = new SchedulerDatabase(dbName, mapper);
+            let instance = new SchedulerDatabase(dbName, credentials, mapper);
             // instance.logger.info("Starting DB setup for TEST");
             instance.readyEvent.subscribe(() => {
                 resolve(instance);
@@ -127,11 +133,18 @@ class SchedulerDatabase implements IObjectStore {
         return this._converter;
     }
 
-    get couchOptions(): DatabaseConfiguration {
+    get localPouchOptions(): DatabaseConfiguration {
         return {
-            auth: {
-                username: "scheduler",
-                password: "1234"
+            skip_setup: true,
+        };
+    }
+
+    get remoteCouchOptions(): Options {
+        return {
+            ajax: {
+                headers: {
+                    Authorization: 'Basic ' + window.btoa(this.couchUsername + ':' + this.couchCredentials)
+                }
             }
         };
     }
@@ -141,7 +154,7 @@ class SchedulerDatabase implements IObjectStore {
         // let options = {adapter: 'idb'};
         // PouchDB.plugin(plugin);
         this.logger.info('initialize', `Creating new DB instance: ${this.dbName} ...`);
-        this.db = await new PouchDB(this.dbName, this.couchOptions);
+        this.db = await new PouchDB(this.dbName, this.localPouchOptions);
 
         this.logger.debug("Getting DB information");
         this.info = await this.db.info();
@@ -472,16 +485,17 @@ class SchedulerDatabase implements IObjectStore {
         }
     }
 
-    startReplicationFor(serverUrl: string, organizationUUID: string) {
+    async startReplicationFor(serverUrl: string, organizationUUID: string) {
         if (!organizationUUID || !serverUrl) {
             throw new Error(`Cannot start replication: serverUrl/organization not provided`);
         }
         let remoteDBName = Organization.dbNameFor(organizationUUID);
-        this._startReplication(serverUrl, remoteDBName);
+        this.logger.info('startReplicationFor', `Starting replication for ${remoteDBName}`);
+        await this._startReplication(serverUrl, remoteDBName);
         this.logger.info('startReplicationFor', `Started replication for ${remoteDBName}`);
     }
 
-    private _startReplication(serverUrl: string, remoteDBName: string) {
+    private async _startReplication(serverUrl: string, remoteDBName: string) {
         if (!serverUrl) {
             throw new Error(`Cannot begin replication without remote DB server url being specified.`);
         }
@@ -492,7 +506,15 @@ class SchedulerDatabase implements IObjectStore {
             this.logger.warn(`Replication already started, ignored`);
         }
 
-        this.server_db = new PouchDB(`${serverUrl}/${remoteDBName}`, this.couchOptions);
+        this.couchUsername = remoteDBName;
+        this.logger.info(`Using ${this.couchUsername} with token ${this.couchCredentials}`);
+        this.server_db = new PouchDB(`${serverUrl}/${remoteDBName}`, this.remoteCouchOptions);
+
+        this.logger.info(`Doing login...`);
+        await this.server_db.logIn(this.couchUsername, this.couchCredentials, this.remoteCouchOptions);
+        this.logger.info(`Done login...`);
+
+        // await this.db.logIn(this.couchUsername, this.couchCredentials);
         this.server_sync = this.db.sync(this.server_db, {live: true, retry: true})
             .on('change', (change) => {
                 this.lastSeenReplicationStatus = ReplicationStatus.ProcessingPull;

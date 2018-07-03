@@ -173,6 +173,7 @@ describe('scheduler server', () => {
                 loginToken: "12345",
                 lastPersonUUID: null,
                 lastOrganizationUUID: null,
+                organizationCouchToken: null,
                 isForcedOffline: false
             };
             storageMock = StorageMock.instance('state', state);
@@ -194,6 +195,7 @@ describe('scheduler server', () => {
                 loginToken: "12345",
                 lastPersonUUID: null,
                 lastOrganizationUUID: null,
+                organizationCouchToken: null,
                 isForcedOffline: false
             };
 
@@ -224,6 +226,7 @@ describe('scheduler server', () => {
                 loginToken: userResponse.logintoken,
                 lastPersonUUID: personInDB.uuid,
                 lastOrganizationUUID: "abcdefg",
+                organizationCouchToken: null,
                 isForcedOffline: false
             };
 
@@ -256,6 +259,7 @@ describe('scheduler server', () => {
                 loginToken: userResponse.logintoken,
                 lastPersonUUID: "!2345",
                 lastOrganizationUUID: "abcdefg",
+                organizationCouchToken: null,
                 isForcedOffline: false
             };
 

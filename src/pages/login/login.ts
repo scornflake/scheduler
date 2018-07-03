@@ -63,7 +63,7 @@ class LoginPage implements AfterViewInit {
             setTimeout(() => {
                 this.setRegistrationName("Neil Clayton");
                 this.setRegistrationEmail("neil@cloudnine.net.nz");
-                this.setRegistrationPassword("testing59");
+                this.setRegistrationPassword("968FqbkkG8iQdK34ik");
 
                 // // do a login for this user
                 // this.server.loginUser(this.registrationEmail, this.registrationPassword).then(lr => {

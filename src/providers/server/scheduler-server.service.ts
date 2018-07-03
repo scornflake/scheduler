@@ -31,6 +31,7 @@ interface IState {
     loginToken: string;
     lastPersonUUID: string;
     lastOrganizationUUID: string;
+    organizationCouchToken: string;
     isForcedOffline: boolean;
 }
 
@@ -111,6 +112,7 @@ class SchedulerServer implements ILifecycle {
         this.state.lastOrganizationUUID = null;
         this.state.lastPersonUUID = null;
         this.state.loginToken = null;
+        this.state.organizationCouchToken = null;
         this._previousState = undefined;
         await this.asyncSaveState().then(() => {
             this.logger.info(`User logged out, state saved.`);
@@ -126,11 +128,13 @@ class SchedulerServer implements ILifecycle {
             this.state.loginToken = user.logintoken;
             this.state.lastPersonUUID = user.uuid;
             this.state.lastOrganizationUUID = user.organization_uuid;
+            this.state.organizationCouchToken = user.organization_token;
         } else {
             this.restAPI.loginToken = null;
             this.state.loginToken = null;
             this.state.lastPersonUUID = null;
             this.state.lastOrganizationUUID = null;
+            this.state.organizationCouchToken = null;
             this.logger.info(`Login: Clearing state token/uuid because login not OK`);
         }
         uiStore.setLoginTokenValidated(good);
@@ -306,6 +310,11 @@ class SchedulerServer implements ILifecycle {
             callback.showLoginPage(`lastPersonUUID is nil on server.state`);
             return false;
         }
+        if (!this.state.organizationCouchToken) {
+            this.logger.debug('asyncRunStartupLifecycle', `organizationCouchToken nil, show login page`);
+            callback.showLoginPage(`organizationCouchToken is nil on server.state`);
+            return false;
+        }
 
         // OK. At this stage we are good to have the DB come up against this
         // organization (keyed off Person).
@@ -343,16 +352,21 @@ class SchedulerServer implements ILifecycle {
     private async setupDBFromState(callback: ILifecycleCallback, responseTimeout: number = Infinity) {
         let organizationUUID = this.state.lastOrganizationUUID;
         let personUUID = this.state.lastPersonUUID;
+        let organizationToken = this.state.organizationCouchToken;
+
         if (!organizationUUID) {
             throw new Error(`Cannot setup DB undefined/null organization. organizationUUID is required`);
         }
         if (!personUUID) {
             throw new Error(`Cannot setup DB undefined/null person. personUUID is required`);
         }
+        if (!organizationToken) {
+            throw new Error(`Cannot setup DB. organizationToken is required (all DB access needs a user/login)`);
+        }
 
         this.logger.info('setupDBFromState', `Beginning DB setup for person:${personUUID} and org:${organizationUUID}`);
         let name = Organization.dbNameFor(organizationUUID);
-        let newDb = new SchedulerDatabase(name, this.ormMapper);
+        let newDb = new SchedulerDatabase(name, organizationToken, this.ormMapper);
 
         // Clear logged in person and any other 'db dependent' state
         // This should cause the various subjects on RootStore to fire, hopefully with nulls
@@ -379,7 +393,7 @@ class SchedulerServer implements ILifecycle {
 
         // Start replication
         let couch = this.configurationService.getValue('server')['couch'];
-        newDb.startReplicationFor(couch, organizationUUID);
+        await newDb.startReplicationFor(couch, organizationUUID);
 
         // Wait for replication to go quiet (no updates in a bit)
         this.logger.info('setupDBFromState', `Waiting for replication to come up`);
@@ -400,7 +414,7 @@ class SchedulerServer implements ILifecycle {
     async asyncWaitForDBToContainObjectWithUUID(uuid, newDb, responseTimeout: number): Promise<ObjectWithUUID> {
         // Poll until we can find the person.
         // First poll can be reasonably quick because we do these only after replication has run and quietened for 1s
-        this.logger.info('setupDBFromState', `Waiting for ${uuid}`);
+        this.logger.info('asyncWaitForDBToContainObjectWithUUID', `Waiting for ${uuid}`);
 
         if (responseTimeout == Infinity) {
             responseTimeout = 15000;
@@ -409,7 +423,7 @@ class SchedulerServer implements ILifecycle {
         await Observable.timer(150, 1500)
             .pipe(
                 flatMap(() => {
-                    this.logger.debug(`Seeing if ${uuid} exists...`);
+                    this.logger.debug('asyncWaitForDBToContainObjectWithUUID', `Seeing if ${uuid} exists...`);
                     return Observable.from(newDb.async_DoesObjectExistWithUUID(uuid));
                 }),
                 filter((v: boolean) => v),
@@ -420,7 +434,7 @@ class SchedulerServer implements ILifecycle {
                 })
             ).toPromise();
 
-        this.logger.info('setupDBFromState', `Woot! We can see the ${uuid} in the DB`);
+        this.logger.info('asyncWaitForDBToContainObjectWithUUID', `Woot! We can see the ${uuid} in the DB`);
 
         // Make sure store logged in person is set
         // Again, causing various subjects on RootStore to fire, getting new state & objects
