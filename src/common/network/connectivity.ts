@@ -23,6 +23,7 @@ class ConnectivityService implements OnDestroy {
     @observable private _overrideEnabled: boolean = false;
 
     constructor(private platform: Platform, private network: Network, private zone: NgZone) {
+    // constructor(private platform: Platform, private zone: NgZone) {
         this.networkSubject = new BehaviorSubject<boolean>(true);
         this.logger = LoggingWrapper.getLogger('network');
 

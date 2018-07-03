@@ -58,7 +58,7 @@ class PageUtils implements OnInit {
             showCreateOrInvitePage: (reason: string) => {
                 // add args to tell it to switch to create mode
                 this.logger.info(`show create/invite page, because: ${reason}`);
-                this.nativeTransitions.fade({duration: 1000});
+                // this.nativeTransitions.fade({duration: 1000});
                 navCtrl.push('login');
             },
             showError: (message) => {

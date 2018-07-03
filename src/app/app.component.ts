@@ -31,11 +31,12 @@ export class MyApp {
             // Here you can do any higher level native things you might need.
             this.statusBar.styleDefault();
             this.splashScreen.hide();
+            console.warn('Platform says ready');
+            this.rebuildGroupsOnChange();
         });
     }
 
     ngOnInit() {
-        this.rebuildGroupsOnChange();
     }
 
     private rebuildGroupsOnChange() {
