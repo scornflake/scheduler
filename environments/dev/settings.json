@@ -1,7 +1,7 @@
 {
   "server": {
     "couch": "https://schedulerdb.shinywhitebox.com",
-    "rest": "http://192.168.1.171:8000"
+    "rest": "http://192.168.1.168:8000"
   },
   "database": {
     "name": "scheduler"

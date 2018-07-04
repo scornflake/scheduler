@@ -10,9 +10,8 @@
     "build:prod": "ionic-app-scripts build --prod",
     "build:ios": "ionic cordova build ios --prod --release",
     "lint": "ionic-app-scripts lint",
-    "ionic:build": "ionic-app-scripts build",
-    "ionic:serve": "ionic-app-scripts serve -c",
-    "ionic:prod": "ionic-app-scripts serve --prod -c",
+    "serve": "ionic-app-scripts serve -c",
+    "serve:prod": "ionic-app-scripts serve --prod -c",
     "test": "karma start ./test-config/karma.conf.js",
     "tsc": "tsc",
     "tsc:w": "tsc -w"

@@ -1,6 +1,11 @@
 TODO
 ====
-- scheduler-redis | 1:M 01 Jul 23:30:33.030 # WARNING you have Transparent Huge Pages (THP) support enabled in your kernel. This will create latency and memory usage issues with Redis. To fix this issue run the command 'echo never > /sys/kernel/mm/transparent_hugepage/enabled' as root, and add it to your /etc/rc.local in order to retain the setting after a reboot. Redis must be restarted after THP is disabled.
+- Startup
+    - You've your own org. Now what?
+    - Show buttons on main page:
+        - Create a team (wizard?)
+        - Setup some roles
+        - Add people
 - Do the Invite thing
     - Send invites to people (Share)
     - Allow people to accept, and move them to that organization
@@ -35,6 +40,7 @@ TODO
 - If User is activated, but I deleted the Org, validation/login still seems to return OK (and the client then goes into an endless loop)
 - Finish 'clone plan'
   - Then update     duplicate_plan(plan: Plan)
+- Scheduler should show the next coming date (not the first one)
 - Make it possible to specify period of the plan (days in between each) and what time it starts (e.g: 10am)
 - DB isn't showing an up to date version of info. Should reload this on page reload?
 - Add 'level' to Person, and write up about game-ifying the whole thing
@@ -46,6 +52,11 @@ TODO
     - monitoring? couch? web? rq?
     - including, how to upgrade the stack?
 - DB backups
+
+Performance / Deployment
+========================
+- scheduler-redis | 1:M 01 Jul 23:30:33.030 # WARNING you have Transparent Huge Pages (THP) support enabled in your kernel. This will create latency and memory usage issues with Redis. To fix this issue run the command 'echo never > /sys/kernel/mm/transparent_hugepage/enabled' as root, and add it to your /etc/rc.local in order to retain the setting after a reboot. Redis must be restarted after THP is disabled.
+
 
 Scheduling
 ===
