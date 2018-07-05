@@ -1,6 +1,6 @@
 import {RootStore} from "../../store/root";
 import {RESTServer} from "./server";
-import {LoginResponse, ServerError, UserResponse, ValidationResponse} from "../../common/interfaces";
+import {LoginResponse, RoleSetResponse, ServerError, UserResponse, ValidationResponse} from "../../common/interfaces";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
@@ -24,6 +24,8 @@ import {reaction, runInAction} from "mobx";
 import {ILifecycle, ILifecycleCallback} from "./interfaces";
 import {Subscription} from "rxjs/Subscription";
 import {ConnectivityService} from "../../common/network/connectivity";
+import {Team} from "../../scheduling/teams";
+import {Plan} from "../../scheduling/plan";
 
 const STATE_ROOT = 'state';
 
@@ -44,6 +46,7 @@ class SchedulerServer implements ILifecycle {
     private dbSubject: Subject<SchedulerDatabase>;
     private _db: SchedulerDatabase;
     private dbChangeTrackingSubscription: Subscription;
+    private lifecycleRunning: boolean;
 
     constructor(@Inject(forwardRef(() => RootStore)) private store,
                 private restAPI: RESTServer,
@@ -54,6 +57,9 @@ class SchedulerServer implements ILifecycle {
     ) {
         this.logger = LoggingWrapper.getLogger('service.bridge');
         this.dbSubject = new BehaviorSubject<SchedulerDatabase>(null);
+
+        // assume so, to begin with.
+        this.lifecycleRunning = true;
     }
 
     isUsernameAvailableAndGood(username: string): Observable<string> {
@@ -70,6 +76,12 @@ class SchedulerServer implements ILifecycle {
 
     get state(): IState {
         return this._state;
+    }
+
+    get isReady(): boolean {
+        // ready to show stuff?
+        // i.e: lifecycle has completed one way or the other
+        return !this.lifecycleRunning;
     }
 
     @computed get loggedIn(): boolean {
@@ -113,6 +125,7 @@ class SchedulerServer implements ILifecycle {
         this.state.lastPersonUUID = null;
         this.state.loginToken = null;
         this.state.organizationCouchToken = null;
+        this.store.logout();
         this._previousState = undefined;
         await this.asyncSaveState().then(() => {
             this.logger.info(`User logged out, state saved.`);
@@ -167,6 +180,14 @@ class SchedulerServer implements ILifecycle {
 
     async savePerson(person: Person): Promise<Person> {
         return await this._db.async_storeOrUpdateObject(person) as Person;
+    }
+
+    async saveTeam(team: Team): Promise<Team> {
+        return await this._db.async_storeOrUpdateObject(team) as Team;
+    }
+
+    async savePlan(plan: Plan): Promise<Plan> {
+        return await this._db.async_storeOrUpdateObject(plan) as Plan;
     }
 
     setStore(store: RootStore) {
@@ -255,48 +276,55 @@ class SchedulerServer implements ILifecycle {
      */
     async asyncRunStartupLifecycle(callback: ILifecycleCallback, timeout: number = Infinity): Promise<boolean> {
         await this.asyncLoadState();
+        this.lifecycleRunning = true;
 
-        // If the state is the same, do nothing. As nothing has changed.
-        if (this.hasStateChangedSinceLastLifecycleRun() === false) {
-            this.logger.info('asyncRunStartupLifecycle', 'Ignored - the state hasnt changed');
-            return;
-        }
+        try {
+            // If the state is the same, do nothing. As nothing has changed.
+            if (this.hasStateChangedSinceLastLifecycleRun() === false) {
+                this.logger.info('asyncRunStartupLifecycle', 'Ignored - the state hasnt changed');
+                return;
+            }
 
-        if (!this.state.loginToken) {
-            this.logger.debug('asyncRunStartupLifecycle', `Login token null, show login page`);
-            callback.showLoginPage(`Login token null`);
-            return false;
-        }
+            if (!this.state.loginToken) {
+                this.logger.debug('asyncRunStartupLifecycle', `Login token null, show login page`);
+                callback.showLoginPage(`Login token null`);
+                return false;
+            }
 
-        // Are we online? can we validate?
-        if (this.connectivity.isOnline) {
-            try {
-                let vr = await this.validateLoginToken(this.state.loginToken);
-                if (!vr.ok) {
-                    this.logger.debug('asyncRunStartupLifecycle', `Login token invalid, show login page`);
-                    callback.showLoginPage(`Login token invalid: ${SWBSafeJSON.stringify(vr)}`);
-                    return false;
-                }
-            } catch (err) {
-                if (err instanceof ServerError) {
-                    if (err.isHTTPServerNotThere) {
-                        this.logger.warn(`Assume server is toast (got back: ${err}`);
-                        // fall through and continue
+            // Are we online? can we validate?
+            if (this.connectivity.isOnline) {
+                try {
+                    let vr = await this.validateLoginToken(this.state.loginToken);
+                    if (!vr.ok) {
+                        this.logger.debug('asyncRunStartupLifecycle', `Login token invalid, show login page`);
+                        callback.showLoginPage(`Login token invalid: ${SWBSafeJSON.stringify(vr)}`);
+                        return false;
+                    }
+                } catch (err) {
+                    if (err instanceof ServerError) {
+                        if (err.isHTTPServerNotThere) {
+                            this.logger.warn(`Assume server is toast (got back: ${err}`);
+                            // fall through and continue
+                        } else {
+                            callback.showError(err);
+                        }
                     } else {
                         callback.showError(err);
                     }
-                } else {
-                    callback.showError(err);
                 }
-            }
 
-        } else {
-            this.logger.warn(`We're offline. We have a token and we're gonna assume it is OK.`);
+            } else {
+                this.logger.warn(`We're offline. We have a token and we're gonna assume it is OK.`);
+            }
+            return await this.asyncRunStartupLifecycleAfterLogin(callback, timeout);
+        } finally {
+            this.lifecycleRunning = false;
         }
-        return this.asyncRunStartupLifecycleAfterLogin(callback, timeout);
     }
 
     async asyncRunStartupLifecycleAfterLogin(callback: ILifecycleCallback, timeout: number = Infinity): Promise<boolean> {
+        await this.asyncLoadState();
+
         // If no lastOrganizationUUID UUID, loginUser() didn't do its job.
         // Login should validate token, check for Person object locally (direct DB access)
         // and also set this.state.lastPersonUUID and this.state.lastOrganizationUUID
@@ -327,6 +355,7 @@ class SchedulerServer implements ILifecycle {
         }
 
         this.captureStateAsPrevious();
+        await this.asyncSaveState();
         callback.applicationHasStarted(allGood);
         return allGood;
     }
@@ -407,6 +436,12 @@ class SchedulerServer implements ILifecycle {
             throw new Error(`Object with UUID ${personUUID} was loaded, but it's not an instance of Person! It's: ${SWBSafeJSON.stringify(person)}`);
         }
 
+        // Does this person need a 're-save'?
+        // This can happen if the person was created by the server and doesn't have all the fields we map here on the client
+        if (person.needsResave) {
+            this.logger.info(`Resaving ${person.name} because its missing some needed info`);
+            await this.savePerson(person);
+        }
         // We want that 'defaults' one to be alive so it triggers when we first load the state
         // this.checkForDefaults();
     }
@@ -499,6 +534,11 @@ class SchedulerServer implements ILifecycle {
             return Person.createFromUserResponse(lr.user);
         }
         return null;
+    }
+
+    async getRoleSets(): Promise<RoleSetResponse[]> {
+        this.raiseExceptionIfNotOnline('getRoleSets');
+        return this.restAPI.getRoleSets();
     }
 }
 

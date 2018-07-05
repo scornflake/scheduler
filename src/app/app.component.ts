@@ -78,7 +78,7 @@ export class MyApp {
                     {
                         title: "Logout", exec: () => {
                             this.server.asyncLogout().then(() => {
-                                this.nav.popToRoot();
+                                this.nav.setRoot('login');
                             });
                         },
                         enabled: () => this.loggedIn

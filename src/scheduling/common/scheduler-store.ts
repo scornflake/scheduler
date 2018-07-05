@@ -46,12 +46,12 @@ abstract class GenericManager<T extends NamedObject> {
         return this.store.items.filter(item => item.type == this.type && item.name.toLowerCase() == name.toLowerCase())
     }
 
-    firstThisTypeByName(name: string, exception_if_not_found: boolean = true): T {
+    firstThisTypeByName(name: string, throwOnNotFound: boolean = true): T {
         let res = this.findThisTypeByName(name);
-        if (res == null && exception_if_not_found) {
+        if (res == null && throwOnNotFound) {
             throw new Error(`Unable to find ${this.type} with name ${name}`);
         }
-        if (res.length > 1 && exception_if_not_found) {
+        if (res.length > 1 && throwOnNotFound) {
             throw new Error(`Found ${res.length} of ${this.type} with name ${name}. Expected only single object.`);
         }
         return res[0];

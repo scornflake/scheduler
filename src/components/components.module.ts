@@ -20,6 +20,8 @@ import {ResponsiveModule} from "ng2-responsive";
 import {CalendarComponent} from "./swbcalendar/swbcalendar";
 import {Calendar} from "./ion-calendar/ion-calendar";
 import {monthName} from "../common/pipes/month-name";
+import { ShowPlanComponent } from './show-plan/show-plan';
+import { WelcomeWizardComponent } from './welcome-wizard/welcome-wizard';
 
 @NgModule({
     declarations: [
@@ -39,7 +41,9 @@ import {monthName} from "../common/pipes/month-name";
         IonSegmentHotfix,
         CalendarComponent,
         Calendar,
-        monthName
+        monthName,
+    ShowPlanComponent,
+    WelcomeWizardComponent
     ],
     imports: [
         IonicModule,
@@ -66,7 +70,9 @@ import {monthName} from "../common/pipes/month-name";
         OrganizationEditorComponent,
         Calendar,
         CalendarComponent,
-        monthName
+        monthName,
+    ShowPlanComponent,
+    WelcomeWizardComponent
     ]
 })
 export class ComponentsModule {

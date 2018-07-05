@@ -1,16 +1,22 @@
 import {ObjectValidation} from "../scheduling/shared";
 import {NavController, Platform, ToastController} from "ionic-angular";
-import {forwardRef, Inject, Injectable, OnInit} from "@angular/core";
+import {forwardRef, Inject, Injectable, NgZone, OnInit} from "@angular/core";
 import deepEqual from "deep-equal";
 import {ToastOptions} from "ionic-angular/components/toast/toast-options";
 import {SchedulerServer} from "../providers/server/scheduler-server.service";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
 import {IDependencyTree, IObserverTree} from "mobx";
-import {ILifecycleCallback} from "../providers/server/interfaces";
+import {ILifecycleCallback, LifecycleCallbacks} from "../providers/server/interfaces";
 import {ServerError} from "../common/interfaces";
 import {NativePageTransitions} from "@ionic-native/native-page-transitions";
+import {Observable} from "rxjs/Observable";
+import {Subject} from "rxjs/Subject";
 
+interface LifecycleEvent {
+    event: LifecycleCallbacks;
+    args: any;
+}
 
 @Injectable()
 class PageUtils implements OnInit {
@@ -18,6 +24,7 @@ class PageUtils implements OnInit {
 
     constructor(private toastController: ToastController,
                 private nativeTransitions: NativePageTransitions,
+                private zoneRef: NgZone,
                 @Inject(forwardRef(() => SchedulerServer)) private server,
                 private platform: Platform) {
         this.logger = LoggingWrapper.getLogger('page.utils');
@@ -67,12 +74,46 @@ class PageUtils implements OnInit {
         } as ILifecycleCallback;
     }
 
+
     async runStartupLifecycle(navCtrl: NavController): Promise<boolean> {
         return await this.server.asyncRunStartupLifecycle(this.lifecycleCallback(navCtrl));
     }
 
+    runStartupLifecycleAsStream(): Observable<LifecycleEvent> {
+        let subject = new Subject<any>();
+        let callback: ILifecycleCallback = {
+            showLoginPage: (reason: string) => {
+                subject.next({event: LifecycleCallbacks.showLoginPage, args: reason})
+            },
+            applicationIsStarting: () => {
+                subject.next({event: LifecycleCallbacks.applicationIsStarting, args: null})
+            },
+            applicationHasStarted: (ok: boolean) => {
+                subject.next({event: LifecycleCallbacks.applicationHasStarted, args: ok})
+            },
+            showCreateOrInvitePage: (reason: string) => {
+                subject.next({event: LifecycleCallbacks.showCreateOrInvitePage, args: reason})
+            },
+            showError: (message: string | ServerError) => {
+                subject.next({event: LifecycleCallbacks.showError, args: message})
+            }
+        };
+        this.server.asyncRunStartupLifecycle(callback).then(() => {
+            subject.complete();
+        });
+        return subject;
+    }
+
     async runStartupLifecycleAfterLogin(navCtrl: NavController): Promise<boolean> {
         return await this.server.asyncRunStartupLifecycleAfterLogin(this.lifecycleCallback(navCtrl));
+    }
+
+    executeInZone(func) {
+        if (this.zoneRef) {
+            this.zoneRef.run(func);
+        } else {
+            func();
+        }
     }
 
     private show_alert(message: string | ServerError, more_options: ToastOptions, stay_open: boolean = false) {
@@ -133,5 +174,6 @@ class ObjectUtils {
 
 export {
     PageUtils,
-    ObjectUtils
+    ObjectUtils,
+    LifecycleEvent
 }

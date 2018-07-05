@@ -1,4 +1,4 @@
-import {Component, ViewChild} from '@angular/core';
+import {ApplicationRef, Component, ViewChild} from '@angular/core';
 import {AlertController, IonicPage, NavController, NavParams, ViewController} from 'ionic-angular';
 import {Team} from "../../scheduling/teams";
 import {Person} from "../../scheduling/people";
@@ -6,6 +6,9 @@ import {RootStore} from "../../store/root";
 import {ObjectValidation} from "../../scheduling/shared";
 import {PageUtils} from "../page-utils";
 import {NamedObject} from "../../scheduling/base-types";
+import {LoggingWrapper} from "../../common/logging-wrapper";
+import {Logger} from "ionic-logging-service";
+import {runInAction} from "mobx";
 
 @IonicPage({
     name: 'page-team',
@@ -19,15 +22,18 @@ export class TeamPage {
     team: Team;
     callback: (add: boolean) => void;
     @ViewChild('peoplelist') pc;
+    private logger: Logger;
 
     constructor(public navCtrl: NavController,
                 public viewCtrl: ViewController,
                 public pageUtils: PageUtils,
                 public alertCtrl: AlertController,
+                private appRef: ApplicationRef,
                 public rootStore: RootStore,
                 public navParams: NavParams) {
         this.team = navParams.get('team');
         this.callback = navParams.get('callback');
+        this.logger = LoggingWrapper.getLogger('page.team')
     }
 
     get has_add_button() {
@@ -41,6 +47,7 @@ export class TeamPage {
         if (!this.team) {
             // No team? go back to the teams list
             this.navCtrl.pop();
+        } else {
         }
     }
 
@@ -59,27 +66,26 @@ export class TeamPage {
     }
 
     get okButtonDisabled(): boolean {
-        if(!this.team) {
+        if (!this.team) {
             return true;
         }
-        if(!this.team.name) {
+        if (!this.team.name) {
             return true;
         }
-        if(this.team.name.length == 0) {
+        if (this.team.name.length == 0) {
             return true;
         }
         return false;
     }
 
     add_person_to_team(person: Person) {
-        this.rootStore.asyncSaveOrUpdateDb(person).then((new_person) => {
-            this.rootStore.people.add(person);
-            this.team.add(person);
-        });
+        this.team.add(person);
+        this.rootStore.asyncSaveOrUpdateDb(this.team);
     }
 
     delete_from_team(person: Person) {
         this.team.remove(person);
+
     }
 
     add_from_existing() {

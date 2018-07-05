@@ -34,6 +34,8 @@ import {ResponsiveConfig, ResponsiveModule} from "ng2-responsive";
 import {ConnectivityService} from "../common/network/connectivity";
 import {Network} from "@ionic-native/network";
 import {NativePageTransitions} from "@ionic-native/native-page-transitions";
+import {TeamWizardPageModule} from "../pages/team-wizard/team-wizard.module";
+import {PlanWizardPageModule} from "../pages/plan-wizard/plan-wizard.module";
 
 
 let config = {
@@ -74,7 +76,9 @@ export function ResponsiveDefinition() {
         TeamPageModule,
         PersonAssignmentPageModule,
         DatabaseMaintPageModule,
-        ResponsiveModule
+        ResponsiveModule,
+        TeamWizardPageModule,
+        PlanWizardPageModule,
     ],
     bootstrap: [IonicApp],
     entryComponents: [

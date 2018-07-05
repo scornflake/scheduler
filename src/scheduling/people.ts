@@ -96,6 +96,23 @@ class Person extends NamedObject {
         return this;
     }
 
+    get needsResave(): boolean {
+        let needsIt = false;
+        if(!this.preferences) {
+            this.preferences = new Preferences();
+            needsIt = true;
+        }
+        if(!this.unavailable) {
+            this.unavailable = new Array<Unavailability>();
+            needsIt = true;
+        }
+        if(!this._availability) {
+            this.availability = new Availability();
+            needsIt = true;
+        }
+        return needsIt;
+    }
+
     @computed get availability() {
         return this._availability;
     }
@@ -120,7 +137,7 @@ class Person extends NamedObject {
     }
 
     @computed get initials() {
-        if(this.name != null) {
+        if (this.name != null) {
             let words = this.name.split(" ");
             return words.map(w => w[0]).join(".")
         }

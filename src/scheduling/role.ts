@@ -20,6 +20,10 @@ class Role extends NamedObject {
         this.layout_priority = val;
     }
 
+    @action setDisplayOrder(val: number) {
+        this.display_order = val;
+    }
+
     get required(): boolean {
         return this.minimum_needed > 1;
     }

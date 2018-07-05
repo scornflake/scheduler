@@ -1,0 +1,27 @@
+<div class="welcome">
+    <h2 class="heading">Welcome!</h2>
+
+    <div class="buttons" ion-grid>
+        <p>Lets do some wizard like things to get you started.
+            Start by creating a Team, then create a Plan.</p>
+        <br/>
+        <br/>
+
+        <ion-row>
+            <button ion-col col-8 offset-2 col-md-4 offset-md-4 ion-button (tap)="createTeamClicked.emit($event)">Create
+                Team
+            </button>
+            <p *ngIf="store.teams.length > 0" class="yay">Neat! You've got at least one team.</p>
+        </ion-row>
+        <ion-row>
+            <button ion-col col-8 offset-2 col-md-4 offset-md-4 ion-button (tap)="createPlanClicked.emit($event)">Create
+                Plan
+            </button>
+        </ion-row>
+    </div>
+
+    <ion-footer>
+        <p *ngIf="store.teams.length == 0">Tip: Plans work with Teams, so create the Team first.</p>
+        <p *ngIf="store.teams.length > 0">Tip: Plans are used to make schedules.</p>
+    </ion-footer>
+</div>

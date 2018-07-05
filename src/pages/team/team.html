@@ -16,19 +16,21 @@
 </ion-header>
 
 
-<ion-content *ngIf="team != null" no-margin>
-    <ion-list no-margin>
-        <ion-item>
-            <ion-label>Name</ion-label>
-            <ion-input [(ngModel)]="team.name"></ion-input>
-        </ion-item>
-    </ion-list>
+<ion-content no-margin>
+    <div *ngIf="team">
+        <ion-list no-margin>
+            <ion-item>
+                <ion-label>Name</ion-label>
+                <ion-input [(ngModel)]="team.name"></ion-input>
+            </ion-item>
+        </ion-list>
 
-    <people #peoplelist
-            [people]="team.people"
-            (person_added)="add_person_to_team($event)"
-            (delete)="delete_from_team($event)">
-    </people>
+        <people #peoplelist
+                [people]="team.people"
+                (personAdded)="add_person_to_team($event)"
+                (delete)="delete_from_team($event)">
+        </people>
+    </div>
 </ion-content>
 
 <ion-footer>

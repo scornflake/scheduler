@@ -87,6 +87,8 @@ class LoginPage implements AfterViewInit {
         } else {
             this.switchToLogin();
         }
+        this.slides.lockSwipes(true);
+        this.slides.enableKeyboardControl(false);
     }
 
     @action setRegistrationPassword(value: string) {
@@ -269,7 +271,7 @@ class LoginPage implements AfterViewInit {
                 this.server.hasEmailBeenConfirmed(this.registrationEmail).then(flag => {
                     if (flag) {
                         this.logger.info(`Email was confirmed. Wait for replication to start`);
-                        this.switchToReplication();
+                        this.startReplicationAndWait();
                     }
                 })
             })
@@ -278,7 +280,7 @@ class LoginPage implements AfterViewInit {
         }
     }
 
-    private switchToReplication() {
+    private startReplicationAndWait() {
         this.stopListeningForConfirmation();
         this.switchModes(LoginPageMode.StartingReplication);
 
@@ -286,6 +288,8 @@ class LoginPage implements AfterViewInit {
         // the local DB... if we can find both, and replication is started
         // then we continue
 
+        // This will validate the login. it should be fine because its just been created and confirmed.
+        // the lifecycle kicks off replication as well.
         this.pageUtils.runStartupLifecycle(this.nav);
 
         console.log(`checking local DB for what we need ...`);

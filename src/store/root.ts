@@ -15,7 +15,7 @@ import {Organization} from "../scheduling/organization";
 import {IObjectCache} from "../providers/mapping/cache";
 import {Role} from "../scheduling/role";
 import {Assignment} from "../scheduling/assignment";
-import {action} from "mobx-angular";
+import {action, computed} from "mobx-angular";
 import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {SWBSafeJSON} from "../common/json/safe-stringify";
@@ -231,6 +231,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
                 } else {
                     this.logger.info(`No schedule generated, the provided plan was null`);
                 }
+                return null;
             }, schedule => {
                 runInAction(() => {
                     this.logger.debug(`Assigning recently created schedule to this.schedule`);
@@ -281,6 +282,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
         if (!this.spDisposer) {
             // If the selected plan UUID changes, lookup the plan and broadcast the change
             this.spDisposer = reaction(() => {
+                trace();
                 if (this.loggedInPerson) {
                     if (this.loggedInPerson.preferences) {
                         return this.loggedInPerson.preferences.selected_plan_uuid;
@@ -289,14 +291,10 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
                 return null;
             }, uuid => {
                 let plan = this.plans.findOfThisTypeByUUID(uuid);
-                if (plan) {
-                    this.ui_store.setSelectedPlan(plan);
-                    this.executeInZone(() => {
-                        this.selectedPlanSubject.next(plan);
-                    });
-                } else {
-                    this.logger.warn(`selected_plan$ failure - can't find plan with ID: ${uuid}`);
-                }
+                this.ui_store.setSelectedPlan(plan);
+                this.executeInZone(() => {
+                    this.selectedPlanSubject.next(plan);
+                });
             }, {name: 'selected plan'});
         }
     }
@@ -360,6 +358,11 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
     clearDependentState() {
         // I *think* all the other states hang off of this one...
         this.ui_store.setLoggedInPerson(null);
+    }
+
+    logout() {
+        this.clearDependentState();
+        this.clear();
     }
 
     async setDatabase(db: SchedulerDatabase) {

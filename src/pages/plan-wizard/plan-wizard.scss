@@ -1,0 +1,29 @@
+page-plan-wizard {
+  .selection ion-select {
+    max-width: 100% !important;
+  }
+
+  .heading {
+    h2 {
+      p {
+        font-size: 0.6em;
+      }
+    }
+  }
+
+  .role {
+    padding: 10px;
+    padding-bottom: 15px;
+    ion-badge {
+      margin: 4px;
+      padding: 5px;
+    }
+  }
+
+  ion-footer {
+    p {
+      text-align: center;
+      color: $subdued-text-color;
+    }
+  }
+}

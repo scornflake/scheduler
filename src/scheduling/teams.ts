@@ -1,14 +1,15 @@
 import {find_object_with_name} from "./common/base_model";
 import {Person} from "./people";
 import {NamedObject} from "./base-types";
-import {action, observable} from "mobx-angular";
+import {action, computed, observable} from "mobx-angular";
+import {runInAction} from "mobx";
 
 class Team extends NamedObject {
-    private _people: Array<Person>;
+    @observable private _people: Array<Person>;
 
     constructor(name: string, people: Array<Person> = []) {
         super(name);
-        this._people = observable(new Array<Person>());
+        this._people = new Array<Person>();
         if (people) {
             this.people = people;
         }
@@ -19,9 +20,11 @@ class Team extends NamedObject {
     }
 
     set people(new_people: Array<Person>) {
-        if(new_people) {
-            this._people.splice(0, this._people.length);
-            new_people.forEach(v => this._people.push(v));
+        if (new_people) {
+            runInAction(() => {
+                this._people.splice(0, this._people.length);
+                new_people.forEach(v => this._people.push(v));
+            });
         }
     }
 
@@ -48,7 +51,7 @@ class Team extends NamedObject {
 
     @action
     add(person: Person): Person {
-        if(person) {
+        if (person) {
             let existing = this.findPersonByUUID(person.uuid);
             if (!existing) {
                 this._people.push(person);
@@ -59,7 +62,7 @@ class Team extends NamedObject {
 
     @action
     remove(person: Person) {
-        if(person) {
+        if (person) {
             let index = this._people.findIndex(p => p.uuid == person.uuid);
             if (index != -1) {
                 this._people.splice(index, 1);

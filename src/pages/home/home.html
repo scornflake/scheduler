@@ -23,35 +23,31 @@
     <div *ngIf="store.uiStore$|async as ui; else notSignedIn">
         <div *ngIf="server">
             <div *ngIf="server.loggedIn; else notSignedIn">
-                <ion-grid no-padding>
-                    <ion-item ion-row id="planselection" no-padding *ngIf="store.preferences$ | async as ss">
-                        <ion-label ion-col col-auto class="hidden-xs-down" padding-left>Showing Plan</ion-label>
-                        <ion-select
-                                ion-col col-sm text-center
-                                [ngModel]="ss.selected_plan_uuid"
-                                (ngModelChange)="ss.setSelectedPlanUUID($event)"
-                                placeholder="Plan"
-                        >
-                            <ion-option *ngFor="let p of plansByDateLatestFirst" value="{{p.uuid}}"
-                                        [selected]="ss.selected_plan_uuid == p.uuid">
-                                <div *ngIf="pageUtils.small; else tablets">
-                                    {{p.name}}
-                                </div>
-                                <ng-template #tablets>
-                                    {{p.name}}: {{p.start_date|date:'MMM d'}}-{{p.end_date|date:'MMM d'}}
-                                </ng-template>
-                            </ion-option>
-                        </ion-select>
-                        <button class="hidden-xs-down editButton" item-end ion-button (tap)="editPlan()">Edit</button>
-                    </ion-item>
-                </ion-grid>
-
-                <div *ngIf="store.schedule$ | async as schedule">
-                    <schedule-viewer [schedule]="schedule" [me]="store.loggedInPerson$|async"></schedule-viewer>
-                    <person-schedule [schedule]="schedule" [person]="store.loggedInPerson$|async"></person-schedule>
-                    <person-unavailable *ngIf="store.loggedInPerson$|async as p"
-                                        [person]="p"></person-unavailable>
+                <div class="loading" *ngIf="!server.isReady; else main">
+                    <ion-spinner [duration]="1000"></ion-spinner>
                 </div>
+                <ng-template #main>
+                    <ion-grid no-padding>
+                        <welcome-wizard
+                                *ngIf="hasNoPlans"
+                                (createPlanClicked)="createPlanWizard()"
+                                (createTeamClicked)="createTeamWizard()"
+                        >
+                        </welcome-wizard>
+
+                        <div *ngIf="!hasNoPlans">
+                            <show-plan *ngIf="!hasNoPlans" (editPlanClicked)="editPlan($event)"></show-plan>
+                            <div *ngIf="store.schedule$ | async as schedule">
+                                <schedule-viewer [schedule]="schedule"
+                                                 [me]="store.loggedInPerson$|async"></schedule-viewer>
+                                <person-schedule [schedule]="schedule"
+                                                 [person]="store.loggedInPerson$|async"></person-schedule>
+                                <person-unavailable *ngIf="store.loggedInPerson$|async as p"
+                                                    [person]="p"></person-unavailable>
+                            </div>
+                        </div>
+                    </ion-grid>
+                </ng-template>
 
 
                 <!--<ion-grid *ngIf="store.schedule$ | async as schedule" no-padding>-->
@@ -68,41 +64,42 @@
             </div>
         </div>
     </div>
-    <ng-template #notSignedIn>
-        <div class="notSignedIn">
-            <div class="title" text-center>Please sign&nbsp;in</div>
-            <div class="buttons">
-                <button class="signInButton" col-4 offset-4 ion-button (tap)="startSignIn()">Sign In</button>
-            </div>
-        </div>
-    </ng-template>
+    <!--<ng-template #notSignedIn>-->
+    <!--<div class="notSignedIn">-->
+    <!--<div class="title" text-center>Please sign&nbsp;in</div>-->
+    <!--<div class="buttons">-->
+    <!--<button class="signInButton" col-4 offset-4 ion-button (tap)="startSignIn()">Sign In</button>-->
+    <!--</div>-->
+    <!--</div>-->
+    <!--</ng-template>-->
 </ion-content>
 
 <!--<ion-footer>-->
-    <!--<div *ngIf="notSignedIn">-->
-    <!--<button class="signInButton" col-4 offset-4 ion-button (tap)="startSignIn()">Sign In</button>-->
-    <!--</div>-->
+<!--<div *ngIf="notSignedIn">-->
+<!--<button class="signInButton" col-4 offset-4 ion-button (tap)="startSignIn()">Sign In</button>-->
+<!--</div>-->
 
-    <!--<ion-buttons>-->
-    <!--<button small ion-button (tap)="change_state()">Test</button>-->
-    <!--</ion-buttons>-->
+<!--<ion-buttons>-->
+<!--<button small ion-button (tap)="change_state()">Test</button>-->
+<!--</ion-buttons>-->
 
 
-    <!--<ion-buttons *ngIf="(store.saved_state$ | async) as state">-->
-    <!--<button small ion-button-->
-    <!--(click)="export_as_csv()">To CSV-->
-    <!--</button>-->
-    <!--<button small ion-button *ngIf="state.have_previous_selection"-->
-    <!--(click)="read_as_previous_schedule()">Read Previous...-->
-    <!--</button>-->
-    <!--<button small ion-button *ngIf="!state.have_previous_selection"-->
-    <!--(click)="select_previous_schedule()">Select Previous...-->
-    <!--</button>-->
-    <!--<button small ion-button *ngIf="store.ui_store.signed_in_to_google"-->
-    <!--(click)="export_as_sheets()">Export Sheet...-->
-    <!--</button>-->
-    <!--<button small ion-button *ngIf="store.ui_store.signed_in_to_google"-->
-    <!--(click)="clear_sheet_state()">Clear State-->
-    <!--</button>-->
-    <!--</ion-buttons>-->
+<!--<ion-buttons *ngIf="(store.saved_state$ | async) as state">-->
+<!--<button small ion-button-->
+<!--(click)="export_as_csv()">To CSV-->
+<!--</button>-->
+<!--<button small ion-button *ngIf="state.have_previous_selection"-->
+<!--(click)="read_as_previous_schedule()">Read Previous...-->
+<!--</button>-->
+<!--<button small ion-button *ngIf="!state.have_previous_selection"-->
+<!--(click)="select_previous_schedule()">Select Previous...-->
+<!--</button>-->
+<!--<button small ion-button *ngIf="store.ui_store.signed_in_to_google"-->
+<!--(click)="export_as_sheets()">Export Sheet...-->
+<!--</button>-->
+<!--<button small ion-button *ngIf="store.ui_store.signed_in_to_google"-->
+<!--(click)="clear_sheet_state()">Clear State-->
+<!--</button>-->
+<!--</ion-buttons>-->
 <!--</ion-footer>-->
+

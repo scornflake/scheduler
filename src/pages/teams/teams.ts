@@ -23,12 +23,12 @@ export class TeamsPage {
     }
 
     ngAfterViewInit() {
-        // let the_teams = this.teams();
+        // let the_teams = this.teams;
         // if (the_teams.length > 0) {
-        //     this.show_team_detail(the_teams[0]);
+        //     this.showTeamDetail(the_teams[0]);
         // }
         // this.add_new_team();
-        this.pageUtils.runStartupLifecycle(this.navCtrl);
+        // this.pageUtils.runStartupLifecycle(this.navCtrl);
     }
 
     add_new_team() {

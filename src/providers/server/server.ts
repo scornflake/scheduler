@@ -3,7 +3,7 @@ import {Injectable} from '@angular/core';
 import {ConfigurationService} from "ionic-configuration-service";
 import {
     LoginResponse,
-    OrganizationResponse,
+    OrganizationResponse, RoleSetResponse,
     ServerError,
     UserResponse,
     ValidationResponse
@@ -176,6 +176,22 @@ export class RESTServer {
         body = Object.assign(body, this.fullNameToFirstAndLast(name));
         try {
             return await this.http.post(url, body, options).toPromise() as LoginResponse;
+        } catch (err) {
+            console.error(`Got bad response from server: ${JSON.stringify(err)}`);
+            if (err['status']) {
+                if (err['status'] == 400) {
+                    throw new ServerError(err);
+                }
+            }
+            throw err;
+        }
+    }
+
+    async getRoleSets(): Promise<Array<RoleSetResponse>> {
+        let url = this.server_url(`role_set/`);
+        let options = this.options;
+        try {
+            return await this.http.get(url, options).toPromise() as RoleSetResponse[];
         } catch (err) {
             console.error(`Got bad response from server: ${JSON.stringify(err)}`);
             if (err['status']) {

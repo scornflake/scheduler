@@ -15,6 +15,6 @@
 <ion-content>
     <people #personlist
             [people]="rootStore.people.all"
-            (person_added)="add_person($event)"
+            (personAdded)="add_person($event)"
             (delete)="delete_person($event)"></people>
 </ion-content>

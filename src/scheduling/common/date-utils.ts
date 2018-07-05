@@ -29,6 +29,10 @@ let formatDateForGoogleSpreadsheet = (date: Date): string => {
     return date.toDateString();
 };
 
+let dateForToday = (): Moment => {
+    return moment();
+};
+
 let parseDateFromSpreadsheetDate = (date_as_string: string): Date => {
     let moment_date = parseMomentDateFromSpreadsheetDate(date_as_string);
     if (moment_date && moment_date.isValid()) {

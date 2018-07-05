@@ -26,6 +26,19 @@ export class UserResponse {
     organization_token: string;
 }
 
+export class RoleResponse {
+    name: string;
+    minimum_needed: number;
+    maximum_needed: number;
+    layout_priority: number;
+    display_order: number;
+}
+
+export class RoleSetResponse {
+    name: string;
+    roles: RoleResponse[];
+}
+
 export declare type FieldErrors = {
     key: string;
     errors: string[];
@@ -97,7 +110,7 @@ export class ServerError {
             if (all.length > 0) {
                 all += ", ";
             }
-            if(Array.isArray(err.errors)) {
+            if (Array.isArray(err.errors)) {
                 all += err.errors.join(", ");
             }
         }

@@ -111,8 +111,16 @@ class Plan extends NamedObject {
         this.end_date = dateForISODateString(dateString);
     }
 
+    @action setEndDate(date: Date) {
+        this.end_date = date;
+    }
+
     @action setStartDateFromISO(dateString: string) {
         this.start_date = dateForISODateString(dateString);
+    }
+
+    @action setStartDate(date: Date) {
+        this.start_date = date;
     }
 
     @computed get people(): Array<Person> {

@@ -1,11 +1,5 @@
 TODO
 ====
-- Startup
-    - You've your own org. Now what?
-    - Show buttons on main page:
-        - Create a team (wizard?)
-        - Setup some roles
-        - Add people
 - Do the Invite thing
     - Send invites to people (Share)
     - Allow people to accept, and move them to that organization
@@ -25,6 +19,12 @@ TODO
         - SelectedPlan
     - login, should fade to actual page
     - everything is too quick right now, and "waits" for data with a white page
+- Deleting a Team
+    - not actually implemented (it never sends the delete to the server)
+    - it isnt deleted from the other side (other clients)
+- Adding new member to team (same on plans as well)
+    - doesn't refresh UI
+    - wondering if it's because the actual array we have isn't an ObservableArray?
 - Sort out logout, stop hitting DB
     - Doesn't seem to be any more?
     - maybe a prob with menu, now solved?
@@ -33,6 +33,11 @@ TODO
     - This may be to do with a mobx error, that we see only on Safari.
 - Daniel Gibbs 'avail' shows as nothing, doesn't pick up the 'Anytime'
 - Daniel Gibbs: no email
+- Couch doesn't save Config settings. Restart clears CORS/etc.
+- Permissions on REST API.
+    - Throttling.
+    - Do users have to be logged in to access RoleSets?
+    - Check what is POST/PUT able. Reduce if necessary.
 - Search for usages (writes) of layout_priority that don't go through an @action
 - Add roles editing
 - Add a way to add 'default roles' (these sets should come from the server)

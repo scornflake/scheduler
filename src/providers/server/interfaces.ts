@@ -12,11 +12,20 @@ interface ILifecycleCallback {
     showError(message: string | ServerError);
 }
 
+enum LifecycleCallbacks {
+    showLoginPage,
+    applicationIsStarting,
+    applicationHasStarted,
+    showCreateOrInvitePage,
+    showError
+}
+
 interface ILifecycle {
     asyncRunStartupLifecycle(callback: ILifecycleCallback): Promise<boolean>;
 }
 
 export {
+    LifecycleCallbacks,
     ILifecycleCallback,
     ILifecycle,
 }

@@ -6,8 +6,12 @@ import {Logger} from "ionic-logging-service";
 import {RootStore} from "../../store/root";
 import {Plan} from "../../scheduling/plan";
 import {LoggingWrapper} from "../../common/logging-wrapper";
-import {PageUtils} from "../page-utils";
+import {LifecycleEvent, PageUtils} from "../page-utils";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
+import {computed} from "mobx-angular";
+import {pipe} from "rxjs/util/pipe";
+import {debounceTime, delay} from "rxjs/operators";
+import {LifecycleCallbacks} from "../../providers/server/interfaces";
 
 
 @IonicPage({
@@ -33,38 +37,59 @@ export class HomePage {
     ngOnInit() {
         // this.sheetAPI.init();
 
-        this.pageUtils.runStartupLifecycle(this.navCtrl).then(() => {
-            this.logger.info(`ngOnInit`, 'runStartupLifecycle complete');
-        });
+        this.pageUtils.runStartupLifecycleAsStream()
+            .pipe(
+                debounceTime(500),
+                delay(500)
+            )
+            .subscribe((event: LifecycleEvent) => {
+                switch (event.event) {
+                    case LifecycleCallbacks.showError: {
+                        this.pageUtils.showError(event.args);
+                        break;
+                    }
 
-        // this.store.ui_store$.subscribe(ius => {
-        //     this.logger.warn(`Home Says Signed In: ${ius.signed_in}`);
-        // });
-        // this.store.preferences.subscribe(ss => {
-        //     this.logger.warn(`Prefs: ${SafeJSON.stringify(ss)}`)
-        // })
-        // this.store.schedule$.subscribe(ss => {
-        //     this.logger.warn(`Schedule CHANGED in HOME: ${ss ? ss.id : ''}`)
-        // });
+                    case LifecycleCallbacks.applicationHasStarted: {
+                        this.navCtrl.setRoot('home', {});
+                        break;
+                    }
 
-        // this.navCtrl.push('login', {create: true});
+                    case LifecycleCallbacks.showLoginPage: {
+                        this.logger.info(`show login page, because: ${event.args}`);
+                        this.navCtrl.setRoot('login', {});
+                    }
+                }
+            }, err => {
+                this.pageUtils.showError(err);
+            }, () => {
+                this.logger.info(`ngOnInit`, 'runStartupLifecycle complete!');
+                // this.createTeamWizard();
+                // this.createPlanWizard();
+
+                // this.navCtrl.push('login', {create: true});
+                // this.navCtrl.push('page-teams', {create: true});
+            });
+
+
+        // Startup flow, aka: 'dont make me blink'.
+        // 1) if we have a login token and we're validating it, do NOT show the startup
+        // 2) if we don't have a token, show the login page directly (as the root)
+        // 3) Prevent very fast page transitions, e.g: if validation succeeds quickly, wait at least 1s before switching.
+
+
     }
 
-    selectPlanw(uuid: string) {
-        this.store.loggedInPerson.preferences.setSelectedPlanUUID(uuid);
+    @computed get hasNoPlans(): boolean {
+        if (this.store) {
+            if (this.store.plans) {
+                return this.store.plans.length == 0;
+            }
+            return true;
+        }
     }
 
     clear_selection() {
         this.store.ui_store.clear_selection();
-    }
-
-    get plansByDateLatestFirst(): Array<Plan> {
-        // Sort by date, latest first
-        return this.store.plans.plansByDateLatestFirst;
-    }
-
-    planTitle(p: Plan): string {
-        return `${p.name} ${p.start_date}-${p.end_date}`
     }
 
     select_previous_schedule() {
@@ -151,5 +176,13 @@ export class HomePage {
 
     editPlan(plan) {
         this.navCtrl.push('page-plan-details', {plan: this.store.ui_store.selectedPlan})
+    }
+
+    createPlanWizard() {
+        this.navCtrl.push('page-plan-wizard')
+    }
+
+    createTeamWizard() {
+        this.navCtrl.push('page-team-wizard')
     }
 }
