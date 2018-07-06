@@ -6,7 +6,7 @@
         </ion-toolbar>
     </ion-header>
     <ion-content>
-        <div *mobxAutorun>
+        <div *mobxTraceAutorun>
             <div *ngFor="let g of frozenGroups">
                 <div *ngIf="g.visible">
                     <ion-list-header color="light" *ngIf="g.title">{{g.title}}</ion-list-header>

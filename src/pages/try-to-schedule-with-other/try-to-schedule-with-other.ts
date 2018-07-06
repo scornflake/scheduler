@@ -34,7 +34,7 @@ export class TryToScheduleWithOtherPage {
 
     save() {
         if (!this.person_uuid) {
-            this.pageUtils.show_validation_error(ObjectValidation.simple("Person is required"));
+            this.pageUtils.showValidationError(ObjectValidation.simple("Person is required"));
             return;
         }
 

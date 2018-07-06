@@ -2,7 +2,7 @@ import {NgModule} from '@angular/core';
 import {IonicPageModule} from 'ionic-angular';
 import {TeamsPage} from './teams';
 import {ComponentsModule} from "../../components/components.module";
-import {MobxAngularModule} from "mobx-angular";
+import {SchedulerDirectivesModule} from "../../common/directives";
 
 @NgModule({
     declarations: [
@@ -10,7 +10,7 @@ import {MobxAngularModule} from "mobx-angular";
     ],
     imports: [
         ComponentsModule,
-        MobxAngularModule,
+        SchedulerDirectivesModule,
         IonicPageModule.forChild(TeamsPage),
     ],
 })

@@ -21,6 +21,5 @@ export class ProfilePage {
     }
 
     ngOnInit() {
-        this.pageUtils.runStartupLifecycle(this.navCtrl);
     }
 }

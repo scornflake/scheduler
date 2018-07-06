@@ -3,6 +3,7 @@ import {IonicPageModule} from 'ionic-angular';
 import {ComponentsModule} from "../../components/components.module";
 import {PeoplePage} from "./people-page";
 import {MobxAngularModule} from "mobx-angular";
+import {SchedulerDirectivesModule} from "../../common/directives";
 
 @NgModule({
     declarations: [
@@ -10,6 +11,7 @@ import {MobxAngularModule} from "mobx-angular";
     ],
     imports: [
         ComponentsModule,
+        SchedulerDirectivesModule,
         MobxAngularModule,
         IonicPageModule.forChild(PeoplePage),
     ],

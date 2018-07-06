@@ -16,7 +16,7 @@ class Team extends NamedObject {
     }
 
     get people(): Array<Person> {
-        return NamedObject.sortByName(this._people);
+        return this._people;
     }
 
     set people(new_people: Array<Person>) {

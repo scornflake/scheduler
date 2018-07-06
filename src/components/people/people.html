@@ -1,12 +1,13 @@
 <ion-searchbar [(ngModel)]="name_filter"></ion-searchbar>
-<div *mobxAutorun>
+<!-- Don't use mobxAutorun here, see MOBX.md -->
+<!--<div>-->
+<div *mobxTraceAutorun>
     <ion-list-header color="primary">People</ion-list-header>
     <ion-list>
-        <ion-item-sliding *ngFor="let person of filtered_people">
-            <ion-item detail-push (tap)="show_person_detail(person)">
+        <ion-item-sliding *ngFor="let person of filteredPeople">
+            <ion-item detail-push (tap)="showPersonDetail(person)">
                 <h2>{{person.name}}</h2>
-                <p>{{person.role_names}}</p>
-                <p>{{person.availability}}</p>
+                <p>{{personSummary(person)}}</p>
             </ion-item>
             <ion-item-options side="right">
                 <button ion-button color="danger" (tap)="delete_person(person)">Delete</button>

@@ -1,18 +1,17 @@
-import {ChangeDetectionStrategy, Component} from '@angular/core';
+import {Component} from '@angular/core';
 import {IonicPage, NavController} from 'ionic-angular';
 import {CSVExporter} from "../../scheduling/exporter/csv.exporter";
 import {GAPIS} from "../../common/gapis-auth";
 import {Logger} from "ionic-logging-service";
 import {RootStore} from "../../store/root";
-import {Plan} from "../../scheduling/plan";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {LifecycleEvent, PageUtils} from "../page-utils";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {computed} from "mobx-angular";
-import {pipe} from "rxjs/util/pipe";
 import {debounceTime, delay} from "rxjs/operators";
 import {LifecycleCallbacks} from "../../providers/server/interfaces";
 
+let __firstTime: boolean = true;
 
 @IonicPage({
     defaultHistory: ['home'],
@@ -63,20 +62,23 @@ export class HomePage {
                 this.pageUtils.showError(err);
             }, () => {
                 this.logger.info(`ngOnInit`, 'runStartupLifecycle complete!');
-                // this.createTeamWizard();
-                // this.createPlanWizard();
-
-                // this.navCtrl.push('login', {create: true});
-                // this.navCtrl.push('page-teams', {create: true});
+                this.firstTimeRun();
             });
 
+    }
 
-        // Startup flow, aka: 'dont make me blink'.
-        // 1) if we have a login token and we're validating it, do NOT show the startup
-        // 2) if we don't have a token, show the login page directly (as the root)
-        // 3) Prevent very fast page transitions, e.g: if validation succeeds quickly, wait at least 1s before switching.
+    private firstTimeRun() {
+        if (__firstTime) {
+            // this.createTeamWizard();
+            // this.createPlanWizard();
 
-
+            // this.navCtrl.push('login', {create: true});
+            // this.navCtrl.push('page-people', {create: true});
+            // this.navCtrl.push('page-teams', {create: true});
+            // this.navCtrl.push('page-plans', {create: true});
+            // this.navCtrl.push('page-test-utils', {create: true});
+            __firstTime = false;
+        }
     }
 
     @computed get hasNoPlans(): boolean {

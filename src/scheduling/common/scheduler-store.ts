@@ -17,7 +17,7 @@ abstract class GenericManager<T extends NamedObject> {
     }
 
     @computed get all(): T[] {
-        return this.findAllThisType();
+        return this.findAllThisType;
     }
 
     @computed get length(): number {
@@ -32,14 +32,17 @@ abstract class GenericManager<T extends NamedObject> {
         return this.all.map(callbackfn);
     }
 
-    findAllThisType(): T[] {
-        return this.store.items.filter(item => {
+    @computed get findAllThisType(): T[] {
+        // noinspection UnnecessaryLocalVariableJS
+        let filtered = this.store.items.filter(item => {
             return item.type == this.type;
         });
+        // console.warn(`findAllThisType on type: ${this.type} returning ${filtered.length} objects.`);
+        return filtered;
     }
 
     findOfThisTypeByUUID(uuid: string): T {
-        return this.findAllThisType().find(p => p.uuid == uuid);
+        return this.findAllThisType.find(p => p.uuid == uuid);
     }
 
     findThisTypeByName(name: string): T[] {
@@ -72,7 +75,7 @@ class RoleManager extends GenericManager<Role> {
     }
 
     @computed get roles(): Array<Role> {
-        return this.findAllThisType();
+        return this.findAllThisType;
     }
 
     @action remove(role: Role) {
@@ -91,7 +94,7 @@ class PersonManager extends GenericManager<Person> {
     }
 
     get people(): Array<Person> {
-        return this.findAllThisType();
+        return this.findAllThisType;
     }
 
     findByNameFuzzy(name: string) {
@@ -118,7 +121,7 @@ class OrganizationManager extends GenericManager<Organization> {
     }
 
     get organizations(): Array<Organization> {
-        return this.findAllThisType();
+        return this.findAllThisType;
     }
 }
 
@@ -128,7 +131,7 @@ class TeamManager extends GenericManager<Team> {
     }
 
     get teams(): Array<Team> {
-        return this.findAllThisType();
+        return this.findAllThisType;
     }
 
     remove(team: Team) {
@@ -139,6 +142,10 @@ class TeamManager extends GenericManager<Team> {
         }
         throw new Error(`cannot call, the store isnt a SchedulerObjectStore`);
     }
+
+    findAllWithPerson(person: Person): Array<Team> {
+        return this.teams.filter(t => t.findPersonInTeam(person) != null);
+    }
 }
 
 class PlansManager extends GenericManager<Plan> {
@@ -147,7 +154,7 @@ class PlansManager extends GenericManager<Plan> {
     }
 
     get plans(): Array<Plan> {
-        return this.findAllThisType();
+        return this.findAllThisType;
     }
 
     get plansByDateLatestFirst(): Array<Plan> {
@@ -174,7 +181,7 @@ class PlansManager extends GenericManager<Plan> {
 class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
     private peopleManager: PersonManager;
     private teamManager: TeamManager;
-    private plansManager: PlansManager;
+    @observable private plansManager: PlansManager;
     private rolesManager: RoleManager;
     private organizationManager: OrganizationManager;
 
@@ -187,23 +194,23 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
         this.organizationManager = new OrganizationManager(this);
     }
 
-    @computed get organizations(): OrganizationManager {
+    get organizations(): OrganizationManager {
         return this.organizationManager;
     }
 
-    @computed get people(): PersonManager {
+    get people(): PersonManager {
         return this.peopleManager;
     }
 
-    @computed get roles(): RoleManager {
+    get roles(): RoleManager {
         return this.rolesManager;
     }
 
-    @computed get teams(): TeamManager {
+    get teams(): TeamManager {
         return this.teamManager;
     }
 
-    @computed get plans(): PlansManager {
+    get plans(): PlansManager {
         return this.plansManager;
     }
 

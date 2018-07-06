@@ -98,15 +98,15 @@ class Person extends NamedObject {
 
     get needsResave(): boolean {
         let needsIt = false;
-        if(!this.preferences) {
+        if (!this.preferences) {
             this.preferences = new Preferences();
             needsIt = true;
         }
-        if(!this.unavailable) {
+        if (!this.unavailable) {
             this.unavailable = new Array<Unavailability>();
             needsIt = true;
         }
-        if(!this._availability) {
+        if (!this._availability) {
             this.availability = new Availability();
             needsIt = true;
         }

@@ -36,6 +36,7 @@ import {Network} from "@ionic-native/network";
 import {NativePageTransitions} from "@ionic-native/native-page-transitions";
 import {TeamWizardPageModule} from "../pages/team-wizard/team-wizard.module";
 import {PlanWizardPageModule} from "../pages/plan-wizard/plan-wizard.module";
+import {SchedulerDirectivesModule} from "../common/directives";
 
 
 let config = {
@@ -79,6 +80,7 @@ export function ResponsiveDefinition() {
         ResponsiveModule,
         TeamWizardPageModule,
         PlanWizardPageModule,
+        SchedulerDirectivesModule
     ],
     bootstrap: [IonicApp],
     entryComponents: [
@@ -125,3 +127,4 @@ export class AppModule {
         AppModule.injector = injector;
     }
 }
+

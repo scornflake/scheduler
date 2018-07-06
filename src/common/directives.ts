@@ -1,6 +1,18 @@
-import {ChangeDetectorRef, ContentChildren, Directive, QueryList, Self} from '@angular/core';
-import {Segment, SegmentButton} from 'ionic-angular';
+import {
+    ChangeDetectorRef,
+    ContentChildren,
+    Directive, Input,
+    NgModule, NgZone,
+    QueryList,
+    Renderer,
+    Self,
+    TemplateRef,
+    ViewContainerRef
+} from '@angular/core';
+import {DateTime, Segment, SegmentButton} from 'ionic-angular';
 import {Subscription} from 'rxjs';
+import {MobxAutorunDirective} from "mobx-angular";
+import {autorun, trace} from "mobx";
 
 // TODO: Hotfix for dynamic ion-segment-buttons issue (https://github.com/driftyco/ionic/issues/6923).
 @Directive({
@@ -12,11 +24,10 @@ export class IonSegmentHotfix {
     @ContentChildren(SegmentButton)
     buttons: QueryList<SegmentButton>;
 
-    constructor(@Self() private segment: Segment, private cf : ChangeDetectorRef) {
+    constructor(@Self() private segment: Segment, private cf: ChangeDetectorRef) {
     }
 
     ngAfterViewInit() {
-
     }
 
     ngAfterContentInit() {
@@ -47,4 +58,91 @@ export class IonSegmentHotfix {
     doDetectChanges() {
         this.cf.detectChanges();
     }
+}
+
+@Directive({
+    selector: '[mobxTraceAutorun]'
+})
+export class MobxTraceAutorun extends MobxAutorunDirective {
+    @Input('mobxTraceAutorun') options: string;
+    @Input('mobxTraceDelay') delay: number = 50;
+
+    private disabled: boolean = false;
+    private trace: boolean = false;
+
+    constructor(templateRef: TemplateRef<any>, viewContainer: ViewContainerRef, renderer: Renderer) {
+        super(templateRef, viewContainer, renderer);
+    }
+
+    ngOnInit(): void {
+        super.ngOnInit();
+        if (this.options) {
+            if (this.options.includes('trace')) {
+                this.trace = true;
+            }
+            console.warn(`MobxTraceAutorun: options: ${this.options}, delay: ${this.delay}, trace: ${this.trace}`);
+        }
+    }
+
+    autoDetect(view: any): void {
+        if (this.disabled) {
+            return;
+        }
+        let enableTracing = this.trace;
+        let actionDelay = this.delay;
+        let autorunName = view._view.component
+            ? view._view.component.constructor.name + ".detectChanges()" // angular 4+
+            : view._view.parentView.context.constructor.name + ".detectChanges()"; // angular 2
+        this.dispose = autorun(function () {
+            if (enableTracing) {
+                trace();
+            }
+
+            /*
+            It appears executing this immediately can interfere with animations / UI.
+             */
+            setTimeout(() => {
+                view['detectChanges']();
+            }, actionDelay);
+        }, {name: autorunName});
+    }
+}
+
+
+/*
+I had problems with ion-datetime.
+If bound to a stream$|async, it would display the value on page load OK. But if it was bound to some normal object, no... it wouldn't.
+It *would* show the value as soon as I clicked on some other control in the view tho.
+ */
+@Directive({
+    selector: 'ion-datetime'
+})
+export class IonDateTimeHotfix {
+    constructor(@Self() private dateTime: DateTime, private cf: ChangeDetectorRef) {
+    }
+
+    ngAfterContentInit() {
+        this.onChildrenChanged();
+    }
+
+    onChildrenChanged() {
+        setTimeout(() => {
+            this.cf.markForCheck();
+        });
+    }
+}
+
+@NgModule({
+    declarations: [
+        IonDateTimeHotfix,
+        IonSegmentHotfix,
+        MobxTraceAutorun,
+    ],
+    exports: [
+        IonDateTimeHotfix,
+        IonSegmentHotfix,
+        MobxTraceAutorun,
+    ]
+})
+export class SchedulerDirectivesModule {
 }

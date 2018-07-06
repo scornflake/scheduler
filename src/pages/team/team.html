@@ -4,10 +4,10 @@
         <ion-title text-center *ngIf="has_add_button">Add New Team</ion-title>
         <ion-title text-center *ngIf="!has_add_button">Edit Team</ion-title>
         <ion-buttons end>
-            <button ion-button icon-only (tap)="pc.add_new_person()">
+            <button ion-button icon-only (tap)="pc.addNewPerson()">
                 <ion-icon name="person-add"></ion-icon>
             </button>
-            <button ion-button icon-only (tap)="add_from_existing()">
+            <button ion-button icon-only (tap)="addFromExisting()">
                 <ion-icon name="people"></ion-icon>
             </button>
         </ion-buttons>
@@ -16,7 +16,7 @@
 </ion-header>
 
 
-<ion-content no-margin>
+<ion-content no-margin *mobxTraceAutorun>
     <div *ngIf="team">
         <ion-list no-margin>
             <ion-item>

@@ -1,33 +1,18 @@
 TODO
 ====
+- Deleting a Team
+    - not actually implemented (it never sends the delete to the server)
+    - it isn't deleted from the other side (other clients)
 - Do the Invite thing
     - Send invites to people (Share)
     - Allow people to accept, and move them to that organization
     - Reload the app?
 - Serve the built www via something static (nginx?)
-- Offline. Close server. Get app to startup.
-    - How to detect? [done]
-    - Case where have connection, but server is offline. That 'known' error should result in continue... [done]
-    - Restart app from sleep, without network, does it work?
+-
 - Get sign in / reg lifecycle going (done?)
   - Don't auto sign in as me :)
   - The various pages:
-    - should flow nicer
-    - replication starting (or whatever we're gonna call it...), should wait for
-        - Replication
-        - Schedule
-        - SelectedPlan
     - login, should fade to actual page
-    - everything is too quick right now, and "waits" for data with a white page
-- Deleting a Team
-    - not actually implemented (it never sends the delete to the server)
-    - it isnt deleted from the other side (other clients)
-- Adding new member to team (same on plans as well)
-    - doesn't refresh UI
-    - wondering if it's because the actual array we have isn't an ObservableArray?
-- Sort out logout, stop hitting DB
-    - Doesn't seem to be any more?
-    - maybe a prob with menu, now solved?
 - When creating account first time, receiving data, done - it doesn't select the first schedule.
     - I think even if you select the schedule, it doesn't show it.
     - This may be to do with a mobx error, that we see only on Safari.
@@ -38,9 +23,10 @@ TODO
     - Throttling.
     - Do users have to be logged in to access RoleSets?
     - Check what is POST/PUT able. Reduce if necessary.
-- Search for usages (writes) of layout_priority that don't go through an @action
 - Add roles editing
-- Add a way to add 'default roles' (these sets should come from the server)
+- Add a way to add 'default roles'
+    - these sets should come from the server [done]
+    - should be available when adding roles, in the role editor (when the wizard isn't around)
 - Remove 'pull to refresh' style action on home page (it doesn't do anything)
 - If User is activated, but I deleted the Org, validation/login still seems to return OK (and the client then goes into an endless loop)
 - Finish 'clone plan'
@@ -50,7 +36,6 @@ TODO
 - DB isn't showing an up to date version of info. Should reload this on page reload?
 - Add 'level' to Person, and write up about game-ifying the whole thing
 - Make it so scheduler tells you if a required role isn't filled
-- Building the docker containers
 - It would be GREAT to have CI build the docker images (after running tests) and auto-deploy. At least for a test environment.
 - Deploying the containers
     - making sure rqscheduler, rqworker are running

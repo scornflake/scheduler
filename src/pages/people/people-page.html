@@ -4,7 +4,7 @@
             Your People
         </ion-title>
         <ion-buttons end>
-            <button ion-button icon-only (tap)="pc.add_new_person()">
+            <button ion-button icon-only (tap)="pc.addNewPerson()">
                 <ion-icon name="person-add"></ion-icon>
             </button>
         </ion-buttons>
@@ -12,7 +12,7 @@
     <saving-state></saving-state>
 </ion-header>
 
-<ion-content>
+<ion-content *mobxTraceAutorun>
     <people #personlist
             [people]="rootStore.people.all"
             (personAdded)="add_person($event)"

@@ -4,6 +4,7 @@ import {ComponentsModule} from "../../components/components.module";
 import {HomePage} from "./home";
 import {MobxAngularModule} from "mobx-angular";
 import {ResponsiveModule} from "ng2-responsive";
+import {SchedulerDirectivesModule} from "../../common/directives";
 
 @NgModule({
     declarations: [
@@ -12,6 +13,7 @@ import {ResponsiveModule} from "ng2-responsive";
     imports: [
         ComponentsModule,
         MobxAngularModule,
+        SchedulerDirectivesModule,
         ResponsiveModule,
         IonicPageModule.forChild(HomePage),
     ],

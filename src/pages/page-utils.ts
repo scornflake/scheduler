@@ -33,7 +33,7 @@ class PageUtils implements OnInit {
     ngOnInit() {
     }
 
-    public show_validation_error(validation: ObjectValidation, stay_open: boolean = false) {
+    public showValidationError(validation: ObjectValidation, stay_open: boolean = false) {
         this.show_alert(validation.errors.join(", "), {cssClass: 'validation'}, stay_open);
     }
 

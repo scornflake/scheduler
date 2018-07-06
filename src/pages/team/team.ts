@@ -1,4 +1,4 @@
-import {ApplicationRef, Component, ViewChild} from '@angular/core';
+import {ApplicationRef, ChangeDetectorRef, Component, NgZone, ViewChild} from '@angular/core';
 import {AlertController, IonicPage, NavController, NavParams, ViewController} from 'ionic-angular';
 import {Team} from "../../scheduling/teams";
 import {Person} from "../../scheduling/people";
@@ -12,7 +12,7 @@ import {runInAction} from "mobx";
 
 @IonicPage({
     name: 'page-team',
-    defaultHistory: ['page-teams']
+    defaultHistory: ['page-teams', 'home']
 })
 @Component({
     selector: 'page-team',
@@ -28,13 +28,22 @@ export class TeamPage {
                 public viewCtrl: ViewController,
                 public pageUtils: PageUtils,
                 public alertCtrl: AlertController,
-                private appRef: ApplicationRef,
+                public cd: ChangeDetectorRef,
+                public zone: NgZone,
                 public rootStore: RootStore,
                 public navParams: NavParams) {
         this.team = navParams.get('team');
         this.callback = navParams.get('callback');
         this.logger = LoggingWrapper.getLogger('page.team')
     }
+
+    // ngDoCheck() {
+    //     console.warn(`TeamPage is being checked`);
+    // }
+    //
+    // ngOnChanges(changes) {
+    //     console.warn(`TeamPage has changes`)
+    // }
 
     get has_add_button() {
         return this.callback != null;
@@ -60,7 +69,7 @@ export class TeamPage {
         try {
             this.callback(true);
         } catch (err) {
-            this.pageUtils.show_validation_error(ObjectValidation.simple(err));
+            this.pageUtils.showValidationError(ObjectValidation.simple(err));
         }
         this.navCtrl.pop();
     }
@@ -88,7 +97,7 @@ export class TeamPage {
 
     }
 
-    add_from_existing() {
+    addFromExisting() {
         // Show a selection of people, with add/cancel button
         let alert = this.alertCtrl.create({
             title: "Select people to add"
@@ -96,7 +105,7 @@ export class TeamPage {
         let people_not_in_list = this.rootStore.people.all.filter(p => this.team.findPersonInTeam(p) == null);
         if (people_not_in_list.length == 0) {
             let validation = ObjectValidation.simple("All people are already in the list");
-            this.pageUtils.show_validation_error(validation);
+            this.pageUtils.showValidationError(validation);
             return;
         }
         for (let p of NamedObject.sortByName(people_not_in_list)) {
@@ -109,10 +118,13 @@ export class TeamPage {
         alert.addButton({
             text: 'Add',
             handler: (uuids) => {
-                for (let uuid of uuids) {
-                    let person = this.rootStore.findByUUID(uuid) as Person;
-                    this.team.add(person);
-                }
+                let dismissTransition = alert.dismiss();
+                dismissTransition.then(() => {
+                    this.addExistingUUIDsToTeam(uuids)
+                });
+                // this.addExistingUUIDsToTeam(uuids);
+                // return true;
+                return false;
             }
         });
         alert.addButton({
@@ -123,6 +135,17 @@ export class TeamPage {
             }
         });
         alert.present();
+    }
+
+    addExistingUUIDsToTeam(uuids) {
+        for (let uuid of uuids) {
+            let person = this.rootStore.findByUUID(uuid) as Person;
+            this.team.add(person);
+
+            // For some reason, the change to the data isn't enough
+            this.cd.detectChanges();
+            // this.pc.cd.detectChanges();
+        }
     }
 }
 

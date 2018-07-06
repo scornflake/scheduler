@@ -213,7 +213,7 @@ export class DatabaseMaintPage implements OnDestroy {
         } catch (e) {
             // oh oh.
             let ve = ObjectValidation.simple("Cannot setup default fake plan. Is the DB OK? " + e.toString().substr(0, 100));
-            this.pageUtils.show_validation_error(ve, true);
+            this.pageUtils.showValidationError(ve, true);
         }
 
         return plan;

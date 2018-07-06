@@ -23,19 +23,20 @@ export class PlansPage {
                 public navParams: NavParams) {
     }
 
-    @computed get plans() {
+    get plans() {
         return this.rootStore.plans.all;
     }
 
     ionViewDidLoad() {
-        // for debugging
+        // for debugging, pop to first page if no plans
         if (this.plans.length == 0) {
             // this.navCtrl.pop();
         } else {
-            // this.show_plan_detail(this.plans[0])
+            // For Debug, show first plan
+            // if (this.plans.length) {
+                // this.showPlanDetail(this.plans[0])
+            // }
         }
-
-        this.pageUtils.runStartupLifecycle(this.navCtrl);
     }
 
     @action add_plan() {
@@ -60,9 +61,9 @@ export class PlansPage {
 
                     this.rootStore.asyncSaveOrUpdateDb(plan).then(() => {
                         this.rootStore.plans.add(plan);
-                        this.show_plan_detail(plan);
+                        this.showPlanDetail(plan);
                     });
-                } catch(err) {
+                } catch (err) {
                     this.pageUtils.showError(err);
                 }
             }
@@ -77,14 +78,14 @@ export class PlansPage {
         alert.present();
     }
 
-    show_plan_detail(plan: Plan) {
+    showPlanDetail(plan: Plan) {
         this.navCtrl.push('page-plan-details', {plan: plan})
     }
 
     duplicate_plan(plan: Plan) {
         let newPlan = this.rootStore.asyncDuplicateExistingPlan('New Plan', plan).then(newPlan => {
             this.rootStore.plans.add(newPlan);
-            this.show_plan_detail(newPlan);
+            this.showPlanDetail(newPlan);
             // this.rootStore.async_save_or_update_to_db(newPlan).then(() => {
             // });
         });

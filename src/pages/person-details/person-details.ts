@@ -46,12 +46,13 @@ export class PersonDetailsPage {
     ok_editing() {
         let validation = this.person.validate();
         if (!validation.ok) {
-            this.pageUtils.show_validation_error(validation);
+            this.pageUtils.showValidationError(validation);
             return;
         }
-        if (this.callback) {
-            this.callback(this.person);
-        }
-        this.navCtrl.pop();
+        this.navCtrl.pop().then(() => {
+            if (this.callback) {
+                this.callback(this.person);
+            }
+        });
     }
 }

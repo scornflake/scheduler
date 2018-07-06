@@ -12,10 +12,16 @@
 </ion-header>
 
 
-<ion-content *mobxAutorun>
+<ion-content>
+    <!--<ion-list *ngIf="plans[0] as p">-->
+        <!--<ion-item>-->
+            <!--<ion-label>Plan start</ion-label>-->
+            <!--<ion-datetime [ngModel]="p.start_date.toISOString()" item-end></ion-datetime>-->
+        <!--</ion-item>-->
+    <!--</ion-list>-->
     <ion-list>
         <ion-item-sliding *ngFor="let plan of plans">
-            <ion-item detail-push (tap)="show_plan_detail(plan)">
+            <ion-item detail-push (tap)="showPlanDetail(plan)">
                 <h2>{{plan.name}}</h2>
                 <p>From {{plan.start_date|date:'shortDate'}} to {{plan.end_date|date:'shortDate'}}</p>
             </ion-item>

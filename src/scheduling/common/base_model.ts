@@ -33,9 +33,7 @@ class GenericObjectStore<T extends ObjectWithUUID> {
     @observable items: Array<T>;
 
     constructor() {
-        runInAction(() => {
-            this.items = [];
-        });
+        this.clear();
     }
 
     @action addObjectToStore(instance: T, overwrite_existing = true): T {
@@ -67,8 +65,9 @@ class GenericObjectStore<T extends ObjectWithUUID> {
         }
     }
 
-    @action protected clear_all_objects_from_array() {
-        this.items = []
+    @action
+    protected clear_all_objects_from_array() {
+        this.clear();
     }
 
     @computed get length(): number {
@@ -92,7 +91,7 @@ class GenericObjectStore<T extends ObjectWithUUID> {
     }
 
     @action clear() {
-        this.items = [];
+        this.items = observable([]);
     }
 }
 

@@ -13,38 +13,39 @@
 </ion-header>
 
 
-<ion-content *ngIf="plan != null">
-    <ion-list no-padding no-margin>
-        <ion-item>
-            <ion-label>Name</ion-label>
-            <ion-input text-right placeholder="Plan name" [ngModel]="plan.name" (ngModelChange)="plan.setName($event)"></ion-input>
-        </ion-item>
-        <ion-item>
-            <ion-label>Start Date</ion-label>
-            <ion-datetime [ngModel]="plan.start_date.toISOString()"
-                          (ngModelChange)="plan.setStartDateFromISO($event)"></ion-datetime>
-        </ion-item>
-        <ion-item>
-            <ion-label>End Date</ion-label>
-            <ion-datetime [ngModel]="plan.end_date.toISOString()"
-                          (ngModelChange)="plan.setEndDateFromISO($event)"></ion-datetime>
-        </ion-item>
-    </ion-list>
-
-    <ion-list-header color="primary">
-        Role Assignment
-    </ion-list-header>
-    <ion-searchbar [(ngModel)]="name_filter"></ion-searchbar>
-    <ion-list>
-        <ion-item-sliding *ngFor="let p of sorted_people">
-            <ion-item (tap)="show_assignment(p)" text-wrap>
-                <h2>{{p.name}}</h2>
-                <p>{{description_for_person(p)}}</p>
+<ion-content>
+    <div *ngIf="plan">
+        <ion-list no-padding no-margin>
+            <ion-item>
+                <ion-label>Name</ion-label>
+                <ion-input text-right placeholder="Plan name" [ngModel]="plan.name"
+                           (ngModelChange)="plan.setName($event)"></ion-input>
             </ion-item>
-            <ion-item-options side="right">
-                <button ion-button color="danger" (tap)="delete_assignment_for_person(p)">Delete</button>
-            </ion-item-options>
-        </ion-item-sliding>
-    </ion-list>
+            <ion-item>
+                <ion-label>Start Date</ion-label>
+                <ion-datetime [(ngModel)]="startDate"></ion-datetime>
+            </ion-item>
+            <ion-item>
+                <ion-label>End Date</ion-label>
+                <ion-datetime [ngModel]="plan.end_date.toISOString()"
+                              (ngModelChange)="plan.setEndDateFromISO($event)"></ion-datetime>
+            </ion-item>
+        </ion-list>
 
+        <ion-list-header color="light">
+            Role Assignment
+        </ion-list-header>
+        <ion-searchbar [(ngModel)]="name_filter"></ion-searchbar>
+        <ion-list>
+            <ion-item-sliding *ngFor="let p of sorted_people">
+                <ion-item (tap)="show_assignment(p)" text-wrap>
+                    <h2>{{p.name}}</h2>
+                    <p>{{description_for_person(p)}}</p>
+                </ion-item>
+                <ion-item-options side="right">
+                    <button ion-button color="danger" (tap)="delete_assignment_for_person(p)">Delete</button>
+                </ion-item-options>
+            </ion-item-sliding>
+        </ion-list>
+    </div>
 </ion-content>

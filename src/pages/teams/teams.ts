@@ -23,13 +23,25 @@ export class TeamsPage {
     }
 
     ngAfterViewInit() {
+        // For Debug (if not loaded, jump back home)
+        // if(!this.teams.length) {
+        //     this.navCtrl.pop();
+        // }
+
+        // For Debug, show first team, if we have one
         // let the_teams = this.teams;
         // if (the_teams.length > 0) {
         //     this.showTeamDetail(the_teams[0]);
         // }
-        // this.add_new_team();
-        // this.pageUtils.runStartupLifecycle(this.navCtrl);
     }
+
+    // ngDoCheck() {
+    //     console.warn(`TeamsPage is being checked`);
+    // }
+    //
+    // ngOnChanges(changes) {
+    //     console.warn(`TeamsPage has changes`)
+    // }
 
     add_new_team() {
         let team = new Team("");

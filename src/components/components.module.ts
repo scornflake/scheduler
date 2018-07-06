@@ -15,13 +15,13 @@ import {PersonScheduleComponent} from './person-schedule/person-schedule';
 import {PersonUnavailableComponent} from './person-unavailable/person-unavailable';
 import {OrganizationEditorComponent} from './organization-editor/organization-editor';
 import {MobxAngularModule} from "mobx-angular";
-import {IonSegmentHotfix} from "../common/directives";
 import {ResponsiveModule} from "ng2-responsive";
 import {CalendarComponent} from "./swbcalendar/swbcalendar";
 import {Calendar} from "./ion-calendar/ion-calendar";
 import {monthName} from "../common/pipes/month-name";
-import { ShowPlanComponent } from './show-plan/show-plan';
-import { WelcomeWizardComponent } from './welcome-wizard/welcome-wizard';
+import {ShowPlanComponent} from './show-plan/show-plan';
+import {WelcomeWizardComponent} from './welcome-wizard/welcome-wizard';
+import {SchedulerDirectivesModule} from "../common/directives";
 
 @NgModule({
     declarations: [
@@ -38,17 +38,17 @@ import { WelcomeWizardComponent } from './welcome-wizard/welcome-wizard';
         PersonScheduleComponent,
         PersonUnavailableComponent,
         OrganizationEditorComponent,
-        IonSegmentHotfix,
         CalendarComponent,
         Calendar,
         monthName,
-    ShowPlanComponent,
-    WelcomeWizardComponent
+        ShowPlanComponent,
+        WelcomeWizardComponent,
     ],
     imports: [
         IonicModule,
         NgPipesModule,
         MobxAngularModule,
+        SchedulerDirectivesModule,
         ResponsiveModule,
     ],
     entryComponents: [
@@ -71,8 +71,8 @@ import { WelcomeWizardComponent } from './welcome-wizard/welcome-wizard';
         Calendar,
         CalendarComponent,
         monthName,
-    ShowPlanComponent,
-    WelcomeWizardComponent
+        ShowPlanComponent,
+        WelcomeWizardComponent,
     ]
 })
 export class ComponentsModule {

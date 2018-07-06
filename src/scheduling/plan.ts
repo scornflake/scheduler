@@ -86,7 +86,7 @@ class Plan extends NamedObject {
         return this._assignments.find(a => a.person.uuid == person.uuid);
     }
 
-    get_or_create_assignment_for(person: Person): Assignment {
+    @action get_or_create_assignment_for(person: Person): Assignment {
         let found = this.get_assignment_for(person);
         if (found == null) {
             let assignment = new Assignment(person);

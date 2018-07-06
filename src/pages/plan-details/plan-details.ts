@@ -5,6 +5,8 @@ import {Person} from "../../scheduling/people";
 import {PageUtils} from "../page-utils";
 import {NamedObject} from "../../scheduling/base-types";
 import {action, computed, observable} from "mobx-angular";
+import {isObservableObject} from "mobx";
+import {Team} from "../../scheduling/teams";
 
 @IonicPage({
     name: 'page-plan-details',
@@ -22,8 +24,24 @@ export class PlanDetailsPage {
                 public alertCtrl: AlertController,
                 public pageUtils: PageUtils,
                 public navParams: NavParams) {
-        this.plan = this.navParams.get('plan');
     }
+
+    ngOnInit() {
+        this.plan = this.navParams.get('plan');
+        // this.plan = new Plan('Some Fake Plan', new Team('Some Team'));
+        // this.plan.setStartDate(new Date());
+        // this.plan.setEndDate(new Date());
+
+        if (this.plan == null) {
+            this.navCtrl.pop();
+        } else {
+            // for debugging
+            // this.show_assignment(this.plan.people[0]);
+            console.warn(`Is Observable: ${isObservableObject(this.plan)}`);
+            console.warn(`Start date: ${this.plan.start_date.toISOString()}`);
+        }
+    }
+
 
     @computed get sorted_people(): Array<Person> {
         return NamedObject.sortByName(this.plan.people).filter(p => {
@@ -34,19 +52,28 @@ export class PlanDetailsPage {
         })
     }
 
+    get startDate(): string {
+        let isoString = this.plan.start_date.toISOString();
+        console.warn(`return start date of: ${isoString}`);
+        return isoString;
+    }
+
+    set startDate(value: string) {
+        this.plan.setStartDateFromISO(value);
+    }
+
+    get endDate(): string {
+        return this.plan.end_date.toISOString();
+    }
+
+    set endDate(value: string) {
+        this.plan.setEndDateFromISO(value);
+    }
+
     description_for_person(p: Person) {
         let items: Array<any> = [p.availability];
         items = items.concat(this.plan.get_assignment_for(p).roles);
         return items.join(", ");
-    }
-
-    ionViewDidLoad() {
-        if (this.plan == null) {
-            this.navCtrl.pop();
-        } else {
-            // for debugging
-            // this.show_assignment(this.plan.people[0]);
-        }
     }
 
     @action add_assignment() {
