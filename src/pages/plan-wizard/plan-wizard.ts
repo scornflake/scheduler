@@ -52,8 +52,8 @@ export class PlanWizardPage extends WizardPage {
         this.endDate = moment().add(3, 'month').toDate();
 
         // for debug
-        this.planName = 'Super Cunning';
-        this.roleSetName = "Music";
+        // this.planName = 'Super Cunning';
+        // this.roleSetName = "Music";
     }
 
     ionViewDidLoad(): void {

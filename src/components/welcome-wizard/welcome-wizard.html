@@ -14,7 +14,8 @@
             <p *ngIf="store.teams.length > 0" class="yay">Neat! You've got at least one team.</p>
         </ion-row>
         <ion-row>
-            <button ion-col col-8 offset-2 col-md-4 offset-md-4 ion-button (tap)="createPlanClicked.emit($event)">Create
+            <button [disabled]="store.teams.length == 0" ion-col col-8 offset-2 col-md-4 offset-md-4 ion-button
+                    (tap)="createPlanClicked.emit($event)">Create
                 Plan
             </button>
         </ion-row>

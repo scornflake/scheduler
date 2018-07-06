@@ -225,7 +225,9 @@ class LoginPage implements AfterViewInit {
          */
         let waitPeriod = this.firstSwitch ? 1000 : 0;
         setTimeout(() => {
+            this.slides.lockSwipes(false);
             this.slides.slideTo(mode);
+            this.slides.lockSwipes(true);
         }, waitPeriod);
         this.firstSwitch = false;
     }
