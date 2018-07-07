@@ -16,13 +16,13 @@ export class PersonScheduleComponent {
     constructor(public store: RootStore) {
     }
 
-    ngDoCheck() {
-        console.warn(`PersonScheduleComponent is being checked`);
-    }
-
-    ngOnChanges(changes) {
-        console.warn(`PersonScheduleComponent has changes`)
-    }
+    // ngDoCheck() {
+    //     console.warn(`PersonScheduleComponent is being checked`);
+    // }
+    //
+    // ngOnChanges(changes) {
+    //     console.warn(`PersonScheduleComponent has changes`)
+    // }
 
     @computed get scheduled_dates(): Array<ScheduleAtDate> {
         if (!this.person || !this.schedule) {

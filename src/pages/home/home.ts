@@ -33,13 +33,13 @@ export class HomePage {
         this.logger = LoggingWrapper.getLogger("page.home");
     }
 
-    ngDoCheck() {
-        console.warn(`HomePage is being checked`);
-    }
-
-    ngOnChanges(changes) {
-        console.warn(`HomePage has changes`)
-    }
+    // ngDoCheck() {
+    //     // console.warn(`HomePage is being checked`);
+    // }
+    //
+    // ngOnChanges(changes) {
+    //     console.warn(`HomePage has changes`)
+    // }
 
     showAbout() {
         this.navCtrl.push('page-about');

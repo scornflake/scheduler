@@ -41,11 +41,12 @@ export class SavingStateComponent implements AfterViewInit, OnDestroy {
                             this.savingstate = "saving";
                         } else if (state == SavingState.FinishedSaving) {
                             this.savingstate = "done";
-                            Observable.interval(1000).pipe(
+                            let subscription = Observable.interval(1000).pipe(
                                 take(1)
                             ).subscribe(() => {
                                 runInAction(() => {
                                     this.savingstate = "idle";
+                                    subscription.unsubscribe();
                                 });
                             })
                         }

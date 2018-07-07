@@ -43,19 +43,21 @@ class ConnectivityService implements OnDestroy {
                 });
             } else {
                 // If running in browser, poll the flag on the navigator
-                this.connectionSubscription = Observable.timer(200, 1000).pipe(
-                    map(() => {
-                        return window.navigator.onLine;
-                    }),
-                    distinctUntilChanged()
-                ).subscribe((value) => {
-                    runInAction(() => {
-                        this._navigatorOnline = value;
-                        this.zone.run(() => {
-                            this.sendNetworkChange();
+                this.zone.runOutsideAngular(() => {
+                    this.connectionSubscription = Observable.timer(200, 1000).pipe(
+                        map(() => {
+                            return window.navigator.onLine;
+                        }),
+                        distinctUntilChanged()
+                    ).subscribe((value) => {
+                        runInAction(() => {
+                            this._navigatorOnline = value;
+                            this.zone.run(() => {
+                                this.sendNetworkChange();
+                            });
                         });
-                    });
-                })
+                    })
+                });
             }
         });
     }

@@ -92,13 +92,9 @@ export class MobxTraceAutorun extends MobxAutorunDirective {
             ? view._view.component.constructor.name + ".detectChanges()" // angular 4+
             : view._view.parentView.context.constructor.name + ".detectChanges()"; // angular 2
         this.dispose = autorun(function () {
-            if (enableTracing) {
+            if (enableTracing == true) {
                 trace();
             }
-            /*
-            It appears executing this immediately can interfere with animations / UI.
-            However; if you do it delayed, you can end up with exceptions due to the view already being destroyed.
-             */
             view['detectChanges']();
         }, {name: autorunName});
     }
@@ -109,6 +105,7 @@ export class MobxTraceAutorun extends MobxAutorunDirective {
 I had problems with ion-datetime.
 If bound to a stream$|async, it would display the value on page load OK. But if it was bound to some normal object, no... it wouldn't.
 It *would* show the value as soon as I clicked on some other control in the view tho.
+IDIOT: this was because I had 'changeDetection: ChangeDetectionStrategy.OnPush' on the APP!!! AT THE ROOT LEVEL. MORON...
  */
 @Directive({
     selector: 'ion-datetime'
@@ -122,9 +119,9 @@ export class IonDateTimeHotfix {
     }
 
     onChildrenChanged() {
-        setTimeout(() => {
-            this.cf.markForCheck();
-        });
+        // setTimeout(() => {
+        //     this.cf.markForCheck();
+        // });
     }
 }
 

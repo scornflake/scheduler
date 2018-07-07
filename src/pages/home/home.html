@@ -16,12 +16,10 @@
         <!--</button>-->
         <!--</ion-buttons>-->
     </ion-toolbar>
-    <!--<saving-state></saving-state>-->
+    <saving-state></saving-state>
 </ion-header>
 
 <ion-content>
-    <!--<button ion-button (tap)="showAbout()"></button>-->
-    
     <div *ngIf="store.uiStore$|async as ui; else notSignedIn">
         <div *ngIf="server">
             <div *ngIf="server.loggedIn; else notSignedIn">

@@ -10,7 +10,8 @@ import {isUndefined} from "util";
 
 @Component({
     templateUrl: 'app.html',
-    changeDetection: ChangeDetectionStrategy.OnPush
+    // DONT DO THIS. IT BORKS THE APP ENTIRELY
+    // changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MyApp {
     rootPage: any = HomePage;
