@@ -65,7 +65,6 @@ export class IonSegmentHotfix {
 })
 export class MobxTraceAutorun extends MobxAutorunDirective {
     @Input('mobxTraceAutorun') options: string;
-    @Input('mobxTraceDelay') delay: number = 50;
 
     private disabled: boolean = false;
     private trace: boolean = false;
@@ -75,13 +74,13 @@ export class MobxTraceAutorun extends MobxAutorunDirective {
     }
 
     ngOnInit(): void {
-        super.ngOnInit();
         if (this.options) {
             if (this.options.includes('trace')) {
                 this.trace = true;
             }
-            console.warn(`MobxTraceAutorun: options: ${this.options}, delay: ${this.delay}, trace: ${this.trace}`);
+            console.warn(`MobxTraceAutorun: options: ${this.options}, trace: ${this.trace}`);
         }
+        super.ngOnInit();
     }
 
     autoDetect(view: any): void {
@@ -89,7 +88,6 @@ export class MobxTraceAutorun extends MobxAutorunDirective {
             return;
         }
         let enableTracing = this.trace;
-        let actionDelay = this.delay;
         let autorunName = view._view.component
             ? view._view.component.constructor.name + ".detectChanges()" // angular 4+
             : view._view.parentView.context.constructor.name + ".detectChanges()"; // angular 2
@@ -97,13 +95,11 @@ export class MobxTraceAutorun extends MobxAutorunDirective {
             if (enableTracing) {
                 trace();
             }
-
             /*
             It appears executing this immediately can interfere with animations / UI.
+            However; if you do it delayed, you can end up with exceptions due to the view already being destroyed.
              */
-            setTimeout(() => {
-                view['detectChanges']();
-            }, actionDelay);
+            view['detectChanges']();
         }, {name: autorunName});
     }
 }

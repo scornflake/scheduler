@@ -3,31 +3,6 @@ import * as _ from 'lodash';
 import {isUndefined} from "util";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {ObjectWithUUID} from "../base-types";
-import {runInAction} from "mobx";
-
-
-/*
-What if I throw away the DB entirely?
-- I loose the 'change detection' thing (maybe I can keep it just for that)
-    - could be replaced with watch.js, keeping the @persisted markers.
-    - I need the @persisted markers to work out what to save.
-    - So no, not reaaaaly easy to kill the DB off, since it arose mainly out of needing to know what to persist an object.
-- I loose the ability to auto persist references / lists of references
-
-ok. so a cache.
-
-Want:
-- DB reads go through the cache.
-- DB writes hit DB then the cache.
-- DB reference lookups use the cache first. If they have to construct, they add to the cache.
-- Pouch updates the cache upon seeing changes.
-
-
-TODO:
-- Remove @persisted and replace with an explicit map.
-- Add this map to the DB / store / somewhere, such that a test can modify it as well.
-
- */
 
 class GenericObjectStore<T extends ObjectWithUUID> {
     @observable items: Array<T>;
@@ -62,6 +37,7 @@ class GenericObjectStore<T extends ObjectWithUUID> {
         let index = this.findIndexOfObject(instance);
         if (index != -1) {
             this.items.splice(index, 1);
+            // console.warn(`Object ${instance.uuid} removed!`);
         }
     }
 

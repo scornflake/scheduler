@@ -37,8 +37,8 @@ export class PlanDetailsPage {
         } else {
             // for debugging
             // this.show_assignment(this.plan.people[0]);
-            console.warn(`Is Observable: ${isObservableObject(this.plan)}`);
-            console.warn(`Start date: ${this.plan.start_date.toISOString()}`);
+            // console.warn(`Is Observable: ${isObservableObject(this.plan)}`);
+            // console.warn(`Start date: ${this.plan.start_date.toISOString()}`);
         }
     }
 
@@ -54,7 +54,7 @@ export class PlanDetailsPage {
 
     get startDate(): string {
         let isoString = this.plan.start_date.toISOString();
-        console.warn(`return start date of: ${isoString}`);
+        // console.warn(`return start date of: ${isoString}`);
         return isoString;
     }
 

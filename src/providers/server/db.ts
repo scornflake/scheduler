@@ -355,7 +355,8 @@ class SchedulerDatabase implements IObjectStore {
 
             if (doc['_deleted']) {
                 let revisions = doc['_revisions'] || [];
-                this.logger.warn(`IDS: ${revisions.join(",")} deleted. Not sure what to do with those...`);
+                this._cache.evict(docId);
+                this.logger.info(`Evicted ${docId} from cache.`);
                 continue;
             }
 
@@ -431,10 +432,25 @@ class SchedulerDatabase implements IObjectStore {
         if (object.is_new) {
             throw new Error("Cannot remove object that is 'new' and hasn't been saved yet");
         }
+
+        // We do these first. Optimistic!
         if (this._cache) {
             this._cache.evict(object);
         }
         this.tracker.untrack(object);
+
+        // First, get the latest revision number.
+        let existing = await this.db.get(object.uuid);
+        if(existing) {
+            if(existing._rev != object._rev) {
+                this.logger.warn(`Updated _rev from ${object._rev} => ${existing._rev} before delete, otherwise we'd get a document conflict (but we may be loosing data)`);
+                object._rev = existing._rev;
+            } else {
+                this.logger.warn(`_rev's match, delete should be OK! ${object._rev} == ${existing._rev}`);
+            }
+        } else {
+            this.logger.warn(`Couldn't check the _rev of ${object.uuid}. It doesn't exist?!`);
+        }
         return await this.db.remove({_id: object.uuid, _rev: object._rev});
     }
 
@@ -522,31 +538,27 @@ class SchedulerDatabase implements IObjectStore {
         this.logger.info(`Using ${this.couchUsername} with token ${this.couchCredentials}`);
         this.server_db = new PouchDB(`${serverUrl}/${remoteDBName}`, this.remoteCouchOptions);
 
-        this.logger.info(`Doing login...`);
+        this.logger.info(`Doing login using ${this.couchUsername}...`);
         await this.server_db.logIn(this.couchUsername, this.couchCredentials, this.remoteCouchOptions);
-        this.logger.info(`Done login...`);
+        this.logger.info(`Done login. Begin sync...`);
 
         // await this.db.logIn(this.couchUsername, this.couchCredentials);
         this.server_sync = this.db.sync(this.server_db, {live: true, retry: true})
             .on('change', (change) => {
                 this.lastSeenReplicationStatus = ReplicationStatus.ProcessingPull;
                 this.saveNotifications$.next(SavingState.FinishedSaving);
-                if (change.direction == 'pull') {
+                if (change['direction'] == 'pull') {
                     let data = change.change;
-                    let docs = data.docs.filter(d => {
-                        // filter out deleted docs
-                        if (d['_deleted']) {
-                            this.logger.warn(`IDS: ${d['_revisions'].join(",")} deleted. Not sure what to do with those...`);
-                            return false;
-                        }
-                        return true;
-                    });
+                    let docs = data.docs;
+
                     // remove the _revisions, so the logging doesn't SUCK
+                    this.logger.info(`Remove any _revisions...`);
                     for (let doc of docs) {
                         delete doc['_revisions'];
                     }
 
                     let changeInfo = {};
+                    this.logger.info(`Ponder changeInfo...: ${JSON.stringify(docs)}`);
                     if (docs && Array.isArray(docs)) {
                         changeInfo['num_docs'] = docs.length;
                     } else {
@@ -554,6 +566,7 @@ class SchedulerDatabase implements IObjectStore {
                     }
 
                     this.logger.info(`Processing incoming change: ${JSON.stringify(changeInfo)}`);
+
                     // Want to update existing store using this data, as though we had read it direct from the DB
                     this.saveNotifications$.next(SavingState.ChangeDetected);
 
@@ -563,7 +576,7 @@ class SchedulerDatabase implements IObjectStore {
                     this.saveNotifications$.next(SavingState.FinishedSaving);
                     this.replicationNotifications$.next(this.lastSeenReplicationStatus);
                 } else {
-                    this.logger.debug(`Outgoing change: ${JSON.stringify(change)}`);
+                    // this.logger.debug(`Outgoing change: ${JSON.stringify(change)}`);
                 }
             })
             .on('paused', (info) => {
@@ -584,6 +597,7 @@ class SchedulerDatabase implements IObjectStore {
             });
         this.lastSeenReplicationStatus = ReplicationStatus.Idle;
         this.replicationNotifications$.next(this.lastSeenReplicationStatus);
+        this.logger.debug(`Sync started`);
     }
 }
 

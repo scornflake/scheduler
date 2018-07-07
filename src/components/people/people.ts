@@ -1,10 +1,10 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output} from '@angular/core';
+import {ChangeDetectorRef, Component, EventEmitter, Input, Output} from '@angular/core';
 import {Person} from "../../scheduling/people";
 import {AlertController, NavController} from "ionic-angular";
 import {PageUtils} from "../../pages/page-utils";
 import {ObjectValidation} from "../../scheduling/shared";
 import {NamedObject} from "../../scheduling/base-types";
-import {action, computed} from "mobx-angular";
+import {action, computed, observable} from "mobx-angular";
 import {RootStore} from "../../store/root";
 
 @Component({
@@ -16,19 +16,19 @@ export class PeopleComponent {
     @Output() delete = new EventEmitter<Person>();
     @Output() personAdded = new EventEmitter<Person>();
 
-    name_filter: string = "";
+    @observable nameFilter: string = "";
 
     constructor(private navCtrl: NavController,
                 private pageUtils: PageUtils,
+                public cd: ChangeDetectorRef,
                 private store: RootStore,
-                public cd:ChangeDetectorRef,
                 private alertCtrl: AlertController) {
     }
 
     @computed get filteredPeople(): Array<Person> {
         let people = NamedObject.sortByName(this.people);
-        if (this.name_filter.length > 0) {
-            people = people.filter(p => p.name.toLowerCase().indexOf(this.name_filter.toLowerCase()) >= 0);
+        if (this.nameFilter.length > 0) {
+            people = people.filter(p => p.name.toLowerCase().indexOf(this.nameFilter.toLowerCase()) >= 0);
         }
         // console.warn(`PeopleComponent returning filtered people to template, ${people.map(p => p.name).join(", ")}`);
         return people;
@@ -46,17 +46,18 @@ export class PeopleComponent {
         this.navCtrl.push('PersonDetailsPage', {person: person})
     }
 
-    personSummary(person: Person): string {
+    personSummary(person: Person, showTeams: boolean = false): string {
         let things: Array<any> = [person.availability];
-        let inTeams = this.store.teams.findAllWithPerson(person);
-        if (inTeams.length) {
-            let listOfTeams = inTeams.map(t => t.name).join(", ");
-            things.push(`in teams: ${listOfTeams}`);
+        if(showTeams) {
+            let inTeams = this.store.teams.findAllWithPerson(person);
+            if (inTeams.length) {
+                let listOfTeams = inTeams.map(t => t.name).join(", ");
+                things.push(`in teams: ${listOfTeams}`);
+            }
         }
         return things.join(", ");
     }
 
-    @action
     public addNewPerson() {
         let new_object = new Person('');
         this.navCtrl.push('PersonDetailsPage', {
@@ -85,14 +86,22 @@ export class PeopleComponent {
                     text: 'Delete',
                     role: 'cancel',
                     handler: () => {
-                        alert.dismiss().then(() => {
+                        try {
                             this.delete.emit(person);
-                        });
-                        return false;
+                        } catch (err) {
+                            this.pageUtils.showError(err);
+                        }
+                        // alert.dismiss().then(() => {
+                        // });
+                        // return false;
                     },
                 }
             ]
         });
         alert.present()
+    }
+
+    @action setNameFilter(newFilter: string) {
+        this.nameFilter = newFilter;
     }
 }

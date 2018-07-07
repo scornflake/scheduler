@@ -16,10 +16,12 @@
         <!--</button>-->
         <!--</ion-buttons>-->
     </ion-toolbar>
-    <saving-state></saving-state>
+    <!--<saving-state></saving-state>-->
 </ion-header>
 
-<ion-content *mobxTraceAutorun="'trace'">
+<ion-content>
+    <!--<button ion-button (tap)="showAbout()"></button>-->
+    
     <div *ngIf="store.uiStore$|async as ui; else notSignedIn">
         <div *ngIf="server">
             <div *ngIf="server.loggedIn; else notSignedIn">
@@ -64,14 +66,6 @@
             </div>
         </div>
     </div>
-    <!--<ng-template #notSignedIn>-->
-    <!--<div class="notSignedIn">-->
-    <!--<div class="title" text-center>Please sign&nbsp;in</div>-->
-    <!--<div class="buttons">-->
-    <!--<button class="signInButton" col-4 offset-4 ion-button (tap)="startSignIn()">Sign In</button>-->
-    <!--</div>-->
-    <!--</div>-->
-    <!--</ng-template>-->
 </ion-content>
 
 <!--<ion-footer>-->

@@ -5,14 +5,18 @@ interface IObjectCache {
 
     saveInCache(object: ObjectWithUUID): void;
 
-    evict(object: ObjectWithUUID): void;
+    evict(object: ObjectWithUUID | string): void;
 }
 
 class SimpleCache implements IObjectCache {
     private _cache = new Map<string, ObjectWithUUID>();
 
-    evict(object: ObjectWithUUID): void {
-        this._cache.delete(object.uuid);
+    evict(object: ObjectWithUUID | string): void {
+        if (object instanceof ObjectWithUUID) {
+            this._cache.delete(object.uuid);
+        } else {
+            this._cache.delete(object);
+        }
     }
 
     saveInCache(object: ObjectWithUUID): void {

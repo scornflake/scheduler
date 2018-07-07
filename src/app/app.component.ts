@@ -64,6 +64,7 @@ export class MyApp {
                     {title: "Dashboard", page: 'home'},
                     {title: "Login", page: 'login', visible: () => !this.loggedIn},
                     {title: "Profile", page: 'page-profile', enabled: () => this.loggedIn},
+                    {title: "About", page: 'page-about'},
                 ]
             },
             {
@@ -83,7 +84,6 @@ export class MyApp {
                         },
                         enabled: () => this.loggedIn
                     },
-                    {title: "About", page: 'page-about'},
                 ]
             },
             {

@@ -8,6 +8,12 @@
 
 <ion-content *mobxAutorun>
     <div *ngIf="netUtil">
+        <ion-list *ngIf="store.loggedInPerson$|async as p">
+            <ion-list-header color="light">Organization UUID</ion-list-header>
+            <ion-item>
+                <ion-label>{{p.organization.uuid || 'wft'}}</ion-label>
+            </ion-item>
+        </ion-list>
         <ion-list>
             <ion-list-header color="light">Network</ion-list-header>
             <ion-item>

@@ -45,7 +45,7 @@ describe('mapper', () => {
     it('should throw if mapping not defined', () => {
         expect(() => {
             mapper.propertiesFor('FooScudBar')
-        }).toThrowError(/No properties defined for FooScudBar/)
+        }).toThrowError(/No properties defined for class_name: FooScudBar/)
     });
 
     it('should throw exception if inherited class isnt in the map', function () {

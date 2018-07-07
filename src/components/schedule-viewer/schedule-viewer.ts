@@ -12,7 +12,7 @@ import {Logger} from "ionic-logging-service";
 import {Role} from "../../scheduling/role";
 
 @Component({
-    changeDetection: ChangeDetectionStrategy.OnPush,
+    // changeDetection: ChangeDetectionStrategy.OnPush,
     selector: 'schedule-viewer',
     templateUrl: 'schedule-viewer.html'
 })

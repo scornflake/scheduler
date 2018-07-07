@@ -14,8 +14,8 @@ import {LifecycleCallbacks} from "../../providers/server/interfaces";
 let __firstTime: boolean = true;
 
 @IonicPage({
-    defaultHistory: ['home'],
-    name: 'home'
+    name: 'home',
+    defaultHistory: ['home']
 })
 @Component({
     selector: 'page-home',
@@ -33,9 +33,20 @@ export class HomePage {
         this.logger = LoggingWrapper.getLogger("page.home");
     }
 
+    ngDoCheck() {
+        console.warn(`HomePage is being checked`);
+    }
+
+    ngOnChanges(changes) {
+        console.warn(`HomePage has changes`)
+    }
+
+    showAbout() {
+        this.navCtrl.push('page-about');
+    }
+
     ngOnInit() {
         // this.sheetAPI.init();
-
         this.pageUtils.runStartupLifecycleAsStream()
             .pipe(
                 debounceTime(500),

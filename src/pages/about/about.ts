@@ -5,13 +5,13 @@ import {IonicPage, NavController} from 'ionic-angular';
     name: 'page-about'
 })
 @Component({
-  selector: 'page-about',
-  templateUrl: 'about.html'
+    selector: 'page-about',
+    templateUrl: 'about.html'
 })
 export class AboutPage {
 
-  constructor(public navCtrl: NavController) {
+    constructor(public navCtrl: NavController) {
 
-  }
+    }
 
 }

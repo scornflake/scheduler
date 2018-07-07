@@ -1,9 +1,12 @@
-import {ChangeDetectionStrategy, Component} from '@angular/core';
+import {ApplicationRef, Component} from '@angular/core';
 import {IonicPage, NavController, NavParams} from 'ionic-angular';
 import {RootStore} from "../../store/root";
 import {Team} from "../../scheduling/teams";
 import {PageUtils} from "../page-utils";
-import {computed} from "mobx-angular";
+import {SchedulerServer} from "../../providers/server/scheduler-server.service";
+import {LoggingWrapper} from "../../common/logging-wrapper";
+import {Logger} from "ionic-logging-service";
+import {action, computed} from "mobx-angular";
 
 @IonicPage({
     name: 'page-teams',
@@ -12,19 +15,22 @@ import {computed} from "mobx-angular";
 @Component({
     selector: 'page-teams',
     templateUrl: 'teams.html',
-    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TeamsPage {
+    private logger: Logger;
 
     constructor(public navCtrl: NavController,
                 public rootStore: RootStore,
+                public appRef:ApplicationRef,
+                public server: SchedulerServer,
                 public pageUtils: PageUtils,
                 public navParams: NavParams) {
+        this.logger = LoggingWrapper.getLogger('page.teams');
     }
 
     ngAfterViewInit() {
         // For Debug (if not loaded, jump back home)
-        // if(!this.teams.length) {
+        // if (!this.teams.length) {
         //     this.navCtrl.pop();
         // }
 
@@ -43,7 +49,7 @@ export class TeamsPage {
     //     console.warn(`TeamsPage has changes`)
     // }
 
-    add_new_team() {
+    @action add_new_team() {
         let team = new Team("");
         this.showTeamDetail(team, (add: boolean) => {
             if (add) {
@@ -63,9 +69,13 @@ export class TeamsPage {
         return this.rootStore.teams.all;
     }
 
-    delete_team(team: Team) {
+    @action deleteTeam(team: Team) {
         try {
+            // this does rev integrity, and also deletes from the DB
             this.rootStore.teams.remove(team);
+            setTimeout(() => {
+                this.appRef.tick();
+            }, 150)
         } catch (ex) {
             this.pageUtils.showError(ex);
         }

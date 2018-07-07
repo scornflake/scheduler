@@ -21,7 +21,7 @@
         <ion-list no-margin>
             <ion-item>
                 <ion-label>Name</ion-label>
-                <ion-input [(ngModel)]="team.name"></ion-input>
+                <ion-input [ngModel]="team.name" (ngModelChange)="team.setName($event)"></ion-input>
             </ion-item>
         </ion-list>
 

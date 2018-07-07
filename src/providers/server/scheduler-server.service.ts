@@ -190,6 +190,10 @@ class SchedulerServer implements ILifecycle {
         return await this._db.async_storeOrUpdateObject(plan) as Plan;
     }
 
+    async deleteTeam(team:Team) {
+        return await this._db.asyncDeleteObject(team);
+    }
+
     setStore(store: RootStore) {
         this.store = store;
     }
@@ -430,18 +434,20 @@ class SchedulerServer implements ILifecycle {
 
         this.logger.info('setupDBFromState', `Checking we can find ${personUUID}`);
         let person = await this.asyncWaitForDBToContainObjectWithUUID(personUUID, newDb, responseTimeout);
+
         if (person instanceof Person) {
+            // Does this person need a 're-save'?
+            // This can happen if the person was created by the server and doesn't have all the fields we map here on the client
+            if (person.needsResave) {
+                this.logger.warn(`Resaving ${person.name} because its missing some needed info`);
+                await this.savePerson(person);
+            }
+
             this.store.ui_store.setLoggedInPerson(person);
         } else {
             throw new Error(`Object with UUID ${personUUID} was loaded, but it's not an instance of Person! It's: ${SWBSafeJSON.stringify(person)}`);
         }
 
-        // Does this person need a 're-save'?
-        // This can happen if the person was created by the server and doesn't have all the fields we map here on the client
-        if (person.needsResave) {
-            this.logger.info(`Resaving ${person.name} because its missing some needed info`);
-            await this.savePerson(person);
-        }
         // We want that 'defaults' one to be alive so it triggers when we first load the state
         // this.checkForDefaults();
     }

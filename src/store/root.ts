@@ -115,8 +115,16 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
         this.addObjectToStore(object, true);
     }
 
-    evict(object: ObjectWithUUID): void {
-        this.removeObjectFromStore(object);
+    evict(object: ObjectWithUUID|string): void {
+        if(object instanceof ObjectWithUUID) {
+            this.removeObjectFromStore(object);
+        } else {
+            // find it by ID first
+            let existing = this.getFromCache(object);
+            if(existing) {
+                this.removeObjectFromStore(existing);
+            }
+        }
     }
 
     removeAndWait(obj: ObjectWithUUID) {

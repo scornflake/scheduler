@@ -66,12 +66,13 @@ export class TeamPage {
     }
 
     send_ok() {
-        try {
-            this.callback(true);
-        } catch (err) {
-            this.pageUtils.showValidationError(ObjectValidation.simple(err));
-        }
-        this.navCtrl.pop();
+        this.navCtrl.pop().then(() => {
+            try {
+                this.callback(true);
+            } catch (err) {
+                this.pageUtils.showValidationError(ObjectValidation.simple(err));
+            }
+        });
     }
 
     get okButtonDisabled(): boolean {
