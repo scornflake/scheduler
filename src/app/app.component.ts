@@ -7,6 +7,7 @@ import {SchedulerServer} from "../providers/server/scheduler-server.service";
 import {computed} from "mobx-angular";
 import {autorun} from "mobx";
 import {isUndefined} from "util";
+import {NativePageTransitions, NativeTransitionOptions} from "@ionic-native/native-page-transitions";
 
 @Component({
     templateUrl: 'app.html',
@@ -22,6 +23,7 @@ export class MyApp {
     constructor(private platform: Platform,
                 private statusBar: StatusBar,
                 private splashScreen: SplashScreen,
+                private native: NativePageTransitions,
                 private server: SchedulerServer,
                 private menu: MenuController) {
         this.menu.enable(true, 'menu');
@@ -104,6 +106,7 @@ export class MyApp {
         if (p.exec) {
             p.exec();
         } else {
+            this.native.slide(null);
             this.nav.push(p.page);
         }
         this.menu.close();

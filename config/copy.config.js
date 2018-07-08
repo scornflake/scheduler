@@ -24,7 +24,7 @@ module.exports = {
         dest: '{{BUILD}}'
     },
     copySettings: {
-        src: ['{{ROOT}}/environments/' + envDirectory + "/settings.json"],
+        src: ['{{ROOT}}/environments/' + envDirectory + "/*.json"],
         dest: '{{WWW}}/assets'
     }
 };

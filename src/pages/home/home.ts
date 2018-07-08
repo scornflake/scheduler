@@ -10,6 +10,7 @@ import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {computed} from "mobx-angular";
 import {debounceTime, delay} from "rxjs/operators";
 import {LifecycleCallbacks} from "../../providers/server/interfaces";
+import {NativePageTransitions} from "@ionic-native/native-page-transitions";
 
 let __firstTime: boolean = true;
 
@@ -27,6 +28,7 @@ export class HomePage {
     constructor(private navCtrl: NavController,
                 private sheetAPI: GAPIS,
                 private pageUtils: PageUtils,
+                private nativeTrans: NativePageTransitions,
                 private platform: Platform,
                 private popoverCtrlr: PopoverController,
                 public server: SchedulerServer,
@@ -62,12 +64,18 @@ export class HomePage {
                     }
 
                     case LifecycleCallbacks.applicationHasStarted: {
+                        this.nativeTrans.fade({
+                            duration: 1000,
+                        });
                         this.navCtrl.setRoot('home', {});
                         break;
                     }
 
                     case LifecycleCallbacks.showLoginPage: {
                         this.logger.info(`show login page, because: ${event.args}`);
+                        this.nativeTrans.fade({
+                            duration: 1000,
+                        });
                         this.navCtrl.setRoot('login', {});
                     }
                 }
@@ -93,6 +101,7 @@ export class HomePage {
 
 
             // this.navCtrl.push('login', {create: true});
+            // this.navCtrl.push('page-db');
             // this.navCtrl.push('page-people', {create: true});
             // this.navCtrl.push('page-teams', {create: true});
             // this.navCtrl.push('page-plans', {create: true});

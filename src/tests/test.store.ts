@@ -19,6 +19,9 @@ import {
 import {Plan} from "../scheduling/plan";
 import {Team} from "../scheduling/teams";
 import {PersonManager} from "../scheduling/common/scheduler-store";
+import {HttpClient} from "@angular/common/http";
+import {SWBSafeJSON} from "../common/json/safe-stringify";
+import {action} from "mobx-angular";
 
 
 export class NPBCStoreConstruction {
@@ -34,6 +37,14 @@ export class NPBCStoreConstruction {
     //     }
     //     return null;
     // }
+
+    static async load(url: string, httpClient: HttpClient) {
+        try {
+            return await httpClient.get(url).toPromise();
+        } catch (e) {
+            throw new Error(`${url} could not be loaded: ${SWBSafeJSON.stringify(e)}`);
+        }
+    }
 
     static SetupTeamUnavailability(team: Team) {
         // noinspection JSUnusedLocalSymbols
@@ -103,7 +114,7 @@ export class NPBCStoreConstruction {
 
     }
 
-    static AddPeopleToPlanWithRoles(service: Plan, team: Team) {
+    @action static AddPeopleToPlanWithRoles(service: Plan, team: Team) {
         let neil = team.findPersonWithName("Neil Clayton");
         let cherilyn = team.findPersonWithName("Cherilyn Clayton");
         let kylie = team.findPersonWithName("Kylie Welch-Herekiuha");
@@ -226,23 +237,46 @@ export class NPBCStoreConstruction {
             .addRole(defaultComputerRole, 2)
     }
 
+    static async asyncFixPeoplesEmail(peopleStore: PersonManager, http: HttpClient) {
+        let emails = await NPBCStoreConstruction.load('assets/people.json', http) as any[];
+        if (emails == null) {
+            return;
+        }
+        console.warn(`Got: ${JSON.stringify(emails)}`);
+        for (let record of emails) {
+            let email = record['email'];
+            let name = record['name'];
+
+            let person = peopleStore.firstThisTypeByName(name);
+            if(person) {
+                if(person.email != email) {
+                    person.setEmail(email);
+                }
+            }
+        }
+    }
+
     static SetupPeople(people_store: PersonManager): Array<Person> {
         let people_added = [];
 
-        function aint(name: string) {
+        function aint(name: string, email: string = null) {
             let person = people_store.firstThisTypeByName(name);
             if (person == null) {
                 let p = people_store.add(new Person(name));
                 people_added.push(p);
                 return p;
             }
+            if (email != null) {
+                if (person.email != email) {
+                    person.email = email;
+                }
+            }
             return person;
         }
 
-        let neil = aint("Neil Clayton");
-        neil.email = "neil@cloudnine.net.nz";
-
+        let neil = aint("Neil Clayton", "neil@cloudnine.net.nz");
         let cherilyn = aint("Cherilyn Clayton");
+
         let kylie = aint("Kylie Welch-Herekiuha");
         let christine = aint("Christine Edlin");
         let stuart = aint("Stuart Campbell");

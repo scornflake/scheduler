@@ -1,16 +1,11 @@
 TODO
 ====
+- Couch doesn't save Config settings. Restart clears CORS/etc.
 - Serve the built www via something static (nginx?)
-- Get sign in / reg lifecycle going (done?)
-  - Don't auto sign in as me :)
-  - The various pages:
-    - login, should fade to actual page
-- When creating account first time, receiving data, done - it doesn't select the first schedule.
+- Bug when signing in sometimes. Get no schedule, and the later error about a.name.
+- When creating account first time, or switching orgs, - it doesn't select the first schedule.
     - I think even if you select the schedule, it doesn't show it.
     - This may be to do with a mobx error, that we see only on Safari.
-- Daniel Gibbs 'avail' shows as nothing, doesn't pick up the 'Anytime'
-- Daniel Gibbs: no email
-- Couch doesn't save Config settings. Restart clears CORS/etc.
 - Permissions on REST API.
     - Throttling.
     - Do users have to be logged in to access RoleSets?
@@ -29,6 +24,9 @@ TODO
 - DB isn't showing an up to date version of info. Should reload this on page reload?
 - Add 'level' to Person, and write up about game-ifying the whole thing
 - Make it so scheduler tells you if a required role isn't filled
+- Invites
+    - Itd be nice for the server to send links to the app, for people to download
+    - Then when the user creates an account, it knows there's a pending invite and auto joins them to that org
 - It would be GREAT to have CI build the docker images (after running tests) and auto-deploy. At least for a test environment.
 - Deploying the containers
     - making sure rqscheduler, rqworker are running

@@ -53,7 +53,7 @@ export class RESTServer {
 
 
     async login(username: string, password: string): Promise<LoginResponse> {
-        let url = this.server_url("login/" + `?email=${username}&password=${password}`);
+        let url = this.server_url("login/" + `?email=${username.toLowerCase()}&password=${password}`);
         this.logger.info(`About to: ${url}`);
         return this.http.get(url).map(r => {
             // this.logger.warn(`RESP: ${SafeJSON.stringify(r)}`);

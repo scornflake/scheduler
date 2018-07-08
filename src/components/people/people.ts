@@ -88,6 +88,14 @@ export class PeopleComponent {
         return things.join(", ");
     }
 
+    personSummaryRight(person: Person, showTeams: boolean = false): string {
+        let things: Array<any> = [];
+        if(person.email) {
+            things.push(person.email);
+        }
+        return things.join(", ");
+    }
+
     invitePeople() {
         this.inviteMode = !this.inviteMode;
     }

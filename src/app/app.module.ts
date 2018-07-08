@@ -37,6 +37,7 @@ import {NativePageTransitions} from "@ionic-native/native-page-transitions";
 import {TeamWizardPageModule} from "../pages/team-wizard/team-wizard.module";
 import {PlanWizardPageModule} from "../pages/plan-wizard/plan-wizard.module";
 import {SchedulerDirectivesModule} from "../common/directives";
+import {IonicNativePlugin} from "@ionic-native/core";
 
 
 let config = {

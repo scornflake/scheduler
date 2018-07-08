@@ -16,6 +16,7 @@ import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {Subscription} from "rxjs/Subscription";
 import {action, computed, observable} from "mobx-angular";
 import {runInAction} from "mobx";
+import {HttpClient} from "@angular/common/http";
 
 @IonicPage({
     name: 'page-db',
@@ -38,6 +39,7 @@ export class DatabaseMaintPage implements OnDestroy {
                 public alertCtrl: AlertController,
                 public store: RootStore,
                 public server: SchedulerServer,
+                public http: HttpClient,
                 public mapper: OrmMapper,
                 public pageUtils: PageUtils,
                 public navParams: NavParams) {
@@ -217,5 +219,11 @@ export class DatabaseMaintPage implements OnDestroy {
         }
 
         return plan;
+    }
+
+    fix_our_emails() {
+        NPBCStoreConstruction.asyncFixPeoplesEmail(this.store.people, this.http).then(() => {
+            this.pageUtils.showMessage(`fix fixy fix done`);
+        }, err => this.pageUtils.showError(err, true))
     }
 }

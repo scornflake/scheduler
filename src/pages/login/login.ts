@@ -57,27 +57,6 @@ class LoginPage implements AfterViewInit {
 
         this.logger = this.logService.getLogger("page.login");
         this.isCreateAccount = this.navParams.get('create');
-
-        if (isUndefined(this.isCreateAccount)) {
-            // for testing
-            setTimeout(() => {
-                this.setRegistrationName("Neil Clayton");
-                this.setRegistrationEmail("neil@cloudnine.net.nz");
-                this.setRegistrationPassword("968FqbkkG8iQdK34ik");
-
-                // // do a login for this user
-                // this.server.loginUser(this.registrationEmail, this.registrationPassword).then(lr => {
-                //     if (lr.ok) {
-                //         this.switchToReplication();
-                //         // this.register();
-                //     } else {
-                //         console.error(`Arg: ${JSON.stringify(lr)}`);
-                //     }
-                // });
-
-
-            }, 250)
-        }
     }
 
     ngAfterViewInit(): void {
