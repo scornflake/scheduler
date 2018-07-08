@@ -1,5 +1,5 @@
 import {ObjectValidation} from "../scheduling/shared";
-import {NavController, Platform, ToastController} from "ionic-angular";
+import {AlertController, NavController, Platform, ToastController} from "ionic-angular";
 import {forwardRef, Inject, Injectable, NgZone, OnInit} from "@angular/core";
 import deepEqual from "deep-equal";
 import {ToastOptions} from "ionic-angular/components/toast/toast-options";
@@ -23,6 +23,7 @@ class PageUtils implements OnInit {
     private logger: Logger;
 
     constructor(private toastController: ToastController,
+                private alertCtrlr: AlertController,
                 private nativeTransitions: NativePageTransitions,
                 private zoneRef: NgZone,
                 @Inject(forwardRef(() => SchedulerServer)) private server,
@@ -115,6 +116,28 @@ class PageUtils implements OnInit {
             func();
         }
     }
+
+    areYouSure(message: string = "Are you sure?", okButtonText: string = "Delete", okHandler) {
+        let alert = this.alertCtrlr.create({
+            message: message,
+            buttons: [
+                {
+                    text: 'Cancel',
+                    handler: () => {
+                    }
+                },
+                {
+                    text: okButtonText,
+                    role: 'cancel',
+                    handler: () => {
+                        okHandler();
+                    },
+                }
+            ]
+        });
+        alert.present();
+    }
+
 
     private show_alert(message: string | ServerError, more_options: ToastOptions, stay_open: boolean = false) {
         if (message instanceof ServerError) {

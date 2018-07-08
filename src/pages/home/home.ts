@@ -1,5 +1,5 @@
 import {Component} from '@angular/core';
-import {IonicPage, NavController} from 'ionic-angular';
+import {IonicPage, NavController, Platform, PopoverController} from 'ionic-angular';
 import {CSVExporter} from "../../scheduling/exporter/csv.exporter";
 import {GAPIS} from "../../common/gapis-auth";
 import {Logger} from "ionic-logging-service";
@@ -27,6 +27,8 @@ export class HomePage {
     constructor(private navCtrl: NavController,
                 private sheetAPI: GAPIS,
                 private pageUtils: PageUtils,
+                private platform: Platform,
+                private popoverCtrlr: PopoverController,
                 public server: SchedulerServer,
                 public store: RootStore) {
 
@@ -82,6 +84,13 @@ export class HomePage {
         if (__firstTime) {
             // this.createTeamWizard();
             // this.createPlanWizard();
+
+            // if (this.platform.is('cordova')) {
+            //     this.navCtrl.push('page-people', {create: true});
+            // } else {
+            //     this.navCtrl.push('page-profile');
+            // }
+
 
             // this.navCtrl.push('login', {create: true});
             // this.navCtrl.push('page-people', {create: true});
@@ -197,5 +206,12 @@ export class HomePage {
 
     createTeamWizard() {
         this.navCtrl.push('page-team-wizard')
+    }
+
+    showNotifications($event) {
+        // For not, lets just show the profile
+        this.navCtrl.push('page-profile');
+        // let popover = this.popoverCtrlr.create(NotificationsComponent);
+        // popover.present({ev: $event})
     }
 }

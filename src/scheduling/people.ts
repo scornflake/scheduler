@@ -6,7 +6,7 @@ import {Unavailability} from "./unavailability";
 import * as _ from "lodash";
 import {ObjectValidation} from "./shared";
 import {ObjectUtils} from "../pages/page-utils";
-import {NamedObject, ObjectWithUUID} from "./base-types";
+import {NamedObject, ObjectWithUUID, TypedObject} from "./base-types";
 import {Organization} from "./organization";
 import {action, computed, observable, runInAction} from "mobx";
 import {Logger} from "ionic-logging-service";
@@ -62,12 +62,21 @@ class Preferences extends ObjectWithUUID {
     }
 }
 
+class Invitation extends TypedObject {
+    @observable from: string;
+    @observable fromEmail: string;
+    @observable organizationName: string;
+    @observable organizationUUID: string;
+    @observable date: Date;
+}
+
 class Person extends NamedObject {
     @observable email: string;
     @observable phone: string;
     @observable _availability: Availability;
     @observable unavailable: Array<Unavailability>;
     @observable organization: Organization;
+    @observable invites: Array<Invitation>;
     @observable preferences: Preferences;
 
     // Set when this user logs in
@@ -78,6 +87,7 @@ class Person extends NamedObject {
         this.unavailable = [];
         this.preferences = new Preferences();
         this.availability = new Availability();
+        this.invites = new Array<Invitation>();
     }
 
     @action
@@ -89,6 +99,16 @@ class Person extends NamedObject {
         p.name = name_parts.join(" ");
         p.email = lr.email;
         return p;
+    }
+
+    @action removeInvitesMatching(invite) {
+        let matching = this.invites.filter(i => i.fromEmail = invite.fromEmail);
+        for(let invite of matching) {
+            let index = this.invites.indexOf(invite);
+            if(index != -1) {
+                this.invites.splice(index, 1);
+            }
+        }
     }
 
     @action avail_every(a_number: number, unit: AvailabilityUnit): Person {
@@ -219,5 +239,6 @@ class Person extends NamedObject {
 
 export {
     Person,
-    Preferences
+    Preferences,
+    Invitation
 };

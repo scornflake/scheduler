@@ -1,14 +1,5 @@
 TODO
 ====
-- Teams
-    - Add one, it doesn't show
-    - add/delete doesn't replicate
-    - deletion doesn't replicate either, but prob cause of (2)?
-- Make it so you can't delete yourself from the People list, otherwise it's kkinda hard to login again!
-- Do the Invite thing
-    - Send invites to people (Share)
-    - Allow people to accept, and move them to that organization
-    - Reload the app?
 - Serve the built www via something static (nginx?)
 - Get sign in / reg lifecycle going (done?)
   - Don't auto sign in as me :)

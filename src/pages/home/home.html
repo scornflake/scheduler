@@ -4,6 +4,12 @@
         <button start ion-button menuToggle>
             <ion-icon name="menu"></ion-icon>
         </button>
+        <ion-buttons end class="notifications" *ngIf="store.loggedInPerson$|async as person">
+            <button ion-button (tap)="showNotifications($event)" *ngIf="person.invites.length > 0">
+                <ion-badge color="danger">{{person?.invites.length}}</ion-badge>
+                <ion-icon name="more"></ion-icon>
+            </button>
+        </ion-buttons>
         <!--<button ion-button-->
         <!--(click)="clear_selection()"-->
         <!--[disabled]="!rootStore.ui_store.have_selection">Deselect-->

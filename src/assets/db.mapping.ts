@@ -1,5 +1,5 @@
 import {Availability, AvailabilityEveryNOfM} from "../scheduling/availability";
-import {Person, Preferences} from "../scheduling/people";
+import {Invitation, Person, Preferences} from "../scheduling/people";
 import {Team} from "../scheduling/teams";
 import {Plan} from "../scheduling/plan";
 import {Organization} from "../scheduling/organization";
@@ -40,6 +40,12 @@ let scheduler_db_map: ClassFieldMapping = {
             factory: () => new Role('New Role')
         },
         {
+            name: 'Invitation',
+            fields: [{name: '*'}],
+            inherit: 'TypedObject',
+            factory: () => new Invitation()
+        },
+        {
             name: 'Person',
             fields: [
                 {name: 'phone'},
@@ -47,6 +53,7 @@ let scheduler_db_map: ClassFieldMapping = {
                 {name: 'availability', type: MappingType.Reference},
                 {name: 'unavailable', type: MappingType.NestedObjectList},
                 {name: 'organization', type: MappingType.Reference},
+                {name: 'invites', type: MappingType.NestedObjectList},
                 {name: 'preferences', type: MappingType.Reference}
             ],
             inherit: 'NamedObject',

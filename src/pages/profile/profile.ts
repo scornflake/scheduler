@@ -1,7 +1,8 @@
 import {ChangeDetectionStrategy, Component} from '@angular/core';
-import {IonicPage, NavController, NavParams} from 'ionic-angular';
+import {AlertController, IonicPage, NavController, NavParams} from 'ionic-angular';
 import {RootStore} from "../../store/root";
 import {PageUtils} from "../page-utils";
+import {Invitation} from "../../scheduling/people";
 
 @IonicPage({
     name: 'page-profile',
@@ -21,5 +22,9 @@ export class ProfilePage {
     }
 
     ngOnInit() {
+        // No person? well, can't show much can we
+        if (this.store.loggedInPerson == null) {
+            this.navCtrl.pop();
+        }
     }
 }

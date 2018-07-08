@@ -2,11 +2,6 @@
     <ion-navbar no-border>
         <ion-title>My Profile</ion-title>
     </ion-navbar>
-    <!--<ion-buttons end>-->
-        <!--<button ion-button icon-only (tap)="changeAvail()">-->
-            <!--<ion-icon name="person-add"></ion-icon>-->
-        <!--</button>-->
-    <!--</ion-buttons>-->
     <saving-state></saving-state>
 </ion-header>
 
@@ -14,6 +9,12 @@
 <ion-content no-padding *mobxAutorun>
     <div *ngIf="store.loggedInPerson$ | async as person">
         <organization-editor [organization]="person.organization"></organization-editor>
+
+        <div *ngIf="person.invites.length > 0">
+            <ion-list-header color="light">Invites</ion-list-header>
+            <notifications *ngIf="person.invites.length > 0"></notifications>
+        </div>
+
         <person-details [person]="person"></person-details>
     </div>
 </ion-content>

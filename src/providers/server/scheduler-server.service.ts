@@ -120,11 +120,15 @@ class SchedulerServer implements ILifecycle {
     }
 
     @action
-    async asyncLogout() {
+    async asyncLogout(clearToken: boolean = true) {
         this.state.lastOrganizationUUID = null;
         this.state.lastPersonUUID = null;
-        this.state.loginToken = null;
         this.state.organizationCouchToken = null;
+
+        if (clearToken) {
+            this.state.loginToken = null;
+        }
+
         this.store.logout();
         this._previousState = undefined;
         await this.asyncSaveState().then(() => {
@@ -190,7 +194,7 @@ class SchedulerServer implements ILifecycle {
         return await this._db.async_storeOrUpdateObject(plan) as Plan;
     }
 
-    async deleteTeam(team:Team) {
+    async deleteTeam(team: Team) {
         return await this._db.asyncDeleteObject(team);
     }
 
@@ -486,7 +490,7 @@ class SchedulerServer implements ILifecycle {
         return theObject;
     }
 
-    private async waitForReplicationToQuietenDown(newDb: SchedulerDatabase) {
+    async waitForReplicationToQuietenDown(newDb: SchedulerDatabase) {
         await newDb.replicationNotifications$.pipe(
             map(v => {
                 this.logger.info(`Replication doing something: ${v}`);
@@ -545,6 +549,28 @@ class SchedulerServer implements ILifecycle {
     async getRoleSets(): Promise<RoleSetResponse[]> {
         this.raiseExceptionIfNotOnline('getRoleSets');
         return this.restAPI.getRoleSets();
+    }
+
+    async sendInvites(toPeople: Person[]) {
+        // Ask the server to do this for us
+        this.raiseExceptionIfNotOnline('sendInvites');
+
+        // - send them
+        let response = await this.restAPI.sendInvites(toPeople);
+
+        // - record we've done this on our end?
+        this.logger.info(`Sent invites: ${SWBSafeJSON.stringify(response)}`);
+        return response
+    }
+
+    async movePersonToOrganization(organizationUUID: string) {
+        this.raiseExceptionIfNotOnline('movePersonToOrganization');
+
+        let person = this.store.loggedInPerson;
+        if (person == null) {
+            throw new Error(`Cannot move. No person is logged in`);
+        }
+        await this.restAPI.movePersonToOrganization(person, organizationUUID);
     }
 }
 

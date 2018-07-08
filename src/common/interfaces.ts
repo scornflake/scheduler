@@ -39,6 +39,14 @@ export class RoleSetResponse {
     roles: RoleResponse[];
 }
 
+export class InviteResponse {
+    id: number;
+    to_email: string;
+    created: string;
+    modified: string;
+    expires: string;
+}
+
 export declare type FieldErrors = {
     key: string;
     errors: string[];
@@ -82,6 +90,9 @@ export class ServerError {
     }
 
     get message(): string {
+        if(this.isHTTPServerNotThere) {
+            return "Cannot talk to server. Oh no!"
+        }
         return this.returnNamedField('message')
     }
 

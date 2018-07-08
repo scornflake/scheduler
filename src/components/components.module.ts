@@ -22,6 +22,7 @@ import {monthName} from "../common/pipes/month-name";
 import {ShowPlanComponent} from './show-plan/show-plan';
 import {WelcomeWizardComponent} from './welcome-wizard/welcome-wizard';
 import {SchedulerDirectivesModule} from "../common/directives";
+import {NotificationsComponent} from './notifications/notifications';
 
 @NgModule({
     declarations: [
@@ -43,6 +44,7 @@ import {SchedulerDirectivesModule} from "../common/directives";
         monthName,
         ShowPlanComponent,
         WelcomeWizardComponent,
+        NotificationsComponent,
     ],
     imports: [
         IonicModule,
@@ -53,6 +55,7 @@ import {SchedulerDirectivesModule} from "../common/directives";
     ],
     entryComponents: [
         CalendarComponent,
+        NotificationsComponent,
     ],
     exports: [
         ScheduleViewerComponent,
@@ -73,6 +76,7 @@ import {SchedulerDirectivesModule} from "../common/directives";
         monthName,
         ShowPlanComponent,
         WelcomeWizardComponent,
+        NotificationsComponent,
     ]
 })
 export class ComponentsModule {

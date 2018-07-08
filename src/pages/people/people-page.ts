@@ -41,9 +41,10 @@ export class PeoplePage {
     // }
 
     ngAfterViewInit() {
-        // if (!this.rootStore.people.length) {
-        //     this.navCtrl.pop();
-        // }
+        // for debug
+        if (!this.rootStore.people.length) {
+            this.navCtrl.pop();
+        }
         // for debug
         // this.add_new_person();
         // this.show_person_detail(this.rootStore.people_store.find_person_with_name("Stuart Campbell"));
@@ -61,7 +62,7 @@ export class PeoplePage {
     @action
     delete_person(person: Person) {
         try {
-            if(person.uuid == this.rootStore.loggedInPerson.uuid) {
+            if (person.uuid == this.rootStore.loggedInPerson.uuid) {
                 this.pageUtils.showError('Hey! You cant delete yourself!');
                 return;
             }
@@ -70,4 +71,11 @@ export class PeoplePage {
             this.pageUtils.showError(er);
         }
     }
+
+    addFromContacts() {
+        /*
+        Apparently the native plugin is deprecated. Ignoring for now.
+         */
+    }
+
 }

@@ -1,0 +1,12 @@
+<div *ngIf="store.loggedInPerson$|async as person">
+    <ion-list no-margin>
+        <ion-item *ngFor="let invite of person.invites">
+            <h2>{{invite.organizationName}}</h2>
+            <p>From {{invite.from}}</p>
+            <ion-buttons item-end>
+                <button ion-button small color="warning" (tap)="declineInvitation(invite)">Decline</button>
+                <button ion-button small color="secondary" (tap)="acceptInvitation(invite)">Accept</button>
+            </ion-buttons>
+        </ion-item>
+    </ion-list>
+</div>

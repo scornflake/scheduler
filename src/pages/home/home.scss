@@ -11,6 +11,12 @@ page-home {
       stroke: #b2b2b2;
     }
   }
+
+  .notifications {
+    ion-badge {
+      margin-right: 10px;
+    }
+  }
 }
 
 .notSignedIn {

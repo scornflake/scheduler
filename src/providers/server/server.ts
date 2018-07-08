@@ -2,6 +2,7 @@ import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {ConfigurationService} from "ionic-configuration-service";
 import {
+    InviteResponse,
     LoginResponse,
     OrganizationResponse, RoleSetResponse,
     ServerError,
@@ -13,6 +14,7 @@ import "rxjs/add/operator/map";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import "rxjs/add/observable/from";
+import {Person} from "../../scheduling/people";
 
 @Injectable()
 export class RESTServer {
@@ -178,12 +180,7 @@ export class RESTServer {
             return await this.http.post(url, body, options).toPromise() as LoginResponse;
         } catch (err) {
             console.error(`Got bad response from server: ${JSON.stringify(err)}`);
-            if (err['status']) {
-                if (err['status'] == 400) {
-                    throw new ServerError(err);
-                }
-            }
-            throw err;
+            throw new ServerError(err);
         }
     }
 
@@ -193,13 +190,39 @@ export class RESTServer {
         try {
             return await this.http.get(url, options).toPromise() as RoleSetResponse[];
         } catch (err) {
-            console.error(`Got bad response from server: ${JSON.stringify(err)}`);
-            if (err['status']) {
-                if (err['status'] == 400) {
-                    throw new ServerError(err);
-                }
-            }
-            throw err;
+            console.error(`Got bad response from server for getRoleSets: ${JSON.stringify(err)}`);
+            throw new ServerError(err);
+        }
+    }
+
+    async sendInvites(toPeople: Person[]): Promise<InviteResponse[]> {
+        // We do a number of puts. Can we do an array of. Yes.
+        // This has to be an authenticated request. You don't need to specify 'from_user', that'll come from the auth token.
+        let url = this.server_url(`invite/`);
+        let body = toPeople.map(p => {
+            return {'to_email': p.email}
+        });
+        try {
+            let options = this.options;
+            this.logger.info(`Talking to server using : ${options}`);
+            return await this.http.post(url, body, options).toPromise() as InviteResponse[];
+        } catch (err) {
+            console.error(`Got bad response from server for sendInvites: ${JSON.stringify(err)}`);
+            throw new ServerError(err);
+        }
+    }
+
+    async movePersonToOrganization(person: Person, targetOrganizationUUID: string) {
+        let moveCommand = {
+            "email": person.email,
+            "from_organization_uuid": person.organization.uuid,
+            "to_organization_uuid": targetOrganizationUUID,
+        };
+        try {
+            let url = this.server_url(`move/`);
+            await this.http.post(url, moveCommand, this.options).toPromise();
+        } catch (e) {
+            throw new ServerError(e);
         }
     }
 }

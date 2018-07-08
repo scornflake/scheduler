@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, Component, EventEmitter, Input, Output} from '@angular/core';
+import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {Person} from "../../scheduling/people";
 import {AlertController, NavController} from "ionic-angular";
 import {PageUtils} from "../../pages/page-utils";
@@ -6,6 +6,7 @@ import {ObjectValidation} from "../../scheduling/shared";
 import {NamedObject} from "../../scheduling/base-types";
 import {action, computed, observable} from "mobx-angular";
 import {RootStore} from "../../store/root";
+import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 
 @Component({
     selector: 'people',
@@ -18,20 +19,46 @@ export class PeopleComponent {
 
     @observable nameFilter: string = "";
 
+    @observable inviteMode: boolean = false;
+    private selections = new Array<Person>();
+
     constructor(private navCtrl: NavController,
                 private pageUtils: PageUtils,
-                public cd: ChangeDetectorRef,
                 private store: RootStore,
+                private server:SchedulerServer,
                 private alertCtrl: AlertController) {
     }
 
-    @computed get filteredPeople(): Array<Person> {
+    @computed get sortedPeople(): Array<Person> {
         let people = NamedObject.sortByName(this.people);
         if (this.nameFilter.length > 0) {
             people = people.filter(p => p.name.toLowerCase().indexOf(this.nameFilter.toLowerCase()) >= 0);
         }
+        return people;
+    }
+
+    @computed get filteredPeople(): Array<Person> {
+        let people = this.sortedPeople;
+        if (this.inviteMode) {
+            // only show people that have email addresses
+            people = people.filter(p => p.email && p.email.length > 0);
+        }
         // console.warn(`PeopleComponent returning filtered people to template, ${people.map(p => p.name).join(", ")}`);
         return people;
+    }
+
+    @computed get numPeopleWithoutEmail(): number {
+        if (this.inviteMode) {
+            return this.sortedPeople.length - this.filteredPeople.length;
+        }
+        return 0;
+    }
+
+    @computed get numPeopleSelected(): number {
+        if (this.inviteMode) {
+            return this.selections.length;
+        }
+        return 0;
     }
 
     // ngDoCheck() {
@@ -43,12 +70,15 @@ export class PeopleComponent {
     // }
 
     public showPersonDetail(person: Person) {
+        if (this.inviteMode) {
+            return;
+        }
         this.navCtrl.push('PersonDetailsPage', {person: person})
     }
 
     personSummary(person: Person, showTeams: boolean = false): string {
         let things: Array<any> = [person.availability];
-        if(showTeams) {
+        if (showTeams) {
             let inTeams = this.store.teams.findAllWithPerson(person);
             if (inTeams.length) {
                 let listOfTeams = inTeams.map(t => t.name).join(", ");
@@ -56,6 +86,10 @@ export class PeopleComponent {
             }
         }
         return things.join(", ");
+    }
+
+    invitePeople() {
+        this.inviteMode = !this.inviteMode;
     }
 
     public addNewPerson() {
@@ -103,5 +137,30 @@ export class PeopleComponent {
 
     @action setNameFilter(newFilter: string) {
         this.nameFilter = newFilter;
+    }
+
+    isSelected(person: Person): boolean {
+        return this.selections.find(p => p.uuid == person.uuid) != null;
+    }
+
+    selectPerson($event, person) {
+        if(this.isSelected(person)) {
+            let index = this.selections.findIndex(p => p.uuid == person.uuid);
+            this.selections.splice(index, 1);
+        } else {
+            this.selections.push(person);
+        }
+    }
+
+    sendInvites() {
+        try {
+            this.server.sendInvites(this.selections).then(() => {
+                this.pageUtils.showMessage(`Sent ${this.numPeopleSelected} invites`);
+                this.inviteMode = false;
+                this.selections = [];
+            }, err => this.pageUtils.showError(err))
+        } catch(err) {
+            this.pageUtils.showError(err);
+        }
     }
 }
