@@ -1,0 +1,13 @@
+src
+node_modules
+.sourcemaps
+.vscode
+platforms
+resources
+yarn-error.log
+people.json
+fastlane
+plugins
+test-config
+typings
+
