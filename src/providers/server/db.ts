@@ -441,8 +441,8 @@ class SchedulerDatabase implements IObjectStore {
 
         // First, get the latest revision number.
         let existing = await this.db.get(object.uuid);
-        if(existing) {
-            if(existing._rev != object._rev) {
+        if (existing) {
+            if (existing._rev != object._rev) {
                 this.logger.warn(`Updated _rev from ${object._rev} => ${existing._rev} before delete, otherwise we'd get a document conflict (but we may be loosing data)`);
                 object._rev = existing._rev;
             } else {
@@ -542,7 +542,26 @@ class SchedulerDatabase implements IObjectStore {
         await this.server_db.logIn(this.couchUsername, this.couchCredentials, this.remoteCouchOptions);
         this.logger.info(`Done login. Begin sync...`);
 
-        // await this.db.logIn(this.couchUsername, this.couchCredentials);
+        // Do a single non-live sync first, to get all the data into our local store.
+        this.db.sync(this.server_db, {retry: true}, () => {
+            this.logger.warn(`Initial replication complete`);
+            this.startContinuousReplication();
+            this.lastSeenReplicationStatus = ReplicationStatus.Idle;
+            this.replicationNotifications$.next(this.lastSeenReplicationStatus);
+        }).on('change', (change) => {
+            this.lastSeenReplicationStatus = ReplicationStatus.ProcessingPull;
+            this.saveNotifications$.next(SavingState.FinishedSaving);
+        }).on('denied', (err) => {
+
+        }).on('error', (err) => {
+
+        }).on('complete', (info) => {
+            this.logger.warn(`NOTIFICATION: Initial replication complete`);
+        });
+    }
+
+    private startContinuousReplication() {
+        // Now start continuous replication.
         this.server_sync = this.db.sync(this.server_db, {live: true, retry: true})
             .on('change', (change) => {
                 this.lastSeenReplicationStatus = ReplicationStatus.ProcessingPull;
@@ -575,8 +594,6 @@ class SchedulerDatabase implements IObjectStore {
                     });
                     this.saveNotifications$.next(SavingState.FinishedSaving);
                     this.replicationNotifications$.next(this.lastSeenReplicationStatus);
-                } else {
-                    // this.logger.debug(`Outgoing change: ${JSON.stringify(change)}`);
                 }
             })
             .on('paused', (info) => {

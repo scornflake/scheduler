@@ -19,7 +19,8 @@ class StoreBasedResolver implements IReferenceResolver {
         let new_list = observable([]);
         for (let item of references) {
             let ref: ObjectReference = this.mapper.parseReference(item);
-            new_list.push(await this.async_lookupObjectReference(ref, nesting + 1));
+            let object = await this.async_lookupObjectReference(ref, nesting + 1);
+            new_list.push(object);
         }
         return new_list;
     }
@@ -64,8 +65,16 @@ class StoreBasedResolver implements IReferenceResolver {
         return result_map;
     }
 
+    private assertNewValueNotNull(value: any, ref: ObjectReference) {
+        if (value == null) {
+            throw new Error(`ObjectNotFound error: Tried to lookup: ${JSON.stringify(ref)}. Not found.`);
+        }
+    }
+
     async async_lookupObjectReference(reference: ObjectReference, nesting: number = 0) {
-        return await this.loader.async_LoadObjectWithUUID(reference.id, true, nesting);
+        let object = await this.loader.async_LoadObjectWithUUID(reference.id, true, nesting);
+        this.assertNewValueNotNull(object, reference);
+        return object;
     }
 
 }

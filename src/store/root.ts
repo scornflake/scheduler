@@ -62,11 +62,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
     }
 
     ngOnDestroy() {
-        if (this.ssDisposer) this.ssDisposer();
-        if (this.uiDisposer) this.uiDisposer();
-        if (this.lipDisposer) this.lipDisposer();
-        if (this.scheduleDisposer) this.scheduleDisposer();
-        if (this.spDisposer) this.spDisposer();
+        this.cleanupReactionDisposers();
     }
 
     @action setPreviousSchedule(schedule: ScheduleWithRules) {
@@ -115,13 +111,13 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
         this.addObjectToStore(object, true);
     }
 
-    evict(object: ObjectWithUUID|string): void {
-        if(object instanceof ObjectWithUUID) {
+    evict(object: ObjectWithUUID | string): void {
+        if (object instanceof ObjectWithUUID) {
             this.removeObjectFromStore(object);
         } else {
             // find it by ID first
             let existing = this.getFromCache(object);
-            if(existing) {
+            if (existing) {
                 this.removeObjectFromStore(existing);
             }
         }
@@ -369,6 +365,8 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
     }
 
     logout() {
+        // A good idea since we don't want these to be doing anything when we kill other refs.
+        this.cleanupReactionDisposers();
         this.clearDependentState();
         this.clear();
     }
@@ -392,6 +390,14 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
         } else {
             func();
         }
+    }
+
+    private cleanupReactionDisposers() {
+        if (this.ssDisposer) this.ssDisposer();
+        if (this.uiDisposer) this.uiDisposer();
+        if (this.lipDisposer) this.lipDisposer();
+        if (this.scheduleDisposer) this.scheduleDisposer();
+        if (this.spDisposer) this.spDisposer();
     }
 }
 

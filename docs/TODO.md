@@ -1,8 +1,8 @@
 TODO
 ====
-- Couch doesn't save Config settings. Restart clears CORS/etc.
-- Serve the built www via something static (nginx?)
-- Bug when signing in sometimes. Get no schedule, and the later error about a.name.
+- Bug when signing in sometimes.
+    - Get no schedule, and the later error about a.name.
+    - Seemingly random object access null errors
 - When creating account first time, or switching orgs, - it doesn't select the first schedule.
     - I think even if you select the schedule, it doesn't show it.
     - This may be to do with a mobx error, that we see only on Safari.
@@ -20,19 +20,22 @@ TODO
 - Finish 'clone plan'
   - Then update     duplicate_plan(plan: Plan)
 - Scheduler should show the next coming date (not the first one)
-- Make it possible to specify period of the plan (days in between each) and what time it starts (e.g: 10am)
-- DB isn't showing an up to date version of info. Should reload this on page reload?
-- Add 'level' to Person, and write up about game-ifying the whole thing
+- Make it possible to specify:
+    - period of the plan (days in between each);
+    - and what time it starts (e.g: 10am)
 - Make it so scheduler tells you if a required role isn't filled
 - Invites
     - Itd be nice for the server to send links to the app, for people to download
     - Then when the user creates an account, it knows there's a pending invite and auto joins them to that org
 - It would be GREAT to have CI build the docker images (after running tests) and auto-deploy. At least for a test environment.
 - Deploying the containers
-    - making sure rqscheduler, rqworker are running
     - monitoring? couch? web? rq?
     - including, how to upgrade the stack?
-- DB backups
+- Add 'level' to Person, and write up about game-ifying the whole thing
+- Backups
+    - DB
+    - Per org?
+- DB isn't showing an up to date version of info. Should reload this on page reload?
 
 Performance / Deployment
 ========================
@@ -46,6 +49,9 @@ Scheduling
 - Roles: when shown for an assignment, should be shown in role priority order.
     - Currently for Cher, it shows Worship Leader after Keys. Should be other way around (to imply importance)
     - If there are roles with differing priority, this should be shown somehow (number, color?). Color could work if everyone in that role had that background color.
+- Want to see why a spot is empty. If someone cannot be scheduled on, record that as well (so we can show that 'Foo not available because X')
+
+
 Layout
 ===
 

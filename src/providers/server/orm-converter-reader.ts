@@ -7,7 +7,6 @@ import {LoggingWrapper} from "../../common/logging-wrapper";
 import {OrmMapper} from "../mapping/orm-mapper";
 import {IObjectCache} from "../mapping/cache";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
-import {instance} from "ts-mockito";
 
 class OrmConverterReader {
     private utils: OrmUtils;
@@ -86,8 +85,8 @@ class OrmConverterReader {
         if (!new_object) {
             this.utils.debug(`Creating new object of type: ${new_object_type}`, nesting);
             new_object = this.mapper.createNewInstanceOfType(new_object_type);
-            if(new_object instanceof ObjectWithUUID) {
-                if(new_object.type != new_object_type) {
+            if (new_object instanceof ObjectWithUUID) {
+                if (new_object.type != new_object_type) {
                     throw new Error(`Newly created object supposed to have type: ${new_object_type} but instead has type: ${new_object.type}`);
                 }
             }
@@ -234,7 +233,6 @@ class OrmConverterReader {
         }
         return instance;
     }
-
 }
 
 export {

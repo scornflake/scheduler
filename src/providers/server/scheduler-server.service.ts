@@ -424,10 +424,6 @@ class SchedulerServer implements ILifecycle {
         // Show a 'loading...' page.
         callback.applicationIsStarting();
 
-        // load what we have (wait while this happens)
-        this.logger.info('setupDBFromState', `Loading from DB...`);
-        await this.store.loadDataFromStorage();
-
         // Start replication
         let couch = this.configurationService.getValue('server')['couch'];
         await newDb.startReplicationFor(couch, organizationUUID);
@@ -435,6 +431,10 @@ class SchedulerServer implements ILifecycle {
         // Wait for replication to go quiet (no updates in a bit)
         this.logger.info('setupDBFromState', `Waiting for replication to come up`);
         await this.waitForReplicationToQuietenDown(newDb);
+
+        // load what we have (wait while this happens)
+        this.logger.info('setupDBFromState', `Loading from DB...`);
+        await this.store.loadDataFromStorage();
 
         this.logger.info('setupDBFromState', `Checking we can find ${personUUID}`);
         let person = await this.asyncWaitForDBToContainObjectWithUUID(personUUID, newDb, responseTimeout);

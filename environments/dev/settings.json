@@ -61,8 +61,12 @@
         "logLevel": "INFO"
       },
       {
-        "loggerName": "db.mapping",
+        "loggerName": "orm",
         "logLevel": "WARN"
+      },
+      {
+        "loggerName": "db.mapping",
+        "logLevel": "INFO"
       },
       {
         "loggerName": "db.tracking",
@@ -70,7 +74,7 @@
       },
       {
         "loggerName": "db.converter",
-        "logLevel": "WARN"
+        "logLevel": "INFO"
       }
     ],
     "browserConsoleAppender": {
