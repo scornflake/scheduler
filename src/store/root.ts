@@ -54,8 +54,6 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
         this.scheduleSubject = new BehaviorSubject<ScheduleWithRules>(null);
         this.preferencesSubject = new BehaviorSubject<Preferences>(null);
         this.selectedPlanSubject = new BehaviorSubject<Plan>(null);
-
-        this.setupSubjects();
     }
 
     ngOnInit() {
@@ -212,7 +210,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
         this.ui_store = uiStore;
     }
 
-    private setupSubjects() {
+    private setupReactions() {
         this._createLoggedInPersonReaction();
         this._createPreferencesReaction();
         this._createScheduleReaction();
@@ -221,8 +219,9 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
     }
 
     private _createScheduleReaction() {
-        if (!this.scheduleDisposer) {
+        if (this.scheduleDisposer == null) {
             // Subscribe to a change in the plan, generate a new schedule, and then broadcast that
+            this.logger.info(`Setting up 'schedule' reaction`);
             this.scheduleDisposer = reaction(() => {
                 trace();
                 let plan = this.ui_store.selectedPlan;
@@ -257,8 +256,9 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
     }
 
     private _createPreferencesReaction() {
-        if (!this.ssDisposer) {
+        if (this.ssDisposer == null) {
             // Observe changes, and send these to the subject
+            this.logger.info(`Setting up 'preferences' reaction`);
             this.ssDisposer = reaction(() => {
                 if (this.loggedInPerson) {
                     let prefs = this.loggedInPerson.preferences;
@@ -283,8 +283,9 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
     }
 
     private _createSelectedPlanReaction() {
-        if (!this.spDisposer) {
+        if (this.spDisposer == null) {
             // If the selected plan UUID changes, lookup the plan and broadcast the change
+            this.logger.info(`Setting up 'selected plan' reaction`);
             this.spDisposer = reaction(() => {
                 trace();
                 if (this.loggedInPerson) {
@@ -304,7 +305,8 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
     }
 
     private _createUIStoreReaction() {
-        if (!this.uiDisposer) {
+        if (this.uiDisposer == null) {
+            this.logger.info(`Setting up 'ui store' reaction`);
             this.uiDisposer = reaction(() => {
                 // trace();
                 if (this.ui_store) {
@@ -322,7 +324,8 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
     }
 
     private _createLoggedInPersonReaction() {
-        if (!this.lipDisposer) {
+        if (this.lipDisposer == null) {
+            this.logger.info(`Setting up 'logged in person' reaction`);
             this.lipDisposer = reaction(() => {
                 // trace();
                 if (this.ui_store) {
@@ -359,15 +362,31 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
         return this.selectedPlanSubject;
     }
 
-    clearDependentState() {
+    private cleanupReactionDisposers() {
+        if (this.ssDisposer) this.ssDisposer();
+        if (this.uiDisposer) this.uiDisposer();
+        if (this.lipDisposer) this.lipDisposer();
+        if (this.scheduleDisposer) this.scheduleDisposer();
+        if (this.spDisposer) this.spDisposer();
+
+        this.ssDisposer = null;
+        this.uiDisposer = null;
+        this.lipDisposer = null;
+        this.scheduleDisposer = null;
+        this.spDisposer = null;
+    }
+
+    cleanupBecauseDBIsChanging() {
+        // Destroy the reactions.
+        this.cleanupReactionDisposers();
+
         // I *think* all the other states hang off of this one...
         this.ui_store.setLoggedInPerson(null);
     }
 
     logout() {
         // A good idea since we don't want these to be doing anything when we kill other refs.
-        this.cleanupReactionDisposers();
-        this.clearDependentState();
+        this.cleanupBecauseDBIsChanging();
         this.clear();
     }
 
@@ -380,7 +399,8 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
             this.clear();
             this.db = db;
             this.db.setCache(this);
-            this.logger.info(`Yay. RootStore has a new DB.`);
+            this.setupReactions();
+            this.logger.info(`Yay. RootStore has a new DB (reactions are now live).`);
         }
     }
 
@@ -390,14 +410,6 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
         } else {
             func();
         }
-    }
-
-    private cleanupReactionDisposers() {
-        if (this.ssDisposer) this.ssDisposer();
-        if (this.uiDisposer) this.uiDisposer();
-        if (this.lipDisposer) this.lipDisposer();
-        if (this.scheduleDisposer) this.scheduleDisposer();
-        if (this.spDisposer) this.spDisposer();
     }
 }
 

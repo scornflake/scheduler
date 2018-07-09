@@ -197,6 +197,10 @@ class SchedulerDatabase implements IObjectStore {
         return this.current_indexes.indexes.find(idx => idx.name == name) != null;
     }
 
+    async async_docWithUUID(uuid: string) {
+        return await this.db.get(uuid);
+    }
+
     @action
     async async_LoadObjectWithUUID(id: string, useCache: boolean = true, nesting: number = 0): Promise<ObjectWithUUID> {
         if (isUndefined(id)) {
@@ -544,7 +548,7 @@ class SchedulerDatabase implements IObjectStore {
 
         // Do a single non-live sync first, to get all the data into our local store.
         this.db.sync(this.server_db, {retry: true}, () => {
-            this.logger.warn(`Initial replication complete`);
+            this.logger.info(`Initial replication complete`);
             this.startContinuousReplication();
             this.lastSeenReplicationStatus = ReplicationStatus.Idle;
             this.replicationNotifications$.next(this.lastSeenReplicationStatus);
@@ -556,7 +560,7 @@ class SchedulerDatabase implements IObjectStore {
         }).on('error', (err) => {
 
         }).on('complete', (info) => {
-            this.logger.warn(`NOTIFICATION: Initial replication complete`);
+            // this.logger.warn(`NOTIFICATION: Initial replication complete`);
         });
     }
 

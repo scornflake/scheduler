@@ -1,11 +1,9 @@
 TODO
 ====
-- Bug when signing in sometimes.
-    - Get no schedule, and the later error about a.name.
-    - Seemingly random object access null errors
-- When creating account first time, or switching orgs, - it doesn't select the first schedule.
-    - I think even if you select the schedule, it doesn't show it.
-    - This may be to do with a mobx error, that we see only on Safari.
+- Invites
+    - When new user created, we don't attach invites to that user
+    - Some error about assets/settings.json not being loaded
+    - Confirm email didn't work on prod docker service (but did via localhost)
 - Permissions on REST API.
     - Throttling.
     - Do users have to be logged in to access RoleSets?

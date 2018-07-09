@@ -408,7 +408,7 @@ class SchedulerServer implements ILifecycle {
         // Clear logged in person and any other 'db dependent' state
         // This should cause the various subjects on RootStore to fire, hopefully with nulls
         this.logger.info('setupDBFromState', `Clearing RootStore state...`);
-        this.store.clearDependentState();
+        this.store.cleanupBecauseDBIsChanging();
 
         // Wait until the DB is ready and set it on the rootstore
         this.logger.info('setupDBFromState', `Waiting for DB ready...`);
@@ -436,24 +436,46 @@ class SchedulerServer implements ILifecycle {
         this.logger.info('setupDBFromState', `Loading from DB...`);
         await this.store.loadDataFromStorage();
 
-        this.logger.info('setupDBFromState', `Checking we can find ${personUUID}`);
+        this.logger.info('setupDBFromState', `Checking we can find person: ${personUUID}`);
         let person = await this.asyncWaitForDBToContainObjectWithUUID(personUUID, newDb, responseTimeout);
 
         if (person instanceof Person) {
             // Does this person need a 're-save'?
             // This can happen if the person was created by the server and doesn't have all the fields we map here on the client
-            if (person.needsResave) {
+            //
+            // The ORM will instantiate using the factory. This will likely set good defaults on the object (e,g: non-null preferences, [] unavail, and a default avail).
+            // Yet the DB version won't have any of that.
+            //
+            // We need the doc, to be sure.
+            //
+            let doc = await this.db.async_docWithUUID(person.uuid);
+            if (!doc) {
+                throw new Error(`Tried to find Person doc with ID ${person.uuid} but it's not in the DB. WTF?`);
+            }
+            let docKeys = Object.keys(doc);
+            // console.log(`Doc: ${SWBSafeJSON.stringify(doc)}`);
+            let hasPrefs = docKeys.indexOf('preferences') > -1;
+            let hasAvail = docKeys.indexOf('availability') > -1;
+            let hasUnAvail = docKeys.indexOf('unavailable') > -1;
+
+            if (!hasUnAvail || !hasAvail || !hasPrefs) {
                 this.logger.warn(`Resaving ${person.name} because its missing some needed info`);
+                this.logger.warn(`Keys: ${docKeys}`);
+                if (!hasPrefs) this.logger.warn(` - No preferences`);
+                if (!hasAvail) this.logger.warn(` - No availability`);
+                if (!hasUnAvail) this.logger.warn(` - No unavailable`);
                 await this.savePerson(person);
             }
 
+            this.logger.info(`${person.name} to be the logged in person`);
             this.store.ui_store.setLoggedInPerson(person);
+
+            // We want that 'defaults' o ne to be alive so it triggers when we first load the state
+            this.checkForDefaults(person);
         } else {
             throw new Error(`Object with UUID ${personUUID} was loaded, but it's not an instance of Person! It's: ${SWBSafeJSON.stringify(person)}`);
         }
 
-        // We want that 'defaults' one to be alive so it triggers when we first load the state
-        // this.checkForDefaults();
     }
 
     async asyncWaitForDBToContainObjectWithUUID(uuid, newDb, responseTimeout: number): Promise<ObjectWithUUID> {
@@ -479,7 +501,7 @@ class SchedulerServer implements ILifecycle {
                 })
             ).toPromise();
 
-        this.logger.info('asyncWaitForDBToContainObjectWithUUID', `Woot! We can see the ${uuid} in the DB`);
+        this.logger.info('asyncWaitForDBToContainObjectWithUUID', `Woot! We can see ${uuid} in the DB`);
 
         // Make sure store logged in person is set
         // Again, causing various subjects on RootStore to fire, getting new state & objects
@@ -505,9 +527,8 @@ class SchedulerServer implements ILifecycle {
         this.logger.info('Replication has been silent for a while');
     }
 
-    private checkForDefaults(store: RootStore) {
+    private checkForDefaults(person: Person) {
         let theStore = this.store;
-        let person = theStore.ui_store.loggedInPerson;
         if (!person) {
             throw new Error('Unable to start defaults check, no person logged in');
         }

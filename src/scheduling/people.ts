@@ -116,23 +116,6 @@ class Person extends NamedObject {
         return this;
     }
 
-    get needsResave(): boolean {
-        let needsIt = false;
-        if (!this.preferences) {
-            this.preferences = new Preferences();
-            needsIt = true;
-        }
-        if (!this.unavailable) {
-            this.unavailable = new Array<Unavailability>();
-            needsIt = true;
-        }
-        if (!this._availability) {
-            this.availability = new Availability();
-            needsIt = true;
-        }
-        return needsIt;
-    }
-
     @computed get availability() {
         return this._availability;
     }
