@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {AlertController, IonicPage, NavController, NavParams} from 'ionic-angular';
 import {RootStore} from "../../store/root";
 import {LoggingWrapper} from "../../common/logging-wrapper";
@@ -17,7 +17,7 @@ import PluralizeStatic from "pluralize";
     selector: 'page-roles',
     templateUrl: 'roles.html',
 })
-export class RolesPage {
+export class RolesPage implements OnInit {
     private logger: Logger;
 
     constructor(public navCtrl: NavController,
@@ -29,12 +29,14 @@ export class RolesPage {
         this.logger = LoggingWrapper.getLogger('page.roles');
     }
 
-    ionViewDidLoad() {
+    ngOnInit() {
         // For debug
         if (this.store.roles.length == 0) {
             this.navCtrl.pop();
+        } else {
+            // // For debug only
+            // this.showRoleDetail(this.store.roles[0]);
         }
-
     }
 
     addNewRole() {
@@ -84,7 +86,7 @@ export class RolesPage {
         }
     }
 
-    showUsedIn(role: Role) {
+    showUsedInSummary(role: Role) {
         let usages = this.store.findWhatRoleIsUsedIn(role);
         if (usages.length == 0) {
             return "";
@@ -96,5 +98,9 @@ export class RolesPage {
 
             return `Used in ${usages.slice(0, 1).join(", ")} and ${PluralizeStatic('other', usageCount, true)}.`;
         }
+    }
+
+    showRoleDetail(role) {
+        this.navCtrl.push('page-role-detail', {role: role})
     }
 }

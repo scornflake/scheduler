@@ -20,15 +20,12 @@
 <ion-content no-padding>
     <div *ngIf="store">
         <div *ngFor="let group of store.roles.rolesGroupsByPriority">
-            <ion-list-header color="light">Role Group, Priority {{group.priority}}</ion-list-header>
-            <ion-list>
+            <ion-list-header color="light" no-margin>Role Group, Priority {{group.priority}}</ion-list-header>
+            <ion-list no-margin>
                 <ion-item-sliding *ngFor="let role of group.roles">
-                    <ion-item detail-push>
-                        <h2>
-                            {{role.name}}
-                            <p text-right>{{role.summary}}</p>
-                        </h2>
-                        <p>{{showUsedIn(role)}}</p>
+                    <ion-item detail-push (tap)="showRoleDetail(role)">
+                        <h2> {{role.name}} ({{role.summary}}) </h2>
+                        <p>{{showUsedInSummary(role)}}</p>
                     </ion-item>
                     <ion-item-options side="right">
                         <button ion-button color="danger" (tap)="deleteRole(role)">Delete</button>

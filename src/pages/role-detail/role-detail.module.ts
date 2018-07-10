@@ -1,16 +1,14 @@
 import {NgModule} from '@angular/core';
 import {IonicPageModule} from 'ionic-angular';
 import {RoleDetailPage} from './role-detail';
-import {ComponentsModule} from "../../components/components.module";
-import {MobxAngularModule} from "mobx-angular";
+import {SchedulerDirectivesModule} from "../../common/directives";
 
 @NgModule({
     declarations: [
         RoleDetailPage,
     ],
     imports: [
-        ComponentsModule,
-        MobxAngularModule,
+        SchedulerDirectivesModule,
         IonicPageModule.forChild(RoleDetailPage),
     ],
 })

@@ -10,9 +10,6 @@ TODO
         - **Especially**:
             - Access to other organization data
 - Add roles editing
-- Add a way to add 'default roles'
-    - these sets should come from the server [done]
-    - should be available when adding roles, in the role editor (when the wizard isn't around)
 - Why do the wizard 'slider' pages 'Jump (tm)' when you first show them?
 - Remove 'pull to refresh' style action on home page (it doesn't do anything)
 - If User is activated, but I deleted the Org, validation/login still seems to return OK (and the client then goes into an endless loop)

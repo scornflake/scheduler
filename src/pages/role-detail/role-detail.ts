@@ -1,27 +1,26 @@
 import {Component} from '@angular/core';
 import {IonicPage, NavController, NavParams} from 'ionic-angular';
-import {Assignment} from "../../scheduling/assignment";
 import {Role} from "../../scheduling/role";
 
-@IonicPage()
+@IonicPage({
+    name: 'page-role-detail',
+    defaultHistory: ['page-roles', 'home']
+})
 @Component({
     selector: 'page-role-detail',
     templateUrl: 'role-detail.html',
 })
 export class RoleDetailPage {
-    role: Role;
-    assignment: Assignment;
+    private role: Role;
 
     constructor(public navCtrl: NavController, public navParams: NavParams) {
-        this.role = this.navParams.get('role');
-        this.assignment = this.navParams.get('assignment');
+        this.role = this.navParams.get('role') as Role;
     }
 
     ionViewDidLoad() {
-        if (!this.role || !this.assignment) {
-            // pop back to home, for debugging
-            this.navCtrl.setRoot('people')
+        if (!this.role) {
+            this.navCtrl.pop();
         }
-
     }
+
 }

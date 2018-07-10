@@ -1,9 +1,9 @@
 import {Role} from "../scheduling/role";
 
-let speakerPriority = 12;
-let leaderPriority = 11;
-let soundPriority = 10;
-let instrumentPriority = 10;
+let speakerPriority = 3;
+let leaderPriority = 2;
+let soundPriority = 1;
+let instrumentPriority = 1;
 
 let defaultSpeakerRole: Role = null;
 let defaultThemeRole: Role = null;

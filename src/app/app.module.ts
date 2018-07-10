@@ -37,8 +37,9 @@ import {NativePageTransitions} from "@ionic-native/native-page-transitions";
 import {TeamWizardPageModule} from "../pages/team-wizard/team-wizard.module";
 import {PlanWizardPageModule} from "../pages/plan-wizard/plan-wizard.module";
 import {SchedulerDirectivesModule} from "../common/directives";
-import {IonicNativePlugin} from "@ionic-native/core";
-import { PermissionsProvider } from '../providers/permissions/permissions';
+import {PermissionsProvider} from '../providers/permissions/permissions';
+import {RolesPageModule} from "../pages/roles/roles.module";
+import {RoleDetailPageModule} from "../pages/role-detail/role-detail.module";
 
 
 let config = {
@@ -77,6 +78,8 @@ export function ResponsiveDefinition() {
         AboutPageModule,
         TeamsPageModule,
         TeamPageModule,
+        RolesPageModule,
+        RoleDetailPageModule,
         PersonAssignmentPageModule,
         DatabaseMaintPageModule,
         ResponsiveModule,

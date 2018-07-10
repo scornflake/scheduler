@@ -33,6 +33,14 @@ class Role extends NamedObject {
         this.display_order = val;
     }
 
+    @action setMinimumNeeded(val: number) {
+        this.minimum_needed = val;
+    }
+
+    @action setMaximumWanted(val: number) {
+        this.maximum_wanted = val;
+    }
+
     get required(): boolean {
         return this.minimum_needed > 1;
     }
