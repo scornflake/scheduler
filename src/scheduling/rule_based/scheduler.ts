@@ -57,12 +57,12 @@ class ScheduleWithRules {
         this.logger.debug("Schedule is " + schedule_duration + " days long");
 
         let role_groups = this.plan.roles_in_layout_order_grouped;
-        let role_names = role_groups.map(g => SWBSafeJSON.stringify(g.map(r => r.name)));
+        let role_names = role_groups.map(roleGroup => SWBSafeJSON.stringify(roleGroup.roles.map(r => r.name)));
         this.logger.debug("Roles (in order of importance): " + SWBSafeJSON.stringify(role_names));
 
         this.facts.begin();
 
-        role_groups.forEach(rg => this.process_role_group(rg));
+        role_groups.forEach(rg => this.process_role_group(rg.roles));
 
         this.process_secondary_actions();
     }

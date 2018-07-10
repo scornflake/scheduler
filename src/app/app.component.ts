@@ -72,6 +72,7 @@ export class MyApp {
             },
             {
                 title: "Admin", visible: () => this.loggedIn, items: [
+                    {title: "Roles", page: 'page-roles', enabled: () => this.loggedIn},
                     {title: "People", page: 'page-people', enabled: () => this.loggedIn},
                     {title: "Teams", page: 'page-teams', enabled: () => this.loggedIn},
                     {title: "Plans", page: 'page-plans', enabled: () => this.loggedIn},

@@ -1,13 +1,14 @@
 TODO
 ====
 - Invites
-    - When new user created, we don't attach invites to that user
     - Some error about assets/settings.json not being loaded
-    - Confirm email didn't work on prod docker service (but did via localhost)
 - Permissions on REST API.
     - Throttling.
-    - Do users have to be logged in to access RoleSets?
+    - Do users have to be logged in to access RoleSets?  No reason why not that I can think of, because they are not needed unless you have an account.
     - Check what is POST/PUT able. Reduce if necessary.
+    - How do we enforce the exact same set of rules on the server, so data cannot be modified by malicious client?
+        - **Especially**:
+            - Access to other organization data
 - Add roles editing
 - Add a way to add 'default roles'
     - these sets should come from the server [done]

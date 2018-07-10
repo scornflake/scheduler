@@ -78,8 +78,8 @@ describe('service', () => {
         console.log(`Groups zero: ${groups[0]}`);
         console.log(`Groups one: ${groups[1]}`);
         expect(groups.length).toEqual(2, 'group length isnt correct');
-        expect(groups[0].length).toEqual(1, 'expected single with priority 1');
-        expect(groups[1].length).toEqual(2, 'expected two with priority 2');
+        expect(groups[0].roles.length).toEqual(1, 'expected single with priority 1');
+        expect(groups[1].roles.length).toEqual(2, 'expected two with priority 2');
     });
 
     describe('rules', () => {

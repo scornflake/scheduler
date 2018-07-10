@@ -1,18 +1,18 @@
 import {NgModule} from '@angular/core';
 import {IonicPageModule} from 'ionic-angular';
-import {TeamPage} from './team';
-import {ComponentsModule} from "../../components/components.module";
+import {RolesPage} from './roles';
 import {SchedulerDirectivesModule} from "../../common/directives";
+import {ComponentsModule} from "../../components/components.module";
 
 @NgModule({
     declarations: [
-        TeamPage,
+        RolesPage,
     ],
     imports: [
         ComponentsModule,
         SchedulerDirectivesModule,
-        IonicPageModule.forChild(TeamPage),
+        IonicPageModule.forChild(RolesPage),
     ],
 })
-export class TeamPageModule {
+export class RolesPageModule {
 }

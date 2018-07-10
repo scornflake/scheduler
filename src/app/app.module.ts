@@ -38,6 +38,7 @@ import {TeamWizardPageModule} from "../pages/team-wizard/team-wizard.module";
 import {PlanWizardPageModule} from "../pages/plan-wizard/plan-wizard.module";
 import {SchedulerDirectivesModule} from "../common/directives";
 import {IonicNativePlugin} from "@ionic-native/core";
+import { PermissionsProvider } from '../providers/permissions/permissions';
 
 
 let config = {
@@ -116,7 +117,8 @@ export function ResponsiveDefinition() {
         [{
             provide: ResponsiveConfig,
             useFactory: ResponsiveDefinition
-        }]
+        }],
+    PermissionsProvider
     ]
 })
 

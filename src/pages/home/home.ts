@@ -102,6 +102,7 @@ export class HomePage {
 
             // this.navCtrl.push('login', {create: true});
             // this.navCtrl.push('page-db');
+            // this.navCtrl.push('page-roles');
             // this.navCtrl.push('page-people', {create: true});
             // this.navCtrl.push('page-teams', {create: true});
             // this.navCtrl.push('page-plans', {create: true});

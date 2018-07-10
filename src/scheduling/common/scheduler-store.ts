@@ -6,6 +6,7 @@ import {Plan} from "../plan";
 import {Role} from "../role";
 import {NamedObject, ObjectWithUUID} from "../base-types";
 import {action, computed, observable} from "mobx-angular";
+import {ObservableMap} from "mobx";
 
 abstract class GenericManager<T extends NamedObject> {
     @observable protected store: GenericObjectStore<T>;
@@ -17,7 +18,7 @@ abstract class GenericManager<T extends NamedObject> {
     }
 
     @computed get all(): T[] {
-        return this.findAllThisType;
+        return this.allOfThisType;
     }
 
     @computed get length(): number {
@@ -32,7 +33,7 @@ abstract class GenericManager<T extends NamedObject> {
         return this.all.map(callbackfn);
     }
 
-    @computed get findAllThisType(): T[] {
+    @computed get allOfThisType(): T[] {
         // noinspection UnnecessaryLocalVariableJS
         let filtered = this.store.items.filter(item => {
             return item.type == this.type;
@@ -42,7 +43,7 @@ abstract class GenericManager<T extends NamedObject> {
     }
 
     findOfThisTypeByUUID(uuid: string): T {
-        return this.findAllThisType.find(p => p.uuid == uuid);
+        return this.allOfThisType.find(p => p.uuid == uuid);
     }
 
     findThisTypeByName(name: string): T[] {
@@ -51,7 +52,7 @@ abstract class GenericManager<T extends NamedObject> {
 
     firstThisTypeByName(name: string, throwOnNotFound: boolean = true): T {
         let res = this.findThisTypeByName(name);
-        if (res == null && throwOnNotFound) {
+        if (res.length == 0 && throwOnNotFound) {
             throw new Error(`Unable to find ${this.type} with name ${name}`);
         }
         if (res.length > 1 && throwOnNotFound) {
@@ -69,13 +70,18 @@ abstract class GenericManager<T extends NamedObject> {
     }
 }
 
+export class RolesByPriority {
+    priority: number;
+    roles: Array<Role>;
+}
+
 class RoleManager extends GenericManager<Role> {
     constructor(store) {
         super(store, 'Role');
     }
 
     @computed get roles(): Array<Role> {
-        return this.findAllThisType;
+        return this.allOfThisType;
     }
 
     @action remove(role: Role) {
@@ -86,6 +92,11 @@ class RoleManager extends GenericManager<Role> {
         }
         throw new Error(`cannot call, the store isnt a SchedulerObjectStore`);
     }
+
+    @computed get rolesGroupsByPriority(): RolesByPriority[] {
+        // Add all roles into a map
+        return Role.sortRolesByPriority(this.allOfThisType);
+    }
 }
 
 class PersonManager extends GenericManager<Person> {
@@ -94,7 +105,7 @@ class PersonManager extends GenericManager<Person> {
     }
 
     get people(): Array<Person> {
-        return this.findAllThisType;
+        return this.allOfThisType;
     }
 
     findByNameFuzzy(name: string) {
@@ -121,7 +132,7 @@ class OrganizationManager extends GenericManager<Organization> {
     }
 
     get organizations(): Array<Organization> {
-        return this.findAllThisType;
+        return this.allOfThisType;
     }
 }
 
@@ -131,7 +142,7 @@ class TeamManager extends GenericManager<Team> {
     }
 
     get teams(): Array<Team> {
-        return this.findAllThisType;
+        return this.allOfThisType;
     }
 
     remove(team: Team) {
@@ -154,7 +165,7 @@ class PlansManager extends GenericManager<Plan> {
     }
 
     get plans(): Array<Plan> {
-        return this.findAllThisType;
+        return this.allOfThisType;
     }
 
     get plansByDateLatestFirst(): Array<Plan> {
@@ -181,9 +192,10 @@ class PlansManager extends GenericManager<Plan> {
 class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
     private peopleManager: PersonManager;
     private teamManager: TeamManager;
-    @observable private plansManager: PlansManager;
     private rolesManager: RoleManager;
     private organizationManager: OrganizationManager;
+
+    @observable private plansManager: PlansManager;
 
     constructor() {
         super();
@@ -228,43 +240,42 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
         this.removeObjectFromStore(plan);
     }
 
-    @action removeRoleFromStoreWithRefcheck(role: Role) {
-        let msg = `Cannot delete role ${role.name}, `;
-
+    findWhatRoleIsUsedIn(role): string[] {
+        let usedIn = [];
         // can't be used in role
         this.plans.forEach(p => {
             // Roles
             if (p.roles.indexOf(role) != -1) {
-                throw new Error(`${msg}it is used in plan: ${p.name}`);
+                usedIn.push(`Plan ${p.name}`);
             }
 
             // Weighted roles per assignment
             let assignmentsWithRole = p.assignments_with_role(role);
             if (assignmentsWithRole.length > 0) {
-                throw new Error(`${msg}it is used in plan: ${p.name} (assignments)`);
+                usedIn.push(`Plan ${p.name} (assignments)`);
             }
 
             // Pick rules (OnThisDate)
             if (p.rules_for_role(role).length > 0) {
-                throw new Error(`${msg}it is used in plan: ${p.name} (pick rules)`);
+                usedIn.push(`Plan ${p.name} (rules)`);
             }
 
-            // check condtional
+            // check conditional
             p.assignments.forEach(a => {
                 a.conditional_rules.forEach(cr => {
                     if (cr['role']) {
                         if (cr['role'].uuid == role.uuid) {
-                            throw new Error(`${msg}it is used in plan: ${p.name}  (conditions)`);
+                            usedIn.push(`Plan ${p.name} (conditions)`);
                         }
                     }
                     if (cr['actions']) {
                         // check for actions containing the role
                         let actions = cr['actions'];
                         actions.forEach(a => {
-                            console.log(`check action: ${a}`);
+                            // console.log(`check action: ${a}`);
                             if (a['role']) {
                                 if (a['role'].uuid == role.uuid) {
-                                    throw new Error(`${msg}it is used in plan: ${p.name}  (actions)`);
+                                    usedIn.push(`Plan ${p.name} (actions)`);
                                 }
                             }
                         })
@@ -273,6 +284,15 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
             })
         });
 
+        return usedIn;
+    }
+
+    @action removeRoleFromStoreWithRefcheck(role: Role) {
+        let msg = `Cannot delete role ${role.name}, `;
+        let usages = this.findWhatRoleIsUsedIn(role);
+        if (usages.length > 0) {
+            throw new Error(`${msg} used in ${usages[0]}`);
+        }
         this.removeObjectFromStore(role);
     }
 

@@ -26,6 +26,7 @@ import {Subscription} from "rxjs/Subscription";
 import {ConnectivityService} from "../../common/network/connectivity";
 import {Team} from "../../scheduling/teams";
 import {Plan} from "../../scheduling/plan";
+import {Role} from "../../scheduling/role";
 
 const STATE_ROOT = 'state';
 
@@ -188,6 +189,10 @@ class SchedulerServer implements ILifecycle {
 
     async saveTeam(team: Team): Promise<Team> {
         return await this._db.async_storeOrUpdateObject(team) as Team;
+    }
+
+    async saveRole(role: Role): Promise<Role> {
+        return await this._db.async_storeOrUpdateObject(role) as Role;
     }
 
     async savePlan(plan: Plan): Promise<Plan> {
@@ -429,8 +434,9 @@ class SchedulerServer implements ILifecycle {
         await newDb.startReplicationFor(couch, organizationUUID);
 
         // Wait for replication to go quiet (no updates in a bit)
-        this.logger.info('setupDBFromState', `Waiting for replication to come up`);
-        await this.waitForReplicationToQuietenDown(newDb);
+        // Me: Don't need this now that the DB does a sync(non-live) FIRST, followed by setting up live.
+        // this.logger.info('setupDBFromState', `Waiting for replication to come up`);
+        // await this.waitForReplicationToQuietenDown(newDb);
 
         // load what we have (wait while this happens)
         this.logger.info('setupDBFromState', `Loading from DB...`);

@@ -24,7 +24,6 @@
                 <ion-input [ngModel]="team.name" (ngModelChange)="team.setName($event)"></ion-input>
             </ion-item>
         </ion-list>
-
         <people #peoplelist
                 [people]="team.people"
                 (personAdded)="add_person_to_team($event)"

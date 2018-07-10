@@ -12,6 +12,7 @@ import {NamedObject} from "./base-types";
 import {action, computed, observable} from "mobx-angular";
 import {addDaysToDate, dateForISODateString} from "./common/date-utils";
 import {ObservableMap} from "mobx";
+import {RolesByPriority} from "./common/scheduler-store";
 
 class Plan extends NamedObject {
     @observable start_date: Date;
@@ -210,35 +211,8 @@ class Plan extends NamedObject {
     }
 
     @computed
-    get roles_in_layout_order_grouped(): Array<Array<Role>> {
-        // Add all roles into a map
-        let roles_in_order = this.roles_in_layout_order;
-        let intermediate = new ObservableMap<number, Array<Role>>();
-        // this.logger.info(`Sorting following roles: ${roles_in_order.join(",")}`);
-        for (let role of roles_in_order) {
-            if (!intermediate.has(role.layout_priority)) {
-                intermediate.set(role.layout_priority, []);
-            }
-            intermediate.set(role.layout_priority, [...intermediate.get(role.layout_priority), role]);
-        }
-
-        // Turn into an array, sorted by priority
-        let intermediate_keys = intermediate.keys();
-        let keys = Array.from(intermediate_keys).sort((a, b) => {
-            if (a < b) {
-                return 1;
-            }
-            if (a > b) {
-                return -1;
-            }
-            return 0;
-        });
-        let result = observable([]);
-        for (let key of keys) {
-            let list = intermediate.get(key);
-            result.push(list);
-        }
-        return result;
+    get roles_in_layout_order_grouped(): RolesByPriority[] {
+        return Role.sortRolesByPriority(this.roles_in_layout_order);
     }
 
     role_rules(): Map<Assignment, Array<Rule>> {

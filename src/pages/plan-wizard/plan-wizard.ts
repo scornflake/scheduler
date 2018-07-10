@@ -155,9 +155,7 @@ export class PlanWizardPage extends WizardPage {
         this.chosenRoleSet.roles.forEach(r => {
             let role = this.store.roles.firstThisTypeByName(r.name, false);
             if (!role) {
-                role = new Role(r.name, r.minimum_needed, r.maximum_needed, r.layout_priority);
-                role.setDisplayOrder(r.display_order);
-
+                role = Role.roleFromRoleSet(r);
                 this.store.roles.add(role);
             }
             plan.addRole(role);

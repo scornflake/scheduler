@@ -1,5 +1,4 @@
-<!--<div *mobxTraceAutorun="'trace'">-->
-<ion-content>
+<div>
     <ion-searchbar [ngModel]="nameFilter" (ngModelChange)="setNameFilter($event)"></ion-searchbar>
     <ion-list-header color="warning" *ngIf="numPeopleWithoutEmail > 0">{{numPeopleWithoutEmail}} people have no email
         address
@@ -21,10 +20,4 @@
             </ion-item-options>
         </ion-item-sliding>
     </ion-list>
-</ion-content>
-<ion-footer *ngIf="inviteMode">
-    <ion-toolbar>
-        <button ion-button block (tap)="sendInvites()" [disabled]="numPeopleSelected == 0">Send <span
-                *ngIf="numPeopleSelected > 0">&nbsp;{{numPeopleSelected}} invites</span></button>
-    </ion-toolbar>
-</ion-footer>
+</div>

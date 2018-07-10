@@ -29,12 +29,11 @@ export class TeamsPage {
     }
 
     ngAfterViewInit() {
-        // For Debug (if not loaded, jump back home)
+        // // For Debug (if not loaded, jump back home)
         // if (!this.teams.length) {
         //     this.navCtrl.pop();
         // }
-
-        // For Debug, show first team, if we have one
+        // // For Debug, show first team, if we have one
         // let the_teams = this.teams;
         // if (the_teams.length > 0) {
         //     this.showTeamDetail(the_teams[0]);

@@ -80,6 +80,9 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
         let items = await this.db.async_load_into_store<Organization>(this.organizations, 'Organization');
         this.logger.info(`Loaded ${items.length} organizations... before: ${before}, after: ${this.organizations.length}`);
 
+        items = await this.db.async_load_into_store<Role>(this.roles, 'Role');
+        this.logger.info(`Loaded ${items.length} roles...`);
+
         items = await this.db.async_load_into_store<Person>(this.people, 'Person');
         this.logger.info(`Loaded ${items.length} people...`);
 

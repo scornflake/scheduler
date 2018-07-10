@@ -1,8 +1,9 @@
 import {
     ChangeDetectorRef,
     ContentChildren,
-    Directive, Input,
-    NgModule, NgZone,
+    Directive,
+    Input,
+    NgModule,
     QueryList,
     Renderer,
     Self,
@@ -106,6 +107,7 @@ I had problems with ion-datetime.
 If bound to a stream$|async, it would display the value on page load OK. But if it was bound to some normal object, no... it wouldn't.
 It *would* show the value as soon as I clicked on some other control in the view tho.
 IDIOT: this was because I had 'changeDetection: ChangeDetectionStrategy.OnPush' on the APP!!! AT THE ROOT LEVEL. MORON...
+Thus it's almost 1000% positive that I don't need this directive. At all.
  */
 @Directive({
     selector: 'ion-datetime'

@@ -247,7 +247,7 @@ export class NPBCStoreConstruction {
             let email = record['email'];
             let name = record['name'];
 
-            let person = peopleStore.firstThisTypeByName(name);
+            let person = peopleStore.firstThisTypeByName(name, false);
             if(person) {
                 if(person.email != email) {
                     person.setEmail(email);
@@ -260,7 +260,7 @@ export class NPBCStoreConstruction {
         let people_added = [];
 
         function aint(name: string, email: string = null) {
-            let person = people_store.firstThisTypeByName(name);
+            let person = people_store.firstThisTypeByName(name, false);
             if (person == null) {
                 let p = people_store.add(new Person(name));
                 people_added.push(p);

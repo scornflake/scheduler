@@ -173,7 +173,7 @@ export class DatabaseMaintPage implements OnDestroy {
         This sets unavailability
          */
         let teamManager = this.store.teams;
-        let defaultTeam = teamManager.firstThisTypeByName("Default");
+        let defaultTeam = teamManager.firstThisTypeByName("Default", false);
         if (!defaultTeam) {
             defaultTeam = new Team("Default", this.store.people.all);
             teamManager.add(defaultTeam);
@@ -200,7 +200,7 @@ export class DatabaseMaintPage implements OnDestroy {
     private setup_fake_draft_plan(team: Team): Plan {
         // make up a default team
         // for testing, create some fake
-        let plan = this.store.plans.firstThisTypeByName("Sunday Morning Service");
+        let plan = this.store.plans.firstThisTypeByName("Sunday Morning Service", false);
         if (plan == null) {
             plan = this.store.plans.add(new Plan("Sunday Morning Service", team));
             this.pageUtils.showMessage('Adding new default plan')
