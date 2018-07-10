@@ -7,27 +7,30 @@ TODO
     - How do we enforce the exact same set of rules on the server, so data cannot be modified by malicious client?
         - **Especially**:
             - Access to other organization data
-- Add roles editing
 - Why do the wizard 'slider' pages 'Jump (tm)' when you first show them?
-- Remove 'pull to refresh' style action on home page (it doesn't do anything)
+- Remove 'pull to refresh' style action on home page (io sonly?) (it doesn't do anything)
 - If User is activated, but I deleted the Org, validation/login still seems to return OK (and the client then goes into an endless loop)
 - Finish 'clone plan'
   - Then update     duplicate_plan(plan: Plan)
 - Scheduler should show the next coming date (not the first one)
 - Make it possible to specify:
     - period of the plan (days in between each);
+    - What is the minimum period? Days? Hours?
     - and what time it starts (e.g: 10am)
 - Make it so scheduler tells you if a required role isn't filled
+    - Requires a role being 'required' (well, that's equal to min > 0)
 - Invites
     - Itd be nice for the server to send links to the app, for people to download
     - Then when the user creates an account, it knows there's a pending invite and auto joins them to that org
-- It would be GREAT to have CI build the docker images (after running tests) and auto-deploy. At least for a test environment.
+- It would be GREAT to:
+    - after running tests
+    - and auto-deploy; at least for the test environment.
 - Deploying the containers
-    - monitoring? couch? web? rq?
+    - monitoring???
     - including, how to upgrade the stack?
 - Add 'level' to Person, and write up about game-ifying the whole thing
 - Backups
-    - DB
+    - DB (of production)
     - Per org?
 - DB isn't showing an up to date version of info. Should reload this on page reload?
 
