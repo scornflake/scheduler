@@ -80,7 +80,7 @@ class Role extends NamedObject {
         let result = observable([]);
         for (let key of keys) {
             let list = intermediate.get(key);
-            result.push({priority: key, roles: list});
+            result.push({priority: key, roles: list.sort()});
         }
         return result;
 

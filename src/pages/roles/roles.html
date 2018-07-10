@@ -1,5 +1,4 @@
 <ion-header>
-
     <ion-navbar>
         <ion-title>Roles</ion-title>
 
@@ -25,7 +24,9 @@
                 <ion-item-sliding *ngFor="let role of group.roles">
                     <ion-item detail-push (tap)="showRoleDetail(role)">
                         <h2> {{role.name}} ({{role.summary}}) </h2>
-                        <p>{{showUsedInSummary(role)}}</p>
+                        <p *xs>In {{showUsedInSummary(role, true)}}</p>
+                        <p *sm>Used in {{showUsedInSummary(role, 2)}}</p>
+                        <p *showItBootstrap="['md', 'lg', 'xl']">Used in {{showUsedInSummary(role, 3)}}</p>
                     </ion-item>
                     <ion-item-options side="right">
                         <button ion-button color="danger" (tap)="deleteRole(role)">Delete</button>

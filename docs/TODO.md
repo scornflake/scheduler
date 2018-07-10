@@ -1,7 +1,5 @@
 TODO
 ====
-- Invites
-    - Some error about assets/settings.json not being loaded
 - Permissions on REST API.
     - Throttling.
     - Do users have to be logged in to access RoleSets?  No reason why not that I can think of, because they are not needed unless you have an account.

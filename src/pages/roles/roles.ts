@@ -31,11 +31,15 @@ export class RolesPage implements OnInit {
 
     ngOnInit() {
         // For debug
-        if (this.store.roles.length == 0) {
-            this.navCtrl.pop();
-        } else {
-            // // For debug only
-            // this.showRoleDetail(this.store.roles[0]);
+        // if (this.store.roles.length == 0) {
+        //     this.navCtrl.pop();
+        // }
+    }
+
+    ngAfterContentInit() {
+        // For debug only
+        if (this.store.roles.length) {
+            this.showRoleDetail(this.store.roles[0]);
         }
     }
 
@@ -86,17 +90,16 @@ export class RolesPage implements OnInit {
         }
     }
 
-    showUsedInSummary(role: Role) {
+    showUsedInSummary(role: Role, maxToShow: number = 1) {
         let usages = this.store.findWhatRoleIsUsedIn(role);
         if (usages.length == 0) {
             return "";
         }
-        if (usages.length == 1) {
-            return `Used in ${usages[0]}`;
+        if (usages.length <= maxToShow) {
+            return `${usages[0]}`;
         } else {
-            let usageCount = usages.length - 1;
-
-            return `Used in ${usages.slice(0, 1).join(", ")} and ${PluralizeStatic('other', usageCount, true)}.`;
+            let usageCount = usages.length - maxToShow;
+            return `${usages.slice(0, maxToShow).join(", ")} and ${PluralizeStatic('other', usageCount, true)}.`;
         }
     }
 

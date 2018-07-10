@@ -284,7 +284,7 @@ class SchedulerObjectStore extends GenericObjectStore<ObjectWithUUID> {
             })
         });
 
-        return usedIn;
+        return Array.from(new Set(usedIn));
     }
 
     @action removeRoleFromStoreWithRefcheck(role: Role) {
