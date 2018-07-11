@@ -50,9 +50,13 @@ class Plan extends NamedObject {
         this.days_per_period = 7;
     }
 
+    @action setDaysPerPeriod(value: number) {
+        this.days_per_period = value;
+    }
+
     static newPlanName(existingName: string): string {
         let match = existingName.match(/(.*) (\d+)$/);
-        if(match) {
+        if (match) {
             // console.log(`Got: ${JSON.stringify(match)}`);
             let number = parseInt(match[2]) + 1;
             return `${match[1]} ${number}`;

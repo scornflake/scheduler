@@ -27,11 +27,11 @@
     <ion-list-header color="light">Min/Max # of people {{role.minimum_needed}}/{{role.maximum_wanted}}</ion-list-header>
     <ion-range min="0" max="6" [ngModel]="role.minimum_needed" (ngModelChange)="role.setMinimumNeeded($event)">
         <ion-label range-left>0</ion-label>
-        <ion-label range-right>10</ion-label>
+        <ion-label range-right>6</ion-label>
     </ion-range>
     <ion-range min="0" max="6" [ngModel]="role.maximum_wanted" (ngModelChange)="role.setMaximumWanted($event)">
         <ion-label range-left>0</ion-label>
-        <ion-label range-right>10</ion-label>
+        <ion-label range-right>6</ion-label>
     </ion-range>
 
     <ion-list-header color="light">Usage</ion-list-header>

@@ -30,6 +30,14 @@
                 <ion-datetime [ngModel]="plan.end_date.toISOString()"
                               (ngModelChange)="plan.setEndDateFromISO($event)"></ion-datetime>
             </ion-item>
+            <ion-item>
+                <ion-label>Days between events</ion-label>
+                <ion-range min="1" max="7" [ngModel]="plan.days_per_period"
+                           (ngModelChange)="plan.setDaysPerPeriod($event)">
+                    <ion-label range-left>1</ion-label>
+                    <ion-label range-right>7</ion-label>
+                </ion-range>
+            </ion-item>
         </ion-list>
 
         <ion-list-header color="light">

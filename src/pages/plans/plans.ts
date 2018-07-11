@@ -1,12 +1,13 @@
-import {Component} from '@angular/core';
-import {AlertController, IonicPage, NavController, NavParams} from 'ionic-angular';
+import {Component, ContentChildren, QueryList, ViewChildren} from '@angular/core';
+import {AlertController, IonicPage, ItemSliding, NavController, NavParams} from 'ionic-angular';
 import {Plan} from "../../scheduling/plan";
 import {RootStore} from "../../store/root";
 import {PageUtils} from "../page-utils";
 import {NamedObject} from "../../scheduling/base-types";
 import {Team} from "../../scheduling/teams";
-import {action, computed} from "mobx-angular";
+import {action} from "mobx-angular";
 import * as moment from "moment";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 
 @IonicPage({
     name: 'page-plans',
@@ -17,6 +18,8 @@ import * as moment from "moment";
     templateUrl: 'plans.html',
 })
 export class PlansPage {
+    @ViewChildren('slidersRef') sliders: QueryList<ItemSliding>;
+
     constructor(public navCtrl: NavController,
                 public rootStore: RootStore,
                 public alertCtrl: AlertController,
@@ -33,9 +36,9 @@ export class PlansPage {
         if (this.plans.length == 0) {
             this.navCtrl.pop();
         } else {
-            // For Debug, show first plan
+            // // For Debug, show first plan
             // if (this.plans.length) {
-            // this.showPlanDetail(this.plans[0])
+            //     this.showPlanDetail(this.plans[0])
             // }
         }
     }
@@ -83,7 +86,9 @@ export class PlansPage {
         this.navCtrl.push('page-plan-details', {plan: plan})
     }
 
-    duplicatePlan(plan: Plan) {
+    duplicatePlan(plan: Plan, index: number) {
+        let slidersList = this.sliders.toArray();
+        let selectedSlider = slidersList[index];
         let newPlanName = Plan.newPlanName(plan.name);
         this.rootStore.asyncDuplicateExistingPlan(newPlanName, plan).then(newPlan => {
             let existingDuration = plan.schedule_duration_in_days;
@@ -92,9 +97,8 @@ export class PlansPage {
             newPlan.setStartDate(moment(plan.end_date).add(plan.days_per_period + 1, 'day').toDate());
             newPlan.setEndDate(moment(newPlan.start_date).add(3, 'month').subtract(1, 'day').toDate());
 
-            setTimeout(() => {
-                this.showPlanDetail(newPlan);
-            }, 50)
+            this.showPlanDetail(newPlan);
+            selectedSlider.close();
         });
     }
 
