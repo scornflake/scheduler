@@ -4,7 +4,7 @@ import {RootStore} from "../../store/root";
 import {Team} from "../../scheduling/teams";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {WizardPage} from "./wizard";
-import {Component} from "@angular/core";
+import {Component, OnInit} from "@angular/core";
 
 @IonicPage({
     name: 'page-team-wizard',
@@ -14,22 +14,24 @@ import {Component} from "@angular/core";
     selector: 'page-team-wizard',
     templateUrl: 'team-wizard.html',
 })
-export class TeamWizardPage extends WizardPage {
+export class TeamWizardPage extends WizardPage implements OnInit {
     teamName: string;
-    people: Array<Person>;
+    people: Array<Person> = new Array<Person>();
 
     constructor(public navCtrl: NavController,
                 public store: RootStore,
                 public server: SchedulerServer,
                 public navParams: NavParams) {
         super();
-        this.people = new Array<Person>();
+    }
+
+    ngOnInit(): void {
         this.addAnotherPerson();
     }
 
     get nonNullPeople(): Array<Person> {
         if (!this.people) {
-            console.error(`no prople return none`);
+            console.error(`no people return none`);
             return [];
         }
         return this.people.filter(p => p.name.length > 0);

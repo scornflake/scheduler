@@ -6,13 +6,16 @@ import {LoggingWrapper} from "../../common/logging-wrapper";
 import {observable} from "mobx-angular";
 import {TypedObject} from "../../scheduling/base-types";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
+import {Logger} from "ionic-logging-service";
 
 class StoreBasedResolver implements IReferenceResolver {
     private utils: OrmUtils;
+    private logger: Logger;
 
     constructor(private loader: IObjectStore,
                 private mapper: OrmMapper) {
-        this.utils = new OrmUtils(LoggingWrapper.getLogger('orm.resolver'));
+        this.logger = LoggingWrapper.getLogger('orm.resolver');
+        this.utils = new OrmUtils(this.logger);
     }
 
     async async_lookupListOfReferences(references: Array<any>, nesting: number = 0) {
@@ -67,7 +70,9 @@ class StoreBasedResolver implements IReferenceResolver {
 
     private assertNewValueNotNull(value: any, ref: ObjectReference) {
         if (value == null) {
-            throw new Error(`ObjectNotFound error: Tried to lookup: ${JSON.stringify(ref)}. Not found.`);
+            let message = `ObjectNotFound error: Tried to lookup: ${JSON.stringify(ref)}. Not found.`;
+            this.logger.error(message);
+            throw new Error(message);
         }
     }
 

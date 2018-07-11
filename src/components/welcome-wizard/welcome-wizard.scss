@@ -25,3 +25,9 @@ welcome-wizard {
     }
   }
 }
+
+ion-slides.top-aligned {
+  ion-slide.swiper-slide {
+    align-items: flex-start;
+  }
+}

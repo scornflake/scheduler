@@ -11,14 +11,14 @@
 
 
 <ion-content no-padding>
-    <ion-slides>
+    <ion-slides class="top-aligned">
         <ion-slide>
             <h2 class="heading">
                 Create a new team
             </h2>
-            <div class="tip">
-                <p>Enter a name for the team. The name should describe the activity of the team members. e.g:
-                    'Music'.</p>
+            <div class="tip" col-10 offset-1>
+                <p>Enter a name for the team. The name should describe the overall makup of the team members. e.g:
+                    'Volunteers'.</p>
                 <p>Teams can be used across multiple Plans. They describe the people available in the Plan.</p>
             </div>
             <ion-grid>
@@ -27,7 +27,7 @@
                         <ion-list>
                             <ion-item>
                                 <ion-label stacked>Team Name</ion-label>
-                                <ion-input autofocus [(ngModel)]="teamName"></ion-input>
+                                <ion-input [(ngModel)]="teamName"></ion-input>
                             </ion-item>
                         </ion-list>
                     </ion-col>
@@ -38,8 +38,9 @@
             <h2 class="heading">
                 Add some people
             </h2>
-            <div class="tip">
-                <p>Teams are made up of people (surprise!). Enter a few names now. Don't worry about defining the entire team, you can add people and their details later
+            <div class="tip" col-10 offset-1>
+                <p>Teams are made up of people (surprise!). Enter a few names now. Don't worry about defining the entire
+                    team, you can add people and their details later
                     using the <i>Teams</i> editor, from the side menu.</p>
             </div>
             <ion-list ion-grid ion-row>

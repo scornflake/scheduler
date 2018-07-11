@@ -114,7 +114,7 @@ export class PersonAssignmentPage {
     }
 
     role_tapped(role: Role) {
-        this.navCtrl.push('RoleDetailPage', {
+        this.navCtrl.push('page-role-detail', {
             'assignment': this.assignment,
             'role': role
         });
