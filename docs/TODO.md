@@ -1,7 +1,6 @@
 TODO
 ====
 - Prefs fails lookup, is nil, when logging in first time
-- Why do the wizard 'slider' pages 'Jump (tm)' when you first show them?
 - Remove 'pull to refresh' style action on home page (ios only?) (it doesn't do anything)
 - Deleting a plan, didn't update on Pauls side, same for duplicate.
 - Add timezone/locale to the Profile

@@ -1,7 +1,6 @@
 node_modules
 www
 .vscode
-platforms
 plugins
 yarn-error.log
 .sourcemaps
