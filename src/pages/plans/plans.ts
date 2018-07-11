@@ -6,6 +6,7 @@ import {PageUtils} from "../page-utils";
 import {NamedObject} from "../../scheduling/base-types";
 import {Team} from "../../scheduling/teams";
 import {action, computed} from "mobx-angular";
+import * as moment from "moment";
 
 @IonicPage({
     name: 'page-plans',
@@ -24,22 +25,22 @@ export class PlansPage {
     }
 
     get plans() {
-        return this.rootStore.plans.all;
+        return this.rootStore.plans.all.sort();
     }
 
     ionViewDidLoad() {
         // for debugging, pop to first page if no plans
         if (this.plans.length == 0) {
-            // this.navCtrl.pop();
+            this.navCtrl.pop();
         } else {
             // For Debug, show first plan
             // if (this.plans.length) {
-                // this.showPlanDetail(this.plans[0])
+            // this.showPlanDetail(this.plans[0])
             // }
         }
     }
 
-    @action add_plan() {
+    @action addPlan() {
         // Select a team
         let alert = this.alertCtrl.create({
             title: "Select team to use"
@@ -82,16 +83,22 @@ export class PlansPage {
         this.navCtrl.push('page-plan-details', {plan: plan})
     }
 
-    duplicate_plan(plan: Plan) {
-        let newPlan = this.rootStore.asyncDuplicateExistingPlan('New Plan', plan).then(newPlan => {
-            this.rootStore.plans.add(newPlan);
-            this.showPlanDetail(newPlan);
-            // this.rootStore.async_save_or_update_to_db(newPlan).then(() => {
-            // });
+    duplicatePlan(plan: Plan) {
+        let newPlanName = Plan.newPlanName(plan.name);
+        this.rootStore.asyncDuplicateExistingPlan(newPlanName, plan).then(newPlan => {
+            let existingDuration = plan.schedule_duration_in_days;
+
+            // Make the start equal to the next avail date
+            newPlan.setStartDate(moment(plan.end_date).add(plan.days_per_period + 1, 'day').toDate());
+            newPlan.setEndDate(moment(newPlan.start_date).add(3, 'month').subtract(1, 'day').toDate());
+
+            setTimeout(() => {
+                this.showPlanDetail(newPlan);
+            }, 50)
         });
     }
 
-    delete_plan(plan: Plan) {
+    deletePlan(plan: Plan) {
         let alert = this.alertCtrl.create({
             message: "Are you sure?",
             buttons: [

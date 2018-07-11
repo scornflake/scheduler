@@ -206,6 +206,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
 
         // evil evil evil
         newPlan.assignments = newAssignments;
+        await this.db.async_storeOrUpdateObject(newPlan);
         return newPlan;
     }
 

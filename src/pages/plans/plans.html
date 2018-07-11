@@ -3,7 +3,7 @@
         <ion-title>Plans</ion-title>
 
         <ion-buttons end>
-            <button ion-button icon-only (tap)="add_plan()">
+            <button ion-button icon-only (tap)="addPlan()">
                 <ion-icon name="add-circle"></ion-icon>
             </button>
         </ion-buttons>
@@ -13,24 +13,21 @@
 
 
 <ion-content>
-    <!--<ion-list *ngIf="plans[0] as p">-->
-        <!--<ion-item>-->
-            <!--<ion-label>Plan start</ion-label>-->
-            <!--<ion-datetime [ngModel]="p.start_date.toISOString()" item-end></ion-datetime>-->
-        <!--</ion-item>-->
-    <!--</ion-list>-->
     <ion-list>
         <ion-item-sliding *ngFor="let plan of plans">
             <ion-item detail-push (tap)="showPlanDetail(plan)">
                 <h2>{{plan.name}}</h2>
-                <p>From {{plan.start_date|date:'shortDate'}} to {{plan.end_date|date:'shortDate'}}</p>
+                <p>From {{plan.start_date|date:'mediumDate'}} to {{plan.end_date|date:'mediumDate'}}</p>
             </ion-item>
             <ion-item-options side="right">
-                <button ion-button color="danger" (tap)="delete_plan(plan)">Delete</button>
+                <button ion-button color="danger" (tap)="deletePlan(plan)">Delete</button>
             </ion-item-options>
             <ion-item-options side="left">
-                <button ion-button color="primary" (tap)="duplicate_plan(plan)">Duplicate</button>
+                <button ion-button color="primary" (tap)="duplicatePlan(plan)">Duplicate</button>
             </ion-item-options>
         </ion-item-sliding>
     </ion-list>
 </ion-content>
+<ion-footer>
+    <p class="tip">Tip: Slide right to duplicate a Plan</p>
+</ion-footer>

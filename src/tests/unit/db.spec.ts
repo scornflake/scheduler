@@ -799,10 +799,10 @@ describe('db', () => {
             let bob = new Person("bob");
             let team = new Team("My team", [neil, bob]);
             converter.writer.async_createDocFromJSObject(team).then(dict => {
-                // console.log(`I created: ${JSON.stringify(dict)}`);
+                console.log(`I created: ${JSON.stringify(dict)}`);
                 let refs = dict['people'];
                 expect(refs.length).toEqual(2);
-                expect(refs[1]).toEqual(mapper.referenceForObject(neil));
+                expect(refs[0]).toEqual(mapper.referenceForObject(neil));
                 done();
             });
         });

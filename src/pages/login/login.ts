@@ -127,10 +127,9 @@ class LoginPage implements AfterViewInit {
                 // That'll load all the data and kick us back to home
                 this.pageUtils.runStartupLifecycleAfterLogin(this.nav);
 
-                // OLD OLD
-                // // Using this rather that this.nav.pop(), so it works
-                // // when the page is hit directly as a deep link
-                // this.nav.setRoot('home')
+                // Assumption is that the lifecycle callback is called with something
+                // e.g: 'app has started' or 'error'
+                // thus there's no explicit code here to do anything
             }
         }, (error) => {
             if (error instanceof ServerError) {

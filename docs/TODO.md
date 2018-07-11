@@ -1,17 +1,7 @@
 TODO
 ====
-- Permissions on REST API.
-    - Throttling.
-    - Do users have to be logged in to access RoleSets?  No reason why not that I can think of, because they are not needed unless you have an account.
-    - Check what is POST/PUT able. Reduce if necessary.
-    - How do we enforce the exact same set of rules on the server, so data cannot be modified by malicious client?
-        - **Especially**:
-            - Access to other organization data
 - Why do the wizard 'slider' pages 'Jump (tm)' when you first show them?
-- Remove 'pull to refresh' style action on home page (io sonly?) (it doesn't do anything)
-- If User is activated, but I deleted the Org, validation/login still seems to return OK (and the client then goes into an endless loop)
-- Finish 'clone plan'
-  - Then update     duplicate_plan(plan: Plan)
+- Remove 'pull to refresh' style action on home page (ios only?) (it doesn't do anything)
 - Scheduler should show the next coming date (not the first one)
 - Make it possible to specify:
     - period of the plan (days in between each);
@@ -25,6 +15,14 @@ TODO
 - It would be GREAT to:
     - after running tests
     - and auto-deploy; at least for the test environment.
+- REST API.
+    - Throttling.
+    - Permissions
+    - Do users have to be logged in to access RoleSets?  No reason why not that I can think of, because they are not needed unless you have an account.
+    - Check what is POST/PUT able. Reduce if necessary.
+    - How do we enforce the exact same set of rules on the server, so data cannot be modified by malicious client?
+        - **Especially**:
+            - Access to other organization data
 - Deploying the containers
     - monitoring???
     - including, how to upgrade the stack?

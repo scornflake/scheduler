@@ -83,3 +83,10 @@
 }
 
 
+// Tips in the footer
+ion-footer {
+  p.tip {
+    text-align: center;
+    color: $subdued-text-color;
+  }
+}

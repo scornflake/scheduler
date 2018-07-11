@@ -50,6 +50,17 @@ class Plan extends NamedObject {
         this.days_per_period = 7;
     }
 
+    static newPlanName(existingName: string): string {
+        let match = existingName.match(/(.*) (\d+)$/);
+        if(match) {
+            // console.log(`Got: ${JSON.stringify(match)}`);
+            let number = parseInt(match[2]) + 1;
+            return `${match[1]} ${number}`;
+        } else {
+            return `${existingName} 2`;
+        }
+    }
+
     validate() {
         if (this.roles_in_layout_order.length == 0) {
             throw Error("The dates parameters don't define any roles.");

@@ -32,6 +32,11 @@ describe('service', () => {
         SetupDefaultRoles();
     });
 
+    it('should construct sensible names for duplicate plans', function () {
+        expect(Plan.newPlanName('Plan')).toBe('Plan 2');
+        expect(Plan.newPlanName('Plan 2')).toBe('Plan 3');
+    });
+
     it('can add dependent roles', () => {
         let cher_assignment = plan.assignmentFor(cherilyn);
         cher_assignment.if_assigned_to(defaultLeaderRole).thenDo(new ScheduleOn(cherilyn, defaultKeysRole));
