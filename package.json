@@ -7,6 +7,7 @@
   "scripts": {
     "clean": "ionic-app-scripts clean",
     "build": "ionic-app-scripts build",
+    "prep": "ionic cordova prepare",
     "build:prod": "ionic-app-scripts build --prod",
     "build:ios": "ionic cordova build ios --prod --release",
     "lint": "ionic-app-scripts lint",
@@ -47,7 +48,7 @@
     "accesscontrol": "^2.2.1",
     "angular-pipes": "^6.5.3",
     "com.telerik.plugins.nativepagetransitions": "^0.6.5",
-    "cordova-android": "^6.3.0",
+    "cordova-android": "6.4.0",
     "cordova-browser": "5.0.1",
     "cordova-ios": "4.5.4",
     "cordova-plugin-device": "^1.1.4",
@@ -130,8 +131,8 @@
     },
     "platforms": [
       "browser",
-      "android",
-      "ios"
+      "ios",
+      "android"
     ]
   }
 }

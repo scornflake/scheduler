@@ -5,3 +5,4 @@ plugins
 yarn-error.log
 .sourcemaps
 people.json
+platforms/android/CordovaLib/build
