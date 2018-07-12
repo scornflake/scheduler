@@ -1,3 +1,15 @@
 page-about {
+  .about {
+    padding-top: 50px;
+    background-image: url("../../assets/splash.png");
+    background-size: cover;
+    background-position: center;
+    height: 100%;
 
+    text-align: center;
+
+    .light {
+      color: darkgrey;
+    }
+  }
 }

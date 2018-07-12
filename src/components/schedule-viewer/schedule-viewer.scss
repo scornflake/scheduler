@@ -29,7 +29,7 @@ schedule-viewer {
 
     .horizScheduleHeading {
       background: map_get($colors, 'primary');
-      color: map_get($colors, 'light');
+      color: white;//map_get($colors, 'light');
     }
 
     .horizScheduleGrid {
