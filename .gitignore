@@ -7,3 +7,4 @@ yarn-error.log
 people.json
 platforms/android/CordovaLib/build
 platforms/android/.gradle/4.4
+platforms/android/.gradle
