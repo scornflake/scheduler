@@ -6,6 +6,10 @@ TODO
 - Add timezone/locale to the Profile
 - How to test all navigation possibilities?
 - Scheduler should show the next coming date (not the first one)
+- Login validation should show only if > 0 chars:
+    - don't show 'email should be valid' if nothing typed in
+    - don't show 'email should be valid' or 'password blah' until first 'login' is pressed
+- No 'forgot password' function.
 - Make it possible to specify:
     - period of the plan (days in between each);
     - What is the minimum period? Days? Hours?
