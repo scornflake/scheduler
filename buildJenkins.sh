@@ -1,4 +1,4 @@
-export PATH="${WORKSPACE}/node_modules/.bin"
+export PATH="${WORKSPACE}/node_modules/.bin:$PATH"
 
 yarn install
 
