@@ -1,0 +1,18 @@
+# For more information about the Appfile, see:
+#     https://docs.fastlane.tools/advanced/#appfile
+
+
+# iOS
+app_identifier("com.shinywhitebox.scheduler") # The bundle identifier of your app
+apple_id("neil@shinywhitebox.com") # Your Apple email address
+
+itc_team_id("291361") # App Store Connect Team ID
+team_id("PMJ275ZTUX") # Developer Portal Team ID
+
+
+
+# Android
+# Path to the json secret file - Follow https://docs.fastlane.tools/actions/supply/#setup to get one
+json_key_file("../scheduler-certs/google_play/api-7535514955096851004-651076-20c3e858e3f4.json")
+
+package_name("com.shinywhitebox.scheduler") # e.g. com.krausefx.app

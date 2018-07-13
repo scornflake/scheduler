@@ -1,0 +1,3 @@
+Smart & easy scheduling of teams and/or people within an organisation. Born from having to sort out the schedules for a music team in a church setting. There *has* to be a better (faster!) way! And there is.
+
+It takes the pain out of working out the plan. It'll handle all of the layout for you (including unavailability, preferred roles etc). It aims to do ~95% of your "grunt" scheduling work.

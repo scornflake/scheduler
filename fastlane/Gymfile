@@ -1,0 +1,4 @@
+scheme("Scheduler")
+workspace("./platforms/ios/Scheduler.xcworkspace")
+output_directory("./build")
+output_name("Scheduler")
