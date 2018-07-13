@@ -1,0 +1,93 @@
+<ion-header>
+
+    <ion-navbar>
+        <ion-title>Team Wizard</ion-title>
+        <ion-buttons end *ngIf="nextIsVisible">
+            <button ion-button clear color="primary" (tap)="nextSlide()" [disabled]="!nextIsEnabled">Next</button>
+        </ion-buttons>
+    </ion-navbar>
+
+</ion-header>
+
+
+<ion-content no-padding>
+    <ion-slides class="top-aligned">
+        <ion-slide>
+            <h2 class="heading">
+                Create a new team
+            </h2>
+            <div class="tip" col-10 offset-1>
+                <p>Enter a name for the team. The name should describe the overall makup of the team members. e.g:
+                    'Volunteers'.</p>
+                <p>Teams can be used across multiple Plans. They describe the people available in the Plan.</p>
+            </div>
+            <ion-grid>
+                <ion-row>
+                    <ion-col col-10 offset-1 col-md-6 offset-md-3>
+                        <ion-list>
+                            <ion-item>
+                                <ion-label stacked>Team Name</ion-label>
+                                <ion-input [(ngModel)]="teamName"></ion-input>
+                            </ion-item>
+                        </ion-list>
+                    </ion-col>
+                </ion-row>
+            </ion-grid>
+        </ion-slide>
+        <ion-slide>
+            <h2 class="heading">
+                Add some people
+            </h2>
+            <div class="tip" col-10 offset-1>
+                <p>Teams are made up of people (surprise!). Enter a few names now. Don't worry about defining the entire
+                    team, you can add people and their details later
+                    using the <i>Teams</i> editor, from the side menu.</p>
+            </div>
+            <ion-list ion-grid ion-row>
+                <ion-item-sliding *ngFor="let p of people" ion-col col-10 offset-1 col-md-6 offset-md-3>
+                    <ion-item>
+                        <ion-label stacked>Name</ion-label>
+                        <ion-input [ngModel]="p.name" (ngModelChange)="p.setName($event)"></ion-input>
+                        <button *showItBootstrap="['md','lg','xl']" item-end color="danger" ion-button
+                                (tap)="deletePerson(p)">Delete
+                        </button>
+                    </ion-item>
+                    <ion-item-options side="right" *showItBootstrap="['xs','sm']">
+                        <button ion-button color="danger" (tap)="deletePerson(p)">Delete</button>
+                    </ion-item-options>
+                </ion-item-sliding>
+            </ion-list>
+            <button ion-button (tap)="addAnotherPerson()">Add Another</button>
+        </ion-slide>
+        <ion-slide>
+            <h2 class="heading" *showItBootstrap="['xs','sm']">
+                Great!
+                <h4>Tap 'OK' to create this team!</h4>
+            </h2>
+            <h2 class="heading" *showItBootstrap="['md','lg','xl']">
+                Great! Tap 'OK' to create this team!
+            </h2>
+
+            <ion-card class="summary">
+                <ion-item>
+                    <h1>{{teamName}}</h1>
+                    <p>{{nonNullPeople?.length}} members</p>
+                </ion-item>
+
+                <ion-list *ngFor="let p of nonNullPeople">
+                    <ion-item>
+                        <ion-icon item-start name="person"></ion-icon>
+                        <h2>{{p.name}}</h2>
+                    </ion-item>
+                </ion-list>
+            </ion-card>
+            <button ion-button (tap)="createTheTeam()" [disabled]="saving">OK</button>
+            <br/>
+            <ion-spinner *ngIf="saving"></ion-spinner>
+        </ion-slide>
+    </ion-slides>
+</ion-content>
+<ion-footer *ngIf="!slides.isEnd()">
+    <p class="tip">Tap next when done</p>
+</ion-footer>
+

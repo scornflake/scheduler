@@ -1,38 +1,103 @@
 <ion-header>
     <ion-toolbar>
-        <ion-title>
-            Schedule <span *ngIf="store.ui_store.have_selection">for {{store.ui_store.selected_person?.name}}</span>
-        </ion-title>
-        <ion-buttons end>
-            <button ion-button
-                    (click)="clear_selection()"
-                    [disabled]="!store.ui_store.have_selection">Deselect
-            </button>
-            <button ion-button
-                    (click)="export_as_csv()">CSV
+        <ion-title>Dashboard</ion-title>
+        <button start ion-button menuToggle>
+            <ion-icon name="menu"></ion-icon>
+        </button>
+        <ion-buttons end class="notifications" *ngIf="store.loggedInPerson$|async as person">
+            <button ion-button (tap)="showNotifications($event)" *ngIf="person.invites.length > 0">
+                <ion-badge color="danger">{{person?.invites.length}}</ion-badge>
+                <ion-icon name="more"></ion-icon>
             </button>
         </ion-buttons>
+        <!--<button ion-button-->
+        <!--(click)="clear_selection()"-->
+        <!--[disabled]="!rootStore.ui_store.have_selection">Deselect-->
+        <!--</button>-->
+        <!--<button ion-button *ngIf="!rootStore.ui_store.signed_in_to_google"-->
+        <!--(click)="login()">Login-->
+        <!--</button>-->
+        <!--<button ion-button *ngIf="rootStore.ui_store.signed_in_to_google"-->
+        <!--(click)="logout()">Logout-->
+        <!--</button>-->
+        <!--</ion-buttons>-->
     </ion-toolbar>
+    <saving-state></saving-state>
 </ion-header>
 
-<ion-content padding>
-    <ion-grid>
-        <ion-row>
-            <ion-col auto>
-                <schedule-viewer
-                        [schedule]="store.schedule"
-                ></schedule-viewer>
-            </ion-col>
-            <ion-col *ngIf="store.ui_store.have_selection" col-3>
-                <person-editor
-                        [schedule]="store.schedule"
-                        [person]="store.ui_store.selected_person">
-                </person-editor>
-                <reasons
-                    [decisions]="store.schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"
-                >
-                </reasons>
-            </ion-col>
-        </ion-row>
-    </ion-grid>
+<ion-content>
+    <div *ngIf="store.uiStore$|async as ui; else notSignedIn">
+        <div *ngIf="server">
+            <div *ngIf="server.loggedIn; else notSignedIn">
+                <div class="loading" *ngIf="!server.isReady; else main">
+                    <ion-spinner [duration]="1000"></ion-spinner>
+                </div>
+                <ng-template #main>
+                    <ion-grid no-padding>
+                        <welcome-wizard
+                                *ngIf="hasNoPlans"
+                                (createPlanClicked)="createPlanWizard()"
+                                (createTeamClicked)="createTeamWizard()"
+                        >
+                        </welcome-wizard>
+
+                        <div *ngIf="!hasNoPlans">
+                            <show-plan *ngIf="!hasNoPlans" (editPlanClicked)="editPlan($event)"></show-plan>
+                            <div *ngIf="store.schedule$ | async as schedule">
+                                <schedule-viewer [schedule]="schedule"
+                                                 [me]="store.loggedInPerson$|async"></schedule-viewer>
+                                <person-schedule [schedule]="schedule"
+                                                 [person]="store.loggedInPerson$|async"></person-schedule>
+                                <person-unavailable *ngIf="store.loggedInPerson$|async as p"
+                                                    [person]="p"></person-unavailable>
+                            </div>
+                        </div>
+                    </ion-grid>
+                </ng-template>
+
+
+                <!--<ion-grid *ngIf="store.schedule$ | async as schedule" no-padding>-->
+                <!--<ion-row>-->
+                <!--<ion-col *ngIf="store.ui_store.have_selection">-->
+                <!--<person-editor></person-editor>-->
+                <!--<reasons *ngIf="store.schedule$|async as schedule"-->
+                <!--[decisions]="schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"-->
+                <!--&gt;-->
+                <!--</reasons>-->
+                <!--</ion-col>-->
+                <!--</ion-row>-->
+                <!--</ion-grid>-->
+            </div>
+        </div>
+    </div>
 </ion-content>
+
+<!--<ion-footer>-->
+<!--<div *ngIf="notSignedIn">-->
+<!--<button class="signInButton" col-4 offset-4 ion-button (tap)="startSignIn()">Sign In</button>-->
+<!--</div>-->
+
+<!--<ion-buttons>-->
+<!--<button small ion-button (tap)="change_state()">Test</button>-->
+<!--</ion-buttons>-->
+
+
+<!--<ion-buttons *ngIf="(store.saved_state$ | async) as state">-->
+<!--<button small ion-button-->
+<!--(click)="export_as_csv()">To CSV-->
+<!--</button>-->
+<!--<button small ion-button *ngIf="state.have_previous_selection"-->
+<!--(click)="read_as_previous_schedule()">Read Previous...-->
+<!--</button>-->
+<!--<button small ion-button *ngIf="!state.have_previous_selection"-->
+<!--(click)="select_previous_schedule()">Select Previous...-->
+<!--</button>-->
+<!--<button small ion-button *ngIf="store.ui_store.signed_in_to_google"-->
+<!--(click)="export_as_sheets()">Export Sheet...-->
+<!--</button>-->
+<!--<button small ion-button *ngIf="store.ui_store.signed_in_to_google"-->
+<!--(click)="clear_sheet_state()">Clear State-->
+<!--</button>-->
+<!--</ion-buttons>-->
+<!--</ion-footer>-->
+

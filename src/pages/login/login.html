@@ -1,0 +1,137 @@
+<ion-header>
+
+    <ion-navbar color="primary">
+        <ion-title>Login</ion-title>
+    </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding class="notSignedIn">
+    <div class="login-box" *mobxAutorun>
+        <ion-slides>
+            <ion-slide>
+                <div *ngIf="loginForm">
+                    <form [formGroup]="loginForm" ion-grid>
+                        <ion-row>
+                            <ion-col>
+                                <ion-list inset>
+                                    <ion-item *ngIf="isCreateAccount">
+                                        <ion-label stacked>Name</ion-label>
+                                        <ion-input name="name" type="text"
+                                                   autocomplete="name"
+                                                   placeholder="Name" formControlName="name"
+                                                   [ngModel]="registrationName"
+                                                   (ngModelChange)="setRegistrationName($event)"
+                                                   required>
+                                        </ion-input>
+                                    </ion-item>
+                                    <ion-item>
+                                        <ion-label stacked>Email</ion-label>
+                                        <ion-input name="email" type="text"
+                                                   autocomplete="email"
+                                                   placeholder="Email" formControlName="email"
+                                                   [ngModel]="registrationEmail"
+                                                   (ngModelChange)="setRegistrationEmail($event)"
+                                                   required>
+                                        </ion-input>
+                                    </ion-item>
+
+                                    <ion-item>
+                                        <ion-label stacked>Password</ion-label>
+                                        <ion-input type="password" placeholder="Password" name="password"
+                                                   autocomplete="password"
+                                                   [ngModel]="registrationPassword"
+                                                   (ngModelChange)="setRegistrationPassword($event)"
+                                                   formControlName="password"
+                                                   required>
+                                        </ion-input>
+                                    </ion-item>
+                                </ion-list>
+                            </ion-col>
+                        </ion-row>
+
+                        <show-form-errors [control]="loginForm"></show-form-errors>
+
+                        <ion-row *ngIf="!isCreateAccount">
+                            <ion-col class="signup-col" text-center>
+                                <button ion-button (click)="login()" [disabled]="!loginForm.valid">
+                                    Login
+                                </button>
+                            </ion-col>
+                        </ion-row>
+
+                        <ion-row *ngIf="isCreateAccount">
+                            <ion-col class="signup-col" text-center>
+                                <button ion-button (click)="register()" [disabled]="!loginForm.valid">
+                                    Create new Account
+                                </button>
+                            </ion-col>
+                        </ion-row>
+
+                    </form>
+                </div>
+
+                <ion-grid>
+                    <ion-row>
+                        <button ion-col text-center *ngIf="!isCreateAccount" ion-button class="register-btn" clear
+                                (click)="switchToCreate()">
+                            Create New Account
+                        </button>
+                        <button ion-col text-center *ngIf="isCreateAccount" ion-button class="register-btn" clear
+                                (click)="switchToLogin()">
+                            Login with existing
+                        </button>
+
+                    </ion-row>
+                </ion-grid>
+            </ion-slide>
+            <ion-slide class="waitingForConfirm">
+                <ion-grid>
+                    <ion-row>
+                        <ion-col>
+                            <h2>Please confirm email address</h2>
+                            <p>A email has been sent to {{registrationEmail}}, please follow the
+                                instructions to confirm your address.</p>
+                        </ion-col>
+                    </ion-row>
+                    <ion-row>
+                        <ion-col>
+                            <ion-spinner></ion-spinner>
+                        </ion-col>
+                    </ion-row>
+                    <ion-row>
+                        <button ion-col text-center ion-button (click)="cancelWaitingForConfirmation()">
+                            Cancel
+                        </button>
+                    </ion-row>
+                </ion-grid>
+            </ion-slide>
+            <ion-slide>
+                <ion-grid>
+                    <ion-row>
+                        <ion-col>
+                            <h2>Starting replication...</h2>
+                            <p>One moment please caller...</p>
+                        </ion-col>
+                    </ion-row>
+                </ion-grid>
+            </ion-slide>
+            <ion-slide>
+                <ion-grid>
+                    <ion-row>
+                        <ion-col>
+                            <h2>Ready to ROCK!</h2>
+                            <p>Thanks! You're ready to go.</p>
+                        </ion-col>
+                    </ion-row>
+                    <ion-row>
+                        <button ion-col text-center ion-button (click)="popBackHome()">
+                            Lets go!
+                        </button>
+                    </ion-row>
+                </ion-grid>
+            </ion-slide>
+        </ion-slides>
+    </div>
+</ion-content>

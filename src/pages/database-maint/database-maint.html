@@ -1,0 +1,37 @@
+<ion-header>
+    <ion-navbar>
+        <ion-title>Database. Type: {{databaseType}}</ion-title>
+    </ion-navbar>
+    <saving-state></saving-state>
+</ion-header>
+
+
+<ion-content padding *mobxAutorun>
+    <button ion-button (tap)="store_fake_data()">Store Fake -> DB</button>
+    <button ion-button (tap)="fix_our_emails()">Fix Emails</button>
+    <button ion-button color="danger" (tap)="delete_db()">Delete DB</button>
+
+    <ion-list-header>DB Info</ion-list-header>
+    <ion-list *ngIf="database_info">
+        <ion-item *ngFor="let i of database_info">
+            <ion-label>{{i.label}}</ion-label>
+            <ion-label text-right>{{i.value}}</ion-label>
+        </ion-item>
+    </ion-list>
+
+    <ion-list-header>Stats</ion-list-header>
+    <ion-list *ngIf="this.store">
+        <ion-item *ngFor="let i of stats">
+            <ion-label>{{i.label}}</ion-label>
+            <ion-label text-right>{{i.value}}</ion-label>
+        </ion-item>
+    </ion-list>
+
+    <ion-list-header>Reflection</ion-list-header>
+    <ion-list>
+        <ion-item *ngFor="let i of classFactories">
+            <h2 col-3>Class {{i.name}}</h2>
+            <p text-right *ngFor="let p of propertiesFor(i)">{{p}}</p>
+        </ion-item>
+    </ion-list>
+</ion-content>

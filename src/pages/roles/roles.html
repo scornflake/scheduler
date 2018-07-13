@@ -1,0 +1,38 @@
+<ion-header>
+    <ion-navbar>
+        <ion-title>Roles</ion-title>
+
+        <ion-buttons end>
+            <button ion-button icon-only (tap)="addNewRole()">
+                <ion-icon name="add"></ion-icon>
+            </button>
+            <button ion-button (tap)="addNewRoleSet()">
+                <ion-icon name="color-wand"></ion-icon>
+            </button>
+        </ion-buttons>
+
+    </ion-navbar>
+    <saving-state></saving-state>
+</ion-header>
+
+
+<ion-content no-padding>
+    <div *ngIf="store">
+        <div *ngFor="let group of store.roles.rolesGroupsByPriority">
+            <ion-list-header color="light" no-margin>Role Group, Priority {{group.priority}}</ion-list-header>
+            <ion-list no-margin>
+                <ion-item-sliding *ngFor="let role of group.roles">
+                    <ion-item detail-push (tap)="showRoleDetail(role)">
+                        <h2> {{role.name}} ({{role.summary}}) </h2>
+                        <p *xs>In {{showUsedInSummary(role, true)}}</p>
+                        <p *sm>Used in {{showUsedInSummary(role, 2)}}</p>
+                        <p *showItBootstrap="['md', 'lg', 'xl']">Used in {{showUsedInSummary(role, 3)}}</p>
+                    </ion-item>
+                    <ion-item-options side="right">
+                        <button ion-button color="danger" (tap)="deleteRole(role)">Delete</button>
+                    </ion-item-options>
+                </ion-item-sliding>
+            </ion-list>
+        </div>
+    </div>
+</ion-content>

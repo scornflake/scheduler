@@ -1,0 +1,13 @@
+page-person-details {
+}
+
+.validation {
+  > div {
+    background: red !important;
+  }
+}
+.success {
+  > div {
+    background: limegreen !important;
+  }
+}

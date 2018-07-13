@@ -1,0 +1,79 @@
+{
+  "server": {
+    "couch": "https://schedulerdb.shinywhitebox.com",
+    "rest": "https://scheduler.shinywhitebox.com"
+  },
+  "database": {
+    "name": "scheduler"
+  },
+  "logging": {
+    "logLevels": [
+      {
+        "loggerName": "root",
+        "logLevel": "WARN"
+      },
+      {
+        "loggerName": "network",
+        "logLevel": "INFO"
+      },
+      {
+        "loggerName": "scheduler",
+        "logLevel": "WARN"
+      },
+      {
+        "loggerName": "service",
+        "logLevel": "INFO"
+      },
+      {
+        "loggerName": "service.store",
+        "logLevel": "INFO"
+      },
+      {
+        "loggerName": "model",
+        "logLevel": "INFO"
+      },
+      {
+        "loggerName": "page",
+        "logLevel": "INFO"
+      },
+      {
+        "loggerName": "page.home",
+        "logLevel": "INFO"
+      },
+      {
+        "loggerName": "page.login",
+        "logLevel": "INFO"
+      },
+      {
+        "loggerName": "component",
+        "logLevel": "INFO"
+      },
+      {
+        "loggerName": "component.schedule.view",
+        "logLevel": "INFO"
+      },
+      {
+        "loggerName": "google",
+        "logLevel": "WARN"
+      },
+      {
+        "loggerName": "db",
+        "logLevel": "INFO"
+      },
+      {
+        "loggerName": "db.mapping",
+        "logLevel": "WARN"
+      },
+      {
+        "loggerName": "db.tracking",
+        "logLevel": "INFO"
+      },
+      {
+        "loggerName": "db.converter",
+        "logLevel": "WARN"
+      }
+    ],
+    "browserConsoleAppender": {
+    }
+  }
+}

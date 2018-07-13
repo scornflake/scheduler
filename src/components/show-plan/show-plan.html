@@ -1,0 +1,20 @@
+<ion-item ion-row id="planselection" no-padding *ngIf="store.preferences$ | async as prefs">
+    <ion-label ion-col col-auto class="hidden-xs-down" padding-left>Showing Plan</ion-label>
+    <ion-select
+            ion-col col-sm text-center
+            [ngModel]="prefs.selected_plan_uuid"
+            (ngModelChange)="prefs.setSelectedPlanUUID($event)"
+            placeholder="Plan"
+    >
+        <ion-option *ngFor="let p of store.plans.plansByDateLatestFirst" value="{{p.uuid}}"
+                    [selected]="prefs.selected_plan_uuid == p.uuid">
+            <div *showItBootstrap="['xs', 'sm']">
+                {{p.name}}
+            </div>
+            <div *showItBootstrap="['md', 'lg', 'xl']">
+                {{p.name}}: {{p.start_date|date:'MMM d'}}-{{p.end_date|date:'MMM d'}}
+            </div>
+        </ion-option>
+    </ion-select>
+    <button class="hidden-xs-down editButton" item-end ion-button (tap)="editPlanClicked.emit(p)">Edit</button>
+</ion-item>

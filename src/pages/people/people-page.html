@@ -1,0 +1,30 @@
+<ion-header>
+    <ion-navbar>
+        <ion-title>
+            Your People
+        </ion-title>
+        <ion-buttons end>
+            <button ion-button icon-only (tap)="pc.addNewPerson()">
+                <ion-icon name="add"></ion-icon>
+            </button>
+            <button ion-button icon-only (tap)="pc.invitePeople()">
+                <ion-icon name="share"></ion-icon>
+            </button>
+        </ion-buttons>
+    </ion-navbar>
+    <saving-state></saving-state>
+</ion-header>
+
+<ion-content>
+    <people #personlist
+            [people]="rootStore.people.all"
+            (personAdded)="add_person($event)"
+            (delete)="delete_person($event)"></people>
+</ion-content>
+<ion-footer *ngIf="pc.inviteMode">
+    <ion-toolbar>
+        <button ion-button block (tap)="pc.sendInvites()" [disabled]="pc.numPeopleSelected == 0">Send <span
+                *ngIf="pc.numPeopleSelected > 0">&nbsp;{{pc.numPeopleSelected}} invites</span></button>
+    </ion-toolbar>
+</ion-footer>
+

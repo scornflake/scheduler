@@ -1,0 +1,33 @@
+<ion-header>
+    <ion-navbar>
+        <ion-title>Plans</ion-title>
+
+        <ion-buttons end>
+            <button ion-button icon-only (tap)="addPlan()">
+                <ion-icon name="add-circle"></ion-icon>
+            </button>
+        </ion-buttons>
+    </ion-navbar>
+    <saving-state></saving-state>
+</ion-header>
+
+
+<ion-content>
+    <ion-list>
+        <ion-item-sliding *ngFor="let plan of plans; let idx = index" #slidersRef>
+            <ion-item detail-push (tap)="showPlanDetail(plan)">
+                <h2>{{plan.name}}</h2>
+                <p>From {{plan.start_date|date:'mediumDate'}} to {{plan.end_date|date:'mediumDate'}}</p>
+            </ion-item>
+            <ion-item-options side="right">
+                <button ion-button color="danger" (tap)="deletePlan(plan)">Delete</button>
+            </ion-item-options>
+            <ion-item-options side="left">
+                <button ion-button color="primary" (tap)="duplicatePlan(plan, idx)">Duplicate</button>
+            </ion-item-options>
+        </ion-item-sliding>
+    </ion-list>
+</ion-content>
+<ion-footer>
+    <p class="tip">Tip: Slide right to duplicate a Plan</p>
+</ion-footer>

@@ -1,0 +1,20 @@
+swbcalendar {
+  .today {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+}
+
+.calendar .popover-content {
+  left: 10% !important;
+  min-width: 80%;
+}
+
+.dual-calendar .popover-content {
+  left: 10% !important;
+  top: 5% !important;
+  min-width: 80%;
+  min-height: 523px !important;
+}
+

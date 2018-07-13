@@ -1,42 +1,83 @@
-import {Component, Input} from '@angular/core';
+import {ApplicationRef, ChangeDetectionStrategy, Component, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {isArray} from "util";
-import {Person} from "../../state/people";
-import {RootStore} from "../../state/root";
-import {PopoverController} from "ionic-angular";
+import {Person} from "../../scheduling/people";
+import {PopoverController, Slides} from "ionic-angular";
 import {ReasonsComponent} from "../reasons/reasons";
 import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
+import {computed} from "mobx-angular";
+import {RootStore} from "../../store/root";
+import {ScheduleAtDate} from "../../scheduling/shared";
+import {LoggingWrapper} from "../../common/logging-wrapper";
+import {Logger} from "ionic-logging-service";
+import {Role} from "../../scheduling/role";
 
 @Component({
     // changeDetection: ChangeDetectionStrategy.OnPush,
     selector: 'schedule-viewer',
     templateUrl: 'schedule-viewer.html'
 })
-export class ScheduleViewerComponent {
+export class ScheduleViewerComponent implements OnInit, OnDestroy {
     @Input() schedule: ScheduleWithRules;
+    @Input() me: Person;
+
+    @ViewChild(Slides) slides: Slides;
+
+    colSelectedDate: Date;
+    private logger: Logger;
 
     constructor(private store: RootStore,
+                private appRef: ApplicationRef,
                 public popoverCtrl: PopoverController) {
+        this.logger = LoggingWrapper.getLogger('component.schedule.view')
     }
 
-    get headers(): Array<string> {
+    ngOnInit() {
+        this.colSelectedDate = this.store.loggedInPerson.preferences.last_selected_date;
+        if (!this.colSelectedDate) {
+            if (this.schedule) {
+                this.colSelectedDate = this.schedule.dates[0].date;
+            }
+        }
+    }
+
+    ngOnDestroy() {
+    }
+
+    get roles(): Array<Role> {
+        return this.schedule.plan.roles;
+    }
+
+    get colSelectableDates(): Date[] {
+        return this.schedule.dates.map(sd => sd.date);
+    }
+
+    get colSelectedSchedule(): ScheduleAtDate {
+        return this.schedule.scheduleForDate(this.colSelectedDate);
+    }
+
+    get rowMode(): boolean {
+        return false;
+    }
+
+    @computed
+    get headers(): Array<{ name: string, priority: number }> {
         if (!this.schedule) {
             return [];
         }
         return this.schedule.jsonFields();
     }
 
+    @computed
     get rows(): Array<Object> {
         if (!this.schedule) {
             return [];
         }
-        // console.log(JSON.stringify(this.schedule.jsonResult()));
+        // console.log(SafeJSON.stringify(this.schedule.jsonResult()));
         return this.schedule.jsonResult();
     }
 
     presentPopover(myEvent) {
-        let popover = this.popoverCtrl.create(ReasonsComponent, {
-            // reasons:this.store.ui_store.s
-        });
+        let popover = this.popoverCtrl.create(ReasonsComponent, {});
         popover.present({
             ev: myEvent
         });
@@ -68,7 +109,7 @@ export class ScheduleViewerComponent {
         if (!person) {
             return false;
         }
-        let role = this.store.roles_store.find_role(role_name);
+        let role = this.schedule.plan.find_role(role_name);
         if (!role) {
             return false;
         }
@@ -81,30 +122,41 @@ export class ScheduleViewerComponent {
     Want to mark if:
     a) The person within this cell == the selected person
      */
-    selected_and_in_role(a_person: Person, role_name) {
-        if (a_person == null) {
-            console.error("a_person is null. This seems bad");
-            return false;
+    selected_and_in_role(obj: Object, role_name) {
+        if (obj instanceof Person) {
+            if (obj == null) {
+                console.error("a_person is null. This seems bad");
+                return false;
+            }
+            let person = this.selected_person;
+            if (!person) {
+                return false;
+            }
+            if (obj.uuid != person.uuid) {
+                return false;
+            }
+            return this.schedule.plan.find_role(role_name);
         }
-        let person = this.selected_person;
-        if (!person) {
-            return false;
-        }
-        if (a_person.uuid != person.uuid) {
-            return false;
-        }
-        return this.store.roles_store.find_role(role_name);
-
     }
 
-    select(person: Person, date: Date, role_name: string) {
-        let role = this.store.roles_store.find_role(role_name);
-        console.log("Selecting: " + person + " on " + date.toDateString() + " for " + role.name);
-        this.store.ui_store.selected_person = person;
-        this.store.ui_store.selected_date = date;
-        this.store.ui_store.selected_role = role;
+    select(obj: Object, date: Date, role_name: string) {
+        if (obj instanceof Person) {
+            let role = this.schedule.plan.find_role(role_name);
+            console.log("Selecting: " + obj + " on " + date.toDateString() + " for " + role.name);
+
+            this.store.ui_store.select(obj, date, role);
+            this.appRef.tick();
+        }
     }
 
+    textFor(obj: Object): string {
+        if (obj instanceof Person) {
+            return obj.name;
+        }
+        return obj.toString();
+    }
+
+    @computed
     get selected_person(): Person {
         if (!this.store.ui_store || this.store.ui_store.selected_person == null) {
             return null;
@@ -117,5 +169,24 @@ export class ScheduleViewerComponent {
             return "Nothing";
         }
         return this.selected_person.name;
+    }
+
+    selectNextDate(offset: number) {
+        // find the next date!
+        let dates = this.schedule.dates.map(sd => sd.date);
+        let currentIndex = dates.indexOf(this.colSelectedDate);
+        if (currentIndex != -1) {
+            let nextIndex = currentIndex + offset;
+            if (nextIndex >= 0 && nextIndex < this.schedule.dates.length) {
+                this.colSelectedDate = this.schedule.dates[nextIndex].date;
+            }
+            this.slides.slideTo(nextIndex);
+        }
+    }
+
+    slideChanged() {
+        // select the correct date for the given sd
+        let currentIndex = this.slides.getActiveIndex();
+        this.colSelectedDate = this.schedule.dates[currentIndex].date;
     }
 }

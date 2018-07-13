@@ -1,3 +1,10 @@
 node_modules
 www
 .vscode
+plugins
+yarn-error.log
+.sourcemaps
+people.json
+platforms/android/CordovaLib/build
+platforms/android/.gradle/4.4
+platforms/android/.gradle

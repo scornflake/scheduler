@@ -1,0 +1,88 @@
+<ion-header>
+    <ion-navbar>
+        <ion-title>Various Things</ion-title>
+    </ion-navbar>
+    <saving-state></saving-state>
+</ion-header>
+
+
+<ion-content *mobxAutorun>
+    <div *ngIf="netUtil">
+        <ion-list *ngIf="store.loggedInPerson$|async as p">
+            <ion-list-header color="light">Organization</ion-list-header>
+            <ion-item>
+                <h2>{{p.organization.name || 'wft'}}</h2>
+                <p>{{p.organization.uuid || 'wft'}}</p>
+            </ion-item>
+            <ion-item *ngIf="store.loggedInPerson$|async as p">
+                <h2>Logged in: {{p.name}}</h2>
+                <p>{{p.uuid}}</p>
+            </ion-item>
+        </ion-list>
+        <ion-list>
+            <ion-list-header color="light">Network</ion-list-header>
+            <ion-item>
+                <ion-label>
+                    Online <p class="crowded">Read only</p>
+                </ion-label>
+                <ion-toggle [ngModel]="netUtil.network$|async"></ion-toggle>
+            </ion-item>
+            <ion-item>
+                <ion-label>
+                    Force 'offline'
+                    <p class="crowded">Force the app to think its offline</p>
+                </ion-label>
+                <ion-toggle [(ngModel)]="netUtil.overrideEnabled"></ion-toggle>
+            </ion-item>
+            <ion-item>
+                <ion-label>Network Type</ion-label>
+                <ion-label item-end text-right>{{netUtil.networkType}}</ion-label>
+            </ion-item>
+            <ion-item *ngIf="schedulerServer.db$|async as db">
+                <ion-label>Replication Status</ion-label>
+                <ion-label item-end text-right>{{textForReplicationStatus(db.replicationNotifications$|async)}}
+                </ion-label>
+            </ion-item>
+            <ion-item>
+                <ion-label>
+                    Browser
+                    <p class="crowded">aka we're <b>not native</b>?</p>
+                </ion-label>
+                <ion-toggle [ngModel]="netUtil.onBrowser"></ion-toggle>
+            </ion-item>
+            <ion-item>
+                <h2>Platforms</h2>
+                <p>{{netUtil.platforms}}</p>
+            </ion-item>
+        </ion-list>
+    </div>
+
+    <ion-list>
+        <ion-list-header color="light">State</ion-list-header>
+        <ion-item *ngIf="store.loggedInPerson$|async as p">
+            <ion-label stacked>Logged in person name</ion-label>
+            <ion-input [ngModel]="p.name" (ngModelChange)="p.setName($event)"></ion-input>
+        </ion-item>
+
+        <div *ngIf="store.selectedPlan$ | async as plan">
+            <ion-item>
+                <ion-label stacked>Plan Start Date</ion-label>
+                <ion-datetime [ngModel]="plan.start_date.toISOString()"
+                              (ngModelChange)="plan.setStartDateFromISO($event)"></ion-datetime>
+            </ion-item>
+            <ion-item>
+                <ion-label stacked>Plan End Date</ion-label>
+                <ion-datetime [ngModel]="plan.end_date.toISOString()"
+                              (ngModelChange)="plan.setEndDateFromISO($event)"></ion-datetime>
+            </ion-item>
+        </div>
+
+        <div *ngIf="store.uiStore$|async as ui">
+            <ion-item *ngIf="ui.selectedPlan">
+                <ion-label stacked>Selected Plan</ion-label>
+                <ion-input [ngModel]="ui.selectedPlan.name"
+                           (ngModelChange)="ui.selectedPlan.setName($event)"></ion-input>
+            </ion-item>
+        </div>
+    </ion-list>
+</ion-content>

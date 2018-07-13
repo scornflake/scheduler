@@ -1,0 +1,46 @@
+<ion-header>
+
+    <ion-navbar>
+        <ion-title text-center *ngIf="has_add_button">Add New Team</ion-title>
+        <ion-title text-center *ngIf="!has_add_button">Edit Team</ion-title>
+        <ion-buttons end>
+            <button ion-button icon-only (tap)="pc.addNewPerson()">
+                <ion-icon name="person-add"></ion-icon>
+            </button>
+            <button ion-button icon-only (tap)="addFromExisting()">
+                <ion-icon name="people"></ion-icon>
+            </button>
+        </ion-buttons>
+    </ion-navbar>
+    <saving-state></saving-state>
+</ion-header>
+
+
+<ion-content no-margin *mobxTraceAutorun>
+    <div *ngIf="team">
+        <ion-list no-margin>
+            <ion-item>
+                <ion-label>Name</ion-label>
+                <ion-input [ngModel]="team.name" (ngModelChange)="team.setName($event)"></ion-input>
+            </ion-item>
+        </ion-list>
+        <people #peoplelist
+                [people]="team.people"
+                (personAdded)="add_person_to_team($event)"
+                (delete)="delete_from_team($event)">
+        </people>
+    </div>
+</ion-content>
+
+<ion-footer>
+    <ion-grid *ngIf="has_add_button">
+        <ion-row justify-content-center>
+            <ion-col col-6>
+                <button full ion-button color="danger" (tap)="send_cancel()">Cancel</button>
+            </ion-col>
+            <ion-col col-6>
+                <button full ion-button [disabled]="okButtonDisabled" (tap)="send_ok()">Add</button>
+            </ion-col>
+        </ion-row>
+    </ion-grid>
+</ion-footer>

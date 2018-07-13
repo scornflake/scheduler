@@ -1,0 +1,23 @@
+<div>
+    <ion-searchbar [ngModel]="nameFilter" (ngModelChange)="setNameFilter($event)"></ion-searchbar>
+    <ion-list-header color="warning" *ngIf="numPeopleWithoutEmail > 0">{{numPeopleWithoutEmail}} people have no email
+        address
+    </ion-list-header>
+    <ion-list-header color="primary">People</ion-list-header>
+    <ion-list>
+        <ion-item-sliding *ngFor="let person of filteredPeople">
+            <ion-item [attr.detail-push]="!inviteMode?'true':null" (tap)="showPersonDetail(person)">
+                <ion-label>
+                    <h2>{{person.name}}</h2>
+                    <p *xs> {{personSummary(person)}}</p>
+                    <p *showItBootstrap="['sm', 'md', 'lg', 'xl']">{{personSummary(person, true)}}</p>
+                </ion-label>
+                <ion-checkbox item-end *ngIf="inviteMode" [ngModel]="isSelected(person)"
+                              (ngModelChange)="selectPerson($event, person)"></ion-checkbox>
+            </ion-item>
+            <ion-item-options side="right">
+                <button ion-button color="danger" (tap)="delete_person(person)">Delete</button>
+            </ion-item-options>
+        </ion-item-sliding>
+    </ion-list>
+</div>

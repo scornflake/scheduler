@@ -1,9 +1,68 @@
 schedule-viewer {
+  .heading {
+    font-weight: bold;
+  }
   .range {
     background-color: rgba(darkred, 0.2);
+  }
+  .even {
+    background-color: rgba(black, 0.05);
   }
   .selected {
     background-color: darkred;
     color: white;
+  }
+
+  // no shadows for md buttons please
+  .button-md {
+    box-shadow: none;
+  }
+
+  .smallDate {
+    border-bottom: 1px solid #eee !important;
+    padding-bottom: 10px;
+    //margin-bottom: 10px;
+    margin-top: 8px;
+  }
+
+  .horizSchedule {
+
+    .horizScheduleHeading {
+      background: map_get($colors, 'primary');
+      color: white;//map_get($colors, 'light');
+    }
+
+    .horizScheduleGrid {
+      padding-left: 4px;
+      padding-right: 4px;
+
+      ion-slides {
+        .swiper-slide {
+          //font-size: 14px;
+        }
+      }
+
+      ion-col:first-child {
+        border-right: 1px solid lightgrey;
+      }
+
+      ion-col:nth-child(2) {
+        padding-left: 8px;
+      }
+
+      border-bottom: 1px solid lightgrey;
+    }
+
+  }
+
+  .me {
+    font-weight: bold;
+  }
+
+  .people {
+    // This puts commas between the various people in the list
+    span + span:before {
+      content: ", ";
+    }
   }
 }

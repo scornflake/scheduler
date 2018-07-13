@@ -1,0 +1,33 @@
+welcome-wizard {
+  .welcome {
+    text-align: center;
+
+    p {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+
+    .tip, .yay {
+      color: $subdued-text-ios-color;
+    }
+
+    .yay {
+      text-align: center;
+      width: 100%;
+      font-size: 0.9em;
+    }
+
+    .buttons {
+      padding-top: 40px;
+      ion-row {
+        padding-bottom: 20px !important;
+      }
+    }
+  }
+}
+
+ion-slides.top-aligned {
+  ion-slide.swiper-slide {
+    align-items: flex-start;
+  }
+}

@@ -1,3 +1,40 @@
 page-home {
+  .loading {
+    padding-top: 100px;
+    ion-spinner {
+      padding-top: 200px;
+      text-align: center;
+      width: 100%;
+      margin: auto;
+    }
+    ion-spinner * {
+      stroke: #b2b2b2;
+    }
+  }
 
+  .notifications {
+    ion-badge {
+      margin-right: 10px;
+    }
+  }
 }
+
+.notSignedIn {
+  background-image: url("../../assets/calendar-large.jpg");
+  background-size: cover;
+  height: 100%;
+
+  .title {
+    font-weight: 300;
+    font-size: 4em;
+    padding-top: 100px;
+  }
+
+  .buttons {
+    .signInButton {
+      margin-top: 40px;
+      margin-bottom: calc(100% + 30px);
+    }
+  }
+}
+

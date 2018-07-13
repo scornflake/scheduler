@@ -1,21 +1,65 @@
-<div>
-    <ion-grid>
-        <ion-row>
-            <ion-col *ngFor="let header of headers">{{header|uppercase}}</ion-col>
-        </ion-row>
-        <ion-row *ngFor="let row of rows">
-            <ion-col>
-                {{row['date'].toDateString()}}
-            </ion-col>
-            <ion-col *ngFor="let key of keys_for_row(row)"
-                     [ngClass]="{'range':in_exclusion_zone(row, key)}"
-            >
-                <div *ngFor="let person of value_as_array(row[key])"
-                     [ngClass]="{'selected':selected_and_in_role(person, key)}"
-                     (click)="select(person, row['date'], key)">
-                    {{person.name}}
+<div *mobxTraceAutorun>
+    <div *ngIf="rowMode; else colMode">
+        <ion-grid>
+            <ion-row>
+                <ion-col class="heading" *ngFor="let header of headers">{{header.name|uppercase}}</ion-col>
+            </ion-row>
+            <ion-row *ngFor="let row of rows; let i = index" [ngClass]="{'even':i % 2 == 0}">
+                <ion-col>
+                    {{row['date']?.toDateString()}}
+                </ion-col>
+                <ion-col *ngFor="let key of keys_for_row(row); let i = index"
+                         [ngClass]="{'range':in_exclusion_zone(row, key)}"
+                >
+                    <div *ngFor="let obj of value_as_array(row[key])"
+                         [ngClass]="{'selected':selected_and_in_role(obj, key)}"
+                         (click)="select(obj, row['date'], key)">
+                        {{textFor(obj)}}
+                    </div>
+                </ion-col>
+            </ion-row>
+        </ion-grid>
+    </div>
+    <ng-template #colMode no-padding>
+        <div class="horizSchedule" *ngIf="schedule">
+            <!-- shows only when in small mode -->
+            <div *xs>
+                <div *ngIf="store.selectedPlan$|async as plan" text-center class="smallDate">
+                    {{plan.start_date|date:'MMMM d'}} - {{plan.end_date|date:'MMMM d'}}
                 </div>
-            </ion-col>
-        </ion-row>
-    </ion-grid>
+            </div>
+
+            <ion-grid class="horizScheduleHeading" no-padding>
+                <ion-row align-items-center>
+                    <button ion-col ion-button icon-only col-auto (tap)="selectNextDate(-1)">
+                        <ion-icon name="arrow-back"></ion-icon>
+                    </button>
+                    <h4 ion-col text-center>{{colSelectedDate|date:'longDate'}}</h4>
+                    <button ion-col ion-button icon-only col-auto (tap)="selectNextDate(1)">
+                        <ion-icon name="arrow-forward"></ion-icon>
+                    </button>
+                </ion-row>
+            </ion-grid>
+            <ion-grid class="horizScheduleGrid" no-padding>
+                <ion-slides [pager]="false" (ionSlideDidChange)="slideChanged()">
+                    <ion-slide *ngFor="let sd of schedule.dates">
+                        <ion-row class="heading">
+                            <ion-col col-6 text-left>Role</ion-col>
+                            <ion-col col-6 text-left>Who</ion-col>
+                        </ion-row>
+                        <ion-row *ngFor="let role of roles" class="horizScheduleRow"
+                                 [class.me]="sd.is_person_in_role(store.loggedInPerson, role)">
+                            <ion-col col-6 text-left [class.me]="sd.is_person_in_role(store.loggedInPerson, role)">
+                                {{role.name}}
+                            </ion-col>
+                            <ion-col col-6 text-left class="people">
+                            <span class="person" *ngFor="let p of sd.people_in_role(role);"
+                                  [class.me]="p == store.loggedInPerson">{{p.name}}</span>
+                            </ion-col>
+                        </ion-row>
+                    </ion-slide>
+                </ion-slides>
+            </ion-grid>
+        </div>
+    </ng-template>
 </div>

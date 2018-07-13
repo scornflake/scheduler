@@ -1,0 +1,38 @@
+<ion-header>
+
+    <ion-navbar>
+        <ion-title>Schedule with other...</ion-title>
+    </ion-navbar>
+
+</ion-header>
+
+
+<ion-content>
+    <ion-list>
+        <ion-item>
+            <ion-label floating>Person</ion-label>
+            <ion-select [(ngModel)]="person_uuid">
+                <ion-option *ngFor="let p of people" value="{{p.uuid}}">{{p.name}}</ion-option>
+            </ion-select>
+        </ion-item>
+        <ion-item>
+            <ion-label stacked>Maximum distance (in weeks)</ion-label>
+            <ion-range [(ngModel)]="distance" [max]="4" [min]="1">
+                <ion-badge range-right>{{distance}}</ion-badge>
+            </ion-range>
+        </ion-item>
+        <ion-item>
+            <ion-label stacked>Max # of times this schedule</ion-label>
+            <ion-range [(ngModel)]="max" [max]="4" [min]="1">
+                <ion-badge range-right>{{max}}</ion-badge>
+            </ion-range>
+        </ion-item>
+
+        <ion-item no-border no-lines>
+            <button ion-button col-6 color="danger" (tap)="dismiss()">Cancel</button>
+            <button ion-button col-6 (tap)="save()">Save</button>
+        </ion-item>
+
+    </ion-list>
+
+</ion-content>

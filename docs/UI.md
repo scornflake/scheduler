@@ -4,46 +4,8 @@ Administrator
 Schedule Dashboard
 ------------------
 - Make it look nicer
-- Consider what a single user is going to want to see on a phone
-  - the 'Person Edit' view I think
-  - tap on individual schedule to see that row in more detail
-  - maybe make that a list, with nice icon, and subdetails (like who else is on) so you can get most info you need by just looking at it.
-  - will want to see whole thing at some point (scroll around it)
-
-
-TODO:
------
-- Work out why mobx not updating in ng
-- Research GraphQL and see if pluggable into mobx.
-- Work out possible hosting. Google? AWS? Cost?
-
-- Persistence (is this going to be server-less? nope. need 'something' to serve HTTP/S)
-- Make a login for me
-- Just have one schedule, for now.
-- Make it show that schedule, when public with no auth
-- No footer (tabs) when not logged in
-- No CSV button when not logged in
-- Names cannot be edited when not logged in (in the PeopleEditor)
--
-
-
-
-
-Users
------
-
-- Users / Authentication
-- Organizations
-  - Users
-  - Roles
-  - Allow an admin to enter users. (state = new)
-  - Allow an admin to send bulk invites to all users they have entered (in state = invited)
-  - Users have to confirm an email send before they become (state = active)
-  - Last login date
-- Schedules (named, per organization but editable by users, publishable)
-  - view permissions
-  - edit permissions
-- Registration, change password
+  - I don't like the 'light red' for exclusion zones. I would prefer a blue line down the left hand side, which I think would convey this better.  Then I can light up more of the cell (better spacing) while still showing 'youre booked out over this time'.
+  - Perhaps put a colour key there as well so people know what the colours mean
 
 
 Workflow
@@ -73,16 +35,40 @@ Functions
 
 Notifications
 - When a user logs in they can see notifications
-  - This would include unavailability notifications (action: takes that person off)
+  - Pending member unavailability notifications (action: takes that person off, send email/txt to confirm that's done)
   - Requests to swap with another member (action: swaps a person in a role, with another person of a role)
 
 Ability to enter unavailability dates
-- which should notify the worship leader, but not change the schedule yet
-- when the leader says 'yes', the unavailability is scheduled (the person is just taken off that role I think, assuming the schedule is locked)
+- which should notify the worship leader (after a cooling down period, say 15m). The draft schedule can be updated.
+  - if the date is for an existing schedule, admin needs to take manual action
+
+Manual Editing
+- allow admin to manually change a schedule
+  - add someone on a role
+  - remove someone from a role
+  - swap people around
 
 Ability to request a swap with someone else
 - once confirmed swap that person/role only.
-- what would happen
+- what would happen?
+
+Record practice times
+- Press to start
+- Press to stop
+- Provide this info to the user as well. Gamify it. If they do more, up their level.
+- Provide this feeback to the worship leader (they can see this set only).
+- Provide overall feedback to the ministry leader
+
+Provide a set. Song list and links
+- List of songs, with various links
+    - Link name (CCLI, YouTube, etc)
+    - Link
+    - Intended Tempo
+    - Time (4/4, 6/8 etc)
+    - Notes
+- Provide a metronome usable as a click track
+    - Ability for a user to re-order the set (drummer)
+    - Let drummer change timing
 
 
 Export
@@ -90,10 +76,6 @@ Export
 - Export to Google Sheets (temporary I think. If the schedule were available online, less need for this)
 - Get it online!
 
-
-Visual
-------
-- Lighten 'done dates'
 
 
 Locking
@@ -104,3 +86,17 @@ Locking
 - Pin/Unpin whole dates
 - Pin/Unpin people
 
+
+Data Model
+-----
+
+All data is stored by Organization.
+
+- Users / Authentication
+  - Name
+  - TXT number (for SMS notifications)
+  - Email (for ... email!)
+  - Last login date
+- Roles
+- Teams
+- People

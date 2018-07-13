@@ -1,0 +1,14 @@
+<ion-header>
+
+    <ion-navbar>
+        <ion-title>{{title}}</ion-title>
+    </ion-navbar>
+
+</ion-header>
+
+<ion-content padding>
+    <ion-spinner *ngIf="loading"></ion-spinner>
+    <ion-list>
+        <ion-item (tap)="selectSheet(s)" *ngFor="let s of sheets">{{s.name}}</ion-item>
+    </ion-list>
+</ion-content>

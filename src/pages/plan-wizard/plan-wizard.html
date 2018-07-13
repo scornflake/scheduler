@@ -1,0 +1,139 @@
+<ion-header>
+
+    <ion-navbar>
+        <ion-title>Plan Wizard</ion-title>
+        <ion-buttons end *ngIf="nextIsVisible">
+            <button ion-button clear color="primary" (tap)="nextSlide()" [disabled]="!nextIsEnabled">Next</button>
+        </ion-buttons>
+    </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+    <ion-slides (ionSlideDidChange)="slideChanged()" class="top-aligned">
+        <ion-slide>
+            <h2 class="heading">
+                Create a new plan
+            </h2>
+            <div class="tip">
+                <p col-md-6 offset-md-3>Enter a name and date range for the plan. We've defaulted the plan to three months.</p>
+            </div>
+            <ion-grid *mobxAutorun>
+                <ion-row>
+                    <ion-col col-10 offset-1 col-md-6 offset-md-3>
+                        <ion-list>
+                            <ion-item>
+                                <ion-label stacked>Plan Name</ion-label>
+                                <ion-input autofocus [(ngModel)]="planName"></ion-input>
+                            </ion-item>
+                            <ion-item>
+                                <ion-label stacked>Start Date</ion-label>
+                                <ion-label>{{startDate|date}}</ion-label>
+                                <button item-right ion-button (tap)="selectStartDate()">Select</button>
+                            </ion-item>
+                            <ion-item>
+                                <ion-label stacked>End Date</ion-label>
+                                <ion-label>{{endDate|date}}</ion-label>
+                                <button item-right ion-button (tap)="selectEndDate()">Select</button>
+                            </ion-item>
+                        </ion-list>
+                    </ion-col>
+                </ion-row>
+            </ion-grid>
+
+        </ion-slide>
+
+        <ion-slide>
+            <h2 class="heading">
+                Select a team
+            </h2>
+            <div class="tip">
+                <p col-md-6 offset-md-3>Plans let us create schedules for people. Select the team that you'd like to
+                    manage
+                    with this plan.</p>
+            </div>
+            <ion-grid>
+                <ion-row>
+                    <ion-col col-md-6 offset-md-3>
+                        <ion-list *ngIf="store">
+                            <ion-item class="selection">
+                                <ion-select [(ngModel)]="teamUUID">
+                                    <ion-option
+                                            *ngFor="let t of store.teams.teams"
+                                            [selected]="t.uuid == team"
+                                            [value]="t.uuid">
+                                        {{t.name}}
+                                    </ion-option>
+                                </ion-select>
+                            </ion-item>
+                        </ion-list>
+                    </ion-col>
+                </ion-row>
+            </ion-grid>
+        </ion-slide>
+
+        <ion-slide *mobxAutorun>
+            <h2 class="heading">
+                Pick some roles
+            </h2>
+            <p>Almost done!</p>
+            <div class="tip">
+                <p col-md-6 offset-md-3>Roles define how people are scheduled on at various dates (depending on
+                    availability / unavailability).
+                    <br/>
+                    <br/>
+                    We've created some default sets to get you going. These can be modified later using the <i>Roles</i>
+                    editor in the side menu.</p>
+            </div>
+            <ion-spinner *ngIf="saving"></ion-spinner>
+            <ion-grid *ngIf="!saving">
+                <ion-row>
+                    <ion-col col-md-6 offset-md-3>
+                        <ion-item *ngIf="store" class="selection">
+                            <ion-label>Default Roles:</ion-label>
+                            <ion-select [ngModel]="roleSetName" (ngModelChange)="setRoleSetName($event)">
+                                <ion-option *ngFor="let rs of roleSets" [value]="rs.name"
+                                            [selected]="roleSetName == rs.name">{{rs.name}}
+                                </ion-option>
+                            </ion-select>
+                        </ion-item>
+                    </ion-col>
+                </ion-row>
+            </ion-grid>
+        </ion-slide>
+
+
+        <ion-slide>
+            <h2 class="heading" *showItBootstrap="['xs','sm']">
+                Great!
+                <h4>Tap 'OK' to create this plan!</h4>
+            </h2>
+            <h2 class="heading" *showItBootstrap="['md','lg','xl']">
+                Great! Tap 'OK' to create this plan!
+            </h2>
+
+            <ion-card class="summary">
+                <ion-item>
+                    <ion-avatar item-start>
+                        <img src="assets/icon/plan.png"/>
+                    </ion-avatar>
+                    <h2>{{planName}}</h2>
+                    <p>With roles: {{roleSetName}}</p>
+                </ion-item>
+
+
+                <div *ngIf="chosenRoleSet" class="role">
+                    <ion-badge *ngFor="let r of chosenRoleSet.roles">{{r.name}}</ion-badge>
+                </div>
+            </ion-card>
+            <button ion-button (tap)="createThePlan()" [disabled]="saving">OK</button>
+            <br/>
+            <ion-spinner *ngIf="saving"></ion-spinner>
+        </ion-slide>
+    </ion-slides>
+</ion-content>
+<ion-footer *ngIf="!slides.isEnd()">
+    <p class="tip">Tap next when done</p>
+</ion-footer>
+
