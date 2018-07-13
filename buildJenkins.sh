@@ -1,6 +1,7 @@
 export PATH="${WORKSPACE}/node_modules/.bin:$PATH"
 
 yarn install
+yarn install --dev
 
 npm rebuild node-sass
 npm run build:prod
