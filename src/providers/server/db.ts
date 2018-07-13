@@ -358,7 +358,6 @@ class SchedulerDatabase implements IObjectStore {
             }
 
             if (doc['_deleted']) {
-                let revisions = doc['_revisions'] || [];
                 this._cache.evict(docId);
                 this.logger.info(`Evicted ${docId} from cache.`);
                 continue;

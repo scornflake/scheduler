@@ -1,4 +1,4 @@
-import {Injectable, Injector, NgZone, OnDestroy} from "@angular/core";
+import {Injectable, NgZone, OnDestroy} from "@angular/core";
 import {Platform} from "ionic-angular";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {Subject} from "rxjs/Subject";

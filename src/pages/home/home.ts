@@ -1,5 +1,5 @@
 import {Component} from '@angular/core';
-import {IonicPage, NavController, Platform, PopoverController} from 'ionic-angular';
+import {IonicPage, NavController} from 'ionic-angular';
 import {CSVExporter} from "../../scheduling/exporter/csv.exporter";
 import {GAPIS} from "../../common/gapis-auth";
 import {Logger} from "ionic-logging-service";
@@ -29,8 +29,6 @@ export class HomePage {
                 private sheetAPI: GAPIS,
                 private pageUtils: PageUtils,
                 private nativeTrans: NativePageTransitions,
-                private platform: Platform,
-                private popoverCtrlr: PopoverController,
                 public server: SchedulerServer,
                 public store: RootStore) {
 

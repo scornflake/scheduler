@@ -6,7 +6,6 @@ import {Plan} from "../plan";
 import {Role} from "../role";
 import {NamedObject, ObjectWithUUID} from "../base-types";
 import {action, computed, observable} from "mobx-angular";
-import {ObservableMap} from "mobx";
 
 abstract class GenericManager<T extends NamedObject> {
     @observable protected store: GenericObjectStore<T>;

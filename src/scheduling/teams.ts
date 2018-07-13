@@ -1,7 +1,7 @@
 import {find_object_with_name} from "./common/base_model";
 import {Person} from "./people";
 import {NamedObject} from "./base-types";
-import {action, computed, observable} from "mobx-angular";
+import {action, observable} from "mobx-angular";
 import {runInAction} from "mobx";
 
 class Team extends NamedObject {

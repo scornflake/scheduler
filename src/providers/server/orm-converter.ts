@@ -16,6 +16,7 @@ class OrmConverter {
                 private _loader: IObjectStore,
                 private _cache: IObjectCache = null,
                 private _resolver: IReferenceResolver) {
+
         this.logger = LoggingWrapper.getLogger('orm');
         this._writer = new OrmConverterWriter(this._mapper, this._loader);
         this._reader = new OrmConverterReader(this._mapper, this._resolver, this._cache);
@@ -40,6 +41,7 @@ class OrmConverter {
     set cache(value: IObjectCache) {
         this._cache = value;
         this._reader.setCache(value);
+        this.logger.debug(`Set new cache`);
     }
 }
 

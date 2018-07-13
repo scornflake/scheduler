@@ -4,14 +4,11 @@ import {Person} from "./people";
 import {OnThisDate, Rule, UsageWeightedSequential} from "./rule_based/rules";
 import {isUndefined} from "ionic-angular/util/util";
 import {daysBetween} from "./shared";
-import {LoggingWrapper} from "../common/logging-wrapper";
-import {Logger} from "ionic-logging-service";
 import {Team} from "./teams";
 import {Role} from "./role";
 import {NamedObject} from "./base-types";
 import {action, computed, observable} from "mobx-angular";
 import {addDaysToDate, dateForISODateString} from "./common/date-utils";
-import {ObservableMap} from "mobx";
 import {RolesByPriority} from "./common/scheduler-store";
 
 class Plan extends NamedObject {
@@ -32,11 +29,11 @@ class Plan extends NamedObject {
     // Used at runtime only (I think?)
     private specific_role_rules: Array<Rule>;
 
-    private logger: Logger;
+    // private logger: Logger;
 
     constructor(name: string, team: Team) {
         super(name);
-        this.logger = LoggingWrapper.getLogger("model.plan");
+        // this.logger = LoggingWrapper.getLogger("model.plan");
 
         this.start_date = new Date();
         this.end_date = addDaysToDate(this.start_date, 30);

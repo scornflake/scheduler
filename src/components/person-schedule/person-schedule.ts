@@ -31,7 +31,7 @@ export class PersonScheduleComponent {
         }
         return this.schedule.dates.filter(sd => {
             let allPeople = sd.people;
-            let dump = allPeople.map(p => `${p.email}=${p.uuid}`);
+            // let dump = allPeople.map(p => `${p.email}=${p.uuid}`);
             // console.log(`people for: ${sd.date} = ${SafeJSON.stringify(dump)}`);
             return allPeople.indexOf(this.person) != -1;
         });

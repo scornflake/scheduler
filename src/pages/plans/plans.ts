@@ -1,4 +1,4 @@
-import {Component, ContentChildren, QueryList, ViewChildren} from '@angular/core';
+import {Component, QueryList, ViewChildren} from '@angular/core';
 import {AlertController, IonicPage, ItemSliding, NavController, NavParams} from 'ionic-angular';
 import {Plan} from "../../scheduling/plan";
 import {RootStore} from "../../store/root";
@@ -7,7 +7,6 @@ import {NamedObject} from "../../scheduling/base-types";
 import {Team} from "../../scheduling/teams";
 import {action} from "mobx-angular";
 import * as moment from "moment";
-import {SWBSafeJSON} from "../../common/json/safe-stringify";
 
 @IonicPage({
     name: 'page-plans',
@@ -91,7 +90,7 @@ export class PlansPage {
         let selectedSlider = slidersList[index];
         let newPlanName = Plan.newPlanName(plan.name);
         this.rootStore.asyncDuplicateExistingPlan(newPlanName, plan).then(newPlan => {
-            let existingDuration = plan.schedule_duration_in_days;
+            // let existingDuration = plan.schedule_duration_in_days;
 
             // Make the start equal to the next avail date
             newPlan.setStartDate(moment(plan.end_date).add(plan.days_per_period + 1, 'day').toDate());

@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, ViewChild} from '@angular/core';
+import {Component, ViewChild} from '@angular/core';
 import {MenuController, Nav, Platform} from 'ionic-angular';
 import {StatusBar} from '@ionic-native/status-bar';
 import {SplashScreen} from '@ionic-native/splash-screen';
@@ -7,7 +7,7 @@ import {SchedulerServer} from "../providers/server/scheduler-server.service";
 import {computed} from "mobx-angular";
 import {autorun} from "mobx";
 import {isUndefined} from "util";
-import {NativePageTransitions, NativeTransitionOptions} from "@ionic-native/native-page-transitions";
+import {NativePageTransitions} from "@ionic-native/native-page-transitions";
 
 @Component({
     templateUrl: 'app.html',

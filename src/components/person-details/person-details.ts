@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, Input, Output} from '@angular/core';
+import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {NavController} from "ionic-angular";
 import {RootStore} from "../../store/root";
 import {Person} from "../../scheduling/people";

@@ -2,7 +2,7 @@ import {NamedObject} from "./base-types";
 import {action, observable} from "mobx-angular";
 import {ObservableMap} from "mobx";
 import {RolesByPriority} from "./common/scheduler-store";
-import {RoleResponse, RoleSetResponse} from "../common/interfaces";
+import {RoleResponse} from "../common/interfaces";
 
 class Role extends NamedObject {
     @observable minimum_needed: number;

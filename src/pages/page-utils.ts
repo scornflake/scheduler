@@ -1,5 +1,5 @@
 import {ObjectValidation} from "../scheduling/shared";
-import {AlertController, NavController, Platform, ToastController} from "ionic-angular";
+import {AlertController, NavController, ToastController} from "ionic-angular";
 import {forwardRef, Inject, Injectable, NgZone, OnInit} from "@angular/core";
 import deepEqual from "deep-equal";
 import {ToastOptions} from "ionic-angular/components/toast/toast-options";
@@ -26,8 +26,7 @@ class PageUtils implements OnInit {
                 private alertCtrlr: AlertController,
                 private nativeTransitions: NativePageTransitions,
                 private zoneRef: NgZone,
-                @Inject(forwardRef(() => SchedulerServer)) private server,
-                private platform: Platform) {
+                @Inject(forwardRef(() => SchedulerServer)) private server) {
         this.logger = LoggingWrapper.getLogger('page.utils');
     }
 
@@ -66,7 +65,7 @@ class PageUtils implements OnInit {
             showCreateOrInvitePage: (reason: string) => {
                 // add args to tell it to switch to create mode
                 this.logger.info(`show create/invite page, because: ${reason}`);
-                // this.nativeTransitions.fade({duration: 1000});
+                this.nativeTransitions.fade({duration: 1000});
                 navCtrl.push('login');
             },
             showError: (message) => {

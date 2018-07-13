@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, Input, OnDestroy} from '@angular/core';
+import {AfterViewInit, Component, OnDestroy} from '@angular/core';
 import {SavingState, SchedulerDatabase} from "../../providers/server/db";
 import {Observable} from "rxjs/Observable";
 import {Subscription} from "rxjs/Subscription";

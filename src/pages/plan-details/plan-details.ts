@@ -5,8 +5,6 @@ import {Person} from "../../scheduling/people";
 import {PageUtils} from "../page-utils";
 import {NamedObject} from "../../scheduling/base-types";
 import {action, computed, observable} from "mobx-angular";
-import {isObservableObject} from "mobx";
-import {Team} from "../../scheduling/teams";
 
 @IonicPage({
     name: 'page-plan-details',

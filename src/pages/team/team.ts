@@ -1,4 +1,4 @@
-import {ApplicationRef, ChangeDetectorRef, Component, NgZone, ViewChild} from '@angular/core';
+import {ChangeDetectorRef, Component, NgZone, ViewChild} from '@angular/core';
 import {AlertController, IonicPage, NavController, NavParams, ViewController} from 'ionic-angular';
 import {Team} from "../../scheduling/teams";
 import {Person} from "../../scheduling/people";
@@ -8,7 +8,6 @@ import {PageUtils} from "../page-utils";
 import {NamedObject} from "../../scheduling/base-types";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
-import {runInAction} from "mobx";
 
 @IonicPage({
     name: 'page-team',
@@ -145,7 +144,7 @@ export class TeamPage {
 
             // For some reason, the change to the data isn't enough
             this.cd.detectChanges();
-            // this.pc.cd.detectChanges();
+            this.logger.info(`Added ${uuid} to team`);
         }
     }
 }

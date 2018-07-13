@@ -1,4 +1,4 @@
-import {ApplicationRef, ChangeDetectionStrategy, Component, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {ApplicationRef, Component, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {isArray} from "util";
 import {Person} from "../../scheduling/people";
 import {PopoverController, Slides} from "ionic-angular";
@@ -125,7 +125,7 @@ export class ScheduleViewerComponent implements OnInit, OnDestroy {
     selected_and_in_role(obj: Object, role_name) {
         if (obj instanceof Person) {
             if (obj == null) {
-                console.error("a_person is null. This seems bad");
+                this.logger.error("a_person is null. This seems bad");
                 return false;
             }
             let person = this.selected_person;
@@ -142,7 +142,7 @@ export class ScheduleViewerComponent implements OnInit, OnDestroy {
     select(obj: Object, date: Date, role_name: string) {
         if (obj instanceof Person) {
             let role = this.schedule.plan.find_role(role_name);
-            console.log("Selecting: " + obj + " on " + date.toDateString() + " for " + role.name);
+            this.logger.info("Selecting: " + obj + " on " + date.toDateString() + " for " + role.name);
 
             this.store.ui_store.select(obj, date, role);
             this.appRef.tick();

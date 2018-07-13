@@ -24,13 +24,11 @@ export class RuleFacts {
     // This is the schedule, as it's being built
     private dates: Map<string, ScheduleAtDate>;
     private decision_depth: number;
-    private working_state: Map<string, any>;
 
     private logger: Logger;
 
     constructor(service: Plan) {
         this.service = service;
-        this.working_state = new Map<string, any>();
         this.begin();
 
         this.exclusion_zones = new Map<Person, Array<Exclusion>>();

@@ -14,11 +14,9 @@ import {SchedulerObjectStore} from "../scheduling/common/scheduler-store";
 import {Organization} from "../scheduling/organization";
 import {IObjectCache} from "../providers/mapping/cache";
 import {Role} from "../scheduling/role";
-import {Assignment} from "../scheduling/assignment";
-import {action, computed} from "mobx-angular";
+import {action} from "mobx-angular";
 import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
-import {SWBSafeJSON} from "../common/json/safe-stringify";
 
 @Injectable()
 class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, OnDestroy {

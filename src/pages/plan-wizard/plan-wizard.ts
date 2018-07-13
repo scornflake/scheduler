@@ -112,11 +112,11 @@ export class PlanWizardPage extends WizardPage {
         super.nextSlide(slideNumber);
     }
 
-    private debugGoNextSlide(timer = 250, actualNumber = null) {
-        setTimeout(() => {
-            this.nextSlide(actualNumber);
-        }, timer);
-    }
+    // private debugGoNextSlide(timer = 250, actualNumber = null) {
+    //     setTimeout(() => {
+    //         this.nextSlide(actualNumber);
+    //     }, timer);
+    // }
 
     get nextIsEnabled(): boolean {
         let activeIndex = this.slides.getActiveIndex();

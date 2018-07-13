@@ -101,7 +101,7 @@ export class DatabaseMaintPage implements OnDestroy {
                     /*
                     Must reload the page / app, to get a new DB.
                      */
-                    console.log(`starting destroy of db...`);
+                    this.logger.info(`starting destroy of db...`);
                     location.reload();
                 });
                 // does a reload, so no need to take action after

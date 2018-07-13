@@ -20,7 +20,6 @@ import {
 import {csd} from "../scheduling/common/date-utils";
 import {Role} from "../scheduling/role";
 import {Assignment} from "../scheduling/assignment";
-import {TypedObject} from "../scheduling/base-types";
 
 let scheduler_db_map: ClassFieldMapping = {
     classes: [

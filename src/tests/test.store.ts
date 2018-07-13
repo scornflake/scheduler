@@ -1,3 +1,5 @@
+/* tslint:disable:no-unused-variable */
+
 import {Person} from "../scheduling/people";
 import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../scheduling/availability";
 import {ScheduleOn, TryToScheduleWith} from "../scheduling/rule_based/rules";

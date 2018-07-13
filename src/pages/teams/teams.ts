@@ -55,6 +55,7 @@ export class TeamsPage {
                 this.rootStore.teams.add(team);
                 this.rootStore.asyncSaveOrUpdateDb(team).then(() => {
                     this.pageUtils.showMessage('New team added');
+                    this.logger.info(`New team added`);
                 })
             }
         });
