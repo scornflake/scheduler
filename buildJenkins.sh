@@ -11,11 +11,11 @@ npm run test
 
 npm run build:prod
 
-ionic cordova prepare ios --release --prod
-ionic cordova prepare android --release --prod
-
-# fastlane goes here?
-
 # Get ourselves a docker container of the /www code
 "${WORKSPACE}/buildDockerImage.sh"
+
+#ionic cordova prepare ios --release --prod
+#ionic cordova prepare android --release --prod
+#fastlane goes here? build the things?
+
 
