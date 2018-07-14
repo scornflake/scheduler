@@ -13,9 +13,7 @@
     "lint": "ionic-app-scripts lint",
     "serve": "ionic-app-scripts serve -c",
     "serve:prod": "ionic-app-scripts serve --prod -c",
-    "test": "karma start ./test-config/karma.conf.js",
-    "tsc": "tsc",
-    "tsc:w": "tsc -w"
+    "test": "karma start ./test-config/karma.conf.js --single-run"
   },
   "config": {
     "ionic_copy": "./config/copy.config.js",
@@ -108,6 +106,7 @@
     "karma-chrome-launcher": "^2.2.0",
     "karma-coverage": "^1.1.2",
     "karma-jasmine": "^1.1.1",
+    "karma-junit-reporter": "^1.2.0",
     "karma-remap-coverage": "^0.1.5",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^3.0.0",

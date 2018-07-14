@@ -17,7 +17,7 @@ module.exports = function (config) {
         files: [
             {
                 pattern: 'test-config/karma-test-shim.js',
-                watched: true
+                watched: false
             }
         ],
 
@@ -103,13 +103,24 @@ module.exports = function (config) {
             terminal: true
         },
 
-        reporters: ['progress'],
+        reporters: ['progress', 'junit'],
         port: 9876,
         colors: true,
         logLevel: config.LOG_INFO,
-        autoWatch: true,
+        // autoWatch: true,
+        // browsers: ['PhantomJS'],
         browsers: ['Chrome'],
         singleRun: false,
+
+        junitReporter: {
+            outputDir: 'results',
+            useBrowserName: false,
+            outputFile: 'test-results.xml'
+        },
+
+        phantomjsLauncher: {
+            exitOnResourceError: true
+        }
     };
 
     config.set(_config);
