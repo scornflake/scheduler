@@ -890,14 +890,18 @@ describe('db', () => {
         let neil = new Person("Neilos", "6b73f6d4-f07c-4e17-ae28-85bf4563492d");
         let cherilyn = new Person("Cher", "6f420d68-3e45-b686-bc68-9fc81ca7b44f");
         let someRole1 = new Role("Baking");
-        someRole1._id = "e6885123-1998-88c1-9af0-07c232583c47";
+        someRole1.setId("e6885123-1998-88c1-9af0-07c232583c47");
         let someRole2 = new Role("Flying");
-        someRole1._id = "48622369-6852-bfe8-1e5e-d49dbb1ffb2b";
+        someRole2.setId("48622369-6852-bfe8-1e5e-d49dbb1ffb2b");
+
+        let avail = new Availability();
+        avail.setId("5068ceed-98bc-63aa-3ebb-06cdf430baf8");
 
         cache.saveInCache(neil);
         cache.saveInCache(cherilyn);
         cache.saveInCache(someRole1);
         cache.saveInCache(someRole2);
+        cache.saveInCache(avail);
 
         let doc = {
             "_id": "70922145-cd52-5d97-3c56-0ae95c3a9f33",

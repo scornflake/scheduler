@@ -225,6 +225,7 @@ class SchedulerServer implements ILifecycle {
 
     async asyncLoadState(): Promise<object> {
         if (this._state == null) {
+            this.logger.info(`Loading state because _state is null...`);
             let newState = await this.storage.get(STATE_ROOT) || {
                 lastPersonUUID: null,
                 lastOrganizationUUID: null,
@@ -234,6 +235,7 @@ class SchedulerServer implements ILifecycle {
 
             runInAction(() => {
                 this._state = newState;
+                this.logger.info(`Set state to: ${JSON.stringify(this._state)}`);
             });
 
             this.logger.debug(`Loading state... ${JSON.stringify(this._state)}`);
@@ -249,8 +251,9 @@ class SchedulerServer implements ILifecycle {
                 this.asyncSaveState().then(() => {
                     this.logger.debug(`Saved state because 'forced' flag changed`);
                 });
-            })
+            });
         }
+        this.logger.info(`!Couch Token: ${this._state.organizationCouchToken}`);
         return this.state;
     }
 
@@ -338,22 +341,26 @@ class SchedulerServer implements ILifecycle {
     async asyncRunStartupLifecycleAfterLogin(callback: ILifecycleCallback, timeout: number = Infinity): Promise<boolean> {
         await this.asyncLoadState();
 
+        this.logger.info(`!!Couch Token: ${this._state.organizationCouchToken}`);
+        this.logger.info(`!!!Couch Token: ${this.state.organizationCouchToken}`);
+
         // If no lastOrganizationUUID UUID, loginUser() didn't do its job.
         // Login should validate token, check for Person object locally (direct DB access)
         // and also set this.state.lastPersonUUID and this.state.lastOrganizationUUID
-        if (!this.state.lastOrganizationUUID) {
+        let theState = this.state;
+        if (theState.lastOrganizationUUID == null) {
             this.logger.debug('asyncRunStartupLifecycle', `lastOrganizationUUID nil, show login page`);
             callback.showLoginPage(`lastOrganizationUUID is nil on server.state`);
             return false;
         }
-        if (!this.state.lastPersonUUID) {
+        if (theState.lastPersonUUID == null) {
             this.logger.debug('asyncRunStartupLifecycle', `lastPersonUUID nil, show login page`);
             callback.showLoginPage(`lastPersonUUID is nil on server.state`);
             return false;
         }
-        if (!this.state.organizationCouchToken) {
+        if (theState.organizationCouchToken == null) {
             this.logger.debug('asyncRunStartupLifecycle', `organizationCouchToken nil, show login page`);
-            callback.showLoginPage(`organizationCouchToken is nil on server.state`);
+            callback.showLoginPage(`organizationCouchToken is nil (${JSON.stringify(theState)}) on server.state`);
             return false;
         }
 
@@ -598,6 +605,11 @@ class SchedulerServer implements ILifecycle {
             throw new Error(`Cannot move. No person is logged in`);
         }
         await this.restAPI.movePersonToOrganization(person, organizationUUID);
+    }
+
+    @action forceStateReload() {
+        this.logger.info(`Forced state to reload by setting to null`);
+        this._state = null;
     }
 }
 

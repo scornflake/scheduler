@@ -75,7 +75,7 @@ class OrmConverterWriter {
             //
             // At this present time, fail, and we'll see what this means later (with more use)
             if (!obj.is_new && !this.ignoreOldObjectsWhenUpdating) {
-                throw new Error(`The referenced object ${obj.type}/${obj} was not new, it means you have an 'old/existing' object in your graph that no longer exists in the DB.`);
+                throw new Error(`Tried to get a reference to object ${obj.type}/${obj}, but it didn't already exist in the DB. Also, it's not 'new', which implies you have a stale object in your graph that no longer exists in the DB. BOOM.`);
             }
 
             // Try to store

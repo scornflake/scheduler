@@ -49,6 +49,8 @@ describe('root store', () => {
             plan.assignmentFor(neil).addRole(defaultSoundRole);
             plan.assignmentFor(neil).addRole(defaultSaxRole, 4);
 
+            // cache.s
+
             // Store this plan so it's live in the db
             store.asyncSaveOrUpdateDb(plan).then(() => {
                 console.log(`Stored original plan`);

@@ -18,6 +18,7 @@ import {MockConfigurationService} from "../../app/logging-configuration";
 import {IObjectCache, SimpleCache} from "../../providers/mapping/cache";
 import {Assignment} from "../../scheduling/assignment";
 import {Availability, AvailabilityUnit} from "../../scheduling/availability";
+import {Role} from "../../scheduling/role";
 
 describe('app based tests', () => {
     SetupDefaultRoles();
@@ -194,7 +195,6 @@ describe('app based tests', () => {
             "person": "rrr:Person:a70093d6-72e0-5fa0-cfd1-83b39958e7a9",
             "role_weightings": {
                 "rrr:Role:694434ca-705a-710d-3714-942c0b419a24": 1,
-                "rrr:Role:b8e4e55b-dd71-5090-7d29-3152aee3ef7e": 1,
                 "rrr:Role:392ffeb8-5405-93c0-4e5e-136e9eb78ca9": 3
             },
             "specific_roles": {"2018/1/10@0": ["rrr:Role:694434ca-705a-710d-3714-942c0b419a24"]},
@@ -220,6 +220,14 @@ describe('app based tests', () => {
         let reach = new Availability(3, AvailabilityUnit.EVERY_N_DAYS);
         reach._id = "9763b892-438a-a664-7fe4-a09e21542b00";
         cache.saveInCache(reach);
+
+        // Better setup the roles (for role_weightings) else they wont be found
+        let aRole1 = new Role('something');
+        aRole1.setId("694434ca-705a-710d-3714-942c0b419a24");
+        let aRole2 = new Role('else');
+        aRole2.setId("392ffeb8-5405-93c0-4e5e-136e9eb78ca9");
+        cache.saveInCache(aRole1);
+        cache.saveInCache(aRole2);
 
         converter.reader.async_createJSObjectFromDoc(dict, 'Assignment').then((assign: Assignment) => {
             let secondaries = assign.secondary_actions;
