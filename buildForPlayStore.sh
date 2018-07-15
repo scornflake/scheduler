@@ -8,6 +8,7 @@ yarn install
 
 npm rebuild node-sass
 
+ionic cordova resources android
 ionic cordova build android --prod --release
 fastlane android alpha
 

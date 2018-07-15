@@ -8,6 +8,7 @@ yarn install
 
 npm rebuild node-sass
 
+ionic cordova resources ios
 ionic cordova build ios --prod --release
 fastlane ios beta
 
