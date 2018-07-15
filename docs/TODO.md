@@ -1,6 +1,9 @@
 TODO
 ====
 - Run tests on jenkins
+- PlanWizard doesn't work on android
+    - text disapears whn entering it
+    - NEXT doesn't work on plan page (greyed out)
 - Native builds
     - Version numbering (both)
     - ios

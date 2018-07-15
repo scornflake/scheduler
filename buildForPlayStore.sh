@@ -9,9 +9,7 @@ yarn install
 npm rebuild node-sass
 npm run test
 
-npm run build:prod
-
-# Get ourselves a docker container of the /www code
-"${WORKSPACE}/buildDockerImage.sh"
+ionic cordova build android --prod --release
+fastland android alpha
 
 
