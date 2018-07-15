@@ -44,7 +44,7 @@ platform :android do
     ionic(
         platform: "android",
         prod: true,
-        keystore_path: '../../../scheduler-certs/google_play/android-release-key.jks',
+        keystore_path: '../scheduler-certs/google_play/android-release-key.jks',
         keystore_alias: 'my-alias',
         keystore_password: 'scheduler'
     )
@@ -53,14 +53,26 @@ platform :android do
 
   desc "Deploy new alpha"
   lane :alpha do
-    ionic(platform: "android")
+    ionic(
+        platform: "android",
+        prod: true,
+        keystore_path: '../scheduler-certs/google_play/android-release-key.jks',
+        keystore_alias: 'my-alias',
+        keystore_password: 'scheduler'
+    )
     gradle(task: "clean assembleRelease", project_dir: "./platforms/android")
     upload_to_play_store(track: 'alpha')
   end
 
   desc "Deploy a new version to the Google Play"
   lane :deploy do
-    ionic(platform: "android")
+    ionic(
+        platform: "android",
+        prod: true,
+        keystore_path: '../scheduler-certs/google_play/android-release-key.jks',
+        keystore_alias: 'my-alias',
+        keystore_password: 'scheduler'
+    )
     gradle(task: "clean assembleRelease", project_dir: "./platforms/android")
     upload_to_play_store
   end

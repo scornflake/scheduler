@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget android-versionCode="21" id="com.shinywhitebox.scheduler" ios-CFBundleVersion="21" version="0.0.2" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget android-versionCode="24" id="com.shinywhitebox.scheduler" ios-CFBundleVersion="24" version="0.0.2" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>Scheduler</name>
     <description>Make scheduling the simplest part of your job</description>
     <author email="neil@shinywhitebox.com" href="https://scheuler.shinywhitebox.com">shinywhitebox ltd</author>
@@ -92,6 +92,6 @@
     <plugin name="cordova-plugin-statusbar" spec="^2.4.2" />
     <plugin name="com.telerik.plugins.nativepagetransitions" spec="^0.6.5" />
     <engine name="browser" spec="5.0.1" />
-    <engine name="android" spec="~7.0.0" />
-    <engine name="ios" spec="~4.5.4" />
+    <engine name="android" spec="7.0.0" />
+    <engine name="ios" spec="4.5.4" />
 </widget>
