@@ -10,3 +10,4 @@ platforms/android/.gradle/4.4
 platforms/android/.gradle
 platforms/ios/Scheduler.xcworkspace/xcuserdata/neil.xcuserdatad
 test-results.xml
+build
