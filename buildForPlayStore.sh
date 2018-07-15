@@ -10,6 +10,6 @@ npm rebuild node-sass
 npm run test
 
 ionic cordova build android --prod --release
-fastland android alpha
+fastlane android alpha
 
 
