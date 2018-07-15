@@ -28,7 +28,6 @@ ios
 
 - We're using 'match' based signing.
 - This requires the private repo scheduler-certs in order to work.
-- Fastlane is setup in the fastlane folder of platforms/ios.
 
 android
 -------
@@ -38,8 +37,6 @@ If you blow away the android folder, the following needs to happen:
 
 - add build-extras.gradle
     - this adds dependencies for screenshots
-- add back in the fastlane folder
-    - contains metadata/project setup for fastlane
 - Add a link from private repo scheduler-certs/google_play to the signing properties file. This will enable gradle to sign the build
     - ln -s ../../../scheduler-certs/google_play/release-signing.properties
 
