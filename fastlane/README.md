@@ -35,11 +35,11 @@ fastlane ios beta
 fastlane android test
 ```
 Runs all the tests
-### android beta
+### android build
 ```
-fastlane android beta
+fastlane android build
 ```
-Submit a new Beta Build to Crashlytics Beta
+Build production release
 ### android alpha
 ```
 fastlane android alpha

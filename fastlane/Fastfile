@@ -18,10 +18,12 @@ default_platform(:ios)
 platform :ios do
   desc "Just build the thing"
   lane :build do
+    ionic(platform: "ios")
     match(type: "appstore")
     build_app()
   end
   lane :beta do
+    ionic(platform: "ios")
     match(type: "appstore")
     build_app()
     upload_to_testflight
@@ -37,23 +39,28 @@ platform :android do
     gradle(task: "test")
   end
 
-  desc "Submit a new Beta Build to Crashlytics Beta"
-  lane :beta do
+  desc "Build production release"
+  lane :build do
+    ionic(
+        platform: "android",
+        prod: true,
+        keystore_path: '../../../scheduler-certs/google_play/android-release-key.jks',
+        keystore_alias: 'my-alias',
+        keystore_password: 'scheduler'
+    )
     gradle(task: "clean assembleRelease", project_dir: "./platforms/android")
-    crashlytics
-
-    # sh "your_script.sh"
-    # You can also use other beta testing services here
   end
 
   desc "Deploy new alpha"
   lane :alpha do
+    ionic(platform: "android")
     gradle(task: "clean assembleRelease", project_dir: "./platforms/android")
     upload_to_play_store(track: 'alpha')
   end
 
   desc "Deploy a new version to the Google Play"
   lane :deploy do
+    ionic(platform: "android")
     gradle(task: "clean assembleRelease", project_dir: "./platforms/android")
     upload_to_play_store
   end

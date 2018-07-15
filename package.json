@@ -78,6 +78,7 @@
     "moment-range": "^4.0.1",
     "ng-circle-progress": "^0.9.9",
     "ng2-responsive": "^0.8.4",
+    "node-sass": "^4.9.2",
     "pluralize": "^7.0.0",
     "pouchdb": "^6.4.3",
     "pouchdb-authentication": "^1.1.3",
