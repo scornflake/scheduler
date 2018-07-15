@@ -2,7 +2,7 @@
 <widget android-versionCode="11" id="com.shinywhitebox.scheduler" ios-CFBundleVersion="11" version="0.0.2" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>Scheduler</name>
     <description>Make scheduling the simplest part of your job</description>
-    <author email="neil@shinywhitebox.com" href="http://shinywhitebox.com">shinywhitebox ltd</author>
+    <author email="neil@shinywhitebox.com" href="https://scheuler.shinywhitebox.com">shinywhitebox ltd</author>
     <content src="index.html" />
     <access origin="*" />
     <allow-intent href="http://*/*" />

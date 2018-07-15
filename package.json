@@ -13,7 +13,8 @@
     "lint": "ionic-app-scripts lint",
     "serve": "ionic-app-scripts serve -c",
     "serve:prod": "ionic-app-scripts serve --prod -c",
-    "test": "karma start ./test-config/karma.conf.js --single-run"
+    "test": "karma start ./test-config/karma.conf.js --single-run",
+    "prebuild": "echo HELLLOO"
   },
   "config": {
     "ionic_copy": "./config/copy.config.js",
