@@ -7,6 +7,6 @@ export PATH="$HOME/.fastlane/bin:${WORKSPACE}/node_modules/.bin:$PATH"
 yarn install
 npm rebuild node-sass
 
-bundle exec fastlane ios beta
+fastlane ios beta
 
 
