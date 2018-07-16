@@ -20,12 +20,26 @@ platform :ios do
   lane :build do
     ionic(platform: "ios", prod: true)
     match(type: "appstore", readonly: true)
-    build_app()
+    build_app(
+        export_method: "app-store",
+        export_options: {
+            provisioningProfiles: {
+                "com.shinywhitebox.scheduler" => "match AppStore com.shinywhitebox.scheduler"
+            }
+        }
+    )
   end
   lane :beta do
     ionic(platform: "ios", prod: true)
     match(type: "appstore", readonly: true)
-    build_app()
+    build_app(
+        export_method: "app-store",
+        export_options: {
+            provisioningProfiles: {
+                "com.shinywhitebox.scheduler" => "match AppStore com.shinywhitebox.scheduler"
+            }
+        }
+    )
     upload_to_testflight
   end
 end
