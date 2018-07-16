@@ -4,7 +4,7 @@
 
 # iOS
 app_identifier("com.shinywhitebox.scheduler") # The bundle identifier of your app
-apple_id("neil@shinywhitebox.com") # Your Apple email address
+apple_id("build@shinywhitebox.com") # Your Apple email address
 
 itc_team_id("291361") # App Store Connect Team ID
 team_id("PMJ275ZTUX") # Developer Portal Team ID

@@ -18,13 +18,13 @@ default_platform(:ios)
 platform :ios do
   desc "Just build the thing"
   lane :build do
-    ionic(platform: "ios", prod: true)
-    match(type: "appstore")
+    #ionic(platform: "ios", prod: true)
+    match(type: "appstore", readonly: true)
     build_app()
   end
   lane :beta do
     ionic(platform: "ios", prod: true)
-    match(type: "appstore")
+    match(type: "appstore", readonly: true)
     build_app()
     upload_to_testflight
   end
