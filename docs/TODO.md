@@ -1,5 +1,6 @@
 TODO
 ====
+- Can't chance weighting on a role, in a plan? eeeeeeh?
 - PlanWizard doesn't work on android
     - text disapears whn entering it
     - NEXT doesn't work on plan page (greyed out)
