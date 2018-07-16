@@ -13,3 +13,4 @@ test-results.xml
 build
 platforms
 .gradle
+report.xml
