@@ -25,6 +25,11 @@ fs.readFile('config.xml', 'utf8', function(err, data) {
 
         // Get JS Obj
         var obj = result;
+        var versionString = obj['widget']['$']['version'];
+        var versionParts = versionString.split('.');
+        versionParts[2]++;
+        versionString = versionParts.join(".");
+        obj['widget']['$']['version'] = versionString;
 
         // ios-CFBundleVersion doen't exist in config.xml
         if(typeof obj['widget']['$']['ios-CFBundleVersion'] === 'undefined') {
