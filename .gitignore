@@ -12,3 +12,4 @@ platforms/ios/Scheduler.xcworkspace/xcuserdata/neil.xcuserdatad
 test-results.xml
 build
 platforms
+.gradle
