@@ -8,7 +8,7 @@ import {setupOrmMapper} from "../../providers/mapping/setup";
 import {Person} from "../../scheduling/people";
 import {Plan} from "../../scheduling/plan";
 import {Team} from "../../scheduling/teams";
-import {defaultSoundRole} from "../sample-data";
+import {CleanupDefaultRoles, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
 import {csd} from "../../scheduling/common/date-utils";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {SimpleCache} from "../../providers/mapping/cache";
@@ -28,6 +28,7 @@ class SomeThing extends ObjectWithUUID {
 describe('observation', () => {
     let db;
     let store;
+
     beforeEach((done) => {
         configure({
             enforceActions: true
@@ -39,10 +40,15 @@ describe('observation', () => {
             store = new RootStore(null);
             store.setDatabase(db);
             db.setCache(new SimpleCache());
+            SetupDefaultRoles();
             done();
         });
 
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
+    });
+
+    afterEach(() => {
+        CleanupDefaultRoles();
     });
 
     it('can observe change to prefs', function (done) {

@@ -1,4 +1,10 @@
-import {defaultComputerRole, defaultSaxRole, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
+import {
+    CleanupDefaultRoles,
+    defaultComputerRole,
+    defaultSaxRole,
+    defaultSoundRole,
+    SetupDefaultRoles
+} from "../sample-data";
 import {
     AssignedToRoleCondition,
     ConditionalRule,
@@ -21,8 +27,6 @@ import {Availability, AvailabilityUnit} from "../../scheduling/availability";
 import {Role} from "../../scheduling/role";
 
 describe('app based tests', () => {
-    SetupDefaultRoles();
-
     let cache: IObjectCache;
     let mapper: OrmMapper;
     let converter: OrmConverter;
@@ -36,6 +40,14 @@ describe('app based tests', () => {
     let specificDate;
     let soundRoleRef;
     let computerRoleRef;
+
+    beforeAll(() => {
+        SetupDefaultRoles();
+    });
+
+    afterAll(() => {
+        CleanupDefaultRoles();
+    });
 
     beforeEach((done) => {
         specificDate = csd(2018, 2, 10);

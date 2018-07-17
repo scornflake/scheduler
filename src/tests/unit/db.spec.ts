@@ -17,7 +17,7 @@ import {csd} from "../../scheduling/common/date-utils";
 import {GetTheTypeNameOfTheObject, OrmMapper} from "../../providers/mapping/orm-mapper";
 import {OrmConverter} from "../../providers/server/orm-converter";
 import {Plan} from "../../scheduling/plan";
-import {defaultComputerRole, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
+import {CleanupDefaultRoles, defaultComputerRole, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
 import {IObjectCache, SimpleCache} from "../../providers/mapping/cache";
 import {Role} from "../../scheduling/role";
 import {Availability, AvailabilityUnit} from "../../scheduling/availability";
@@ -283,8 +283,6 @@ describe('db', () => {
         });
 
         describe('can persist a Plan', function () {
-            SetupDefaultRoles();
-
             let neil;
             let bob;
             let team;
@@ -292,6 +290,14 @@ describe('db', () => {
             let specificDate;
             let soundRoleRef;
             let computerRoleRef;
+
+            beforeAll(() => {
+                SetupDefaultRoles();
+            });
+
+            afterAll(() => {
+                CleanupDefaultRoles();
+            });
 
             beforeEach(() => {
                 specificDate = csd(2018, 2, 10);
@@ -343,7 +349,6 @@ describe('db', () => {
                     });
                 });
             });
-
 
             it('can create dict from object', function (done) {
                 converter.writer.async_createDocFromJSObject(thePlan).then(dict => {

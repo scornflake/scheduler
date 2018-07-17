@@ -1,6 +1,13 @@
 import {ScheduleAtDate} from "../../scheduling/shared";
 import {Person} from "../../scheduling/people";
-import {defaultBass, defaultKeysRole, defaultLeaderRole, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
+import {
+    CleanupDefaultRoles,
+    defaultBass,
+    defaultKeysRole,
+    defaultLeaderRole,
+    defaultSoundRole,
+    SetupDefaultRoles
+} from "../sample-data";
 import {constructSensibleDate} from "../../scheduling/common/date-utils";
 import {Plan} from "../../scheduling/plan";
 import {Team} from "../../scheduling/teams";
@@ -8,8 +15,12 @@ import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {Role} from "../../scheduling/role";
 
 describe('schedule', () => {
-    beforeEach(() => {
+    beforeAll(() => {
         SetupDefaultRoles();
+    });
+
+    afterAll(() => {
+        CleanupDefaultRoles();
     });
 
     it('should be able to construct non retarded dates', function () {

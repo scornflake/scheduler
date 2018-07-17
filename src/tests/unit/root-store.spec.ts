@@ -7,7 +7,7 @@ import {SchedulerDatabase} from "../../providers/server/db";
 import {OrmMapper} from "../../providers/mapping/orm-mapper";
 import {SimpleCache} from "../../providers/mapping/cache";
 import {scheduler_db_map} from "../../assets/db.mapping";
-import {defaultSaxRole, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
+import {CleanupDefaultRoles, defaultSaxRole, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
 import {isObservableArray} from "mobx";
 
 describe('root store', () => {
@@ -19,17 +19,15 @@ describe('root store', () => {
     let cache, mapper, db;
 
     beforeEach((done) => {
-        neil = new Person('neilos!');
-        team = new Team('Super Team', [neil]);
-        plan = new Plan('Pin a tail on it', team);
-
         cache = new SimpleCache();
         mapper = new OrmMapper();
 
-        SetupDefaultRoles();
-
         //Add in mappings that we need, since we reference other models in this test
         mapper.addConfiguration(scheduler_db_map);
+
+        neil = new Person('neilos!');
+        team = new Team('Super Team', [neil]);
+        plan = new Plan('Pin a tail on it', team);
 
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 4000;
         SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, "1234", mapper).then(new_db => {
@@ -37,9 +35,20 @@ describe('root store', () => {
             db.setCache(cache);
             store = new RootStore(null);
             store.setDatabase(db).then(() => {
+                SetupDefaultRoles();
                 done();
             });
         });
+    });
+
+    afterEach((done) => {
+        store.logout();
+        if(db) {
+            db.destroyDatabase().then(() => {
+                CleanupDefaultRoles();
+                done();
+            });
+        }
     });
 
     it('should be able to clone a plan', function (done) {
@@ -48,8 +57,6 @@ describe('root store', () => {
             // Lets give it some meaningful data
             plan.assignmentFor(neil).addRole(defaultSoundRole);
             plan.assignmentFor(neil).addRole(defaultSaxRole, 4);
-
-            // cache.s
 
             // Store this plan so it's live in the db
             store.asyncSaveOrUpdateDb(plan).then(() => {
@@ -65,7 +72,6 @@ describe('root store', () => {
                         expect(savedObject).not.toBeFalsy();
                         done();
                     });
-                    // done();
                 })
             });
         });

@@ -5,6 +5,7 @@ import {addDaysToDate, constructSensibleDate} from "../../scheduling/common/date
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {Person} from "../../scheduling/people";
 import {
+    CleanupDefaultRoles,
     defaultAcousticGuitar,
     defaultComputerRole, defaultElectricGuitar,
     defaultSaxRole,
@@ -26,9 +27,15 @@ describe('role scheduler', () => {
     let sound: Role;
     let schedule: ScheduleWithRules;
 
-    beforeEach(() => {
+    beforeAll(() => {
         SetupDefaultRoles();
+    });
 
+    afterAll(() => {
+        CleanupDefaultRoles();
+    });
+
+    beforeEach(() => {
         start_date = new Date();
         end_date = new Date();
         end_date.setDate(start_date.getDate() + 30);

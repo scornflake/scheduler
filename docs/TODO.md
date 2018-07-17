@@ -1,14 +1,13 @@
 TODO
 ====
+- Prefs fails lookup, is nil, when logging in first time
+    - Sometimes I login with a known user, with data, and see the wizard pages (no data!)
+    - Think we have to have a way to resolve late/out of order references
 - PlanWizard doesn't work on android
     - text disapears whn entering it
     - NEXT doesn't work on plan page (greyed out)
 - As an admin:
     - I want to see a list of when people are on (on their 'person' page? on the plan page?)
-- Prefs fails lookup, is nil, when logging in first time
-    - Sometimes I login with a known user, with data, and see the wizard pages (no data!)
-    - Think we have to have a way to resolve late/out of order references
-
 - How to test all navigation possibilities?
 - Scheduler should show the next coming date (not the first one)
     - show next, up to an including if next == today

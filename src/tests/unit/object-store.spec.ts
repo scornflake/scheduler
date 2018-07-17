@@ -5,12 +5,18 @@ import {Plan} from "../../scheduling/plan";
 import {csd} from "../../scheduling/common/date-utils";
 import {Team} from "../../scheduling/teams";
 import {OnThisDate, ScheduleOn} from "../../scheduling/rule_based/rules";
-import {defaultKeysRole, defaultSoundRole} from "../sample-data";
+import {CleanupDefaultRoles, defaultKeysRole, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
 
 describe('object store', () => {
     let store;
+
     beforeEach(() => {
         store = new SchedulerObjectStore();
+        SetupDefaultRoles();
+    });
+
+    afterEach(() => {
+        CleanupDefaultRoles();
     });
 
     it('can store people', () => {

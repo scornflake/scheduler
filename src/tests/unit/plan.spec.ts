@@ -1,6 +1,7 @@
 import {Person} from "../../scheduling/people";
 import {AssignedToRoleCondition, OnThisDate, ScheduleOn} from "../../scheduling/rule_based/rules";
 import {
+    CleanupDefaultRoles,
     defaultAcousticGuitar,
     defaultBass,
     defaultKeysRole,
@@ -21,6 +22,14 @@ describe('service', () => {
     let cherilyn: Person;
     let tim: Person;
 
+    beforeAll(() => {
+        SetupDefaultRoles();
+    });
+
+    afterAll(() => {
+        CleanupDefaultRoles();
+    });
+
     beforeEach(() => {
         team = new Team("test team");
         cherilyn = team.add(new Person("Cherilyn"));
@@ -29,7 +38,6 @@ describe('service', () => {
 
         plan = new Plan("test", team);
 
-        SetupDefaultRoles();
     });
 
     it('should construct sensible names for duplicate plans', function () {

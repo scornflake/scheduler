@@ -33,6 +33,26 @@ function SetupDefaultRoles() {
         defaultElectricGuitar = new Role("Guitar (Electric)", 0, 1, instrumentPriority);
         defaultVocalsRole = new Role("Vocals", 1, 3, instrumentPriority);
         defaultSaxRole = new Role("Sax", 0, 2, instrumentPriority);
+        console.info(`Setup default roles`);
+    }
+}
+
+function CleanupDefaultRoles() {
+    if(defaultSoundRole) {
+        console.info(`Cleaning up default roles`);
+        defaultSpeakerRole = null;
+        defaultThemeRole = null;
+        defaultLeaderRole = null;
+        defaultSoundRole = null;
+        defaultComputerRole = null;
+        defaultBass = null;
+        defaultComputerRole = null;
+        defaultDrumsRole = null;
+        defaultKeysRole = null;
+        defaultAcousticGuitar = null;
+        defaultElectricGuitar = null;
+        defaultVocalsRole = null;
+        defaultSaxRole = null;
     }
 }
 
@@ -51,6 +71,7 @@ export {
     defaultVocalsRole,
     defaultSaxRole,
 
-    SetupDefaultRoles
+    SetupDefaultRoles,
+    CleanupDefaultRoles
 };
 

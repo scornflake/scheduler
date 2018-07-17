@@ -2,7 +2,7 @@ import {FixedRoleOnDate, OnThisDate, UsageWeightedSequential, WeightedRoles} fro
 import {Person} from "../../scheduling/people";
 import {RuleFacts} from "../../scheduling/rule_based/rule-facts";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
-import {defaultSoundRole, SetupDefaultRoles} from "../sample-data";
+import {CleanupDefaultRoles, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
 import {Plan} from "../../scheduling/plan";
 import {Assignment} from "../../scheduling/assignment";
 import {Team} from "../../scheduling/teams";
@@ -17,10 +17,15 @@ describe('rules', () => {
     let date: Date;
     let team: Team;
 
+    beforeAll(() => {
+        SetupDefaultRoles();
+    });
+
+    afterAll(() => {
+        CleanupDefaultRoles();
+    });
 
     beforeEach(() => {
-        SetupDefaultRoles();
-
         people_store = new SchedulerObjectStore().people;
         team = new Team("Foo Bar");
         service = new Plan("rules tests", team);
