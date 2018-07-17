@@ -14,7 +14,8 @@
     "serve": "ionic-app-scripts serve -c",
     "serve:prod": "ionic-app-scripts serve --prod -c",
     "test": "karma start ./test-config/karma.conf.js --single-run",
-    "prebuild": "echo HELLLOO"
+    "postbuild:prod": "node scripts/copy-version-to-www.js",
+    "copy:version": "node scripts/copy-version-to-www.js"
   },
   "config": {
     "ionic_copy": "./config/copy.config.js",
