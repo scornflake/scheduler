@@ -5,7 +5,7 @@ import {RootStore} from "../../store/root";
 import {PageUtils} from "../page-utils";
 import {NamedObject} from "../../scheduling/base-types";
 import {Team} from "../../scheduling/teams";
-import {action} from "mobx-angular";
+import {action, computed} from "mobx-angular";
 import * as moment from "moment";
 
 @IonicPage({
@@ -26,7 +26,7 @@ export class PlansPage {
                 public navParams: NavParams) {
     }
 
-    get plans() {
+    @computed get plans() {
         return this.rootStore.plans.all.sort();
     }
 

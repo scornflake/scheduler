@@ -1,8 +1,5 @@
 TODO
 ====
-
-- Deleting a plan, didn't update on Pauls side, same for duplicate.
-    - think this is a refresh problem
 - PlanWizard doesn't work on android
     - text disapears whn entering it
     - NEXT doesn't work on plan page (greyed out)

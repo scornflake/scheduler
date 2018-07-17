@@ -13,7 +13,7 @@
 
 
 <ion-content>
-    <ion-list>
+    <ion-list *mobxTraceAutorun>
         <ion-item-sliding *ngFor="let plan of plans; let idx = index" #slidersRef>
             <ion-item detail-push (tap)="showPlanDetail(plan)">
                 <h2>{{plan.name}}</h2>
