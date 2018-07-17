@@ -24,8 +24,8 @@ fs.readFile('config.xml', 'utf8', function (err, data) {
         }
 
         // If 'version' specified as arg, also increment the build x.y.z version (the z part)
+        var obj = result;
         if (process.argv[2] == 'version') {
-            var obj = result;
             var versionString = obj['widget']['$']['version'];
             var versionParts = versionString.split('.');
             versionParts[2]++;

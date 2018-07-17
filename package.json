@@ -15,6 +15,8 @@
     "serve:prod": "ionic-app-scripts serve --prod -c",
     "test": "karma start ./test-config/karma.conf.js --single-run",
     "postbuild:prod": "node scripts/copy-version-to-www.js",
+    "bump:build": "node scripts/increment-build-number.js",
+    "bump:build:version": "node scripts/increment-build-number.js version",
     "copy:version": "node scripts/copy-version-to-www.js"
   },
   "config": {
