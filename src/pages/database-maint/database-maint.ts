@@ -88,7 +88,25 @@ export class DatabaseMaintPage implements OnDestroy {
     }
 
 
-    delete_db() {
+    deleteAllContent() {
+        let alert = this.alertCtrl.create({title: "Sure? This is ... really destructive (and no undo) !!!"});
+        alert.addButton({
+            text: 'No',
+            role: 'cancel'
+        });
+        alert.addButton({
+            text: "Yes",
+            handler: () => {
+                this.server.deleteAllContentFromDatabase().then(() => {
+                    this.logger.info(`Deleted everything`);
+                    location.reload();
+                });
+            }
+        });
+        alert.present();
+    }
+
+    destroyDb() {
         let alert = this.alertCtrl.create({title: "Sure? This is .... destructive!!!"});
         alert.addButton({
             text: 'No',

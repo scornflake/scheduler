@@ -1,16 +1,16 @@
 TODO
 ====
-- Can't change weighting on a role, in a plan? eeeeeeh?
+
 - Deleting a plan, didn't update on Pauls side, same for duplicate.
     - think this is a refresh problem
 - PlanWizard doesn't work on android
     - text disapears whn entering it
     - NEXT doesn't work on plan page (greyed out)
-
+- As an admin:
+    - I want to see a list of when people are on (on their 'person' page? on the plan page?)
 - Prefs fails lookup, is nil, when logging in first time
     - Think we have to have a way to resolve late/out of order references
 
-- Remove 'pull to refresh' style action on home page (ios only?) (it doesn't do anything)
 - How to test all navigation possibilities?
 - Scheduler should show the next coming date (not the first one)
     - show next, up to an including if next == today
@@ -41,6 +41,7 @@ TODO
 - Deploying the containers
     - monitoring???
     - including, how to upgrade the stack?
+- Remove 'pull to refresh' style action on home page (ios only?) (it doesn't do anything)
 - Add timezone/locale to the Profile
 - Add 'level' to Person, and write up about game-ifying the whole thing
 - Backups

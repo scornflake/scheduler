@@ -39,7 +39,7 @@ import {PlanWizardPageModule} from "../pages/plan-wizard/plan-wizard.module";
 import {SchedulerDirectivesModule} from "../common/directives";
 import {PermissionsProvider} from '../providers/permissions/permissions';
 import {RolesPageModule} from "../pages/roles/roles.module";
-import {RoleDetailPageModule} from "../pages/role-detail/role-detail.module";
+import {RoleDetailPageModule} from "../pages/role-editor/role-editor.module";
 
 
 let config = {

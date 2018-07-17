@@ -104,6 +104,6 @@ export class RolesPage implements OnInit {
     }
 
     showRoleDetail(role) {
-        this.navCtrl.push('page-role-detail', {role: role})
+        this.navCtrl.push('page-role-editor', {role: role})
     }
 }

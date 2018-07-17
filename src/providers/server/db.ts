@@ -178,6 +178,41 @@ class SchedulerDatabase implements IObjectStore {
         }
     }
 
+    async deleteAllContentFromDatabase(skipOver: string[]) {
+        this.tracker.clearAll();
+
+        // We don't stop replication. The whole point here, is to delete EVERYTHING
+        let theDocs = await this.db.allDocs();
+
+        let deleteCommand = [];
+        for (let doc of theDocs.rows) {
+            // delete the object directly
+            if (doc['id'].startsWith('_design')) {
+                this.logger.info(`Skipped design doc: ${doc['id']}`);
+                continue;
+            }
+            if (doc['id'] && doc['value']) {
+
+                // If it's "us", or our preferences, don't delete
+                if (skipOver.indexOf(doc['id']) != -1) {
+                    this.logger.info(`Skipped ${doc['id']}`);
+                    continue;
+                }
+
+                if (doc['value']['rev']) {
+                    this.logger.info(`delete: ${SWBSafeJSON.stringify(doc)}`);
+                    deleteCommand.push({
+                        _id: doc['id'],
+                        _rev: doc['value']['rev'],
+                        _deleted: true
+                    })
+                }
+            }
+        }
+
+        await this.db.bulkDocs(deleteCommand);
+    }
+
     async destroyDatabase() {
         this.tracker.clearAll();
 

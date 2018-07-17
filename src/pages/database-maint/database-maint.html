@@ -9,7 +9,8 @@
 <ion-content padding *mobxAutorun>
     <button ion-button (tap)="store_fake_data()">Store Fake -> DB</button>
     <button ion-button (tap)="fix_our_emails()">Fix Emails</button>
-    <button ion-button color="danger" (tap)="delete_db()">Delete DB</button>
+    <button ion-button color="danger" (tap)="deleteAllContent()">Delete Content</button>
+    <button ion-button color="danger" (tap)="destroyDb()">Destroy DB</button>
 
     <ion-list-header>DB Info</ion-list-header>
     <ion-list *ngIf="database_info">

@@ -1,0 +1,12 @@
+<ion-header>
+
+  <ion-navbar *ngIf="role">
+    <ion-title>{{role.name}}</ion-title>
+  </ion-navbar>
+</ion-header>
+
+
+<ion-content no-padding *ngIf="role">
+  <ion-list-header color="light">Details</ion-list-header>
+  <role-detail [role]="role" [assignment]="assignment"></role-detail>
+</ion-content>

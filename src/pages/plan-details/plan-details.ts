@@ -34,9 +34,7 @@ export class PlanDetailsPage {
             this.navCtrl.pop();
         } else {
             // for debugging
-            // this.show_assignment(this.plan.people[0]);
-            // console.warn(`Is Observable: ${isObservableObject(this.plan)}`);
-            // console.warn(`Start date: ${this.plan.start_date.toISOString()}`);
+            // this.showAssignment(this.plan.people[0]);
         }
     }
 
@@ -112,7 +110,7 @@ export class PlanDetailsPage {
                 if (uuids.length == 1) {
                     // Kick off UI with this
                     let person = team.findPersonByUUID(uuids[0]);
-                    this.show_assignment(person);
+                    this.showAssignment(person);
                 }
             }
         });
@@ -123,7 +121,7 @@ export class PlanDetailsPage {
         this.plan.remove_person(person);
     }
 
-    show_assignment(person) {
+    showAssignment(person) {
         let assignment = this.plan.get_or_create_assignment_for(person);
         if (assignment) {
             console.log(`Showing assignment for ${assignment.person.name} and plan ${this.plan.name}`);

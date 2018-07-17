@@ -1,15 +1,17 @@
 import {NgModule} from '@angular/core';
 import {IonicPageModule} from 'ionic-angular';
-import {RoleDetailPage} from './role-detail';
+import {RoleEditorPage} from './role-editor';
 import {SchedulerDirectivesModule} from "../../common/directives";
+import {ComponentsModule} from "../../components/components.module";
 
 @NgModule({
     declarations: [
-        RoleDetailPage,
+        RoleEditorPage,
     ],
     imports: [
+        ComponentsModule,
         SchedulerDirectivesModule,
-        IonicPageModule.forChild(RoleDetailPage),
+        IonicPageModule.forChild(RoleEditorPage),
     ],
 })
 export class RoleDetailPageModule {

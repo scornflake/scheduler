@@ -46,7 +46,7 @@
         <ion-searchbar [(ngModel)]="name_filter"></ion-searchbar>
         <ion-list>
             <ion-item-sliding *ngFor="let p of sorted_people">
-                <ion-item (tap)="show_assignment(p)" text-wrap>
+                <ion-item (tap)="showAssignment(p)" text-wrap>
                     <h2>{{p.name}}</h2>
                     <p>{{description_for_person(p)}}</p>
                 </ion-item>

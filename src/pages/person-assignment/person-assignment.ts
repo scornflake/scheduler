@@ -43,6 +43,11 @@ export class PersonAssignmentPage {
     ionViewDidLoad() {
         if (this.assignment == null) {
             this.navCtrl.pop();
+        } else {
+            // // For debugging
+            // if (this.assignment.roles.length > 0) {
+            //     this.role_tapped(this.assignment.roles[0]);
+            // }
         }
     }
 
@@ -63,7 +68,7 @@ export class PersonAssignmentPage {
 
     add_roles_to_alert(alert, input_type = 'checkbox', handler = (r) => {
     }) {
-        let all_roles = this.plan.roles;
+        let all_roles = this.plan.roles.sort();
         for (let r of all_roles) {
             if (input_type == 'button') {
                 alert.addButton({
@@ -114,7 +119,7 @@ export class PersonAssignmentPage {
     }
 
     role_tapped(role: Role) {
-        this.navCtrl.push('page-role-detail', {
+        this.navCtrl.push('page-role-plan-assignment', {
             'assignment': this.assignment,
             'role': role
         });

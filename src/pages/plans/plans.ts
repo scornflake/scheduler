@@ -31,15 +31,15 @@ export class PlansPage {
     }
 
     ionViewDidLoad() {
-        // // for debugging, pop to first page if no plans
-        // if (this.plans.length == 0) {
-        //     this.navCtrl.pop();
-        // } else {
-        //     // // For Debug, show first plan
-        //     // if (this.plans.length) {
-        //     //     this.showPlanDetail(this.plans[0])
-        //     // }
-        // }
+        // for debugging, pop to first page if no plans
+    //     if (this.plans.length == 0) {
+    //         this.navCtrl.pop();
+    //     } else {
+    //         // For Debug, show first plan
+    //         if (this.plans.length) {
+    //             this.showPlanDetail(this.plans[0])
+    //         }
+    //     }
     }
 
     @action addPlan() {

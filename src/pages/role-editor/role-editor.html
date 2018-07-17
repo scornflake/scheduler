@@ -7,14 +7,14 @@
 
 
 <ion-content no-padding *ngIf="role">
-    <ion-list>
+    <ion-list no-margin>
         <ion-item>
             <ion-label stacked>Name</ion-label>
             <ion-input [ngModel]="role.name" (ngModelChange)="role.setName($event)"></ion-input>
         </ion-item>
     </ion-list>
     <ion-list-header color="light">Layout Priority ({{role.layout_priority}})</ion-list-header>
-    <ion-list>
+    <ion-list no-padding>
         <ion-item>
             <ion-range min="0" max="10" [ngModel]="role.layout_priority"
                        (ngModelChange)="role.setLayoutPriority($event)">

@@ -253,7 +253,6 @@ class SchedulerServer implements ILifecycle {
                 });
             });
         }
-        this.logger.info(`!Couch Token: ${this._state.organizationCouchToken}`);
         return this.state;
     }
 
@@ -340,9 +339,6 @@ class SchedulerServer implements ILifecycle {
 
     async asyncRunStartupLifecycleAfterLogin(callback: ILifecycleCallback, timeout: number = Infinity): Promise<boolean> {
         await this.asyncLoadState();
-
-        this.logger.info(`!!Couch Token: ${this._state.organizationCouchToken}`);
-        this.logger.info(`!!!Couch Token: ${this.state.organizationCouchToken}`);
 
         // If no lastOrganizationUUID UUID, loginUser() didn't do its job.
         // Login should validate token, check for Person object locally (direct DB access)
@@ -610,6 +606,17 @@ class SchedulerServer implements ILifecycle {
     @action forceStateReload() {
         this.logger.info(`Forced state to reload by setting to null`);
         this._state = null;
+    }
+
+    async deleteAllContentFromDatabase() {
+        // Clear the in memory store
+        this.store.clear();
+
+        // Untrack all objects and clear the db content
+        // Don't delete the person, their prefs, nor their org.
+        let person = this.store.loggedInPerson;
+        let skip = [person.uuid, person.preferences.uuid, person.organization.uuid, person.availability.uuid];
+        await this.db.deleteAllContentFromDatabase(skip);
     }
 }
 
