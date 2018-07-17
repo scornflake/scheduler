@@ -24,6 +24,7 @@ import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import Database = PouchDB.Database;
 import DatabaseConfiguration = PouchDB.Configuration.DatabaseConfiguration;
 import Options = PouchDB.Core.Options;
+import {Observable} from "rxjs/Observable";
 
 // Put this back in when we move to v7 of Pouch.
 // import plugin from 'pouchdb-adapter-idb';
@@ -581,21 +582,29 @@ class SchedulerDatabase implements IObjectStore {
         this.logger.info(`Done login. Begin sync...`);
 
         // Do a single non-live sync first, to get all the data into our local store.
-        this.db.sync(this.server_db, {retry: true}, () => {
-            this.logger.info(`Initial replication complete`);
-            this.startContinuousReplication();
-            this.lastSeenReplicationStatus = ReplicationStatus.Idle;
-            this.replicationNotifications$.next(this.lastSeenReplicationStatus);
-        }).on('change', (change) => {
-            this.lastSeenReplicationStatus = ReplicationStatus.ProcessingPull;
-            this.saveNotifications$.next(SavingState.FinishedSaving);
-        }).on('denied', (err) => {
-
-        }).on('error', (err) => {
-
-        }).on('complete', (info) => {
-            // this.logger.warn(`NOTIFICATION: Initial replication complete`);
-        });
+        // Wait for this initial sync to complete.
+        await Observable.create(obs => {
+            this.db.sync(this.server_db, {retry: true}, () => {
+                this.logger.info(`Initial replication complete`);
+                this.startContinuousReplication();
+                this.lastSeenReplicationStatus = ReplicationStatus.Idle;
+                this.replicationNotifications$.next(this.lastSeenReplicationStatus);
+                obs.complete();
+            }).on('change', (change) => {
+                this.lastSeenReplicationStatus = ReplicationStatus.ProcessingPull;
+                this.saveNotifications$.next(SavingState.FinishedSaving);
+                obs.next(change);
+            }).on('denied', (err) => {
+                obs.error(err);
+                obs.complete();
+            }).on('error', (err) => {
+                obs.error(err);
+                obs.complete();
+            }).on('complete', (info) => {
+                // this.logger.warn(`NOTIFICATION: Initial replication complete`);
+                obs.complete();
+            });
+        }).toPromise();
     }
 
     private startContinuousReplication() {
