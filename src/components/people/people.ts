@@ -18,8 +18,8 @@ export class PeopleComponent {
     @Output() personAdded = new EventEmitter<Person>();
 
     @observable nameFilter: string = "";
+    @observable inviteMode: boolean;
 
-    @observable inviteMode: boolean = false;
     private selections = new Array<Person>();
 
     constructor(private navCtrl: NavController,
@@ -27,6 +27,7 @@ export class PeopleComponent {
                 private store: RootStore,
                 private server:SchedulerServer,
                 private alertCtrl: AlertController) {
+        this.inviteMode = false;
     }
 
     @computed get sortedPeople(): Array<Person> {

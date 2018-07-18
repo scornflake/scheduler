@@ -18,6 +18,10 @@ import {action, computed, observable} from "mobx-angular";
 import {runInAction} from "mobx";
 import {HttpClient} from "@angular/common/http";
 
+import Faker from "faker";
+import {Person} from "../../scheduling/people";
+import {Availability, AvailabilityEveryNOfM, AvailabilityUnit} from "../../scheduling/availability";
+
 @IonicPage({
     name: 'page-db',
     defaultHistory: ['home']
@@ -167,6 +171,41 @@ export class DatabaseMaintPage implements OnDestroy {
         ];
     }
 
+    @action add100People() {
+        for (let i = 0; i < 100; i++) {
+            let newPerson = new Person();
+            newPerson.setName(Faker.name.findName());
+            newPerson.setEmail(Faker.internet.email());
+            newPerson.setPhone(Faker.phone.phoneNumber());
+            this.store.people.add(newPerson);
+            this.server.savePerson(newPerson).then(() => {
+                this.logger.debug(`saved person: ${newPerson.name}`);
+            });
+        }
+        this.pageUtils.showMessage(`Added 100 people`);
+    }
+
+    @action change100People() {
+        let personManager = this.store.people;
+        for (let i = 0; i < 100; i++) {
+            let editType = Math.round(Math.random() * 4);
+            let randomNum = Math.round(Math.random() * personManager.length);
+            let person = this.store.people.people[randomNum];
+            this.logger.debug(`Make change ${editType} to index ${person.name}`);
+
+            if (editType == 1) {
+                person.setPhone(Faker.phone.phoneNumber());
+            } else if (editType == 2) {
+                person.availability = DatabaseMaintPage.randomAvailability();
+            } else if (editType == 3) {
+                person.setEmail(Faker.internet.email());
+            } else if (editType == 0) {
+                person.preferences.google_sheet_id = Math.random() * 400 + "";
+            }
+        }
+        this.pageUtils.showMessage(`Made 100 edits`);
+    }
+
     @action
     async store_fake_data() {
         if (!this.db) {
@@ -243,5 +282,14 @@ export class DatabaseMaintPage implements OnDestroy {
         NPBCStoreConstruction.asyncFixPeoplesEmail(this.store.people, this.http).then(() => {
             this.pageUtils.showMessage(`fix fixy fix done`);
         }, err => this.pageUtils.showError(err, true))
+    }
+
+    private static randomAvailability() {
+        if (Math.random() > 0.5) {
+            return new Availability(Math.round(Math.random() * 4), AvailabilityUnit.EVERY_N_WEEKS)
+        } else {
+            return new AvailabilityEveryNOfM(Math.round(Math.random() * 3), Math.round(Math.random() * 4));
+        }
+
     }
 }

@@ -21,8 +21,8 @@
             (personAdded)="add_person($event)"
             (delete)="delete_person($event)"></people>
 </ion-content>
-<ion-footer *ngIf="pc.inviteMode">
-    <ion-toolbar>
+<ion-footer *ngIf="pc">
+    <ion-toolbar *ngIf="pc.inviteMode">
         <button ion-button block (tap)="pc.sendInvites()" [disabled]="pc.numPeopleSelected == 0">Send <span
                 *ngIf="pc.numPeopleSelected > 0">&nbsp;{{pc.numPeopleSelected}} invites</span></button>
     </ion-toolbar>
