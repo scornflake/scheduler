@@ -6,10 +6,14 @@ import {observable} from "mobx-angular";
 import {TypedObject} from "../../scheduling/base-types";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {Logger} from "ionic-logging-service";
+import {Observable} from "rxjs/Observable";
+import {filter, flatMap, take, timeout} from "rxjs/operators";
 
 class StoreBasedResolver implements IReferenceResolver {
     private utils: OrmUtils;
     private logger: Logger;
+
+    maxTimeToWaitForReference: number = 5000;
 
     constructor(private loader: IObjectStore,
                 private mapper: OrmMapper) {
@@ -67,6 +71,30 @@ class StoreBasedResolver implements IReferenceResolver {
         return result_map;
     }
 
+    // The polling function
+    private poll(fn, timeout, interval) {
+        let endTime = Number(new Date()) + (timeout || 2000);
+        interval = interval || 100;
+
+        let checkCondition = function (resolve, reject) {
+            // If the condition is met, we're done!
+            let result = fn();
+            if (result) {
+                resolve(result);
+            }
+            // If the condition isn't met but the timeout hasn't elapsed, go again
+            else if (Number(new Date()) < endTime) {
+                setTimeout(checkCondition, interval, resolve, reject);
+            }
+            // Didn't match and too much time, reject!
+            else {
+                reject(new Error('timed out for ' + fn + ': ' + arguments));
+            }
+        };
+        return new Promise(checkCondition);
+    }
+
+
     private assertNewValueNotNull(value: any, ref: ObjectReference) {
         if (value == null) {
             let message = `ObjectNotFound error: Tried to lookup: ${JSON.stringify(ref)}. Not found.`;
@@ -77,6 +105,18 @@ class StoreBasedResolver implements IReferenceResolver {
 
     async async_lookupObjectReference(reference: ObjectReference, nesting: number = 0) {
         let object = await this.loader.async_LoadObjectWithUUID(reference.id, true, nesting);
+        if (object == null && this.maxTimeToWaitForReference > 0) {
+            this.logger.info(`Begin waiting for reference ${SWBSafeJSON.stringify(reference)} to exist...`);
+            object = await Observable.timer(200, 500).pipe(
+                timeout(this.maxTimeToWaitForReference),
+                flatMap(p => {
+                    this.logger.info(`Poll for reference ${SWBSafeJSON.stringify(reference)} to exist...`);
+                    return this.loader.async_LoadObjectWithUUID(reference.id, false, nesting)
+                }),
+                filter(p => p != null),
+                take(1)
+            ).toPromise()
+        }
         this.assertNewValueNotNull(object, reference);
         return object;
     }

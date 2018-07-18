@@ -15,7 +15,7 @@
     <saving-state></saving-state>
 </ion-header>
 
-<ion-content>
+<ion-content *mobxTraceAutorun>
     <people #personlist
             [people]="rootStore.people.all"
             (personAdded)="add_person($event)"

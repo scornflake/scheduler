@@ -2,13 +2,20 @@ TODO
 ====
 - Prefs fails lookup, is nil, when logging in first time
     - Sometimes I login with a known user, with data, and see the wizard pages (no data!)
+        - I think this was a race. Wasn't waiting for the data to be loaded.
     - Think we have to have a way to resolve late/out of order references
 - PlanWizard doesn't work on android
     - text disapears whn entering it
     - NEXT doesn't work on plan page (greyed out)
+- Invites
+    - When a user accepts, there ends up being TWO copies of that user (old login and new?)
+- People Page
+    - Doesn't refresh when an item is deleted by another user.
+    - Or if an item is updated by another user (username, for example)
 - As an admin:
     - I want to see a list of when people are on (on their 'person' page? on the plan page?)
 - How to test all navigation possibilities?
+    - Basically, how to do SOME kind of UI testing?
 - Scheduler should show the next coming date (not the first one)
     - show next, up to an including if next == today
 - Login validation should show only if > 0 chars:

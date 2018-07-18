@@ -663,6 +663,10 @@ class SchedulerDatabase implements IObjectStore {
         this.replicationNotifications$.next(this.lastSeenReplicationStatus);
         this.logger.debug(`Sync started`);
     }
+
+    async storeRawDocs(docs) {
+        return await this.db.bulkDocs(docs);
+    }
 }
 
 export {
