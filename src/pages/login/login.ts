@@ -12,6 +12,8 @@ import {Subscription} from "rxjs/Subscription";
 import {ServerError} from "../../common/interfaces";
 import "rxjs/add/observable/timer";
 import {Organization} from "../../scheduling/organization";
+import {Storage} from '@ionic/storage';
+import {runInAction} from "mobx";
 
 enum LoginPageMode {
     LoginOrCreate = 0,
@@ -50,6 +52,7 @@ class LoginPage implements AfterViewInit {
                 protected alertCtrl: AlertController,
                 protected logService: LoggingService,
                 protected server: SchedulerServer,
+                protected storage: Storage,
                 protected formBuilder: FormBuilder,
                 protected pageUtils: PageUtils,
                 protected loadingCtrl: LoadingController) {
@@ -59,6 +62,12 @@ class LoginPage implements AfterViewInit {
     }
 
     ngAfterViewInit(): void {
+        this.storage.get('last.login.email').then(v => {
+            runInAction(() => {
+                this.registrationEmail = v;
+            });
+        });
+
         this.firstSwitch = true;
         if (this.isCreateAccount) {
             this.switchToCreate();
@@ -79,6 +88,7 @@ class LoginPage implements AfterViewInit {
 
     @action setRegistrationEmail(value: string) {
         this.registrationEmail = value;
+        this.storage.set('last.login.email', value);
     }
 
     validateUsernameUsable(control: AbstractControl): Observable<ValidationErrors> {

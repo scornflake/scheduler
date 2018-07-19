@@ -47,6 +47,11 @@ export class InviteResponse {
     expires: string;
 }
 
+export class MoveResponse {
+    ok: boolean;
+    detail: string;
+}
+
 export declare type FieldErrors = {
     key: string;
     errors: string[];

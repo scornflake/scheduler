@@ -1,11 +1,7 @@
 TODO
 ====
-- Prefs fails lookup, is nil, when logging in first time
-    - Sometimes I login with a known user, with data, and see the wizard pages (no data!)
-        - I think this was a race. Wasn't waiting for the data to be loaded.
-    - Think we have to have a way to resolve late/out of order references
 - PlanWizard doesn't work on android
-    - text disapears whn entering it
+    - text disappears whn entering it
     - NEXT doesn't work on plan page (greyed out)
 - Invites
     - When a user accepts, there ends up being TWO copies of that user (old login and new?)
@@ -16,8 +12,10 @@ TODO
     - I want to see a list of when people are on (on their 'person' page? on the plan page?)
 - How to test all navigation possibilities?
     - Basically, how to do SOME kind of UI testing?
-- Scheduler should show the next coming date (not the first one)
-    - show next, up to an including if next == today
+- Scheduler should
+    - show the next coming date (not the first one)
+        - show next, up to an including if next == today
+    - Allow me to quickly find when someone is on (Jo called mentioned dates, I went to the SS instead cos I could see it. Want to make my default action the app/site)
 - Login validation should show only if > 0 chars:
     - don't show 'email should be valid' if nothing typed in
     - don't show 'email should be valid' or 'password blah' until first 'login' is pressed
@@ -52,6 +50,17 @@ TODO
     - DB (of production)
     - Per org?
 - DB isn't showing an up to date version of info. Should reload this on page reload?
+
+
+Awaiting Confirmation
+=====================
+- Prefs fails lookup, is nil, when logging in first time
+    - Sometimes I login with a known user, with data, and see the wizard pages (no data!)  [done]
+        - I think this was a race. Wasn't waiting for the data to be loaded.  [done]
+    - Think we have to have a way to resolve late/out of order references [done]
+        - Added ability to wait for data to arrive during resolution. Havn't seen bug again yet.
+
+
 
 Performance / Deployment
 ========================

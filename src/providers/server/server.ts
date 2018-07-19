@@ -220,7 +220,7 @@ export class RESTServer {
         };
         try {
             let url = this.server_url(`move/`);
-            await this.http.post(url, moveCommand, this.options).toPromise();
+            return await this.http.post(url, moveCommand, this.options).toPromise();
         } catch (e) {
             throw new ServerError(e);
         }

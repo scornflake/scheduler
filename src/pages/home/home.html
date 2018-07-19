@@ -28,7 +28,7 @@
 <ion-content>
     <div *ngIf="store.uiStore$|async as ui; else notSignedIn">
         <div *ngIf="server">
-            <div *ngIf="server.loggedIn; else notSignedIn">
+            <div *ngIf="server.isLoggedIn; else notSignedIn">
                 <div class="loading" *ngIf="!server.isReady; else main">
                     <ion-spinner [duration]="1000"></ion-spinner>
                 </div>

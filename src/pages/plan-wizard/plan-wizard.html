@@ -25,7 +25,7 @@
                         <ion-list>
                             <ion-item>
                                 <ion-label stacked>Plan Name</ion-label>
-                                <ion-input autofocus [(ngModel)]="planName"></ion-input>
+                                <ion-input autofocus [ngModel]="planName" (ngModelChange)="setPlanName($event)"></ion-input>
                             </ion-item>
                             <ion-item>
                                 <ion-label stacked>Start Date</ion-label>

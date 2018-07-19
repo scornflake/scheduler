@@ -36,9 +36,18 @@ export class NotificationsComponent {
         // we have to have this user IN the other org.
         // we log them out? then log them in...  this will reload the DB with the new org data.
 
+        if(!this.server.isOnline) {
+            this.pageUtils.showError('Must be online to accept an invite');
+            return;
+        }
+
         this.pageUtils.areYouSure("Please confirm", "Accept", () => {
-            // first, delete this invite from the DB
+            // TODO: Show a progress indicator here. Or flip to a page. SOMETHING.
+
+            // Delete this invite from the DB (it's accepted, after all)
             this.store.loggedInPerson.removeInvitesMatching(invite);
+
+            // Wait for replication to quieten, then move the user
             this.server.waitForReplicationToQuietenDown(this.server.db).then(() => {
                 this.logger.info('Moving person to new organization...');
                 this.server.movePersonToOrganization(invite.organizationUUID).then(() => {

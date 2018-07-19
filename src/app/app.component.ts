@@ -55,7 +55,7 @@ export class MyApp {
 
     @computed get loggedIn(): boolean {
         if (this.server) {
-            return this.server.loggedIn;
+            return this.server.isLoggedIn;
         }
         return false;
     }

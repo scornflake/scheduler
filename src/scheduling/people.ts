@@ -147,6 +147,16 @@ class Person extends NamedObject {
         return "";
     }
 
+    @computed get firstName() {
+        if (this.name != null) {
+            let words = this.name.split(" ");
+            if(words.length > 0) {
+                return words[0];
+            }
+        }
+        return this.name;
+    }
+
     @action addUnavailable(d: Date, reason = null): Unavailability {
         let unavailability = new Unavailability(d, null, reason);
         return this._add_unavail(unavailability);

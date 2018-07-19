@@ -3,7 +3,7 @@
         <ion-title>
             Your People
         </ion-title>
-        <ion-buttons end>
+        <ion-buttons end *ngIf="pc">
             <button ion-button icon-only (tap)="pc.addNewPerson()">
                 <ion-icon name="add"></ion-icon>
             </button>

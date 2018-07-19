@@ -85,13 +85,17 @@ class SchedulerServer implements ILifecycle {
         return !this.lifecycleRunning;
     }
 
-    @computed get loggedIn(): boolean {
+    @computed get isLoggedIn(): boolean {
         // atm: this is cleared if a validate login gets 'bad'
         // TODO: Adjust for true offline case.
         if (this.state) {
             return this.state.loginToken != null;
         }
         return false;
+    }
+
+    @computed get isOnline(): boolean {
+        return this.connectivity.isOnline;
     }
 
     raiseExceptionIfNotOnline(method: string) {

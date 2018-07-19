@@ -56,6 +56,10 @@ export class PlanWizardPage extends WizardPage {
         // this.roleSetName = "Music";
     }
 
+    @action setPlanName(name: string) {
+        this.planName = name;
+    }
+
     ionViewDidLoad(): void {
         super.ionViewDidLoad();
         if (this.store.loggedInPerson == null) {
