@@ -84,7 +84,7 @@ class SchedulerServer implements ILifecycle, IReplicationNotification {
 
     raiseExceptionIfNotOnline(method: string) {
         if (!this.connectivity.isOnline) {
-            throw new Error(`Cannot perform operation ${method}, we are not online`);
+            throw new ServerError(`Cannot perform operation ${method}, we are not online`);
         }
     }
 

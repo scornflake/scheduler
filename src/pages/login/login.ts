@@ -187,9 +187,7 @@ class LoginPage implements AfterViewInit {
         let text = error;
         if (error instanceof ServerError) {
             text = error.allErrors;
-        }
-
-        if (typeof(error) === 'object') {
+        } else if (typeof(error) === 'object') {
             text = JSON.stringify(error);
         }
 

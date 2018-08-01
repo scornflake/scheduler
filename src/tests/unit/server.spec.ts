@@ -22,7 +22,6 @@ describe('scheduler server', () => {
     let server: SchedulerServer;
     let store: RootStore;
     let restMock: RESTServer;
-    let restServer: RESTServer;
     let storageMock: Storage;
     let mapper: OrmMapper;
     let db: SchedulerDatabase;
@@ -61,7 +60,7 @@ describe('scheduler server', () => {
         };
 
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
-        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, "1234", mapper).then(new_db => {
+        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, null, mapper).then(new_db => {
             db = new_db;
             server = new SchedulerServer(
                 store,
@@ -140,7 +139,7 @@ describe('scheduler server', () => {
                 console.info(`test received reason: ${reason}`);
                 showedLoginPage = true;
             },
-            showCreateOrInvitePage: (reason => {
+            showCreateOrInvitePage: (() => {
             }),
             applicationHasStarted: () => {
             },
@@ -240,6 +239,7 @@ describe('scheduler server', () => {
             server.asyncRunStartupLifecycle(lifecycleCallback, 1500).then(() => {
                 expect(showedLoginPage).toBeFalsy("should not show login page");
                 expect(lastShownError).toMatch(/1334/);
+                done();
             });
         }, 3000);
 

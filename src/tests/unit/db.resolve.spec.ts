@@ -1,27 +1,8 @@
 import {SchedulerDatabase} from "../../providers/server/db";
 import {Person} from "../../scheduling/people";
-import {ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
-import {MockConfigurationService} from "../../app/logging-configuration";
-import {observable} from "mobx";
-import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {scheduler_db_map} from "../../assets/db.mapping";
-import {
-    ClassFieldMapping,
-    ClassMapping,
-    MappingType,
-    PropertyHint,
-    PropertyMapping
-} from "../../providers/mapping/orm-mapper-type";
-import {Team} from "../../scheduling/teams";
-import {csd} from "../../scheduling/common/date-utils";
-import {GetTheTypeNameOfTheObject, OrmMapper} from "../../providers/mapping/orm-mapper";
-import {OrmConverter} from "../../providers/server/orm-converter";
-import {Plan} from "../../scheduling/plan";
-import {CleanupDefaultRoles, defaultComputerRole, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
+import {OrmMapper} from "../../providers/mapping/orm-mapper";
 import {IObjectCache, SimpleCache} from "../../providers/mapping/cache";
-import {Role} from "../../scheduling/role";
-import {Availability, AvailabilityUnit} from "../../scheduling/availability";
-import {Assignment} from "../../scheduling/assignment";
 
 describe('db lookups', () => {
     let db: SchedulerDatabase;
@@ -36,7 +17,7 @@ describe('db lookups', () => {
         mapper.addConfiguration(scheduler_db_map);
 
         let randomDBName = `tests-${Math.random().toString(36).substring(7)}-db`;
-        SchedulerDatabase.ConstructAndWait(randomDBName, "1234", mapper).then(new_db => {
+        SchedulerDatabase.ConstructAndWait(randomDBName, null, mapper).then(new_db => {
             db = new_db;
             db.setCache(cache);
             done();
@@ -103,7 +84,7 @@ describe('db lookups', () => {
             }
 
             // Now, try to lookup the person.
-            db.async_LoadObjectWithUUID(person.uuid).then(p => {
+            db.async_LoadObjectWithUUID(person.uuid).then(() => {
                 done();
             });
 

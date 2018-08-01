@@ -128,6 +128,9 @@ export class ServerError {
                 all += err.errors.join(", ");
             }
         }
+        if(all.length == 0) {
+            return this.originalError;
+        }
         return all;
     }
 

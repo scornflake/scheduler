@@ -11,7 +11,6 @@ import {
     ScheduleOn,
     TryToScheduleWith
 } from "../../scheduling/rule_based/rules";
-import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {csd} from "../../scheduling/common/date-utils";
 import {Team} from "../../scheduling/teams";
 import {Plan} from "../../scheduling/plan";
@@ -64,7 +63,7 @@ describe('app based tests', () => {
 
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 1500;
 
-        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, "1234", mapper).then(new_db => {
+        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, null, mapper).then(new_db => {
             db = new_db;
             db.setCache(cache);
 

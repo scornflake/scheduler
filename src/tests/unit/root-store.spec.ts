@@ -30,7 +30,7 @@ describe('root store', () => {
         plan = new Plan('Pin a tail on it', team);
 
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 4000;
-        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, "1234", mapper).then(new_db => {
+        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, null, mapper).then(new_db => {
             db = new_db;
             db.setCache(cache);
             store = new RootStore(null);

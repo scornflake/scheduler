@@ -32,7 +32,7 @@
                     Force 'offline'
                     <p class="crowded">Force the app to think its offline</p>
                 </ion-label>
-                <ion-toggle [(ngModel)]="netUtil.overrideEnabled"></ion-toggle>
+                <ion-toggle [ngModel]="netUtil.overrideEnabled" (ngModelChange)="netUtil.setOverrideEnabled($event)"></ion-toggle>
             </ion-item>
             <ion-item>
                 <ion-label>Network Type</ion-label>
