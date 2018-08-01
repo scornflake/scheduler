@@ -16,6 +16,7 @@ import {ConnectivityService} from "../../common/network/connectivity";
 import {StateProvider} from "../../providers/state/state";
 import {IState} from "../../providers/state/state.interface";
 import {AuthorizationService} from "../../providers/token/authorization.service";
+import {HttpErrorResponse} from "@angular/common/http";
 
 describe('scheduler server', () => {
     let server: SchedulerServer;
@@ -54,7 +55,6 @@ describe('scheduler server', () => {
             email: 'me@there.com',
             uuid: '123345',
             organization_uuid: null,
-            organization_token: null,
             first_name: 'neil',
             last_name: 'me',
             is_active: true
@@ -184,11 +184,11 @@ describe('scheduler server', () => {
             };
 
             storageMock = StorageMock.instance('state', state);
-            when(authMock.isAuthenticatedAndNotExpired()).thenReturn(false);
+            when(restMock.getOwnUserDetails()).thenReject(new HttpErrorResponse({status: 401, error: 'expired'}));
 
             server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
                 expect(showedLoginPage).toBeTruthy();
-                verify(authMock.isAuthenticatedAndNotExpired()).called();
+                verify(restMock.getOwnUserDetails()).called();
                 done();
             });
         });

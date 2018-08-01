@@ -22,7 +22,6 @@ export class UserResponse {
     last_name: string;
     uuid: string;
     organization_uuid: string;
-    organization_token: string;
 }
 
 export class RoleResponse {

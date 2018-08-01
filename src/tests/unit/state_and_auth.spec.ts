@@ -48,7 +48,6 @@ describe('auth and state tests', () => {
         last_name: "scud",
         uuid: "12345678sd--sd",
         organization_uuid: "org-scud-missile",
-        organization_token: "I am a token gesture"
     };
 
     beforeEach(async(() => {

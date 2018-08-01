@@ -195,16 +195,11 @@ class SchedulerServer implements ILifecycle, IReplicationNotification {
                 // Simply access our own user record.
                 // That's enuf to force token refresh
 
-                // NOT checking for expiry.
+                // NOT checking for token expiry.
                 // Because: it'll expire in 15m, but could be refreshed fine.
                 //
                 // So, just let it fall through to a real operation
                 //
-                // if (!this.auth.isAuthenticatedAndNotExpired()) {
-                //     this.logger.debug('asyncRunStartupLifecycle', `Login token null/invalid, show login page`);
-                //     callback.showLoginPage(`Login token null/invalid`);
-                //     return false;
-                // }
 
                 try {
                     await this.restAPI.getOwnUserDetails();
