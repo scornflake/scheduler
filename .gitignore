@@ -14,3 +14,4 @@ build
 platforms
 .gradle
 report.xml
+karma_html

@@ -64,7 +64,7 @@ describe('rules', () => {
         state.place_person_in_role(neil_assign, defaultSoundRole, next_date);
 
         let dates = state.schedule_dates;
-        console.log("Have: " + SWBSafeJSON.stringify(dates));
+        // console.log("Have: " + SWBSafeJSON.stringify(dates));
         for (let schedule of dates) {
             console.log(`${schedule.date.toDateString()} - ${schedule.valueOf()}`);
         }

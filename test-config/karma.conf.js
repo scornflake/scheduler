@@ -103,7 +103,7 @@ module.exports = function (config) {
             terminal: true
         },
 
-        reporters: ['progress', 'junit'],
+        reporters: ['progress', 'junit', 'html'],
         port: 9876,
         colors: true,
         logLevel: config.LOG_INFO,

@@ -20,7 +20,6 @@ export class UserResponse {
     is_active: boolean;
     first_name: string;
     last_name: string;
-    logintoken: string;
     uuid: string;
     organization_uuid: string;
     organization_token: string;
@@ -95,7 +94,7 @@ export class ServerError {
     }
 
     get message(): string {
-        if(this.isHTTPServerNotThere) {
+        if (this.isHTTPServerNotThere) {
             return "Cannot talk to server. Oh no!"
         }
         return this.returnNamedField('message')
@@ -138,10 +137,15 @@ export class ServerError {
     }
 }
 
+export class RefreshResponse {
+    token: string;
+}
+
 export class LoginResponse implements ValidationResponse {
-    user?: UserResponse;
     ok: boolean;
     detail: string;
+    user?: UserResponse;
+    token: string;
 
     constructor(ok: boolean = true, reason: string = "", user: UserResponse = null) {
         this.ok = ok;

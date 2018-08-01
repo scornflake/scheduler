@@ -40,6 +40,9 @@ import {SchedulerDirectivesModule} from "../common/directives";
 import {PermissionsProvider} from '../providers/permissions/permissions';
 import {RolesPageModule} from "../pages/roles/roles.module";
 import {RoleDetailPageModule} from "../pages/role-editor/role-editor.module";
+import {EndpointsProvider} from '../providers/endpoints/endpoints';
+import {loadStateAsPromise, StateProvider} from '../providers/state/state';
+import {JWTAPIModule} from "../providers/token/jwt-api.module";
 
 
 let config = {
@@ -85,7 +88,8 @@ export function ResponsiveDefinition() {
         ResponsiveModule,
         TeamWizardPageModule,
         PlanWizardPageModule,
-        SchedulerDirectivesModule
+        SchedulerDirectivesModule,
+        JWTAPIModule,
     ],
     bootstrap: [IonicApp],
     entryComponents: [
@@ -104,14 +108,22 @@ export function ResponsiveDefinition() {
             deps: [ConfigurationService],
             multi: true
         },
+        {
+            provide: APP_INITIALIZER,
+            useFactory: loadStateAsPromise,
+            deps: [StateProvider],
+            multi: true
+        },
         StatusBar,
         Network,
         SplashScreen,
         RootStore,
         SchedulerServer,
+        StateProvider,
         ConfigurationService,
         {provide: ErrorHandler, useClass: IonicErrorHandler},
         PageUtils,
+        EndpointsProvider,
         LoggingService,
         NativePageTransitions,
         ConnectivityService,
@@ -121,7 +133,7 @@ export function ResponsiveDefinition() {
             provide: ResponsiveConfig,
             useFactory: ResponsiveDefinition
         }],
-    PermissionsProvider
+        PermissionsProvider,
     ]
 })
 

@@ -1,6 +1,6 @@
 import {RootStore} from "../../store/root";
 import {RESTServer} from "./server";
-import {LoginResponse, RoleSetResponse, ServerError, UserResponse, ValidationResponse} from "../../common/interfaces";
+import {LoginResponse, RoleSetResponse, ServerError} from "../../common/interfaces";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
@@ -12,37 +12,25 @@ import {ReplicationStatus, SchedulerDatabase} from "./db";
 import {ObjectWithUUID} from "../../scheduling/base-types";
 import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
-import {action, computed, observable} from "mobx-angular";
+import {action, computed} from "mobx-angular";
 import {Storage} from '@ionic/storage';
 import {OrmMapper} from "../mapping/orm-mapper";
 import {catchError, debounceTime, filter, flatMap, map, take, timeout} from "rxjs/operators";
 import {ConfigurationService} from "ionic-configuration-service";
 import "rxjs/add/observable/fromPromise";
 import "rxjs/add/observable/interval";
-import {isDefined} from "ionic-angular/util/util";
-import {reaction, runInAction} from "mobx";
 import {ILifecycle, ILifecycleCallback} from "./interfaces";
 import {Subscription} from "rxjs/Subscription";
 import {ConnectivityService} from "../../common/network/connectivity";
 import {Team} from "../../scheduling/teams";
 import {Plan} from "../../scheduling/plan";
 import {Role} from "../../scheduling/role";
-
-const STATE_ROOT = 'state';
-
-interface IState {
-    loginToken: string;
-    lastPersonUUID: string;
-    lastOrganizationUUID: string;
-    organizationCouchToken: string;
-    isForcedOffline: boolean;
-}
+import {StateProvider} from "../state/state";
+import {AuthorizationService} from "../token/authorization.service";
 
 @Injectable()
 class SchedulerServer implements ILifecycle {
     private logger: Logger;
-    @observable private _state: IState;
-    private _previousState: IState;
 
     private dbSubject: Subject<SchedulerDatabase>;
     private _db: SchedulerDatabase;
@@ -51,7 +39,8 @@ class SchedulerServer implements ILifecycle {
 
     constructor(@Inject(forwardRef(() => RootStore)) private store,
                 private restAPI: RESTServer,
-                private storage: Storage,
+                private auth: AuthorizationService,
+                private state: StateProvider,
                 private connectivity: ConnectivityService,
                 private ormMapper: OrmMapper,
                 private configurationService: ConfigurationService
@@ -75,9 +64,9 @@ class SchedulerServer implements ILifecycle {
         return this._db;
     }
 
-    get state(): IState {
-        return this._state;
-    }
+    // get state(): IState {
+    //     return this._state;
+    // }
 
     get isReady(): boolean {
         // ready to show stuff?
@@ -85,11 +74,11 @@ class SchedulerServer implements ILifecycle {
         return !this.lifecycleRunning;
     }
 
-    @computed get isLoggedIn(): boolean {
+    get isLoggedIn(): boolean {
         // atm: this is cleared if a validate login gets 'bad'
         // TODO: Adjust for true offline case.
         if (this.state) {
-            return this.state.loginToken != null;
+            return this.state.isLoggedIn;
         }
         return false;
     }
@@ -105,20 +94,11 @@ class SchedulerServer implements ILifecycle {
     }
 
     async loginUser(username: string, password: string): Promise<LoginResponse> {
-        this.logger.info(`Requesting user info from server: ${username}`);
-        await this.asyncLoadState();
-
         this.raiseExceptionIfNotOnline('loginUser');
 
         try {
-            let res: LoginResponse = await this.restAPI.login(username, password);
-            this.setLoginTokenFromUserResponse(res.ok, res.user || null);
-
-            // as far as people + orgs existing in the DB
-            // we rely on replication to set that up.
-            // Initial people/org is done on the server. it's expected that first
-            // time replication brings that data to the client
-            return res;
+            this.logger.info(`Logging in user: ${username}`);
+            return await this.auth.login(username, password).toPromise();
         } catch (err) {
             throw new ServerError(err);
         }
@@ -126,57 +106,31 @@ class SchedulerServer implements ILifecycle {
 
     @action
     async asyncLogout(clearToken: boolean = true) {
-        this.state.lastOrganizationUUID = null;
-        this.state.lastPersonUUID = null;
-        this.state.organizationCouchToken = null;
-
+        this.state.logout();
         if (clearToken) {
-            this.state.loginToken = null;
+            this.state.clearTokens();
         }
 
         this.store.logout();
-        this._previousState = undefined;
-        await this.asyncSaveState().then(() => {
+        await this.state.asyncSaveState().then(() => {
             this.logger.info(`User logged out, state saved.`);
         });
     }
 
-    @action setLoginTokenFromUserResponse(good: boolean, user: UserResponse = null) {
-        let uiStore = this.store.ui_store;
-
-        if (good) {
-            this.logger.info(`Login: set login token to ${user.logintoken || ''}, last person to: ${user.uuid || ''}`);
-            this.restAPI.loginToken = user.logintoken;
-            this.state.loginToken = user.logintoken;
-            this.state.lastPersonUUID = user.uuid;
-            this.state.lastOrganizationUUID = user.organization_uuid;
-            this.state.organizationCouchToken = user.organization_token;
-        } else {
-            this.restAPI.loginToken = null;
-            this.state.loginToken = null;
-            this.state.lastPersonUUID = null;
-            this.state.lastOrganizationUUID = null;
-            this.state.organizationCouchToken = null;
-            this.logger.info(`Login: Clearing state token/uuid because login not OK`);
-        }
-        uiStore.setLoginTokenValidated(good);
-    }
-
-    @action
-    async validateLoginToken(token: string): Promise<ValidationResponse> {
-        // If no 'person uuid', need to login
-        await this.asyncLoadState();
-        this.logger.info(`Validating login token: ${SWBSafeJSON.stringify(token)}`);
-
-        this.raiseExceptionIfNotOnline('validateLoginToken');
-        try {
-            let vr = await this.restAPI.validateLoginToken(token);
-            this.setLoginTokenFromUserResponse(vr.ok, vr.user);
-            return vr;
-        } catch (e) {
-            throw new ServerError(e);
-        }
-    }
+    // @action
+    // async validateLoginToken(token: string): Promise<ValidationResponse> {
+    //     // If no 'person uuid', need to login
+    //     this.logger.info(`Validating login token: ${SWBSafeJSON.stringify(token)}`);
+    //
+    //     this.raiseExceptionIfNotOnline('validateLoginToken');
+    //     try {
+    //         let vr = await this.restAPI.validateLoginToken(token);
+    //         this.state.setLoginTokenFromLoginResponse(vr.ok, vr);
+    //         return vr;
+    //     } catch (e) {
+    //         throw new ServerError(e);
+    //     }
+    // }
 
     async hasEmailBeenConfirmed(email: string): Promise<boolean> {
         this.raiseExceptionIfNotOnline('hasEmailBeenConfirmed');
@@ -227,61 +181,6 @@ class SchedulerServer implements ILifecycle {
         return await this._db.async_LoadObjectWithUUID(uuid, useCache) as T;
     }
 
-    async asyncLoadState(): Promise<object> {
-        if (this._state == null) {
-            this.logger.info(`Loading state because _state is null...`);
-            let newState = await this.storage.get(STATE_ROOT) || {
-                lastPersonUUID: null,
-                lastOrganizationUUID: null,
-                loginToken: null,
-                isForcedOffline: false,
-            };
-
-            runInAction(() => {
-                this._state = newState;
-                this.logger.info(`Set state to: ${JSON.stringify(this._state)}`);
-            });
-
-            this.logger.debug(`Loading state... ${JSON.stringify(this._state)}`);
-
-            // Restore current state to the object
-            this.connectivity.setOverrideEnabled(this.state.isForcedOffline);
-
-            // Listen to the connectivity service. If the flag to force it changes, save that here.
-            reaction(() => {
-                return this.connectivity.overrideEnabled;
-            }, (value) => {
-                this._state.isForcedOffline = value;
-                this.asyncSaveState().then(() => {
-                    this.logger.debug(`Saved state because 'forced' flag changed`);
-                });
-            });
-        }
-        return this.state;
-    }
-
-    private async asyncSaveState() {
-        await this.storage.set(STATE_ROOT, this._state);
-    }
-
-    hasStateChangedSinceLastLifecycleRun(): boolean {
-        let areSet = isDefined(this._previousState) && isDefined(this._state);
-        if (areSet) {
-            // Only want to compare some fields, not all
-            let orgSame = this._state.lastOrganizationUUID == this._previousState.lastOrganizationUUID;
-            let personSame = this._state.lastPersonUUID == this._previousState.lastPersonUUID;
-            let tokenSame = this._state.loginToken == this._previousState.loginToken;
-            if (orgSame && personSame && tokenSame) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    captureStateAsPrevious() {
-        this._previousState = Object.assign({}, this._state);
-    }
-
     /*
     Basic idea is that you ALWAYS call this back (after login, validate, etc).
     This method is the one thing that does setup, in order.
@@ -294,44 +193,50 @@ class SchedulerServer implements ILifecycle {
      - check for valid person/uuid, and wait for these to 'exist' in the db (think: time taken for first replication)
      */
     async asyncRunStartupLifecycle(callback: ILifecycleCallback, timeout: number = Infinity): Promise<boolean> {
-        await this.asyncLoadState();
         this.lifecycleRunning = true;
 
         try {
             // If the state is the same, do nothing. As nothing has changed.
-            if (this.hasStateChangedSinceLastLifecycleRun() === false) {
+            if (this.state.hasStateChangedSinceLastLifecycleRun() === false) {
                 this.logger.info('asyncRunStartupLifecycle', 'Ignored - the state hasnt changed');
                 return;
             }
 
-            if (!this.state.loginToken) {
-                this.logger.debug('asyncRunStartupLifecycle', `Login token null, show login page`);
-                callback.showLoginPage(`Login token null`);
-                return false;
-            }
+            // If we are offline, we can check the token for expiry.
+            // But then, we need to be online to refresh it.
+            // So. Um. For now, do nothing?
 
             // Are we online? can we validate?
             if (this.connectivity.isOnline) {
+                //
+                // Tokens, tokens, tokens.
+                //
+                // Quick check here to see if token is OK/needs refresh
+                // Simply access our own user record.
+                // That's enuf to force token refresh
+
+                // Check login token expiry.
+                // No check for authenticity at this point (we don't have the secret)
+                if (!this.auth.isAuthenticatedAndNotExpired()) {
+                    this.logger.debug('asyncRunStartupLifecycle', `Login token null/invalid, show login page`);
+                    callback.showLoginPage(`Login token null/invalid`);
+                    return false;
+                }
+
                 try {
-                    let vr = await this.validateLoginToken(this.state.loginToken);
-                    if (!vr.ok) {
-                        this.logger.debug('asyncRunStartupLifecycle', `Login token invalid, show login page`);
-                        callback.showLoginPage(`Login token invalid: ${SWBSafeJSON.stringify(vr)}`);
-                        return false;
-                    }
+                    await this.restAPI.getOwnUserDetails();
                 } catch (err) {
                     if (err instanceof ServerError) {
                         if (err.isHTTPServerNotThere) {
                             this.logger.warn(`Assume server is toast (got back: ${err}`);
-                            // fall through and continue
-                        } else {
-                            callback.showError(err);
                         }
+                    } else if (this.auth.isTokenExpiryException(err)) {
+                        callback.showLoginPage(`Login token invalid: ${SWBSafeJSON.stringify(err)}`);
+                        return false;
                     } else {
                         callback.showError(err);
                     }
                 }
-
             } else {
                 this.logger.warn(`We're offline. We have a token and we're gonna assume it is OK.`);
             }
@@ -342,12 +247,11 @@ class SchedulerServer implements ILifecycle {
     }
 
     async asyncRunStartupLifecycleAfterLogin(callback: ILifecycleCallback, timeout: number = Infinity): Promise<boolean> {
-        await this.asyncLoadState();
 
         // If no lastOrganizationUUID UUID, loginUser() didn't do its job.
         // Login should validate token, check for Person object locally (direct DB access)
         // and also set this.state.lastPersonUUID and this.state.lastOrganizationUUID
-        let theState = this.state;
+        let theState = this.state.state;
         if (theState.lastOrganizationUUID == null) {
             this.logger.debug('asyncRunStartupLifecycle', `lastOrganizationUUID nil, show login page`);
             callback.showLoginPage(`lastOrganizationUUID is nil on server.state`);
@@ -356,11 +260,6 @@ class SchedulerServer implements ILifecycle {
         if (theState.lastPersonUUID == null) {
             this.logger.debug('asyncRunStartupLifecycle', `lastPersonUUID nil, show login page`);
             callback.showLoginPage(`lastPersonUUID is nil on server.state`);
-            return false;
-        }
-        if (theState.organizationCouchToken == null) {
-            this.logger.debug('asyncRunStartupLifecycle', `organizationCouchToken nil, show login page`);
-            callback.showLoginPage(`organizationCouchToken is nil (${JSON.stringify(theState)}) on server.state`);
             return false;
         }
 
@@ -374,8 +273,8 @@ class SchedulerServer implements ILifecycle {
             allGood = false;
         }
 
-        this.captureStateAsPrevious();
-        await this.asyncSaveState();
+        this.state.captureStateAsPrevious();
+        await this.state.asyncSaveState();
         callback.applicationHasStarted(allGood);
         return allGood;
     }
@@ -399,9 +298,10 @@ class SchedulerServer implements ILifecycle {
     }
 
     private async setupDBFromState(callback: ILifecycleCallback, responseTimeout: number = Infinity) {
-        let organizationUUID = this.state.lastOrganizationUUID;
-        let personUUID = this.state.lastPersonUUID;
-        let organizationToken = this.state.organizationCouchToken;
+        let iState = this.state.state;
+        let organizationUUID = iState.lastOrganizationUUID;
+        let personUUID = iState.lastPersonUUID;
+        let jwtToken = this.state.loginToken;
 
         if (!organizationUUID) {
             throw new Error(`Cannot setup DB undefined/null organization. organizationUUID is required`);
@@ -409,13 +309,14 @@ class SchedulerServer implements ILifecycle {
         if (!personUUID) {
             throw new Error(`Cannot setup DB undefined/null person. personUUID is required`);
         }
-        if (!organizationToken) {
-            throw new Error(`Cannot setup DB. organizationToken is required (all DB access needs a user/login)`);
+        if (!jwtToken) {
+            throw new Error(`Cannot setup DB. jwtToken is required (all DB access needs a token)`);
         }
 
         this.logger.info('setupDBFromState', `Beginning DB setup for person:${personUUID} and org:${organizationUUID}`);
         let name = Organization.dbNameFor(organizationUUID);
-        let newDb = new SchedulerDatabase(name, organizationToken, this.ormMapper);
+
+        let newDb = new SchedulerDatabase(name, jwtToken, this.ormMapper);
 
         // Clear logged in person and any other 'db dependent' state
         // This should cause the various subjects on RootStore to fire, hopefully with nulls
@@ -488,7 +389,6 @@ class SchedulerServer implements ILifecycle {
         } else {
             throw new Error(`Object with UUID ${personUUID} was loaded, but it's not an instance of Person! It's: ${SWBSafeJSON.stringify(person)}`);
         }
-
     }
 
     async asyncWaitForDBToContainObjectWithUUID(uuid, newDb, responseTimeout: number): Promise<ObjectWithUUID> {
@@ -607,11 +507,6 @@ class SchedulerServer implements ILifecycle {
         await this.restAPI.movePersonToOrganization(person, organizationUUID);
     }
 
-    @action forceStateReload() {
-        this.logger.info(`Forced state to reload by setting to null`);
-        this._state = null;
-    }
-
     async deleteAllContentFromDatabase() {
         // Clear the in memory store
         this.store.clear();
@@ -626,6 +521,4 @@ class SchedulerServer implements ILifecycle {
 
 export {
     SchedulerServer,
-    IState,
-
 }

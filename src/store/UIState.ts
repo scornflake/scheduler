@@ -14,7 +14,6 @@ class UIStore {
     @observable selected_role: Role;
 
     @observable signed_in_to_google: boolean;
-    @observable login_token_validated: boolean;
 
     // Set by SchedulerServer as part of startuplifecycle
     @observable private _loggedInPerson: Person;
@@ -25,13 +24,8 @@ class UIStore {
     private logger: Logger;
 
     constructor() {
-        this.login_token_validated = false;
         this.signed_in_to_google = false;
         this.logger = LoggingWrapper.getLogger('store.ui');
-    }
-
-    @action setLoginTokenValidated(flag: boolean) {
-        this.login_token_validated = flag;
     }
 
     @computed get selectedPlan(): Plan {

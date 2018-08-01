@@ -1,4 +1,4 @@
-import {IState, SchedulerServer} from "../../providers/server/scheduler-server.service";
+import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {RootStore} from "../../store/root";
 import {anything, instance, mock, verify, when} from "ts-mockito";
 import {RESTServer} from "../../providers/server/server";
@@ -9,10 +9,13 @@ import {MockConfigurationService} from "../../app/logging-configuration";
 import {scheduler_db_map} from "../../assets/db.mapping";
 import {OrmMapper} from "../../providers/mapping/orm-mapper";
 import {IObjectCache, SimpleCache} from "../../providers/mapping/cache";
-import {LoginResponse, ServerError, UserResponse, ValidationResponse} from "../../common/interfaces";
+import {ServerError, UserResponse} from "../../common/interfaces";
 import {Person} from "../../scheduling/people";
 import {ILifecycleCallback} from "../../providers/server/interfaces";
 import {ConnectivityService} from "../../common/network/connectivity";
+import {StateProvider} from "../../providers/state/state";
+import {IState} from "../../providers/state/state.interface";
+import {AuthorizationService} from "../../providers/token/authorization.service";
 
 describe('scheduler server', () => {
     let server: SchedulerServer;
@@ -23,26 +26,20 @@ describe('scheduler server', () => {
     let mapper: OrmMapper;
     let db: SchedulerDatabase;
     let cache: IObjectCache;
+    let stateMock;
+    let authMock;
 
     let userResponse: UserResponse;
 
-    let createServerWithStorage = (storage): Promise<SchedulerServer> => {
+    beforeEach((done) => {
+        stateMock = mock(StateProvider);
+        when(stateMock.state).thenReturn({});
+
+        restMock = mock(RESTServer);
+        authMock = mock(AuthorizationService);
+
         let connectivityServiceMock = mock(ConnectivityService);
         when(connectivityServiceMock.isOnline).thenReturn(true);
-
-        server = new SchedulerServer(store, restServer, storage, instance(connectivityServiceMock), mapper, MockConfigurationService.ServiceForTests());
-        store = new RootStore(null);
-        server.setStore(store);
-
-        return server.setDatabase(db).then(() => {
-            // force the cache to be US not the DB
-            db.setCache(cache);
-            return server;
-        });
-    };
-
-    beforeEach((done) => {
-        restMock = mock(RESTServer);
 
         storageMock = StorageMock.instance('state', null);
 
@@ -58,7 +55,6 @@ describe('scheduler server', () => {
             uuid: '123345',
             organization_uuid: null,
             organization_token: null,
-            logintoken: "",
             first_name: 'neil',
             last_name: 'me',
             is_active: true
@@ -67,11 +63,22 @@ describe('scheduler server', () => {
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
         SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, "1234", mapper).then(new_db => {
             db = new_db;
-            restServer = instance(restMock);
-            createServerWithStorage(storageMock).then((svr) => {
-                server = svr;
+            server = new SchedulerServer(
+                store,
+                instance(restMock),
+                instance(authMock),
+                instance(stateMock),
+                instance(connectivityServiceMock),
+                mapper,
+                MockConfigurationService.ServiceForTests());
+            store = new RootStore(null);
+            server.setStore(store);
+
+            server.setDatabase(db).then(() => {
+                // force the cache to be US not the DB
+                db.setCache(cache);
                 done();
-            })
+            });
         });
     });
 
@@ -156,37 +163,33 @@ describe('scheduler server', () => {
             })
         });
 
-        it('if no saved state, direct to login page', function (done) {
+        it('redirect to login page if null token', function (done) {
+            when(stateMock.hasStateChangedSinceLastLifecycleRun()).thenReturn(true);
+            when(stateMock.loginToken).thenReturn(null);
+
+            expect(showedLoginPage).toBeFalsy();
+
             server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
-                expect(server.state).not.toBeNull();
-                expect(server.state).not.toBeUndefined();
-                expect(server.state.loginToken).toBeNull();
-                expect(server.state.lastPersonUUID).toBeNull();
-                expect(server.state.isForcedOffline).toBeFalsy();
                 expect(showedLoginPage).toBeTruthy();
                 done();
             })
         });
 
-        it('should direct to login page if token is bad', function (done) {
+        it('should direct to login page if token not valid', function (done) {
             let state: IState = {
                 loginToken: "12345",
                 lastPersonUUID: null,
                 lastOrganizationUUID: null,
-                organizationCouchToken: null,
                 isForcedOffline: false
             };
+
             storageMock = StorageMock.instance('state', state);
+            when(authMock.isAuthenticatedAndNotExpired()).thenReturn(false);
 
-            let vr: ValidationResponse = {ok: false, detail: 'no way!', user: null};
-            when(restMock.validateLoginToken(state.loginToken)).thenResolve(vr);
-
-            createServerWithStorage(storageMock).then(server => {
-                server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
-                    expect(showedLoginPage).toBeTruthy();
-                    verify(restMock.validateLoginToken("12345")).called();
-                    done();
-                });
+            server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
+                expect(showedLoginPage).toBeTruthy();
+                verify(authMock.isAuthenticatedAndNotExpired()).called();
+                done();
             });
         });
 
@@ -195,24 +198,18 @@ describe('scheduler server', () => {
                 loginToken: "12345",
                 lastPersonUUID: null,
                 lastOrganizationUUID: null,
-                organizationCouchToken: null,
                 isForcedOffline: false
             };
 
-            userResponse.logintoken = state.loginToken;
-            userResponse.uuid = null;
-            let vr: ValidationResponse = {ok: true, detail: '', user: userResponse};
-
-            when(restMock.validateLoginToken(state.loginToken)).thenResolve(vr);
+            when(stateMock.state).thenReturn(state);
+            when(authMock.isAuthenticatedAndNotExpired()).thenReturn(true);
+            when(restMock.getOwnUserDetails()).thenResolve([]);
 
             storageMock = StorageMock.instance('state', state);
-            createServerWithStorage(storageMock).then(server => {
-
-                server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
-                    expect(showedLoginPage).toBeTruthy();
-                    verify(restMock.validateLoginToken(state.loginToken)).called();
-                    done();
-                });
+            server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
+                expect(showedLoginPage).toBeTruthy();
+                verify(restMock.getOwnUserDetails()).called();
+                done();
             });
         });
 
@@ -223,66 +220,28 @@ describe('scheduler server', () => {
         // Skipped cos I dont know how to do this given the need to login to the local DB
         xit('should show error if the person from the person UUID cannot be found', function (done) {
             let personInDB = new Person("Hey its ME!");
-            userResponse.uuid = personInDB.uuid;
-            userResponse.organization_uuid = "abcvdh";
-            userResponse.logintoken = "12345";
-            userResponse.organization_token = "super-login-token-yay!";
 
             let state: IState = {
-                loginToken: userResponse.logintoken,
+                loginToken: '1234567e',
                 lastPersonUUID: personInDB.uuid,
                 lastOrganizationUUID: "shouldn't see THIS in the thing",
-                organizationCouchToken: "good luck seeing this!",
                 isForcedOffline: false
             };
 
             expect(state.lastPersonUUID).not.toBeFalsy();
-            storageMock = StorageMock.instance('state', state);
-            createServerWithStorage(storageMock).then(server => {
-                // Intentionally do not store.
-                // This means we should get an error when it tries to lookup the object ID
 
-                let vr: ValidationResponse = {ok: true, detail: '', user: userResponse};
-                when(restMock.validateLoginToken(state.loginToken)).thenResolve(vr);
+            when(stateMock.state).thenReturn(state);
+            when(stateMock.loginToken).thenReturn(state.loginToken);
+            when(authMock.isAuthenticatedAndNotExpired()).thenReturn(true);
+            when(restMock.getOwnUserDetails()).thenResolve([]);
 
-                server.forceStateReload();
-                server.asyncRunStartupLifecycle(lifecycleCallback, 1500).then(() => {
-                    expect(showedLoginPage).toBeFalsy("should not show login page");
-                    expect(lastShownError).toMatch(/1334/);
-                });
+            // Took this out when doing auth rewrite, didn't replace yet
+            // server.forceStateReload();
+            server.asyncRunStartupLifecycle(lifecycleCallback, 1500).then(() => {
+                expect(showedLoginPage).toBeFalsy("should not show login page");
+                expect(lastShownError).toMatch(/1334/);
             });
         }, 3000);
-
-        it('should not run cycle twice, aka: able to detect that it is ok', function (done) {
-            // This is a bit of a fudge.
-            // We put the server into a state where it thinks it's logged in OK.
-            // We want to ensure that it's not actually going to reload/reassign the DB
-            // if the current user token remains valid.
-
-            let state: IState = {
-                loginToken: userResponse.logintoken,
-                lastPersonUUID: "!2345",
-                lastOrganizationUUID: "abcdefg",
-                organizationCouchToken: null,
-                isForcedOffline: false
-            };
-
-            expect(state.lastPersonUUID).not.toBeFalsy();
-            storageMock = StorageMock.instance('state', state);
-            createServerWithStorage(storageMock).then(server => {
-                server.asyncLoadState().then(() => {
-                    expect(server.hasStateChangedSinceLastLifecycleRun()).toBeTruthy();
-                    server.captureStateAsPrevious();
-                    expect(server.hasStateChangedSinceLastLifecycleRun()).toBeFalsy();
-
-                    // if we change the force flag, that shouldnt affect the comparison.
-                    server.state.isForcedOffline = true;
-                    expect(server.hasStateChangedSinceLastLifecycleRun()).toBeFalsy();
-
-                    done();
-                });
-            });
-        });
 
         it('should lookup the person from the DB if login token and person UUID are valid', function (done) {
             let personInDB = new Person("Hey its ME!");
@@ -308,46 +267,4 @@ describe('scheduler server', () => {
             });
         }, 3000);
     });
-
-    describe('loginUser tests', () => {
-        it('good login sets both login token, and person UUID', (done) => {
-            userResponse.logintoken = "424345";
-            userResponse.uuid = "AmazeBalls";
-            let lr: LoginResponse = {ok: true, detail: null, user: userResponse};
-            when(restMock.login(userResponse.email, "1234")).thenResolve(lr);
-            server.loginUser(userResponse.email, "1234").then(() => {
-                verify(restMock.login(userResponse.email, "1234")).called();
-                expect(server.state.loginToken).toEqual(userResponse.logintoken);
-                expect(server.state.lastPersonUUID).toEqual(userResponse.uuid);
-                done();
-            });
-        })
-    });
-
-    describe('test SchedulerServer directly', () => {
-        it('should clear REST login token if token validation fails', function (done) {
-            let token = 'hahahahhaha';
-            let vr: ValidationResponse = {ok: false, detail: 'no way!', user: null};
-            when(restMock.validateLoginToken(token)).thenResolve(vr);
-
-            server.validateLoginToken(token).then(resp => {
-                expect(resp).toEqual(vr);
-                expect(restServer.loginToken).toEqual(null);
-                done();
-            })
-        });
-
-        it('should set REST login token if token validation succeeds', function (done) {
-            let token = 'hahahahhaha';
-            userResponse.logintoken = token;
-            let vr: ValidationResponse = {ok: true, detail: 'no way!', user: userResponse};
-            when(restMock.validateLoginToken(token)).thenResolve(vr);
-
-            server.validateLoginToken(token).then(resp => {
-                expect(resp).toEqual(vr);
-                expect(restServer.loginToken).toEqual(token);
-                done();
-            })
-        });
-    })
 });

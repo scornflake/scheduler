@@ -1,4 +1,7 @@
 import {ConfigurationService} from "ionic-configuration-service";
+import {HttpClient} from "@angular/common/http";
+import {Mock} from "protractor/built/driverProviders";
+import {SWBSafeJSON} from "../common/json/safe-stringify";
 
 export function loadConfiguration(configurationService: ConfigurationService): () => Promise<void> {
     return () => configurationService.load("assets/settings.json");
@@ -10,9 +13,15 @@ Note: had to completely override the class since it doesn't have a setter for th
  */
 class MockConfigurationService extends ConfigurationService {
     private mocked_configValues: { [key: string]: any };
-    private static __service: MockConfigurationService;
+    private static __service: MockConfigurationService = null;
 
     static dbName: string = 'tests';
+
+    constructor(httpClient: HttpClient) {
+        super(httpClient);
+        MockConfigurationService.__service = this;
+        this.setVars(MockConfigurationService.test_configuration());
+    }
 
     public getKeys(): string[] {
         const keys: string[] = [];
@@ -32,14 +41,21 @@ class MockConfigurationService extends ConfigurationService {
     }
 
     public setVars(vars: any) {
+        // if (this.mocked_configValues == null && vars != null) {
+        //     console.log(`Set mock service config to: ${SWBSafeJSON.stringify(vars)}`);
+        // }
         this.mocked_configValues = vars;
     }
 
-    static Service(): MockConfigurationService {
-        if (!this.__service) {
-            this.__service = new MockConfigurationService(null);
+    static Service(config = null): MockConfigurationService {
+        if (MockConfigurationService.__service == null) {
+            MockConfigurationService.__service = new MockConfigurationService(null);
+            if (config == null) {
+                config = MockConfigurationService.test_configuration();
+            }
+            MockConfigurationService.__service.setVars(config);
         }
-        return this.__service;
+        return MockConfigurationService.__service;
     }
 
     static ServiceForTests(db_name: string = "tests"): MockConfigurationService {
@@ -56,7 +72,8 @@ class MockConfigurationService extends ConfigurationService {
                 "name": "tests"
             },
             "server": {
-                "couch": "http://localhost:5984"
+                "couch": "http://localhost:5984",
+                "rest": "http://localhost:8000"
             },
             "logging": {
                 "logLevels": [

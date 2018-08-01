@@ -52,14 +52,14 @@ export class NPBCStoreConstruction {
         // noinspection JSUnusedLocalSymbols
         let neil = team.findPersonWithName("Neil Clayton");
         let cherilyn = team.findPersonWithName("Cherilyn Clayton");
-        let kylie = team.findPersonWithName("Kylie Welch-Herekiuha");
+        // let kylie = team.findPersonWithName("Kylie Welch-Herekiuha");
         let christine = team.findPersonWithName("Christine Edlin");
         let stuart = team.findPersonWithName("Stuart Campbell");
         let jeremy_selfe = team.findPersonWithName("Jeremy Selfe");
 
         let daniel = team.findPersonWithName("Daniel Gibbs");
         let ben = team.findPersonWithName("Ben Watson");
-        let courtney = team.findPersonWithName("Courtney Anderson");
+        // let courtney = team.findPersonWithName("Courtney Anderson");
         let robs = team.findPersonWithName("Rob Sweeney");
         let robp = team.findPersonWithName("Rob Penhey");
         let dave = team.findPersonWithName("Dave Humphries");
@@ -119,14 +119,14 @@ export class NPBCStoreConstruction {
     @action static AddPeopleToPlanWithRoles(service: Plan, team: Team) {
         let neil = team.findPersonWithName("Neil Clayton");
         let cherilyn = team.findPersonWithName("Cherilyn Clayton");
-        let kylie = team.findPersonWithName("Kylie Welch-Herekiuha");
+        // let kylie = team.findPersonWithName("Kylie Welch-Herekiuha");
         let christine = team.findPersonWithName("Christine Edlin");
         let stuart = team.findPersonWithName("Stuart Campbell");
         let jeremy_selfe = team.findPersonWithName("Jeremy Selfe");
 
         let daniel = team.findPersonWithName("Daniel Gibbs");
         let ben = team.findPersonWithName("Ben Watson");
-        let courtney = team.findPersonWithName("Courtney Anderson");
+        // let courtney = team.findPersonWithName("Courtney Anderson");
         let robs = team.findPersonWithName("Rob Sweeney");
         let robp = team.findPersonWithName("Rob Penhey");
         let dave = team.findPersonWithName("Dave Humphries");
@@ -165,9 +165,9 @@ export class NPBCStoreConstruction {
             .if_assigned_to(defaultLeaderRole).thenDo(new ScheduleOn(stuart, defaultAcousticGuitar));
         stuart_assignment.if_assigned_to(defaultLeaderRole).thenDo(new ScheduleOn(stuart, defaultVocalsRole));
 
-        service.assignmentFor(kylie)
-            .addRole(defaultAcousticGuitar)
-            .if_assigned_to(defaultAcousticGuitar).thenDo(new ScheduleOn(kylie, defaultVocalsRole));
+        // service.assignmentFor(kylie)
+        //     .addRole(defaultAcousticGuitar)
+        //     .if_assigned_to(defaultAcousticGuitar).thenDo(new ScheduleOn(kylie, defaultVocalsRole));
 
         service.assignmentFor(jeremy_selfe)
             .addRole(defaultLeaderRole, 2)
@@ -188,8 +188,8 @@ export class NPBCStoreConstruction {
         service.assignmentFor(ben)
             .addRole(defaultBass, 1);
 
-        service.assignmentFor(courtney)
-            .addRole(defaultVocalsRole);
+        // service.assignmentFor(courtney)
+        //     .addRole(defaultVocalsRole);
 
         service.assignmentFor(robp)
             .addRole(defaultBass, 3)
@@ -279,7 +279,7 @@ export class NPBCStoreConstruction {
         let neil = aint("Neil Clayton", "neil@cloudnine.net.nz");
         let cherilyn = aint("Cherilyn Clayton");
 
-        let kylie = aint("Kylie Welch-Herekiuha");
+        // let kylie = aint("Kylie Welch-Herekiuha");
         let christine = aint("Christine Edlin");
         let stuart = aint("Stuart Campbell");
         let jeremy_selfe = aint("Jeremy Selfe");
@@ -308,7 +308,7 @@ export class NPBCStoreConstruction {
         cherilyn.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
         christine.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
         stuart.avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
-        kylie.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+        // kylie.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
         jeremy_selfe.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
         ralph.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
         craig.availability = new AvailabilityEveryNOfM(1, 3);

@@ -1,5 +1,10 @@
 TODO
 ====
+- Rework tokens, introduce JWT
+    - How do we handle needing to refresh a token during continuous replication?
+    - If a token is invalidated (cannot be refreshed), do what? (during continuous replication)?
+    - First time, no token
+    - Existing token, but invalid (for whatever reason)
 - PlanWizard doesn't work on android
     - text disappears whn entering it
     - NEXT doesn't work on plan page (greyed out)

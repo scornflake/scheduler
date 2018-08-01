@@ -62,6 +62,12 @@
   dependencies:
     tslib "^1.7.1"
 
+"@auth0/angular-jwt@^1.0.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@auth0/angular-jwt/-/angular-jwt-1.2.0.tgz#cfac04fe3f93e36ab9881d469df2c0556f2e7392"
+  dependencies:
+    url "^0.11.0"
+
 "@ionic-native/core@4.7.0":
   version "4.7.0"
   resolved "https://registry.yarnpkg.com/@ionic-native/core/-/core-4.7.0.tgz#9e7c13db9f18f454d7a31a5d61d369a7db3f338c"
@@ -4701,6 +4707,13 @@ karma-coverage@^1.1.2:
     minimatch "^3.0.0"
     source-map "^0.5.1"
 
+karma-html-reporter@^0.2.7:
+  version "0.2.7"
+  resolved "https://registry.yarnpkg.com/karma-html-reporter/-/karma-html-reporter-0.2.7.tgz#fd73da9f1ac99fd5bafb309cf070942188e7ba63"
+  dependencies:
+    lodash "~2.2.0"
+    mu2 "~0.5.19"
+
 karma-jasmine@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/karma-jasmine/-/karma-jasmine-1.1.1.tgz#6fe840e75a11600c9d91e84b33c458e1c46a3529"
@@ -5128,6 +5141,10 @@ lodash@^4.15.0, lodash@^4.17.4, lodash@^4.5.0:
   version "4.17.5"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.5.tgz#99a92d65c0272debe8c96b6057bc8fbfa3bed511"
 
+lodash@~2.2.0:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-2.2.1.tgz#ca935fd14ab3c0c872abacf198b9cda501440867"
+
 log-symbols@^2.1.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/log-symbols/-/log-symbols-2.2.0.tgz#5740e1c5d6f0dfda4ad9323b5332107ef6b4c40a"
@@ -5544,6 +5561,10 @@ ms@0.7.1:
 ms@2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.0.0.tgz#5608aeadfc00be6c2901df5f9861788de0d597c8"
+
+mu2@~0.5.19:
+  version "0.5.21"
+  resolved "https://registry.yarnpkg.com/mu2/-/mu2-0.5.21.tgz#888a8f0fd90eb1cfda9db81476f6e199cc9e58d3"
 
 mute-stream@0.0.5:
   version "0.0.5"
