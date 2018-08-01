@@ -11,7 +11,13 @@ export function jwtOptionsFactory(state: StateProvider) {
         tokenGetter: () => {
             return state.loginToken;
         },
-        blacklistedRoutes: []
+        blacklistedRoutes: [],
+        whitelistedDomains: [
+            'schedulerdb.shinywhitebox.com',
+            'scheduler.shinywhitebox.com',
+            'localhost:8000',
+            '192.168.1.168:8000',
+        ]
     };
 }
 
@@ -20,13 +26,6 @@ export function jwtOptionsFactory(state: StateProvider) {
         CommonModule,
         HttpClientModule,
         JwtModule.forRoot({
-            config: {
-                whitelistedDomains: [
-                    'schedulerdb.shinywhitebox.com',
-                    'scheduler.shinywhitebox.com',
-                    'localhost:8000'
-                ]
-            },
             jwtOptionsProvider: {
                 provide: JWT_OPTIONS,
                 useFactory: jwtOptionsFactory,

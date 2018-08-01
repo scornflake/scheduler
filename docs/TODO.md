@@ -1,13 +1,13 @@
 TODO
 ====
 - Rework tokens, introduce JWT
-    - How do we handle needing to refresh a token during continuous replication?
+    - Invalid token, but offline (should still work, with no changes propagated until a new token is had).
     - If a token is invalidated (cannot be refreshed), do what? (during continuous replication)?
-    - First time, no token
-    - Existing token, but invalid (for whatever reason)
 - PlanWizard doesn't work on android
     - text disappears whn entering it
     - NEXT doesn't work on plan page (greyed out)
+- Replication / Token Refresh
+    - If token refresh fails, we wont restart replication. Need some way for replication to restart if the token is OK in the future.
 - Invites
     - When a user accepts, there ends up being TWO copies of that user (old login and new?)
 - People Page

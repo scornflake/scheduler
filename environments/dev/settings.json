@@ -33,6 +33,10 @@
         "logLevel": "DEBUG"
       },
       {
+        "loggerName": "service.refresh",
+        "logLevel": "DEBUG"
+      },
+      {
         "loggerName": "model",
         "logLevel": "INFO"
       },

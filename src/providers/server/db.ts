@@ -25,8 +25,9 @@ import {StateProvider} from "../state/state";
 import Database = PouchDB.Database;
 import DatabaseConfiguration = PouchDB.Configuration.DatabaseConfiguration;
 
-// Put this back in when we move to v7 of Pouch.
-// import plugin from 'pouchdb-adapter-idb';
+export interface IReplicationNotification {
+    asyncTokenRejectedInContinuousReplication(): Promise<boolean>;
+}
 
 enum SavingState {
     Idle = 0,  // No changes
@@ -62,6 +63,7 @@ class SchedulerDatabase implements IObjectStore {
     private _converter: OrmConverter;
     private _state: StateProvider;
     private _cache: IObjectCache;
+    private _delegate: IReplicationNotification;
 
     lastSeenReplicationStatus: ReplicationStatus = ReplicationStatus.Unknown;
 
@@ -145,7 +147,12 @@ class SchedulerDatabase implements IObjectStore {
                     opts.headers.set('Authorization', 'Bearer ' + this._state.loginToken);
                 }
                 // console.log(`POUCH FETCH: ${opts}`);
-                return PouchDB.fetch(url, opts);
+                try {
+                    return PouchDB.fetch(url, opts);
+                } catch(err) {
+                    // console.error(`POUCH ERR: ${err} (rethrow)`);
+                    throw err;
+                }
             }
         }
     }
@@ -657,7 +664,21 @@ class SchedulerDatabase implements IObjectStore {
                 this.logger.error(`Replication denied! ${JSON.stringify(info)}`);
             })
             .on('error', (err) => {
-                this.logger.error(`Replication error: ${err}`);
+                /*
+                21:32:15,898 db Replication error: {"status":401,"name":"unauthorized","message":"[\"Token Rejected\",token_rejected]","reason":"[\"Token Rejected\",token_rejected]"}
+                 */
+                if (err['status'] == 401 && err['name'] == "unauthorized") {
+                    // Try to refresh the token
+                    if(this._delegate) {
+                        this._delegate.asyncTokenRejectedInContinuousReplication().then(r => {
+                            if(r) {
+                                this.startContinuousReplication();
+                            }
+                        })
+                    }
+                } else {
+                    this.logger.error(`Replication error: ${err}. Replication has stopped.`);
+                }
             });
         this.lastSeenReplicationStatus = ReplicationStatus.Idle;
         this.replicationNotifications$.next(this.lastSeenReplicationStatus);
@@ -666,6 +687,21 @@ class SchedulerDatabase implements IObjectStore {
 
     async storeRawDocs(docs) {
         return await this.db.bulkDocs(docs);
+    }
+
+    set notificationDelegate(aDelegate: IReplicationNotification) {
+        this._delegate = aDelegate;
+    }
+
+    async asyncCleanUp() {
+        await this.asyncStopReplication();
+
+        this.tracker = null;
+        this.mapper = null;
+        this._converter = null;
+        this._cache = null;
+        this._state = null;
+        this._delegate = null;
     }
 }
 

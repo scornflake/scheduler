@@ -78,16 +78,13 @@ export class AuthorizationService {
         return this.state.isLoggedIn;
     }
 
-    isAuthenticatedAndNotExpired(notifyListeners: boolean = false): boolean {
+    isAuthenticatedAndNotExpired(): boolean {
         if (!this.state.isLoggedIn) {
             return false;
         }
         try {
             return !this.jwtHelp.isTokenExpired(this.state.loginToken);
         } catch (err) {
-            if(notifyListeners) {
-                this.notifyTokenInvalid();
-            }
             this.logger.warn("isAuthenticatedAndNotExpired", err);
             return false;
         }

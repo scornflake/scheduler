@@ -1,0 +1,10 @@
+// See the scheduler-server for this (that's where it is)
+// OrganizationDB.verify_design_docs.
+{
+  "_id": "_design/filters",
+  "filters": {
+    "docsonly": "function (doc) { return doc._id.indexOf('_design/idx') == -1; }"
+  }
+}
+
+

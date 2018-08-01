@@ -8,7 +8,7 @@ import {Person} from "../../scheduling/people";
 import {Observable} from "rxjs/Observable";
 import {forwardRef, Inject, Injectable} from "@angular/core";
 import {Organization} from "../../scheduling/organization";
-import {ReplicationStatus, SchedulerDatabase} from "./db";
+import {IReplicationNotification, ReplicationStatus, SchedulerDatabase} from "./db";
 import {ObjectWithUUID} from "../../scheduling/base-types";
 import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
@@ -28,7 +28,7 @@ import {StateProvider} from "../state/state";
 import {AuthorizationService, TokenStates} from "../token/authorization.service";
 
 @Injectable()
-class SchedulerServer implements ILifecycle {
+class SchedulerServer implements ILifecycle, IReplicationNotification {
     private logger: Logger;
 
     private dbSubject: Subject<SchedulerDatabase>;
@@ -195,13 +195,16 @@ class SchedulerServer implements ILifecycle {
                 // Simply access our own user record.
                 // That's enuf to force token refresh
 
-                // Check login token expiry.
-                // No check for authenticity at this point (we don't have the secret)
-                if (!this.auth.isAuthenticatedAndNotExpired()) {
-                    this.logger.debug('asyncRunStartupLifecycle', `Login token null/invalid, show login page`);
-                    callback.showLoginPage(`Login token null/invalid`);
-                    return false;
-                }
+                // NOT checking for expiry.
+                // Because: it'll expire in 15m, but could be refreshed fine.
+                //
+                // So, just let it fall through to a real operation
+                //
+                // if (!this.auth.isAuthenticatedAndNotExpired()) {
+                //     this.logger.debug('asyncRunStartupLifecycle', `Login token null/invalid, show login page`);
+                //     callback.showLoginPage(`Login token null/invalid`);
+                //     return false;
+                // }
 
                 try {
                     await this.restAPI.getOwnUserDetails();
@@ -262,7 +265,7 @@ class SchedulerServer implements ILifecycle {
     async setDatabase(dbInstance: SchedulerDatabase) {
         if (dbInstance != this._db) {
             if (this.db) {
-                await this.db.asyncStopReplication();
+                await this.db.asyncCleanUp();
             }
 
             if (this.dbChangeTrackingSubscription) {
@@ -296,6 +299,7 @@ class SchedulerServer implements ILifecycle {
         let name = Organization.dbNameFor(organizationUUID);
 
         let newDb = new SchedulerDatabase(name, this.state, this.ormMapper);
+        newDb.notificationDelegate = this;
 
         // Clear logged in person and any other 'db dependent' state
         // This should cause the various subjects on RootStore to fire, hopefully with nulls
@@ -499,6 +503,14 @@ class SchedulerServer implements ILifecycle {
 
     get authTokenLifecycleNotifications(): Subject<TokenStates> {
         return this.auth.tokenLifecycleSubject;
+    }
+
+    async asyncTokenRejectedInContinuousReplication() : Promise<boolean> {
+        // Oh really?
+        // Ask auth to refresh. This will attempt to do so, saving the refresh token in state.
+        // It's async so that the caller can wait on it, and do something useful when it's back.
+        await this.auth.refresh().toPromise();
+        return this.auth.isAuthenticatedAndNotExpired();
     }
 }
 
