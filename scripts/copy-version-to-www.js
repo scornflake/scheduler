@@ -7,7 +7,7 @@ var wwwFileToReplace = "js/build.js";
 var fs = require('fs');
 var path = require('path');
 
-var rootdir = process.argv[2];
+var environment = process.argv[2] || 'default';
 
 function loadConfigXMLDoc(filePath) {
     var fs = require('fs');
@@ -42,8 +42,8 @@ console.log("Version:", version);
 
 let versionStuffs = {
     version: version,
-    environment: process.env['IONIC_ENV'] || "default",
     build: rawJSON.widget.$['ios-CFBundleVersion']
 };
+
 fs.writeFileSync(outputJSONPath, JSON.stringify(versionStuffs));
 

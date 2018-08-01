@@ -1,4 +1,5 @@
 {
+  "name": "release",
   "server": {
     "couch": "https://schedulerdb.shinywhitebox.com",
     "rest": "https://scheduler.shinywhitebox.com"

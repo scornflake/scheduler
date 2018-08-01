@@ -1,4 +1,5 @@
 {
+  "name": "development",
   "server": {
     "couch": "https://schedulerdb.shinywhitebox.com",
     "rest": "http://192.168.1.168:8000"

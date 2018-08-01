@@ -10,12 +10,12 @@
     <div class="about">
         <h1 no-padding no-margin>Cunning Plan</h1>
         <h5>Version: {{version}} ({{build}})</h5>
-        <h5>Environment: {{environment}}</h5>
+        <h5>Environment: {{name}}</h5>
         <p class="light">(c) {{year}} shinywhitebox ltd</p>
     </div>
 </ion-content>
 
-<ion-footer *ngIf="developer">
+<ion-footer *ngIf="development">
     <ion-grid>
         <ion-row>
             <ion-col>{{rest_url}}</ion-col>
