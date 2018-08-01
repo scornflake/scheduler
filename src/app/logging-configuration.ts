@@ -1,7 +1,5 @@
 import {ConfigurationService} from "ionic-configuration-service";
 import {HttpClient} from "@angular/common/http";
-import {Mock} from "protractor/built/driverProviders";
-import {SWBSafeJSON} from "../common/json/safe-stringify";
 
 export function loadConfiguration(configurationService: ConfigurationService): () => Promise<void> {
     return () => configurationService.load("assets/settings.json");

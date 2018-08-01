@@ -13,8 +13,8 @@ import {RootStore} from "../../store/root";
     templateUrl: 'role-plan-assignment.html',
 })
 export class RolePlanAssignmentPage {
-    private role: Role;
-    private assignment: Assignment;
+    public role: Role;
+    public assignment: Assignment;
 
     constructor(public navCtrl: NavController,
                 public store: RootStore,

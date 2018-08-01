@@ -29,6 +29,10 @@
         "logLevel": "INFO"
       },
       {
+        "loggerName": "service.bridge",
+        "logLevel": "DEBUG"
+      },
+      {
         "loggerName": "model",
         "logLevel": "INFO"
       },
@@ -42,6 +46,10 @@
       },
       {
         "loggerName": "page.login",
+        "logLevel": "INFO"
+      },
+      {
+        "loggerName": "page.utils",
         "logLevel": "DEBUG"
       },
       {

@@ -13,7 +13,6 @@ import {ObjectWithUUID} from "../../scheduling/base-types";
 import {Subject} from "rxjs/Subject";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {action, computed} from "mobx-angular";
-import {Storage} from '@ionic/storage';
 import {OrmMapper} from "../mapping/orm-mapper";
 import {catchError, debounceTime, filter, flatMap, map, take, timeout} from "rxjs/operators";
 import {ConfigurationService} from "ionic-configuration-service";
@@ -26,7 +25,7 @@ import {Team} from "../../scheduling/teams";
 import {Plan} from "../../scheduling/plan";
 import {Role} from "../../scheduling/role";
 import {StateProvider} from "../state/state";
-import {AuthorizationService} from "../token/authorization.service";
+import {AuthorizationService, TokenStates} from "../token/authorization.service";
 
 @Injectable()
 class SchedulerServer implements ILifecycle {
@@ -63,10 +62,6 @@ class SchedulerServer implements ILifecycle {
     get db(): SchedulerDatabase {
         return this._db;
     }
-
-    // get state(): IState {
-    //     return this._state;
-    // }
 
     get isReady(): boolean {
         // ready to show stuff?
@@ -116,21 +111,6 @@ class SchedulerServer implements ILifecycle {
             this.logger.info(`User logged out, state saved.`);
         });
     }
-
-    // @action
-    // async validateLoginToken(token: string): Promise<ValidationResponse> {
-    //     // If no 'person uuid', need to login
-    //     this.logger.info(`Validating login token: ${SWBSafeJSON.stringify(token)}`);
-    //
-    //     this.raiseExceptionIfNotOnline('validateLoginToken');
-    //     try {
-    //         let vr = await this.restAPI.validateLoginToken(token);
-    //         this.state.setLoginTokenFromLoginResponse(vr.ok, vr);
-    //         return vr;
-    //     } catch (e) {
-    //         throw new ServerError(e);
-    //     }
-    // }
 
     async hasEmailBeenConfirmed(email: string): Promise<boolean> {
         this.raiseExceptionIfNotOnline('hasEmailBeenConfirmed');
@@ -301,7 +281,6 @@ class SchedulerServer implements ILifecycle {
         let iState = this.state.state;
         let organizationUUID = iState.lastOrganizationUUID;
         let personUUID = iState.lastPersonUUID;
-        let jwtToken = this.state.loginToken;
 
         if (!organizationUUID) {
             throw new Error(`Cannot setup DB undefined/null organization. organizationUUID is required`);
@@ -309,14 +288,14 @@ class SchedulerServer implements ILifecycle {
         if (!personUUID) {
             throw new Error(`Cannot setup DB undefined/null person. personUUID is required`);
         }
-        if (!jwtToken) {
+        if (!this.state.loginToken) {
             throw new Error(`Cannot setup DB. jwtToken is required (all DB access needs a token)`);
         }
 
         this.logger.info('setupDBFromState', `Beginning DB setup for person:${personUUID} and org:${organizationUUID}`);
         let name = Organization.dbNameFor(organizationUUID);
 
-        let newDb = new SchedulerDatabase(name, jwtToken, this.ormMapper);
+        let newDb = new SchedulerDatabase(name, this.state, this.ormMapper);
 
         // Clear logged in person and any other 'db dependent' state
         // This should cause the various subjects on RootStore to fire, hopefully with nulls
@@ -516,6 +495,10 @@ class SchedulerServer implements ILifecycle {
         let person = this.store.loggedInPerson;
         let skip = [person.uuid, person.preferences.uuid, person.organization.uuid, person.availability.uuid];
         await this.db.deleteAllContentFromDatabase(skip);
+    }
+
+    get authTokenLifecycleNotifications(): Subject<TokenStates> {
+        return this.auth.tokenLifecycleSubject;
     }
 }
 

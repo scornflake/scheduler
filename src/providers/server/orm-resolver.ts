@@ -72,27 +72,27 @@ class StoreBasedResolver implements IReferenceResolver {
     }
 
     // The polling function
-    private poll(fn, timeout, interval) {
-        let endTime = Number(new Date()) + (timeout || 2000);
-        interval = interval || 100;
-
-        let checkCondition = function (resolve, reject) {
-            // If the condition is met, we're done!
-            let result = fn();
-            if (result) {
-                resolve(result);
-            }
-            // If the condition isn't met but the timeout hasn't elapsed, go again
-            else if (Number(new Date()) < endTime) {
-                setTimeout(checkCondition, interval, resolve, reject);
-            }
-            // Didn't match and too much time, reject!
-            else {
-                reject(new Error('timed out for ' + fn + ': ' + arguments));
-            }
-        };
-        return new Promise(checkCondition);
-    }
+    // private poll(fn, timeout, interval) {
+    //     let endTime = Number(new Date()) + (timeout || 2000);
+    //     interval = interval || 100;
+    //
+    //     let checkCondition = function (resolve, reject) {
+    //         // If the condition is met, we're done!
+    //         let result = fn();
+    //         if (result) {
+    //             resolve(result);
+    //         }
+    //         // If the condition isn't met but the timeout hasn't elapsed, go again
+    //         else if (Number(new Date()) < endTime) {
+    //             setTimeout(checkCondition, interval, resolve, reject);
+    //         }
+    //         // Didn't match and too much time, reject!
+    //         else {
+    //             reject(new Error('timed out for ' + fn + ': ' + arguments));
+    //         }
+    //     };
+    //     return new Promise(checkCondition);
+    // }
 
 
     private assertNewValueNotNull(value: any, ref: ObjectReference) {

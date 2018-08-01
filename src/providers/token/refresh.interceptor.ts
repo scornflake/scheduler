@@ -7,12 +7,16 @@ import {AuthorizationService} from './authorization.service';
 import {JwtInterceptor} from '@auth0/angular-jwt';
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger} from "ionic-logging-service";
+import {SchedulerServer} from "../server/scheduler-server.service";
+
 
 @Injectable()
 export class RefreshTokenInterceptor implements HttpInterceptor {
     private logger: Logger;
 
-    constructor(private authorizationService: AuthorizationService, private jwtInterceptor: JwtInterceptor) {
+    constructor(private authorizationService: AuthorizationService,
+                private schedulerServer: SchedulerServer,
+                private jwtInterceptor: JwtInterceptor) {
         this.logger = LoggingWrapper.getLogger('service.refresh');
     }
 

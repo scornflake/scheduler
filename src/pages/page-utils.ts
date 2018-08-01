@@ -12,6 +12,8 @@ import {ServerError} from "../common/interfaces";
 import {NativePageTransitions} from "@ionic-native/native-page-transitions";
 import {Observable} from "rxjs/Observable";
 import {Subject} from "rxjs/Subject";
+import {TokenStates} from "../providers/token/authorization.service";
+import {BehaviorSubject} from "rxjs";
 
 interface LifecycleEvent {
     event: LifecycleCallbacks;
@@ -80,7 +82,8 @@ class PageUtils implements OnInit {
     }
 
     runStartupLifecycleAsStream(): Observable<LifecycleEvent> {
-        let subject = new Subject<any>();
+        this.logger.debug(`Starting lifecycle as a stream`);
+        let subject = new BehaviorSubject<any>({event: LifecycleCallbacks.initialState, args: null});
         let callback: ILifecycleCallback = {
             showLoginPage: (reason: string) => {
                 subject.next({event: LifecycleCallbacks.showLoginPage, args: reason})
@@ -98,7 +101,29 @@ class PageUtils implements OnInit {
                 subject.next({event: LifecycleCallbacks.showError, args: message})
             }
         };
+
+        // this.server.authTokenLifecycleNotifications.subscribe(st => {
+        //     switch(st) {
+        //         case TokenStates.TokenInvalid: {
+        //             this.logger.info('JWT Token Invalid');
+        //             subject.next({event: LifecycleCallbacks.showLoginPage, args: 'JWT token invalid'});
+        //             break;
+        //         }
+        //
+        //         case TokenStates.TokenOK: {
+        //             this.logger.info('JWT Token OK');
+        //             break;
+        //         }
+        //
+        //         case TokenStates.TokenWasRefreshed: {
+        //             this.logger.info('JWT Token refreshed');
+        //             break;
+        //         }
+        //     }
+        // });
+
         this.server.asyncRunStartupLifecycle(callback).then(() => {
+            this.logger.debug(`Lifecycle as a stream - completed`);
             subject.complete();
         });
         return subject;

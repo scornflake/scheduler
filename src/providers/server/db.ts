@@ -1,6 +1,5 @@
 import PouchDB from 'pouchdb';
 import PouchDBFind from 'pouchdb-find';
-import PouchAuthentication from 'pouchdb-authentication';
 import {Logger} from "ionic-logging-service";
 import {NamedObject, ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
 import 'reflect-metadata';
@@ -21,10 +20,10 @@ import {Organization} from "../../scheduling/organization";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {StoreBasedResolver} from "./orm-resolver";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
+import {Observable} from "rxjs/Observable";
+import {StateProvider} from "../state/state";
 import Database = PouchDB.Database;
 import DatabaseConfiguration = PouchDB.Configuration.DatabaseConfiguration;
-import Options = PouchDB.Core.Options;
-import {Observable} from "rxjs/Observable";
 
 // Put this back in when we move to v7 of Pouch.
 // import plugin from 'pouchdb-adapter-idb';
@@ -53,30 +52,28 @@ class SchedulerDatabase implements IObjectStore {
     logger: Logger;
 
     private db: Database<{}>;
-
     private server_db: PouchDB.Database<{}>;
     private server_sync: PouchDB.Replication.Sync<{}>;
 
     private current_indexes: PouchDB.Find.GetIndexesResponse<{}>;
     private dbName: string;
-    private couchUsername: string;
-    private couchCredentials: string;
     private tracker: ObjectChangeTracker;
     private mapper: OrmMapper;
     private _converter: OrmConverter;
+    private _state: StateProvider;
     private _cache: IObjectCache;
+
     lastSeenReplicationStatus: ReplicationStatus = ReplicationStatus.Unknown;
 
-    constructor(dbName: string, credentials: string, mapper: OrmMapper) {
+    constructor(dbName: string, state: StateProvider, mapper: OrmMapper) {
         this.dbName = dbName;
         this.mapper = mapper;
-        this.couchCredentials = credentials;
+        this._state = state;
         this.logger = LoggingWrapper.getLogger("db");
 
         let resolver = new StoreBasedResolver(this, mapper);
         this._converter = new OrmConverter(this.mapper, this, null, resolver);
         PouchDB.plugin(PouchDBFind);
-        PouchDB.plugin(PouchAuthentication);
 
         this.readyEvent = new ReplaySubject(1);
         this.tracker = new ObjectChangeTracker(this.mapper);
@@ -108,9 +105,9 @@ class SchedulerDatabase implements IObjectStore {
         return this.tracker.changes;
     }
 
-    static ConstructAndWait(dbName: string, credentials: string, mapper: OrmMapper): Promise<SchedulerDatabase> {
+    static ConstructAndWait(dbName: string, state: StateProvider, mapper: OrmMapper): Promise<SchedulerDatabase> {
         return new Promise<SchedulerDatabase>((resolve) => {
-            let instance = new SchedulerDatabase(dbName, credentials, mapper);
+            let instance = new SchedulerDatabase(dbName, state, mapper);
             // instance.logger.info("Starting DB setup for TEST");
             instance.readyEvent.subscribe(() => {
                 resolve(instance);
@@ -140,14 +137,17 @@ class SchedulerDatabase implements IObjectStore {
         };
     }
 
-    get remoteCouchOptions(): Options {
+    get remoteCouchOptions() {
         return {
-            ajax: {
-                headers: {
-                    Authorization: 'Basic ' + window.btoa(this.couchUsername + ':' + this.couchCredentials)
+            fetch: (url, opts) => {
+                if (this._state && this._state.loginToken) {
+                    // console.log(`POUCH adding Authorization token to headers!`);
+                    opts.headers.set('Authorization', 'Bearer ' + this._state.loginToken);
                 }
+                // console.log(`POUCH FETCH: ${opts}`);
+                return PouchDB.fetch(url, opts);
             }
-        };
+        }
     }
 
     async initialize() {
@@ -573,18 +573,14 @@ class SchedulerDatabase implements IObjectStore {
             this.logger.warn(`Replication already started, ignored`);
         }
 
-        this.couchUsername = remoteDBName;
-        this.logger.info(`Using ${this.couchUsername} with token ${this.couchCredentials}`);
+        this.logger.info(`Using token ${this._state.loginToken}`);
         this.server_db = new PouchDB(`${serverUrl}/${remoteDBName}`, this.remoteCouchOptions);
-
-        this.logger.info(`Doing login using ${this.couchUsername}...`);
-        await this.server_db.logIn(this.couchUsername, this.couchCredentials, this.remoteCouchOptions);
-        this.logger.info(`Done login. Begin sync...`);
 
         // Do a single non-live sync first, to get all the data into our local store.
         // Wait for this initial sync to complete.
-        await Observable.create(obs => {
+        let observable = Observable.create(obs => {
             this.db.sync(this.server_db, {retry: true}, () => {
+                // this.db.sync(this.server_db, {retry: true, filter: "docsonly/docsonly"}, () => {
                 this.logger.info(`Initial replication complete`);
                 this.startContinuousReplication();
                 this.lastSeenReplicationStatus = ReplicationStatus.Idle;
@@ -595,21 +591,25 @@ class SchedulerDatabase implements IObjectStore {
                 this.saveNotifications$.next(SavingState.FinishedSaving);
                 obs.next(change);
             }).on('denied', (err) => {
-                obs.error(err);
+                this.logger.error(SWBSafeJSON.stringify(err));
+                obs.error(SWBSafeJSON.stringify(err));
                 obs.complete();
             }).on('error', (err) => {
-                obs.error(err);
+                this.logger.error(SWBSafeJSON.stringify(err));
+                obs.error(SWBSafeJSON.stringify(err));
                 obs.complete();
             }).on('complete', (info) => {
                 // this.logger.warn(`NOTIFICATION: Initial replication complete`);
                 obs.complete();
             });
-        }).toPromise();
+        });
+        return observable.toPromise();
     }
 
     private startContinuousReplication() {
         // Now start continuous replication.
-        this.server_sync = this.db.sync(this.server_db, {live: true, retry: true})
+        this.logger.info(`Starting continuous replication...`);
+        this.server_sync = this.db.sync(this.server_db, {live: true, retry: true, filter: "filters/docsonly"})
             .on('change', (change) => {
                 this.lastSeenReplicationStatus = ReplicationStatus.ProcessingPull;
                 this.saveNotifications$.next(SavingState.FinishedSaving);

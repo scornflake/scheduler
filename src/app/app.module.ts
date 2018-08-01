@@ -13,7 +13,6 @@ import {SheetSelectionPageModule} from "../pages/sheet-selection/sheet-selection
 import {TabSelectionPageModule} from "../pages/tab-selection/tab-selection.module";
 import {ConfigurationService} from "ionic-configuration-service";
 import {LoggingService} from "ionic-logging-service";
-import {loadConfiguration} from "./logging-configuration";
 import {RESTServer} from "../providers/server/server";
 import {HomePageModule} from "../pages/home/home.module";
 import {LoginPageModule} from "../pages/login/login.module";
@@ -41,7 +40,7 @@ import {PermissionsProvider} from '../providers/permissions/permissions';
 import {RolesPageModule} from "../pages/roles/roles.module";
 import {RoleDetailPageModule} from "../pages/role-editor/role-editor.module";
 import {EndpointsProvider} from '../providers/endpoints/endpoints';
-import {loadStateAsPromise, StateProvider} from '../providers/state/state';
+import {StateProvider} from '../providers/state/state';
 import {JWTAPIModule} from "../providers/token/jwt-api.module";
 
 
@@ -58,6 +57,23 @@ let config = {
 
 export function ResponsiveDefinition() {
     return new ResponsiveConfig(config);
+}
+
+export function doAppInitializersDeterministic(config: ConfigurationService,
+                                               logging: LoggingService,
+                                               state: StateProvider,
+                                               endpoints: EndpointsProvider) {
+    return () => {
+        // console.log(`Loading settings...`);
+        return config.load("assets/settings.json").then(() => {
+            logging.configure();
+            // console.log(`Validating endpoints...`);
+            return endpoints.validateConfiguration().then(() => {
+                // console.log(`Loading saved state...`);
+                return state.asyncLoadState();
+            })
+        });
+    }
 }
 
 @NgModule({
@@ -97,43 +113,43 @@ export function ResponsiveDefinition() {
         TabsPage,
     ],
     providers: [
+        StatusBar,
+        ConfigurationService,
+        Network,
+        SplashScreen,
+        RootStore,
+        SchedulerServer,
+        StateProvider,
+        {provide: ErrorHandler, useClass: IonicErrorHandler},
+        PageUtils,
+        LoggingService,
+        NativePageTransitions,
+        ConnectivityService,
+        GAPIS,
+        RESTServer,
+        PermissionsProvider,
         {
             provide: OrmMapper,
             useFactory: setupOrmMapper,
             deps: [],
         },
         {
-            provide: APP_INITIALIZER,
-            useFactory: loadConfiguration,
-            deps: [ConfigurationService],
-            multi: true
-        },
-        {
-            provide: APP_INITIALIZER,
-            useFactory: loadStateAsPromise,
-            deps: [StateProvider],
-            multi: true
-        },
-        StatusBar,
-        Network,
-        SplashScreen,
-        RootStore,
-        SchedulerServer,
-        StateProvider,
-        ConfigurationService,
-        {provide: ErrorHandler, useClass: IonicErrorHandler},
-        PageUtils,
-        EndpointsProvider,
-        LoggingService,
-        NativePageTransitions,
-        ConnectivityService,
-        GAPIS,
-        RESTServer,
-        [{
             provide: ResponsiveConfig,
             useFactory: ResponsiveDefinition
-        }],
-        PermissionsProvider,
+        },
+        /*
+        Careful with APP_INITIALIZER.
+        You can get yourself into a situation where another provider uses injected objects, but they are not ready yet.
+        Because: APP_INITIALIZER runs *after* the objects are all hooked together (or at least, after dependencies are resolved)
+        e.g: Endpoints used to use ConfigurationService in its constructor. It was luck that it worked (for a while).
+         */
+        {
+            provide: APP_INITIALIZER,
+            useFactory: doAppInitializersDeterministic,
+            deps: [ConfigurationService, LoggingService, StateProvider, EndpointsProvider],
+            multi: true
+        },
+        EndpointsProvider,
     ]
 })
 

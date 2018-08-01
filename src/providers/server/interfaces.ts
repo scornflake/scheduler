@@ -13,6 +13,7 @@ interface ILifecycleCallback {
 }
 
 enum LifecycleCallbacks {
+    initialState,
     showLoginPage,
     applicationIsStarting,
     applicationHasStarted,

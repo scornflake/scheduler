@@ -51,7 +51,10 @@ export class HomePage {
         // this.sheetAPI.init();
         this.pageUtils.runStartupLifecycleAsStream()
             .pipe(
-                debounceTime(500),
+                /*
+                Dont debounce here - you can loose fast changes in state
+                 */
+                // debounceTime(500),
                 delay(500)
             )
             .subscribe((event: LifecycleEvent) => {
@@ -86,6 +89,7 @@ export class HomePage {
 
     }
 
+    // noinspection JSMethodCanBeStatic
     private firstTimeRun() {
         if (__firstTime) {
             // this.createTeamWizard();
