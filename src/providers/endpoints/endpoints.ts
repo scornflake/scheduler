@@ -41,6 +41,11 @@ export class EndpointsProvider {
         return `${server['rest']}/${path}`;
     }
 
+    couch_url(path): string {
+        let server = this.config.getValue("server");
+        return `${server['couch']}/${path}`;
+    }
+
 
     // noinspection JSMethodCanBeStatic
     // httpHeaders(token: string | null): HttpHeaders | null {

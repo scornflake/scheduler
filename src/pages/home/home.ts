@@ -8,7 +8,7 @@ import {LoggingWrapper} from "../../common/logging-wrapper";
 import {LifecycleEvent, PageUtils} from "../page-utils";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {computed} from "mobx-angular";
-import {debounceTime, delay} from "rxjs/operators";
+import {delay} from "rxjs/operators";
 import {LifecycleCallbacks} from "../../providers/server/interfaces";
 import {NativePageTransitions} from "@ionic-native/native-page-transitions";
 

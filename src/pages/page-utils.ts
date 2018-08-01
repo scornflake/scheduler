@@ -11,8 +11,6 @@ import {ILifecycleCallback, LifecycleCallbacks} from "../providers/server/interf
 import {ServerError} from "../common/interfaces";
 import {NativePageTransitions} from "@ionic-native/native-page-transitions";
 import {Observable} from "rxjs/Observable";
-import {Subject} from "rxjs/Subject";
-import {TokenStates} from "../providers/token/authorization.service";
 import {BehaviorSubject} from "rxjs";
 
 interface LifecycleEvent {

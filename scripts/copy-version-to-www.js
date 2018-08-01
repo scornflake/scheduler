@@ -42,6 +42,7 @@ console.log("Version:", version);
 
 let versionStuffs = {
     version: version,
+    environment: process.env['IONIC_ENV'] || "default",
     build: rawJSON.widget.$['ios-CFBundleVersion']
 };
 fs.writeFileSync(outputJSONPath, JSON.stringify(versionStuffs));
