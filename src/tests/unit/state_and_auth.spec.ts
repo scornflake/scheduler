@@ -145,6 +145,7 @@ describe('auth and state tests', () => {
         stateProv.state.isForcedOffline = true;
         expect(stateProv.hasStateChangedSinceLastLifecycleRun()).toBeFalsy();
 
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000;
     });
 
     it('should set login token if login succeeds', (done) => {
