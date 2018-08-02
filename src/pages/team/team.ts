@@ -6,8 +6,7 @@ import {RootStore} from "../../store/root";
 import {ObjectValidation} from "../../scheduling/shared";
 import {PageUtils} from "../page-utils";
 import {NamedObject} from "../../scheduling/base-types";
-import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 
 @IonicPage({
     name: 'page-team',
@@ -28,12 +27,13 @@ export class TeamPage {
                 public pageUtils: PageUtils,
                 public alertCtrl: AlertController,
                 public cd: ChangeDetectorRef,
+                private logService: LoggingService,
                 public zone: NgZone,
                 public rootStore: RootStore,
                 public navParams: NavParams) {
         this.team = navParams.get('team');
         this.callback = navParams.get('callback');
-        this.logger = LoggingWrapper.getLogger('page.team')
+        this.logger = this.logService.getLogger('page.team')
     }
 
     // ngDoCheck() {

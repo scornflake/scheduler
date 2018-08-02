@@ -1,13 +1,12 @@
 import {UIStore} from "./UIState";
 import {Injectable, NgZone, OnDestroy, OnInit} from "@angular/core";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
 import {IReactionDisposer, observable, reaction, runInAction, toJS, trace} from "mobx";
 import {Plan} from "../scheduling/plan";
 import {SchedulerDatabase} from "../providers/server/db";
 import {Team} from "../scheduling/teams";
 import {ObjectWithUUID} from "../scheduling/base-types";
-import {LoggingWrapper} from "../common/logging-wrapper";
 import {Person, Preferences} from "../scheduling/people";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import {SchedulerObjectStore} from "../scheduling/common/scheduler-store";
@@ -41,11 +40,11 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
 
     private db: SchedulerDatabase;
 
-    constructor(private zone: NgZone) {
+    constructor(private zone: NgZone, private logService: LoggingService) {
         super();
 
-        this.logger = LoggingWrapper.getLogger("service.store");
-        this.setUIStore(new UIStore());
+        this.logger = logService.getLogger("service.store");
+        this.setUIStore(new UIStore(logService));
 
         this.loggedInPersonSubject = new BehaviorSubject<Person>(null);
         this.uiStoreSubject = new BehaviorSubject<UIStore>(null);

@@ -2,8 +2,7 @@ import {RootStore} from "../../store/root";
 import {RESTServer} from "./server";
 import {LoginResponse, RoleSetResponse, ServerError} from "../../common/interfaces";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
-import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {Person} from "../../scheduling/people";
 import {Observable} from "rxjs/Observable";
 import {forwardRef, Inject, Injectable} from "@angular/core";
@@ -40,11 +39,12 @@ class SchedulerServer implements ILifecycle, IReplicationNotification {
                 private restAPI: RESTServer,
                 private auth: AuthorizationService,
                 private state: StateProvider,
+                private logService: LoggingService,
                 private connectivity: ConnectivityService,
                 private ormMapper: OrmMapper,
                 private configurationService: ConfigurationService
     ) {
-        this.logger = LoggingWrapper.getLogger('service.bridge');
+        this.logger = this.logService.getLogger('service.bridge');
         this.dbSubject = new BehaviorSubject<SchedulerDatabase>(null);
 
         // assume so, to begin with.
@@ -193,14 +193,11 @@ class SchedulerServer implements ILifecycle, IReplicationNotification {
                 //
                 // Quick check here to see if token is OK/needs refresh
                 // Simply access our own user record.
-                // That's enuf to force token refresh
-
-                // NOT checking for token expiry.
-                // Because: it'll expire in 15m, but could be refreshed fine.
+                //
+                // Intentionally not checking for token expiry.
+                // Because: it'll expire in 15m, but could be refreshed within 30d (so, still actually semi usable as far as user is concerned).
                 //
                 // So, just let it fall through to a real operation
-                //
-
                 try {
                     await this.restAPI.getOwnUserDetails();
                 } catch (err) {
@@ -216,6 +213,20 @@ class SchedulerServer implements ILifecycle, IReplicationNotification {
                     }
                 }
             } else {
+                // Check we have a token that is ... valid?
+                if (!this.auth.isAuthenticated()) {
+                    callback.showLoginPage(`Token doesn't pass isAuthenticated`);
+                    return false;
+                }
+
+                // OK, is it valid, within .... the 30d?
+                let days = 30;
+                let expiryLeeway = 60 * 60 * 24 * days;
+                if (!this.auth.isAuthenticatedAndNotExpired(expiryLeeway)) {
+                    callback.showLoginPage(`Token is older than 30d`);
+                    return false;
+                }
+
                 this.logger.warn(`We're offline. We have a token and we're gonna assume it is OK.`);
             }
             return await this.asyncRunStartupLifecycleAfterLogin(callback, timeout);
@@ -293,7 +304,7 @@ class SchedulerServer implements ILifecycle, IReplicationNotification {
         this.logger.info('setupDBFromState', `Beginning DB setup for person:${personUUID} and org:${organizationUUID}`);
         let name = Organization.dbNameFor(organizationUUID);
 
-        let newDb = new SchedulerDatabase(name, this.state, this.ormMapper);
+        let newDb = new SchedulerDatabase(name, this.state, this.ormMapper, this.logService);
         newDb.notificationDelegate = this;
 
         // Clear logged in person and any other 'db dependent' state
@@ -500,13 +511,24 @@ class SchedulerServer implements ILifecycle, IReplicationNotification {
         return this.auth.tokenLifecycleSubject;
     }
 
-    async asyncTokenRejectedInContinuousReplication() : Promise<boolean> {
+    async asyncTokenRejectedInContinuousReplication(): Promise<boolean> {
         // Oh really?
         // Ask auth to refresh. This will attempt to do so, saving the refresh token in state.
         // It's async so that the caller can wait on it, and do something useful when it's back.
-        await this.auth.refresh().toPromise();
-        return this.auth.isAuthenticatedAndNotExpired();
+        try {
+            await this.auth.refresh().toPromise();
+            return this.auth.isAuthenticatedAndNotExpired();
+        } catch (err) {
+            // Cannot do it!
+            this.logger.error(`Failed to refresh the token: ${err}`);
+            return false;
+        }
     }
+
+    tokenCouldNotBeRefreshedDuringReplication() {
+        this.auth.notifyTokenInvalid();
+    }
+
 }
 
 export {

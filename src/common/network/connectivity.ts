@@ -2,8 +2,7 @@ import {Injectable, NgZone, OnDestroy} from "@angular/core";
 import {Platform} from "ionic-angular";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {Subject} from "rxjs/Subject";
-import {LoggingWrapper} from "../logging-wrapper";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {Subscription} from "rxjs/Subscription";
 import {SWBSafeJSON} from "../json/safe-stringify";
 import {Observable} from "rxjs/Observable";
@@ -22,10 +21,12 @@ class ConnectivityService implements OnDestroy {
     @observable private _navigatorOnline: boolean = true;
     @observable private _overrideEnabled: boolean = false;
 
-    constructor(private platform: Platform, private network: Network, private zone: NgZone) {
-    // constructor(private platform: Platform, private zone: NgZone) {
+    constructor(private platform: Platform,
+                private network: Network,
+                private logService: LoggingService,
+                private zone: NgZone) {
         this.networkSubject = new BehaviorSubject<boolean>(true);
-        this.logger = LoggingWrapper.getLogger('network');
+        this.logger = this.logService.getLogger('network');
 
         this.platform.ready().then(() => {
             if (this.onDevice && this.network) {

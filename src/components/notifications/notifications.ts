@@ -4,8 +4,7 @@ import {PageUtils} from "../../pages/page-utils";
 import {Invitation} from "../../scheduling/people";
 import {NavController, ViewController} from "ionic-angular";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
-import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 
 @Component({
     selector: 'notifications',
@@ -17,9 +16,10 @@ export class NotificationsComponent {
     constructor(public store: RootStore,
                 public pageUtils: PageUtils,
                 public nav: NavController,
+                public logService: LoggingService,
                 public viewCtrl: ViewController,
                 public server: SchedulerServer) {
-        this.logger = LoggingWrapper.getLogger('notifications');
+        this.logger = this.logService.getLogger('notifications');
     }
 
     close() {
@@ -36,7 +36,7 @@ export class NotificationsComponent {
         // we have to have this user IN the other org.
         // we log them out? then log them in...  this will reload the DB with the new org data.
 
-        if(!this.server.isOnline) {
+        if (!this.server.isOnline) {
             this.pageUtils.showError('Must be online to accept an invite');
             return;
         }

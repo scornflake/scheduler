@@ -1,24 +1,47 @@
 import {ConfigurationService} from "ionic-configuration-service";
 import {HttpClient} from "@angular/common/http";
+import {LoggingService} from "ionic-logging-service";
+import {resetLog4J} from "./unit/test-helpers";
 
 export function loadConfiguration(configurationService: ConfigurationService): () => Promise<void> {
     return () => configurationService.load("assets/settings.json");
 }
 
+/*
+Use this to completely reset the logging system.
+Used like so (in tests):
+
+                {provide: LoggingService, useClass: MockLoggingService},
+
+ */
+class MockLoggingService extends LoggingService {
+    constructor() {
+        resetLog4J();
+        super(new MockConfigurationService(null))
+    }
+}
 
 /*
 Note: had to completely override the class since it doesn't have a setter for the values, and it's private.
  */
-class MockConfigurationService extends ConfigurationService {
+class MockConfigurationService
+    extends ConfigurationService {
     private mocked_configValues: { [key: string]: any };
     private static __service: MockConfigurationService = null;
 
     static dbName: string = 'tests';
 
-    constructor(httpClient: HttpClient) {
+    constructor(httpClient: HttpClient = null) {
         super(httpClient);
         MockConfigurationService.__service = this;
         this.setVars(MockConfigurationService.test_configuration());
+    }
+
+    load(configurationUrl: string): Promise<void> {
+        return new Promise((resolve) => {
+            console.log("Load? Naaaah we're a mock!");
+            resolve();
+        })
     }
 
     public getKeys(): string[] {
@@ -34,6 +57,7 @@ class MockConfigurationService extends ConfigurationService {
         if (this.mocked_configValues) {
             return this.mocked_configValues[key];
         } else {
+            console.error(`something asked for ${key} - we don't have it`);
             return undefined;
         }
     }
@@ -93,7 +117,7 @@ class MockConfigurationService extends ConfigurationService {
                     },
                     {
                         "loggerName": "service.bridge",
-                        "logLevel": "INFO"
+                        "logLevel": "DEBUG"
                     },
                     {
                         "loggerName": "db.mapping",
@@ -115,5 +139,6 @@ class MockConfigurationService extends ConfigurationService {
 
 
 export {
-    MockConfigurationService
+    MockConfigurationService,
+    MockLoggingService
 }

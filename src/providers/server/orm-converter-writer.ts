@@ -3,8 +3,7 @@ import {ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
 import {GetTheTypeNameOfTheObject, OrmMapper} from "../mapping/orm-mapper";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {OrmUtils} from "./orm-utils";
-import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {isUndefined} from "util";
 
 class OrmConverterWriter {
@@ -14,9 +13,10 @@ class OrmConverterWriter {
     private utils: OrmUtils;
 
     constructor(private mapper: OrmMapper,
+                private logService: LoggingService,
                 private objectLoader: IObjectStore
     ) {
-        this.logger = LoggingWrapper.getLogger('orm.writer');
+        this.logger = logService.getLogger('orm.writer');
         this.utils = new OrmUtils(this.logger);
     }
 
@@ -123,7 +123,7 @@ class OrmConverterWriter {
         this.utils.debug(`_convert_to_nested_object_list_of_dict: Nested object list: ${SWBSafeJSON.stringify(value)}`, nesting);
         if (GetTheTypeNameOfTheObject(value) == "array") {
             let typeNames = Array.from(new Set(value.map(v => {
-                if(!(v instanceof TypedObject)) {
+                if (!(v instanceof TypedObject)) {
                     throw new Error(`Items of a nested object list must derive from TypedObject. Got: ${SWBSafeJSON.stringify(v)}`);
                 }
                 return v.type;
@@ -209,7 +209,7 @@ class OrmConverterWriter {
     private async _asyncConvertToReferenceList(mapping: any, value: any, nesting: number = 0) {
         if (GetTheTypeNameOfTheObject(value) == "array") {
             let typeNames = Array.from(new Set(value.map(v => {
-                if(!(v instanceof TypedObject)) {
+                if (!(v instanceof TypedObject)) {
                     throw new Error(`Items of a reference list must derive from TypedObject. Got: ${SWBSafeJSON.stringify(v)}`);
                 }
                 return v.constructor.name;

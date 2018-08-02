@@ -2,8 +2,7 @@ import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {action, computed, observable} from "mobx-angular";
 import {LoginResponse} from "../../common/interfaces";
-import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {reaction, runInAction} from "mobx";
 import {Storage} from "@ionic/storage";
 import {ConnectivityService} from "../../common/network/connectivity";
@@ -23,9 +22,10 @@ export class StateProvider {
     private logger: Logger;
 
     constructor(public http: HttpClient,
+                public logService: LoggingService,
                 private connectivity: ConnectivityService,
                 private storage: Storage) {
-        this.logger = LoggingWrapper.getLogger('service.state');
+        this.logger = logService.getLogger('service.state');
     }
 
     async asyncLoadState(): Promise<object> {
@@ -120,7 +120,7 @@ export class StateProvider {
             if(!ur) {
                 throw new Error('No user returned from login response');
             }
-            this.logger.info(`Login: set login token to ${lr.token || ''}, last person to: ${ur.uuid || ''}`);
+            this.logger.info("setLoginTokenFromLoginResponse", `Set login token to ${lr.token || ''}, last person to: ${ur.uuid || ''}`);
             this.state.loginToken = lr.token;
             this.state.lastPersonUUID = ur.uuid;
             this.state.lastOrganizationUUID = ur.organization_uuid;
@@ -128,7 +128,7 @@ export class StateProvider {
             this.state.loginToken = null;
             this.state.lastPersonUUID = null;
             this.state.lastOrganizationUUID = null;
-            this.logger.info(`Login: Clearing state token/uuid because login not OK`);
+            this.logger.info("setLoginTokenFromLoginResponse", `Clearing state token/uuid because good == false`);
         }
     }
 }

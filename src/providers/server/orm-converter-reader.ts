@@ -3,20 +3,21 @@ import {runInAction} from "mobx";
 import {IReferenceResolver, MappingType, ObjectReference, PropertyMapping} from "../mapping/orm-mapper-type";
 import {ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
 import {OrmUtils} from "./orm-utils";
-import {LoggingWrapper} from "../../common/logging-wrapper";
 import {OrmMapper} from "../mapping/orm-mapper";
 import {IObjectCache} from "../mapping/cache";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
+import {LoggingService} from "ionic-logging-service";
 
 class OrmConverterReader {
     private utils: OrmUtils;
 
     constructor(
         private mapper: OrmMapper,
+        private logService: LoggingService,
         private _resolver: IReferenceResolver,
         private _cache: IObjectCache
     ) {
-        this.utils = new OrmUtils(LoggingWrapper.getLogger('orm.reader'));
+        this.utils = new OrmUtils(logService.getLogger('orm.reader'));
     }
 
     setCache(cache: IObjectCache) {

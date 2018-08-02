@@ -1,7 +1,6 @@
 import {Person} from "./people";
 import {throwOnInvalidDate} from "./common/date-utils";
 import {RuleFacts} from "./rule_based/rule-facts";
-import {Logger} from "ionic-logging-service";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {ObjectWithUUID} from "./base-types";
 import {observable} from "mobx-angular";
@@ -22,13 +21,10 @@ export class Availability extends ObjectWithUUID {
     @observable period: number;
     @observable unit: AvailabilityUnit;
 
-    protected logger: Logger;
-
     constructor(period: number = 1, unit: AvailabilityUnit = AvailabilityUnit.AVAIL_ANYTIME) {
         super();
         this.period = period;
         this.unit = unit;
-        this.logger = LoggingWrapper.getLogger("scheduler.availability");
     }
 
     get_end_date_from(date: Date) {
@@ -139,7 +135,7 @@ export class AvailabilityEveryNOfM extends Availability {
         let num_placements = number_of_placements.length;
         let is_available = num_placements < this.period;
 
-        this.logger.info(`${person.name} is available: ${is_available}. ${num_placements} < ${this.period}`);
+        LoggingWrapper.info("scheduler.availability", `${person.name} is available: ${is_available}. ${num_placements} < ${this.period}`);
 
         if (record_unavailability) {
             facts.add_decision(`Looking between ${start_date.toDateString()} and ${end_date.toDateString()}. Have ${num_placements} in those dates`);

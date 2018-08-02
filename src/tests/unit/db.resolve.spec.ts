@@ -3,6 +3,9 @@ import {Person} from "../../scheduling/people";
 import {scheduler_db_map} from "../../assets/db.mapping";
 import {OrmMapper} from "../../providers/mapping/orm-mapper";
 import {IObjectCache, SimpleCache} from "../../providers/mapping/cache";
+import {LoggingService} from "ionic-logging-service";
+import {MockConfigurationService} from "../mock-logging-configuration";
+import {newLoggingServiceAfterReset} from "./test-helpers";
 
 describe('db lookups', () => {
     let db: SchedulerDatabase;
@@ -10,14 +13,15 @@ describe('db lookups', () => {
     let cache: IObjectCache;
 
     beforeEach((done) => {
+        let logService = newLoggingServiceAfterReset();
         cache = new SimpleCache();
-        mapper = new OrmMapper();
+        mapper = new OrmMapper(logService);
 
         //Add in mappings that we need, since we reference other models in this test
         mapper.addConfiguration(scheduler_db_map);
 
         let randomDBName = `tests-${Math.random().toString(36).substring(7)}-db`;
-        SchedulerDatabase.ConstructAndWait(randomDBName, null, mapper).then(new_db => {
+        SchedulerDatabase.ConstructAndWait(randomDBName, null, mapper, logService).then(new_db => {
             db = new_db;
             db.setCache(cache);
             done();

@@ -4,8 +4,7 @@ import {RootStore} from "../../store/root";
 import {Team} from "../../scheduling/teams";
 import {PageUtils} from "../page-utils";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
-import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {action, computed} from "mobx-angular";
 
 @IonicPage({
@@ -21,11 +20,12 @@ export class TeamsPage {
 
     constructor(public navCtrl: NavController,
                 public rootStore: RootStore,
-                public appRef:ApplicationRef,
+                public appRef: ApplicationRef,
                 public server: SchedulerServer,
+                private logService: LoggingService,
                 public pageUtils: PageUtils,
                 public navParams: NavParams) {
-        this.logger = LoggingWrapper.getLogger('page.teams');
+        this.logger = this.logService.getLogger('page.teams');
     }
 
     ngAfterViewInit() {

@@ -22,19 +22,17 @@ export class AvailabilityOptionsComponent implements OnInit {
             this._person = p;
 
             autorun(() => {
-                this.logger.info(`Building new state from availability: ${p.availability}`);
+                LoggingWrapper.info("component.availability", `Building new state from availability: ${p.availability}`);
                 this.updateInternalStateUsingAvailability(p.availability);
             })
         });
     }
 
-    private logger: Logger;
     @observable private _person: Person;
 
     @Output() availabilityChange = new EventEmitter<Availability>();
 
     constructor() {
-        this.logger = LoggingWrapper.getLogger('component.availability');
         this._state['anytime'] = new ObservableMap();
         this._state['regular'] = new ObservableMap();
         this._state['fraction'] = new ObservableMap();
@@ -107,7 +105,7 @@ export class AvailabilityOptionsComponent implements OnInit {
 
     buildNewAvailability() {
         let days_number: number = parseInt(this.state['days']) || 2;
-        this.logger.warn(`Type is ${this.type}`);
+        LoggingWrapper.warn("component.availability", `Type is ${this.type}`);
         let newAvail = null;
         if (this.type == "fraction") {
             // "this.unit" isn't used here

@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {ConfigurationService} from "ionic-configuration-service";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {LoggingWrapper} from "../../common/logging-wrapper";
 import {isUndefined} from "util";
 
@@ -9,8 +9,8 @@ import {isUndefined} from "util";
 export class EndpointsProvider {
     logger: Logger;
 
-    constructor(public config: ConfigurationService) {
-        this.logger = LoggingWrapper.getLogger('service.endpoints');
+    constructor(public config: ConfigurationService, public logService: LoggingService) {
+        this.logger = this.logService.getLogger('service.endpoints');
     }
 
     async validateConfiguration(): Promise<any> {

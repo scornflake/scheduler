@@ -5,7 +5,7 @@ import {LoggingWrapper} from "../../common/logging-wrapper";
 import {observable} from "mobx-angular";
 import {TypedObject} from "../../scheduling/base-types";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {Observable} from "rxjs/Observable";
 import {filter, flatMap, take, timeout} from "rxjs/operators";
 
@@ -16,8 +16,9 @@ class StoreBasedResolver implements IReferenceResolver {
     maxTimeToWaitForReference: number = 5000;
 
     constructor(private loader: IObjectStore,
+                private logService: LoggingService,
                 private mapper: OrmMapper) {
-        this.logger = LoggingWrapper.getLogger('orm.resolver');
+        this.logger = logService.getLogger('orm.resolver');
         this.utils = new OrmUtils(this.logger);
     }
 

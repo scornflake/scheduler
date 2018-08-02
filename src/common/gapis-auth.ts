@@ -28,16 +28,13 @@ class GAPIS {
     private init_done: boolean;
     private callback: any;
 
-    private logger: Logger;
-
     constructor(private rootStore: RootStore,
                 private server: RESTServer,
                 private appRef: ApplicationRef) {
-        this.logger = LoggingWrapper.getLogger("google");
     }
 
     init(callback = null) {
-        this.logger.info("Loading GAPI...");
+        LoggingWrapper.info("gapi", "Loading GAPI...");
         this.callback = callback;
 
         this.initClient = this.initClient.bind(this);
@@ -61,9 +58,9 @@ class GAPIS {
         const {code} = json;
         this.server.storeGoogleAccessCode(code).subscribe(r => {
             if (!r.ok) {
-                this.logger.error(r.detail)
+                LoggingWrapper.error("gapi", r.detail)
             } else {
-                this.logger.info("Server stored and converted the one-time code to a token!");
+                LoggingWrapper.info("gapi", "Server stored and converted the one-time code to a token!");
             }
         })
     }
@@ -77,7 +74,7 @@ class GAPIS {
     }
 
     list_all_sheets(): Observable<any> {
-        this.logger.info("Listing all sheets");
+        LoggingWrapper.info("gapi", "Listing all sheets");
         let sheets_only = {
             q: "mimeType='application/vnd.google-apps.spreadsheet'"
         };
@@ -94,7 +91,7 @@ class GAPIS {
     }
 
     private initClient() {
-        this.logger.info("Initializing GAPI...");
+        LoggingWrapper.info("gapi", "Initializing GAPI...");
         gapi.client.init({
             apiKey: API_KEY,
             clientId: credentials.installed.client_id,
@@ -116,26 +113,26 @@ class GAPIS {
     }
 
     private updateSigninStatus(isSignedIn: boolean) {
-        this.logger.info("Updating signed in state to: " + isSignedIn);
+        LoggingWrapper.info("gapi", "Updating signed in state to: " + isSignedIn);
         let store = this.ui_store;
         store.signed_in_to_google = isSignedIn;
         this.appRef.tick();
     }
 
     private loadAuthentication() {
-        this.logger.info("Loading Auth API...");
+        LoggingWrapper.info("gapi", "Loading Auth API...");
         gapi.load('client:auth2', this.loadDrive);
     }
 
     private loadDrive() {
-        this.logger.info("Loading drive API...");
+        LoggingWrapper.info("gapi", "Loading drive API...");
         gapi.client.load('drive', 'v3').then((v) => {
             this.loadSheets();
         });
     }
 
     private loadSheets() {
-        this.logger.info("Loading sheets API...");
+        LoggingWrapper.info("gapi", "Loading sheets API...");
         gapi.client.load('sheets', 'v4').then((v) => {
             this.initClient();
         });
@@ -151,7 +148,7 @@ class GAPIS {
 
     public load_sheet_with_id(sheet_id): Observable<Spreadsheet> {
         return Observable.create((observer) => {
-            this.logger.info("Loading spreadsheet with ID: " + sheet_id);
+            LoggingWrapper.info("gapi", `Loading spreadsheet with ID: ${sheet_id}`);
             if (sheet_id == null || sheet_id == "") {
                 // throw new Error("No sheet");
                 throw new Error("No sheet ID specified");
@@ -191,14 +188,14 @@ class GAPIS {
         let progressObservable = new Subject<number>();
         progressObservable.next(0);
         let num_format_rules = sheet.conditionalFormats ? sheet.conditionalFormats.length : 0;
-        this.logger.info("Clearing sheet (with " + num_format_rules + " format rules)...");
+        LoggingWrapper.info("gapi", "Clearing sheet (with " + num_format_rules + " format rules)...");
 
         gapi.client.sheets.spreadsheets.values.clear({
             spreadsheetId: spreadsheet.spreadsheetId,
             range: this.range_for_sheet(sheet)
         }).then((clear_response) => {
             progressObservable.next(0.25);
-            this.logger.info("Sending new data...");
+            LoggingWrapper.info("gapi", "Sending new data...");
             let fields = schedule.jsonFields();
             let rows = schedule.jsonResult().map(row => {
                 // Want to remap this structure
@@ -249,7 +246,7 @@ class GAPIS {
                 }
             }).then((r) => {
                 progressObservable.next(0.66);
-                this.logger.info("Updated all data. Formatting...");
+                LoggingWrapper.info("gapi", "Updated all data. Formatting...");
                 let requests = [];
                 for (let index = num_format_rules - 1; index >= 0; index--) {
                     requests.push({
@@ -382,7 +379,7 @@ class GAPIS {
                 ]
             }).then((r) => {
                 progressObservable.next(1.0);
-                this.logger.info("Finished updating Google Sheet");
+                LoggingWrapper.info("gapi", "Finished updating Google Sheet");
                 progressObservable.complete();
             })
         });

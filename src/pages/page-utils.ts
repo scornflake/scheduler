@@ -4,14 +4,14 @@ import {forwardRef, Inject, Injectable, NgZone, OnInit} from "@angular/core";
 import deepEqual from "deep-equal";
 import {ToastOptions} from "ionic-angular/components/toast/toast-options";
 import {SchedulerServer} from "../providers/server/scheduler-server.service";
-import {LoggingWrapper} from "../common/logging-wrapper";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {IDependencyTree, IObserverTree} from "mobx";
 import {ILifecycleCallback, LifecycleCallbacks} from "../providers/server/interfaces";
 import {ServerError} from "../common/interfaces";
 import {NativePageTransitions} from "@ionic-native/native-page-transitions";
 import {Observable} from "rxjs/Observable";
-import {BehaviorSubject} from "rxjs";
+import {BehaviorSubject, Subscription} from "rxjs";
+import {TokenStates} from "../providers/token/authorization.service";
 
 interface LifecycleEvent {
     event: LifecycleCallbacks;
@@ -21,13 +21,15 @@ interface LifecycleEvent {
 @Injectable()
 class PageUtils implements OnInit {
     private logger: Logger;
+    private authNotificationSubscription: Subscription;
 
     constructor(private toastController: ToastController,
                 private alertCtrlr: AlertController,
+                private logService: LoggingService,
                 private nativeTransitions: NativePageTransitions,
                 private zoneRef: NgZone,
                 @Inject(forwardRef(() => SchedulerServer)) private server) {
-        this.logger = LoggingWrapper.getLogger('page.utils');
+        this.logger = this.logService.getLogger('page.utils');
     }
 
     ngOnInit() {
@@ -100,25 +102,29 @@ class PageUtils implements OnInit {
             }
         };
 
-        // this.server.authTokenLifecycleNotifications.subscribe(st => {
-        //     switch(st) {
-        //         case TokenStates.TokenInvalid: {
-        //             this.logger.info('JWT Token Invalid');
-        //             subject.next({event: LifecycleCallbacks.showLoginPage, args: 'JWT token invalid'});
-        //             break;
-        //         }
-        //
-        //         case TokenStates.TokenOK: {
-        //             this.logger.info('JWT Token OK');
-        //             break;
-        //         }
-        //
-        //         case TokenStates.TokenWasRefreshed: {
-        //             this.logger.info('JWT Token refreshed');
-        //             break;
-        //         }
-        //     }
-        // });
+        if (this.authNotificationSubscription) {
+            this.authNotificationSubscription.unsubscribe();
+            this.authNotificationSubscription = null;
+        }
+
+        this.authNotificationSubscription = this.server.authTokenLifecycleNotifications.subscribe(st => {
+            switch (st) {
+                case TokenStates.TokenInvalid: {
+                    subject.next({event: LifecycleCallbacks.showLoginPage, args: 'JWT token invalid'});
+                    break;
+                }
+
+                case TokenStates.TokenWasRefreshed: {
+                    break;
+                }
+
+                default:
+                case TokenStates.TokenOK: {
+                    this.logger.info('JWT Token OK');
+                    break;
+                }
+            }
+        });
 
         this.server.asyncRunStartupLifecycle(callback).then(() => {
             this.logger.debug(`Lifecycle as a stream - completed`);

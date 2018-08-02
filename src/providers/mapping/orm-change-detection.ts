@@ -8,8 +8,7 @@ import {
     observe
 } from "mobx";
 import {ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
-import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {isUndefined} from "util";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {Subject} from "rxjs/Subject";
@@ -75,9 +74,9 @@ class ObjectChangeTracker {
     private notification_listener: ChangeListener;
     private mapper: OrmMapper;
 
-    constructor(mapper: OrmMapper) {
+    constructor(mapper: OrmMapper, logService: LoggingService) {
         this.mapper = mapper;
-        this.logger = LoggingWrapper.getLogger("db.tracking");
+        this.logger = logService.getLogger("db.tracking");
 
         this.clearAll();
 

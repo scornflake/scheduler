@@ -5,8 +5,7 @@ import {RootStore} from "../../store/root";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {RoleSetResponse} from "../../common/interfaces";
 import {PageUtils} from "../page-utils";
-import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {Plan} from "../../scheduling/plan";
 import {Role} from "../../scheduling/role";
 import * as moment from "moment";
@@ -40,12 +39,13 @@ export class PlanWizardPage extends WizardPage {
     constructor(public navCtrl: NavController,
                 public store: RootStore,
                 public server: SchedulerServer,
+                private logService: LoggingService,
                 private popover: PopoverController,
                 public pageUtils: PageUtils,
                 public navParams: NavParams) {
         super();
 
-        this.logger = LoggingWrapper.getLogger(`page.planwiz`);
+        this.logger = this.logService.getLogger(`page.planwiz`);
 
         // default of today, for 3 months
         this.startDate = moment().toDate();

@@ -3,8 +3,7 @@ import {isDefined, isUndefined} from "ionic-angular/util/util";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
 import * as moment from "moment";
 import {Moment} from "moment";
-import {Logger} from "ionic-logging-service";
-import {LoggingWrapper} from "./logging-wrapper";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {SWBSafeJSON} from "./json/safe-stringify";
 import {Plan} from "../scheduling/plan";
 import {Team} from "../scheduling/teams";
@@ -17,9 +16,9 @@ export class SpreadsheetReader {
     private logger: Logger;
     private people: PersonManager;
 
-    constructor(ppl_manager: PersonManager) {
+    constructor(ppl_manager: PersonManager, private logService: LoggingService) {
         this.problems = new Map<string, Set<string>>();
-        this.logger = LoggingWrapper.getLogger("spreadsheet.reader");
+        this.logger = logService.getLogger("spreadsheet.reader");
         this.people = ppl_manager;
     }
 

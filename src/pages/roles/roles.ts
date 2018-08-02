@@ -1,8 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {AlertController, IonicPage, NavController, NavParams} from 'ionic-angular';
 import {RootStore} from "../../store/root";
-import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {RoleSetResponse} from "../../common/interfaces";
 import {Role} from "../../scheduling/role";
@@ -23,10 +22,11 @@ export class RolesPage implements OnInit {
     constructor(public navCtrl: NavController,
                 public store: RootStore,
                 public pageUtils: PageUtils,
+                private logService: LoggingService,
                 public server: SchedulerServer,
                 public alertController: AlertController,
                 public navParams: NavParams) {
-        this.logger = LoggingWrapper.getLogger('page.roles');
+        this.logger = this.logService.getLogger('page.roles');
     }
 
     ngOnInit() {

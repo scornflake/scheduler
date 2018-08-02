@@ -1,11 +1,10 @@
 import {forwardRef, Inject, Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {BehaviorSubject, Observable, ReplaySubject, Subject} from 'rxjs';
 import {EndpointsProvider} from "../endpoints/endpoints";
 import {LoginResponse, RefreshResponse, ServerError} from "../../common/interfaces";
 import {StateProvider} from "../state/state";
-import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {JwtHelperService} from '@auth0/angular-jwt';
 import {isString} from "util";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
@@ -23,10 +22,11 @@ export class AuthorizationService {
 
     constructor(private httpClient: HttpClient,
                 public state: StateProvider,
+                private logService: LoggingService,
                 @Inject(forwardRef(() => JwtHelperService)) private jwtHelp,
                 private endpoints: EndpointsProvider) {
 
-        this.logger = LoggingWrapper.getLogger(`service.auth`);
+        this.logger = this.logService.getLogger(`service.auth`);
         this.tokenLifecycleSubject = new BehaviorSubject(TokenStates.TokenOK);
     }
 
@@ -62,7 +62,6 @@ export class AuthorizationService {
             this.notifyTokenRefreshed();
             return r;
         }, (err) => {
-            this.logger.info(`Token failed to refresh with ${err}.`);
             this.handleAuthenticationError(err);
         });
 
@@ -78,12 +77,12 @@ export class AuthorizationService {
         return this.state.isLoggedIn;
     }
 
-    isAuthenticatedAndNotExpired(): boolean {
+    isAuthenticatedAndNotExpired(nowOffsetInSeconds: number = 0): boolean {
         if (!this.state.isLoggedIn) {
             return false;
         }
         try {
-            return !this.jwtHelp.isTokenExpired(this.state.loginToken);
+            return !this.jwtHelp.isTokenExpired(this.state.loginToken, -nowOffsetInSeconds);
         } catch (err) {
             this.logger.warn("isAuthenticatedAndNotExpired", err);
             return false;
@@ -93,18 +92,26 @@ export class AuthorizationService {
 
     private handleAuthenticationError(err: any) {
         // TODO: Only for authentication error codes
+        this.logger.info(`Token authentication error: ${SWBSafeJSON.stringify(err)}.`);
         this.notifyTokenInvalid();
         this.state.setLoginTokenFromLoginResponse(false);
     }
 
-    isTokenExpiryException(err: any): boolean {
+    isTokenExpiryException(err: object): boolean {
         let result = false;
-        if (err instanceof ServerError) {
-            result = err.status == 401 && err.message.indexOf('expired') != -1;
+        if(err instanceof HttpErrorResponse || err instanceof ServerError) {
+            let message = err instanceof ServerError ? err.allErrors : `${err.message} ${SWBSafeJSON.stringify(err.error)}`;
+            // console.warn(`THE MESSAGE: ${message}`);
+            if (err.status == 401 && message.indexOf('expired') != -1) {
+                result = true;
+            }
+            if (err.status == 400 && message.indexOf('account is disabled') != -1) {
+                result = true;
+            }
         } else if (isString(err)) {
             result = err.indexOf('expired') != -1;
         }
-        this.logger.error(`Check if ${err} means 'token expired': ${result}`);
+        this.logger.error(`Check if ${err}/${err.constructor.name} means 'token expired': ${result}`);
         return result;
     }
 
@@ -112,7 +119,7 @@ export class AuthorizationService {
         this.tokenLifecycleSubject.next(TokenStates.TokenWasRefreshed);
     }
 
-    private notifyTokenInvalid() {
+    notifyTokenInvalid() {
         this.tokenLifecycleSubject.next(TokenStates.TokenInvalid);
     }
 

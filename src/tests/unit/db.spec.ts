@@ -1,7 +1,7 @@
 import {SchedulerDatabase} from "../../providers/server/db";
 import {Person} from "../../scheduling/people";
 import {ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
-import {MockConfigurationService} from "../../app/logging-configuration";
+import {MockConfigurationService} from "../mock-logging-configuration";
 import {observable} from "mobx";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {scheduler_db_map} from "../../assets/db.mapping";
@@ -22,6 +22,8 @@ import {IObjectCache, SimpleCache} from "../../providers/mapping/cache";
 import {Role} from "../../scheduling/role";
 import {Availability, AvailabilityUnit} from "../../scheduling/availability";
 import {Assignment} from "../../scheduling/assignment";
+import {LoggingService} from "ionic-logging-service";
+import {newLoggingServiceAfterReset} from "./test-helpers";
 
 class SomeEntity extends ObjectWithUUID {
     @observable some_field: string = "a value";
@@ -123,8 +125,9 @@ describe('db', () => {
     };
 
     beforeEach((done) => {
+        let logService = newLoggingServiceAfterReset();
         cache = new SimpleCache();
-        mapper = new OrmMapper();
+        mapper = new OrmMapper(logService);
 
         //Add in mappings that we need, since we reference other models in this test
         mapper.addConfiguration(scheduler_db_map);
@@ -133,7 +136,7 @@ describe('db', () => {
         mapper.addConfiguration(test_config);
 
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 500;
-        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, "1234", mapper).then(new_db => {
+        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, null, mapper, logService).then(new_db => {
             db = new_db;
             db.setCache(cache);
             done();

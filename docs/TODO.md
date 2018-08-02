@@ -1,10 +1,6 @@
 TODO
 ====
-- Offline
-    - Should still work if we had a token.
-    - Should work for ... 15 days? The longer offline, the less point there is.  Offline is supposed to be for 'network outage' / 'temporary' case. Perhaps allow only a couple of days?
 - Rework tokens, introduce JWT
-    - Invalid token, but offline (should still work, with no changes propagated until a new token is had).
     - If a token is invalidated (cannot be refreshed), do what? (during continuous replication)?
 - PlanWizard doesn't work on android
     - text disappears whn entering it

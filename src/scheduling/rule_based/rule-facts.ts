@@ -25,16 +25,12 @@ export class RuleFacts {
     private dates: Map<string, ScheduleAtDate>;
     private decision_depth: number;
 
-    private logger: Logger;
-
     constructor(service: Plan) {
         this.service = service;
         this.begin();
 
         this.exclusion_zones = new Map<Person, Array<Exclusion>>();
         this.usage_counts = new Map<Role, Map<IAssignment, number>>();
-
-        this.logger = LoggingWrapper.getLogger("scheduler.rules.facts");
     }
 
     copyUsageDataFrom(previous_facts: RuleFacts) {
@@ -65,13 +61,13 @@ export class RuleFacts {
 
     get_schedule_for_date(date: Date): ScheduleAtDate {
         if (isUndefined(date)) {
-            this.logger.error("Cannot return a schedule for a null date");
+            LoggingWrapper.error("scheduler.rules.facts","Cannot return a schedule for a null date");
             return null;
         }
         let dateAtHour = dayAndHourForDate(date);
         let schedule = this.dates.get(dateAtHour);
         if (schedule == null) {
-            this.logger.info("Create new schedule for " + dateAtHour);
+            LoggingWrapper.debug("scheduler.rules.facts","Create new schedule for " + dateAtHour);
             schedule = new ScheduleAtDate(date);
             this.dates.set(dateAtHour, schedule);
             return schedule;
@@ -115,7 +111,7 @@ export class RuleFacts {
         }
         text = "--- ".repeat(this.decision_depth) + text;
         if (log) {
-            this.logger.debug('add_decision', text);
+            LoggingWrapper.debug("scheduler.rules.facts", 'add_decision', text);
         }
         if (!this.decisions_for_date) {
             this.decisions_for_date = [];
@@ -211,14 +207,14 @@ export class RuleFacts {
             throw new Error("Person cannot be null here");
         }
         if (!this.usage_counts.has(role)) {
-            this.logger.debug("Creating new role counter for " + role.name);
+            LoggingWrapper.debug("scheduler.rules.facts","Creating new role counter for " + role.name);
             let new_count = new Map<IAssignment, number>();
             this.usage_counts.set(role, new_count);
         }
 
         let by_person = this.usage_counts.get(role);
         if (!by_person.has(assignment)) {
-            this.logger.info("Starting count at 0 for " + assignment.person.name);
+            LoggingWrapper.info("scheduler.rules.facts","Starting count at 0 for " + assignment.person.name);
             by_person.set(assignment, 0);
         }
         return by_person;

@@ -5,18 +5,19 @@ import {RESTServer} from "../../providers/server/server";
 import {StorageMock} from "ionic-mocks";
 import {SchedulerDatabase} from "../../providers/server/db";
 import {Storage} from "@ionic/storage";
-import {MockConfigurationService} from "../../app/logging-configuration";
+import {MockConfigurationService} from "../mock-logging-configuration";
 import {scheduler_db_map} from "../../assets/db.mapping";
 import {OrmMapper} from "../../providers/mapping/orm-mapper";
 import {IObjectCache, SimpleCache} from "../../providers/mapping/cache";
 import {ServerError, UserResponse} from "../../common/interfaces";
 import {Person} from "../../scheduling/people";
-import {ILifecycleCallback} from "../../providers/server/interfaces";
 import {ConnectivityService} from "../../common/network/connectivity";
 import {StateProvider} from "../../providers/state/state";
 import {IState} from "../../providers/state/state.interface";
 import {AuthorizationService} from "../../providers/token/authorization.service";
 import {HttpErrorResponse} from "@angular/common/http";
+import {TestILifecycleCallback} from "./server.callback";
+import {newLoggingServiceAfterReset} from "./test-helpers";
 
 describe('scheduler server', () => {
     let server: SchedulerServer;
@@ -43,8 +44,9 @@ describe('scheduler server', () => {
 
         storageMock = StorageMock.instance('state', null);
 
+        let logService = newLoggingServiceAfterReset();
         cache = new SimpleCache();
-        mapper = new OrmMapper();
+        mapper = new OrmMapper(logService);
 
         //Add in mappings that we need, since we reference other models in this test
         mapper.addConfiguration(scheduler_db_map);
@@ -60,17 +62,18 @@ describe('scheduler server', () => {
         };
 
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
-        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, null, mapper).then(new_db => {
+        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, null, mapper, logService).then(new_db => {
             db = new_db;
             server = new SchedulerServer(
                 store,
                 instance(restMock),
                 instance(authMock),
                 instance(stateMock),
+                logService,
                 instance(connectivityServiceMock),
                 mapper,
                 MockConfigurationService.ServiceForTests());
-            store = new RootStore(null);
+            store = new RootStore(null, logService);
             server.setStore(store);
 
             server.setDatabase(db).then(() => {
@@ -131,28 +134,11 @@ describe('scheduler server', () => {
     });
 
     describe('test SchedulerServer lifecycle', () => {
-        let showedLoginPage: boolean = false;
-        let lastShownError = null;
-
-        let lifecycleCallback = <ILifecycleCallback>{
-            showLoginPage: (reason: string) => {
-                console.info(`test received reason: ${reason}`);
-                showedLoginPage = true;
-            },
-            showCreateOrInvitePage: (() => {
-            }),
-            applicationHasStarted: () => {
-            },
-            applicationIsStarting: () => {
-            },
-            showError: (error) => {
-                lastShownError = error;
-            }
-        };
+        let lifecycleCallback = new TestILifecycleCallback();
 
         beforeEach((done) => {
-            showedLoginPage = false;
-            lastShownError = null;
+            lifecycleCallback.showedLoginPage = false;
+            lifecycleCallback.lastShownError = null;
 
             // we DO want to wait until the DB is ready
             db.readyEvent.subscribe(r => {
@@ -166,14 +152,13 @@ describe('scheduler server', () => {
             when(stateMock.hasStateChangedSinceLastLifecycleRun()).thenReturn(true);
             when(stateMock.loginToken).thenReturn(null);
 
-            expect(showedLoginPage).toBeFalsy();
+            expect(lifecycleCallback.showedLoginPage).toBeFalsy();
 
             server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
-                expect(showedLoginPage).toBeTruthy();
+                expect(lifecycleCallback.showedLoginPage).toBeTruthy();
                 done();
             })
         });
-
         it('should direct to login page if token not valid', function (done) {
             let state: IState = {
                 loginToken: "12345",
@@ -186,7 +171,7 @@ describe('scheduler server', () => {
             when(restMock.getOwnUserDetails()).thenReject(new HttpErrorResponse({status: 401, error: 'expired'}));
 
             server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
-                expect(showedLoginPage).toBeTruthy();
+                expect(lifecycleCallback.showedLoginPage).toBeTruthy();
                 verify(restMock.getOwnUserDetails()).called();
                 done();
             });
@@ -206,7 +191,7 @@ describe('scheduler server', () => {
 
             storageMock = StorageMock.instance('state', state);
             server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
-                expect(showedLoginPage).toBeTruthy();
+                expect(lifecycleCallback.showedLoginPage).toBeTruthy();
                 verify(restMock.getOwnUserDetails()).called();
                 done();
             });
@@ -237,8 +222,8 @@ describe('scheduler server', () => {
             // Took this out when doing auth rewrite, didn't replace yet
             // server.forceStateReload();
             server.asyncRunStartupLifecycle(lifecycleCallback, 1500).then(() => {
-                expect(showedLoginPage).toBeFalsy("should not show login page");
-                expect(lastShownError).toMatch(/1334/);
+                expect(lifecycleCallback.showedLoginPage).toBeFalsy("should not show login page");
+                expect(lifecycleCallback.lastShownError).toMatch(/1334/);
                 done();
             });
         }, 3000);
@@ -266,5 +251,7 @@ describe('scheduler server', () => {
                 done();
             });
         }, 3000);
+
+
     });
 });

@@ -19,11 +19,12 @@ import {OrmMapper} from "../../providers/mapping/orm-mapper";
 import {scheduler_db_map} from "../../assets/db.mapping";
 import {OrmConverter} from "../../providers/server/orm-converter";
 import {SchedulerDatabase} from "../../providers/server/db";
-import {MockConfigurationService} from "../../app/logging-configuration";
+import {MockConfigurationService} from "../mock-logging-configuration";
 import {IObjectCache, SimpleCache} from "../../providers/mapping/cache";
 import {Assignment} from "../../scheduling/assignment";
 import {Availability, AvailabilityUnit} from "../../scheduling/availability";
 import {Role} from "../../scheduling/role";
+import {newLoggingServiceAfterReset} from "./test-helpers";
 
 describe('app based tests', () => {
     let cache: IObjectCache;
@@ -57,13 +58,14 @@ describe('app based tests', () => {
         team = new Team("My team", [neil, bob]);
         thePlan = new Plan("Cunning", team);
 
+        let logService = newLoggingServiceAfterReset();
         cache = new SimpleCache();
-        mapper = new OrmMapper();
+        mapper = new OrmMapper(logService);
         mapper.addConfiguration(scheduler_db_map);
 
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 1500;
 
-        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, null, mapper).then(new_db => {
+        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, null, mapper, logService).then(new_db => {
             db = new_db;
             db.setCache(cache);
 

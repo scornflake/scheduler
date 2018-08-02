@@ -1,5 +1,5 @@
 import {AuthorizationService} from "../../providers/token/authorization.service";
-import {async, inject, TestBed} from "@angular/core/testing";
+import {inject, TestBed} from "@angular/core/testing";
 import {MyApp} from "../../app/app.component";
 import {IonicModule} from "ionic-angular";
 import {HttpClientTestingModule, HttpTestingController} from "@angular/common/http/testing";
@@ -7,18 +7,20 @@ import {ConnectivityService} from "../../common/network/connectivity";
 import {NetworkMock, StorageMock} from "ionic-mocks";
 import {EndpointsProvider} from "../../providers/endpoints/endpoints";
 import {ConfigurationService} from "ionic-configuration-service";
-import {MockConfigurationService} from "../../app/logging-configuration";
+import {MockConfigurationService, MockLoggingService} from "../mock-logging-configuration";
 import {Network} from "@ionic-native/network";
 import {instance, mock} from "ts-mockito";
-import {JwtInterceptor} from '@auth0/angular-jwt';
+import {JWT_OPTIONS, JwtInterceptor} from '@auth0/angular-jwt';
 import {JwtHelperService} from "@auth0/angular-jwt/src/jwthelper.service";
 import {loadStateAsPromise, StateProvider} from "../../providers/state/state";
 import {Storage} from "@ionic/storage";
 import {IState} from "../../providers/state/state.interface";
-import {JWT_OPTIONS} from '@auth0/angular-jwt';
 import {HttpClient} from "@angular/common/http";
 import {LoginResponse, UserResponse} from "../../common/interfaces";
 import {APP_INITIALIZER, ApplicationInitStatus} from "@angular/core";
+import {LoggingService} from "ionic-logging-service";
+import {reconfigureLoggingInitializer} from "./test-helpers";
+
 
 let state: IState = {
     loginToken: "",
@@ -50,17 +52,18 @@ describe('auth and state tests', () => {
         organization_uuid: "org-scud-missile",
     };
 
-    beforeEach(async(() => {
+    beforeEach(async () => {
         connectivityMock = mock(ConnectivityService);
         connectivityInstance = instance(connectivityMock);
 
-        TestBed.configureTestingModule({
+        await TestBed.configureTestingModule({
             declarations: [MyApp],
             imports: [
                 HttpClientTestingModule,
                 IonicModule.forRoot(MyApp)
             ],
             providers: [
+                {provide: LoggingService, useClass: MockLoggingService},
                 AuthorizationService,
                 JwtHelperService,
                 JwtInterceptor,
@@ -94,13 +97,12 @@ describe('auth and state tests', () => {
                 },
                 EndpointsProvider,
             ],
-        }).compileComponents().then(() => {
-        });
+        }).compileComponents();
 
         //https://github.com/angular/angular/issues/24218
         // noinspection BadExpressionStatementJS
-        TestBed.get(ApplicationInitStatus).donePromise;
-    }));
+        await TestBed.get(ApplicationInitStatus).donePromise;
+    });
 
     it('good login sets both login token, and person UUID', () => {
         let lr: LoginResponse = {

@@ -2,13 +2,14 @@ import {Person} from "../../scheduling/people";
 import {Team} from "../../scheduling/teams";
 import {Plan} from "../../scheduling/plan";
 import {RootStore} from "../../store/root";
-import {MockConfigurationService} from "../../app/logging-configuration";
+import {MockConfigurationService} from "../mock-logging-configuration";
 import {SchedulerDatabase} from "../../providers/server/db";
 import {OrmMapper} from "../../providers/mapping/orm-mapper";
 import {SimpleCache} from "../../providers/mapping/cache";
 import {scheduler_db_map} from "../../assets/db.mapping";
 import {CleanupDefaultRoles, defaultSaxRole, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
 import {isObservableArray} from "mobx";
+import {newLoggingServiceAfterReset} from "./test-helpers";
 
 describe('root store', () => {
     let store;
@@ -19,8 +20,9 @@ describe('root store', () => {
     let cache, mapper, db;
 
     beforeEach((done) => {
+        let logService = newLoggingServiceAfterReset();
         cache = new SimpleCache();
-        mapper = new OrmMapper();
+        mapper = new OrmMapper(logService);
 
         //Add in mappings that we need, since we reference other models in this test
         mapper.addConfiguration(scheduler_db_map);
@@ -30,10 +32,10 @@ describe('root store', () => {
         plan = new Plan('Pin a tail on it', team);
 
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 4000;
-        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, null, mapper).then(new_db => {
+        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, null, mapper, logService).then(new_db => {
             db = new_db;
             db.setCache(cache);
-            store = new RootStore(null);
+            store = new RootStore(null, logService);
             store.setDatabase(db).then(() => {
                 SetupDefaultRoles();
                 done();
@@ -43,7 +45,7 @@ describe('root store', () => {
 
     afterEach((done) => {
         store.logout();
-        if(db) {
+        if (db) {
             db.destroyDatabase().then(() => {
                 CleanupDefaultRoles();
                 done();

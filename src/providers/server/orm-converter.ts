@@ -1,7 +1,7 @@
 import {IObjectStore, IReferenceResolver} from "../mapping/orm-mapper-type";
 import {OrmMapper} from "../mapping/orm-mapper";
 import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {IObjectCache} from "../mapping/cache";
 import {OrmConverterWriter} from "./orm-converter-writer";
 import {OrmConverterReader} from "./orm-converter-reader";
@@ -14,12 +14,13 @@ class OrmConverter {
 
     constructor(private _mapper: OrmMapper,
                 private _loader: IObjectStore,
+                private logService: LoggingService,
                 private _cache: IObjectCache = null,
                 private _resolver: IReferenceResolver) {
 
-        this.logger = LoggingWrapper.getLogger('orm');
-        this._writer = new OrmConverterWriter(this._mapper, this._loader);
-        this._reader = new OrmConverterReader(this._mapper, this._resolver, this._cache);
+        this.logger = this.logService.getLogger('orm');
+        this._writer = new OrmConverterWriter(this._mapper, logService, this._loader);
+        this._reader = new OrmConverterReader(this._mapper, logService, this._resolver, this._cache);
     }
 
     get writer(): OrmConverterWriter {

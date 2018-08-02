@@ -3,6 +3,9 @@ import {getTestBed, TestBed} from "@angular/core/testing";
 import {scheduler_db_map} from "../../assets/db.mapping";
 import {MappingType} from "../../providers/mapping/orm-mapper-type";
 import {TypedObject} from "../../scheduling/base-types";
+import {LoggingService} from "ionic-logging-service";
+import {MockLoggingService} from "../mock-logging-configuration";
+import {setupOrmMapper} from "../../providers/mapping/setup";
 
 describe('mapper', () => {
     let mapper;
@@ -10,7 +13,14 @@ describe('mapper', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             imports: [],
-            providers: [OrmMapper]
+            providers: [
+                {
+                    provide: OrmMapper,
+                    useFactory: setupOrmMapper,
+                    deps: [LoggingService],
+                },
+                {provide: LoggingService, useClass: MockLoggingService}
+            ]
         });
 
         let injector = getTestBed();

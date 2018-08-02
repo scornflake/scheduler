@@ -2,9 +2,8 @@ import {Component} from '@angular/core';
 import {IonicPage, NavController} from 'ionic-angular';
 import {CSVExporter} from "../../scheduling/exporter/csv.exporter";
 import {GAPIS} from "../../common/gapis-auth";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {RootStore} from "../../store/root";
-import {LoggingWrapper} from "../../common/logging-wrapper";
 import {LifecycleEvent, PageUtils} from "../page-utils";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {computed} from "mobx-angular";
@@ -28,11 +27,12 @@ export class HomePage {
     constructor(private navCtrl: NavController,
                 private sheetAPI: GAPIS,
                 private pageUtils: PageUtils,
+                private logService:LoggingService,
                 private nativeTrans: NativePageTransitions,
                 public server: SchedulerServer,
                 public store: RootStore) {
 
-        this.logger = LoggingWrapper.getLogger("page.home");
+        this.logger = this.logService.getLogger("page.home");
     }
 
     // ngDoCheck() {

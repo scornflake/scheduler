@@ -29,11 +29,8 @@ class Plan extends NamedObject {
     // Used at runtime only (I think?)
     private specific_role_rules: Array<Rule>;
 
-    // private logger: Logger;
-
     constructor(name: string, team: Team) {
         super(name);
-        // this.logger = LoggingWrapper.getLogger("model.plan");
 
         this.start_date = new Date();
         this.end_date = addDaysToDate(this.start_date, 30);

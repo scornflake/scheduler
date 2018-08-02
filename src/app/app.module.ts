@@ -42,6 +42,7 @@ import {RoleDetailPageModule} from "../pages/role-editor/role-editor.module";
 import {EndpointsProvider} from '../providers/endpoints/endpoints';
 import {StateProvider} from '../providers/state/state';
 import {JWTAPIModule} from "../providers/token/jwt-api.module";
+import {doAppInitializersDeterministic} from "../common/app-initializer";
 
 
 let config = {
@@ -57,23 +58,6 @@ let config = {
 
 export function ResponsiveDefinition() {
     return new ResponsiveConfig(config);
-}
-
-export function doAppInitializersDeterministic(config: ConfigurationService,
-                                               logging: LoggingService,
-                                               state: StateProvider,
-                                               endpoints: EndpointsProvider) {
-    return () => {
-        // console.log(`Loading settings...`);
-        return config.load("assets/settings.json").then(() => {
-            logging.configure();
-            // console.log(`Validating endpoints...`);
-            return endpoints.validateConfiguration().then(() => {
-                // console.log(`Loading saved state...`);
-                return state.asyncLoadState();
-            })
-        });
-    }
 }
 
 @NgModule({
@@ -131,7 +115,7 @@ export function doAppInitializersDeterministic(config: ConfigurationService,
         {
             provide: OrmMapper,
             useFactory: setupOrmMapper,
-            deps: [],
+            deps: [LoggingService],
         },
         {
             provide: ResponsiveConfig,

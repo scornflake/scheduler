@@ -1,10 +1,9 @@
 import PouchDB from 'pouchdb';
 import PouchDBFind from 'pouchdb-find';
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {NamedObject, ObjectWithUUID, TypedObject} from "../../scheduling/base-types";
 import 'reflect-metadata';
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
-import {LoggingWrapper} from "../../common/logging-wrapper";
 import {isUndefined} from "util";
 import {ObjectChange, ObjectChangeTracker} from "../mapping/orm-change-detection";
 import {Subject} from "rxjs/Subject";
@@ -27,6 +26,8 @@ import DatabaseConfiguration = PouchDB.Configuration.DatabaseConfiguration;
 
 export interface IReplicationNotification {
     asyncTokenRejectedInContinuousReplication(): Promise<boolean>;
+
+    tokenCouldNotBeRefreshedDuringReplication();
 }
 
 enum SavingState {
@@ -67,18 +68,18 @@ class SchedulerDatabase implements IObjectStore {
 
     lastSeenReplicationStatus: ReplicationStatus = ReplicationStatus.Unknown;
 
-    constructor(dbName: string, state: StateProvider, mapper: OrmMapper) {
+    constructor(dbName: string, state: StateProvider, mapper: OrmMapper, logService: LoggingService) {
         this.dbName = dbName;
         this.mapper = mapper;
         this._state = state;
-        this.logger = LoggingWrapper.getLogger("db");
+        this.logger = logService.getLogger("db");
 
-        let resolver = new StoreBasedResolver(this, mapper);
-        this._converter = new OrmConverter(this.mapper, this, null, resolver);
+        let resolver = new StoreBasedResolver(this, logService, mapper);
+        this._converter = new OrmConverter(this.mapper, this, logService, null, resolver);
         PouchDB.plugin(PouchDBFind);
 
         this.readyEvent = new ReplaySubject(1);
-        this.tracker = new ObjectChangeTracker(this.mapper);
+        this.tracker = new ObjectChangeTracker(this.mapper, logService);
 
         this.initialize().then();
         this.readyEvent.subscribe(r => {
@@ -107,9 +108,9 @@ class SchedulerDatabase implements IObjectStore {
         return this.tracker.changes;
     }
 
-    static ConstructAndWait(dbName: string, state: StateProvider, mapper: OrmMapper): Promise<SchedulerDatabase> {
+    static ConstructAndWait(dbName: string, state: StateProvider, mapper: OrmMapper, logService: LoggingService): Promise<SchedulerDatabase> {
         return new Promise<SchedulerDatabase>((resolve) => {
-            let instance = new SchedulerDatabase(dbName, state, mapper);
+            let instance = new SchedulerDatabase(dbName, state, mapper, logService);
             // instance.logger.info("Starting DB setup for TEST");
             instance.readyEvent.subscribe(() => {
                 resolve(instance);
@@ -149,7 +150,7 @@ class SchedulerDatabase implements IObjectStore {
                 // console.log(`POUCH FETCH: ${opts}`);
                 try {
                     return PouchDB.fetch(url, opts);
-                } catch(err) {
+                } catch (err) {
                     // console.error(`POUCH ERR: ${err} (rethrow)`);
                     throw err;
                 }
@@ -669,10 +670,12 @@ class SchedulerDatabase implements IObjectStore {
                  */
                 if (err['status'] == 401 && err['name'] == "unauthorized") {
                     // Try to refresh the token
-                    if(this._delegate) {
+                    if (this._delegate) {
                         this._delegate.asyncTokenRejectedInContinuousReplication().then(r => {
-                            if(r) {
+                            if (r) {
                                 this.startContinuousReplication();
+                            } else {
+                                this._delegate.tokenCouldNotBeRefreshedDuringReplication()
                             }
                         })
                     }

@@ -2,8 +2,7 @@ import {Person} from "../scheduling/people";
 import {action, computed, observable} from "mobx";
 import {Role} from "../scheduling/role";
 import {Plan} from "../scheduling/plan";
-import {LoggingWrapper} from "../common/logging-wrapper";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 
 class UIStore {
     /*
@@ -23,9 +22,9 @@ class UIStore {
 
     private logger: Logger;
 
-    constructor() {
+    constructor(logService: LoggingService) {
         this.signed_in_to_google = false;
-        this.logger = LoggingWrapper.getLogger('store.ui');
+        this.logger = logService.getLogger('store.ui');
     }
 
     @computed get selectedPlan(): Plan {

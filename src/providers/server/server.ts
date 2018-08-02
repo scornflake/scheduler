@@ -59,11 +59,11 @@ export class RESTServer {
 
     async getOwnUserDetails(): Promise<any> {
         let url = this.endpoints.userDetails();
-        try {
+        // try {
             return await this.http.get(url).toPromise();
-        } catch(err) {
-            throw new ServerError(err);
-        }
+        // } catch(err) {
+        //     throw new ServerError(err);
+        // }
     }
 
     async hasEmailBeenConfirmed(email: string): Promise<boolean> {

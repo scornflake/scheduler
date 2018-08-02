@@ -9,8 +9,6 @@ import {ObjectUtils} from "../pages/page-utils";
 import {NamedObject, ObjectWithUUID, TypedObject} from "./base-types";
 import {Organization} from "./organization";
 import {action, computed, observable, runInAction} from "mobx";
-import {Logger} from "ionic-logging-service";
-import {LoggingWrapper} from "../common/logging-wrapper";
 import {Plan} from "./plan";
 import {UserResponse} from "../common/interfaces";
 
@@ -23,11 +21,9 @@ class Preferences extends ObjectWithUUID {
     @observable selected_plan_uuid: string;
 
     @observable last_selected_date;
-    private logger: Logger;
 
     constructor(uuid: string = null) {
         super(uuid);
-        this.logger = LoggingWrapper.getLogger('model.preferences');
     }
 
     @computed get have_previous_selection(): boolean {
@@ -56,7 +52,6 @@ class Preferences extends ObjectWithUUID {
 
     @action setSelectedPlanUUID(value: string) {
         if (value != this.selected_plan_uuid) {
-            this.logger.debug(`Setting selected plan UUID to: ${value}`);
             this.selected_plan_uuid = value;
         }
     }
@@ -87,6 +82,7 @@ class Person extends NamedObject {
         this.unavailable = [];
         this.preferences = new Preferences();
         this.availability = new Availability();
+        // noinspection JSPrimitiveTypeWrapperUsage
         this.invites = new Array<Invitation>();
     }
 

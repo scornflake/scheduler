@@ -2,7 +2,7 @@ import {ObjectWithUUID} from "../../scheduling/base-types";
 import {configure, observe} from "mobx";
 import {action, observable} from "mobx-angular";
 import {RootStore} from "../../store/root";
-import {MockConfigurationService} from "../../app/logging-configuration";
+import {MockConfigurationService} from "../mock-logging-configuration";
 import {SchedulerDatabase} from "../../providers/server/db";
 import {setupOrmMapper} from "../../providers/mapping/setup";
 import {Person} from "../../scheduling/people";
@@ -12,6 +12,7 @@ import {CleanupDefaultRoles, defaultSoundRole, SetupDefaultRoles} from "../sampl
 import {csd} from "../../scheduling/common/date-utils";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {SimpleCache} from "../../providers/mapping/cache";
+import {newLoggingServiceAfterReset} from "./test-helpers";
 
 class SomeThing extends ObjectWithUUID {
     @observable some_field: string = "a value";
@@ -34,10 +35,11 @@ describe('observation', () => {
             enforceActions: true
         });
 
-        let mapper = setupOrmMapper();
-        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, null, mapper).then(new_db => {
+        let logService = newLoggingServiceAfterReset();
+        let mapper = setupOrmMapper(logService);
+        SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, null, mapper, logService).then(new_db => {
             db = new_db;
-            store = new RootStore(null);
+            store = new RootStore(null, logService);
             store.setDatabase(db);
             db.setCache(new SimpleCache());
             SetupDefaultRoles();

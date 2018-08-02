@@ -1,7 +1,6 @@
 import {ScheduleAtDate} from "../shared";
 import {Person} from "../people";
 import * as _ from 'lodash';
-import {Logger} from "ionic-logging-service";
 import {dayAndHourForDate} from "../common/date-utils";
 import {RuleFacts} from "./rule-facts";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
@@ -18,14 +17,12 @@ class ScheduleWithRules {
     free_text: {};
     id: string = ObjectWithUUID.guid();
 
-    private logger: Logger;
     private previous_scheduler: ScheduleWithRules;
 
     constructor(plan: Plan, previous: ScheduleWithRules = null) {
         if (!plan) {
             throw new Error(`no plan given to the SchedulerWithRules`);
         }
-        this.logger = LoggingWrapper.getLogger('scheduler');
         this.plan = plan;
         this.plan.validate();
         this.free_text = {};
@@ -53,12 +50,12 @@ class ScheduleWithRules {
             throw new Error("No service defined, cannot create the schedule");
         }
         let schedule_duration = this.plan.schedule_duration_in_days;
-        this.logger.info("Working from " + this.plan.start_date + " to: " + this.plan.end_date);
-        this.logger.debug("Schedule is " + schedule_duration + " days long");
+        LoggingWrapper.info("scheduler", "Working from " + this.plan.start_date + " to: " + this.plan.end_date);
+        LoggingWrapper.debug("scheduler", "Schedule is " + schedule_duration + " days long");
 
         let role_groups = this.plan.roles_in_layout_order_grouped;
         let role_names = role_groups.map(roleGroup => SWBSafeJSON.stringify(roleGroup.roles.map(r => r.name)));
-        this.logger.debug("Roles (in order of importance): " + SWBSafeJSON.stringify(role_names));
+        LoggingWrapper.debug("scheduler", "Roles (in order of importance): " + SWBSafeJSON.stringify(role_names));
 
         this.facts.begin();
 
@@ -71,13 +68,13 @@ class ScheduleWithRules {
         this.facts.begin_new_role_group(role_group);
 
         let current_date = this.plan.start_date;
-        this.logger.debug("\r\nNext group: " + SWBSafeJSON.stringify(role_group.map(r => r.name)));
+        LoggingWrapper.debug("scheduler", "\r\nNext group: " + SWBSafeJSON.stringify(role_group.map(r => r.name)));
 
         // Iterate through all dates
         let iterations = 0;
 
         while (current_date.valueOf() <= this.plan.end_date.valueOf()) {
-            this.logger.debug("Next date: " + current_date);
+            LoggingWrapper.debug("scheduler", "Next date: " + current_date);
 
             for (let role of role_group) {
                 this.facts.begin_new_role(current_date);
@@ -91,7 +88,7 @@ class ScheduleWithRules {
             // This is taking 10,000 reasons too far!
             iterations++;
             if (iterations > 10000) {
-                this.logger.error("Max iterations - bug!?");
+                LoggingWrapper.error("scheduler","Max iterations - bug!?");
                 break
             }
 
@@ -131,11 +128,11 @@ class ScheduleWithRules {
             throw new Error("No facts defined. Cannot process role");
         }
         let specific_day = this.facts.get_schedule_for_date(current_date);
-        this.logger.debug(`Processing role ${role}`);
+        LoggingWrapper.debug("scheduler", `Processing role ${role}`);
 
         // If already at max for this role, ignore it.
         if (this.is_role_filled_for_date(role, current_date)) {
-            this.logger.debug("Not processing " + role.name + ", already have " + role.maximum_wanted + " slotted in");
+            LoggingWrapper.debug("scheduler", "Not processing " + role.name + ", already have " + role.maximum_wanted + " slotted in");
             return;
         }
 
@@ -230,7 +227,7 @@ class ScheduleWithRules {
         this.facts = new RuleFacts(this.plan);
         if (this.previous_scheduler) {
             this.facts.copyUsageDataFrom(this.previous_scheduler.facts);
-            this.logger.info("Taking usage data from previous schedule...");
+            LoggingWrapper.info("scheduler", "Taking usage data from previous schedule...");
         }
         this.prepare_rules_for_execution();
     }
@@ -319,7 +316,7 @@ class ScheduleWithRules {
 
     warmupSsing(previous_schedule: ScheduleWithRules) {
         this.previous_scheduler = previous_schedule;
-        this.logger.info("Warming up using a previous schedule...");
+        LoggingWrapper.info("scheduler", "Warming up using a previous schedule...");
     }
 
     private prepare_rules_for_execution() {

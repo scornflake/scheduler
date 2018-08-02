@@ -60,13 +60,18 @@ export class ServerError {
     originalError: any;
 
     constructor(serverError: any) {
-        this.originalError = serverError;
-        let errorElement = serverError['error'];
-        if (errorElement) {
-            this.errors = [];
-            for (let key of Object.keys(errorElement)) {
-                let value: string[] = errorElement[key];
-                this.errors.push({key: key, errors: value})
+        if(serverError instanceof ServerError) {
+            this.originalError = serverError.originalError;
+            this.errors = serverError.errors;
+        } else {
+            this.originalError = serverError;
+            let errorElement = serverError['error'];
+            if (errorElement) {
+                this.errors = [];
+                for (let key of Object.keys(errorElement)) {
+                    let value: string[] = errorElement[key];
+                    this.errors.push({key: key, errors: value})
+                }
             }
         }
     }

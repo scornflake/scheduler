@@ -1,6 +1,5 @@
 import {isArray, isUndefined} from "util";
-import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {ObjectWithUUID} from "../../scheduling/base-types";
 import {configure, isObservableArray, isObservableMap, isObservableObject} from "mobx";
@@ -59,10 +58,10 @@ let internal_mappings: ClassFieldMapping = {
 
 class OrmMapper {
     definitions: Map<string, ClassMapping>;
-    private logger: Logger;
+    logger: Logger;
 
-    constructor() {
-        this.logger = LoggingWrapper.getLogger('db.mapping');
+    constructor(logService: LoggingService) {
+        this.logger = logService.getLogger('db.mapping');
         this.definitions = new Map<string, ClassMapping>();
         this.addConfiguration(internal_mappings, false);
 

@@ -7,8 +7,7 @@ import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
 import {computed} from "mobx-angular";
 import {RootStore} from "../../store/root";
 import {ScheduleAtDate} from "../../scheduling/shared";
-import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {Role} from "../../scheduling/role";
 
 @Component({
@@ -27,8 +26,9 @@ export class ScheduleViewerComponent implements OnInit, OnDestroy {
 
     constructor(private store: RootStore,
                 private appRef: ApplicationRef,
+                private logService: LoggingService,
                 public popoverCtrl: PopoverController) {
-        this.logger = LoggingWrapper.getLogger('component.schedule.view')
+        this.logger = this.logService.getLogger('component.schedule.view')
     }
 
     ngOnInit() {

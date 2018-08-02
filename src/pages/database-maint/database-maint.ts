@@ -10,8 +10,7 @@ import {ObjectValidation} from "../../scheduling/shared";
 import {Plan} from "../../scheduling/plan";
 import {csd} from "../../scheduling/common/date-utils";
 import {NPBCStoreConstruction} from "../../tests/test.store";
-import {LoggingWrapper} from "../../common/logging-wrapper";
-import {Logger} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {Subscription} from "rxjs/Subscription";
 import {action, computed, observable} from "mobx-angular";
@@ -44,10 +43,11 @@ export class DatabaseMaintPage implements OnDestroy {
                 public store: RootStore,
                 public server: SchedulerServer,
                 public http: HttpClient,
+                private logService: LoggingService,
                 public mapper: OrmMapper,
                 public pageUtils: PageUtils,
                 public navParams: NavParams) {
-        this.logger = LoggingWrapper.getLogger('page.dbmaint');
+        this.logger = this.logService.getLogger('page.dbmaint');
     }
 
     ngOnDestroy() {

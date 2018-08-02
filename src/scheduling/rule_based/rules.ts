@@ -1,14 +1,13 @@
 import * as _ from 'lodash';
 import {Person} from "../people";
-import {Logger} from "ionic-logging-service";
 import {RuleFacts} from "./rule-facts";
-import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Availability} from "../availability";
 import {daysBetween, IAssignment, ScheduleAtDate} from "../shared";
 import {ScheduleWithRules} from "./scheduler";
 import {Role} from "../role";
 import {TypedObject} from "../base-types";
 import {action, computed, observable} from "mobx-angular";
+import {LoggingWrapper} from "../../common/logging-wrapper";
 
 
 class Rule extends TypedObject {
@@ -284,14 +283,12 @@ class TryToScheduleWith extends SecondaryAction {
     @observable reach: Availability;
 
     private success_executions: number = 0;
-    private logger: Logger;
 
     constructor(other_person: Person, reach: Availability, max_number = 99999) {
         super();
         this.other_person = other_person;
         this.reach = reach;
         this.max_number_of_times = max_number;
-        this.logger = LoggingWrapper.getLogger("scheduler.rules.tryto");
     }
 
     prepare_for_execution() {
@@ -328,8 +325,8 @@ class TryToScheduleWith extends SecondaryAction {
 
                 if (closest && this.success_executions < this.max_number_of_times) {
                     let roles_of_owner = score_for_owner.roles;
-                    this.logger.info(`We should try to move ${this.owner} (${roles_of_owner.join(",")}) because they are not on with ${this.other_person}`);
-                    this.logger.info(` - Try to move them to ${closest.date.toDateString()}`);
+                    LoggingWrapper.info("scheduler.rules.tryto", `We should try to move ${this.owner} (${roles_of_owner.join(",")}) because they are not on with ${this.other_person}`);
+                    LoggingWrapper.info("scheduler.rules.tryto", ` - Try to move them to ${closest.date.toDateString()}`);
 
                     let reason = `Moved from ${schedule_at_date.date.toDateString()} to be with ${this.other_person.name}`;
                     schedule_at_date.move_person(this.owner, closest, reason);
@@ -345,7 +342,7 @@ class TryToScheduleWith extends SecondaryAction {
     }
 
     @computed get description() {
-        if(this.other_person != null && this.reach != null) {
+        if (this.other_person != null && this.reach != null) {
             return `Try to team with ${this.other_person.initials} within ${this.reach.description(true)}, max ${this.max_number_of_times}`;
         }
         return `Try to team with 'null person' (good luck with that)`;
