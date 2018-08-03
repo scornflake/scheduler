@@ -18,6 +18,7 @@ import {AuthorizationService} from "../../providers/token/authorization.service"
 import {HttpErrorResponse} from "@angular/common/http";
 import {TestILifecycleCallback} from "./server.callback";
 import {newLoggingServiceAfterReset} from "./test-helpers";
+import {ILifecycleCallback} from "../../providers/server/interfaces";
 
 describe('scheduler server', () => {
     let server: SchedulerServer;
@@ -134,11 +135,10 @@ describe('scheduler server', () => {
     });
 
     describe('test SchedulerServer lifecycle', () => {
-        let lifecycleCallback = new TestILifecycleCallback();
+        let lifecycleCallback: TestILifecycleCallback;
 
         beforeEach((done) => {
-            lifecycleCallback.showedLoginPage = false;
-            lifecycleCallback.lastShownError = null;
+            lifecycleCallback = new TestILifecycleCallback();
 
             // we DO want to wait until the DB is ready
             db.readyEvent.subscribe(r => {
@@ -168,7 +168,12 @@ describe('scheduler server', () => {
             };
 
             storageMock = StorageMock.instance('state', state);
-            when(restMock.getOwnUserDetails()).thenReject(new HttpErrorResponse({status: 401, error: 'expired'}));
+            when(restMock.getOwnUserDetails()).thenReject(new HttpErrorResponse({
+                status: 401,
+                url: "/api/user/",
+                statusText: 'Unauthorized',
+                error: 'Signature has expired'
+            }));
 
             server.asyncRunStartupLifecycle(lifecycleCallback).then(() => {
                 expect(lifecycleCallback.showedLoginPage).toBeTruthy();

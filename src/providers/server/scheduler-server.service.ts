@@ -188,6 +188,7 @@ class SchedulerServer implements ILifecycle, IReplicationNotification {
 
             // Are we online? can we validate?
             if (this.connectivity.isOnline) {
+                this.logger.info(`Online - trying to get user profile, to test token...`);
                 //
                 // Tokens, tokens, tokens.
                 //
@@ -201,18 +202,24 @@ class SchedulerServer implements ILifecycle, IReplicationNotification {
                 try {
                     await this.restAPI.getOwnUserDetails();
                 } catch (err) {
-                    if (err instanceof ServerError) {
-                        if (err.isHTTPServerNotThere) {
-                            this.logger.warn(`Assume server is toast (got back: ${err}`);
-                        }
-                    } else if (this.auth.isTokenExpiryException(err)) {
+                    this.logger.error(`Cant get a token: ${SWBSafeJSON.stringify(err)}, type: ${err.constructor.name}`);
+                    if (this.auth.isTokenExpiryException(err)) {
                         callback.showLoginPage(`Login token invalid: ${SWBSafeJSON.stringify(err)}`);
                         return false;
                     } else {
-                        callback.showError(err);
+                        if (err instanceof ServerError) {
+                            if (err.isHTTPServerNotThere) {
+                                this.logger.warn(`Assume server is toast (got back: ${err}`);
+                            }
+                        } else {
+                            callback.showLoginPage(`Bad response from server: ${SWBSafeJSON.stringify(err)}`);
+                            // callback.showError(err);
+                            return false;
+                        }
                     }
                 }
             } else {
+                this.logger.info(`Not online - doing 'no connectivity' testing...`);
                 // Check we have a token that is ... valid?
                 if (!this.auth.isAuthenticated()) {
                     callback.showLoginPage(`Token doesn't pass isAuthenticated`);

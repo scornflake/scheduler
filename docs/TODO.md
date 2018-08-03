@@ -1,12 +1,8 @@
 TODO
 ====
-- Rework tokens, introduce JWT
-    - If a token is invalidated (cannot be refreshed), do what? (during continuous replication)?
 - PlanWizard doesn't work on android
     - text disappears whn entering it
     - NEXT doesn't work on plan page (greyed out)
-- Replication / Token Refresh
-    - If token refresh fails, we wont restart replication. Need some way for replication to restart if the token is OK in the future.
 - Invites
     - When a user accepts, there ends up being TWO copies of that user (old login and new?)
 - People Page
@@ -36,6 +32,9 @@ TODO
 - It would be GREAT to:
     - after running tests
     - and auto-deploy; at least for the test environment.
+- Replication / Token Refresh
+    - If token refresh fails, we wont restart replication. Need some way for replication to restart if the token is OK in the future.
+    - Get 'possible EventEmitter memory leak detected. 11 listeners added.' when using a very short token time (5s) on server, and restarting replication a couple of times
 - REST API.
     - Throttling.
     - Permissions

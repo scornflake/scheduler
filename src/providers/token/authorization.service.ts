@@ -99,9 +99,14 @@ export class AuthorizationService {
 
     isTokenExpiryException(err: object): boolean {
         let result = false;
+
+        // going to go with any 'status 401' here
+        if(err['status'] === 401) {
+            return true;
+        }
+
         if(err instanceof HttpErrorResponse || err instanceof ServerError) {
             let message = err instanceof ServerError ? err.allErrors : `${err.message} ${SWBSafeJSON.stringify(err.error)}`;
-            // console.warn(`THE MESSAGE: ${message}`);
             if (err.status == 401 && message.indexOf('expired') != -1) {
                 result = true;
             }

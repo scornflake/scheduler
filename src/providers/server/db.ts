@@ -147,11 +147,11 @@ class SchedulerDatabase implements IObjectStore {
                     // console.log(`POUCH adding Authorization token to headers!`);
                     opts.headers.set('Authorization', 'Bearer ' + this._state.loginToken);
                 }
-                // console.log(`POUCH FETCH: ${opts}`);
+                this.logger.debug("remoteCouchOptions", `Fetching: ${url} with ${opts}`);
                 try {
                     return PouchDB.fetch(url, opts);
                 } catch (err) {
-                    // console.error(`POUCH ERR: ${err} (rethrow)`);
+                    this.logger.error("remoteCouchOptions", `Error Fetching: ${url} with ${opts}, ${err}`);
                     throw err;
                 }
             }
