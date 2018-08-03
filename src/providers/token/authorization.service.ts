@@ -32,16 +32,16 @@ export class AuthorizationService {
 
     login(username: string, password: string): Observable<LoginResponse> {
         let url = this.endpoints.login(username, password);
-        this.logger.info(`Calling ${url}`);
+        // this.logger.info(`Calling ${url}`);
         const loginObservable = this.httpClient.get<LoginResponse>(url);
 
         const subject = new ReplaySubject<LoginResponse>(1);
         subject.subscribe((r: LoginResponse) => {
-            console.log(`Got login response: ${SWBSafeJSON.stringify(r)}`);
+            this.logger.info(`Got login response: ${SWBSafeJSON.stringify(r)}`);
             this.state.setLoginTokenFromLoginResponse(r.ok, r);
             this.notifyTokenRefreshed();
         }, (err) => {
-            console.log(`Got error: ${SWBSafeJSON.stringify(err)}`);
+            this.logger.error(`Got error: ${SWBSafeJSON.stringify(err)}`);
             this.handleAuthenticationError(err);
         });
 

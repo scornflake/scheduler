@@ -19,7 +19,7 @@ import {HttpClient} from "@angular/common/http";
 import {LoginResponse, UserResponse} from "../../common/interfaces";
 import {APP_INITIALIZER, ApplicationInitStatus} from "@angular/core";
 import {LoggingService} from "ionic-logging-service";
-import {reconfigureLoggingInitializer} from "./test-helpers";
+import {reconfigureLoggingInitializer, waitForTestBedInitializers} from "./test-helpers";
 
 
 let state: IState = {
@@ -99,9 +99,7 @@ describe('auth and state tests', () => {
             ],
         }).compileComponents();
 
-        //https://github.com/angular/angular/issues/24218
-        // noinspection BadExpressionStatementJS
-        await TestBed.get(ApplicationInitStatus).donePromise;
+        await waitForTestBedInitializers();
     });
 
     it('good login sets both login token, and person UUID', () => {

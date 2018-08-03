@@ -20,11 +20,11 @@ export class RefreshTokenInterceptor implements HttpInterceptor {
     }
 
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-        this.logger.debug("intercept", `is ${req} whitelisted? ${this.jwtInterceptor.isWhitelistedDomain(req)}, blacklisted?: ${this.jwtInterceptor.isBlacklistedRoute(req)}`);
         if (this.jwtInterceptor.isWhitelistedDomain(req) && !this.jwtInterceptor.isBlacklistedRoute(req)) {
             return next.handle(req).pipe(
                 catchError((err) => {
                     const errorResponse = err as HttpErrorResponse;
+                    this.logger.debug("intercept", `is ${req} whitelisted? ${this.jwtInterceptor.isWhitelistedDomain(req)}, blacklisted?: ${this.jwtInterceptor.isBlacklistedRoute(req)}`);
                     // TODO: Are we SURE this is an HttpErrorMessage???
                     if (errorResponse.status === 401) {
                         let message = errorResponse.error.message || JSON.stringify(errorResponse.error);

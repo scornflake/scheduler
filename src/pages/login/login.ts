@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, OnDestroy, ViewChild} from '@angular/core';
 import {AlertController, IonicPage, Loading, LoadingController, NavController, NavParams, Slides} from 'ionic-angular';
 import {AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators} from "@angular/forms";
 import "rxjs/add/operator/debounceTime";
@@ -6,12 +6,11 @@ import {Logger, LoggingService} from "ionic-logging-service";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {PageUtils} from "../page-utils";
 import {action, observable} from "mobx-angular";
-import {catchError, debounceTime, filter, flatMap, map, take, timeout} from "rxjs/operators";
+import {debounceTime, filter, flatMap, map, take, timeout} from "rxjs/operators";
 import {Observable} from "rxjs/Observable";
 import {Subscription} from "rxjs/Subscription";
 import {ServerError} from "../../common/interfaces";
 import "rxjs/add/observable/timer";
-import {Organization} from "../../scheduling/organization";
 import {Storage} from '@ionic/storage';
 import {runInAction} from "mobx";
 
@@ -30,7 +29,7 @@ enum LoginPageMode {
     selector: 'page-login',
     templateUrl: 'login.html',
 })
-class LoginPage implements AfterViewInit {
+class LoginPage implements AfterViewInit, OnDestroy {
     loginForm: FormGroup;
     loading: Loading;
 
@@ -44,7 +43,6 @@ class LoginPage implements AfterViewInit {
 
     private logger: Logger;
     private firstSwitch: boolean = true;
-    private confirmationListener: Observable<any> = null;
     private confirmationSubscription: Subscription = null;
 
     constructor(protected nav: NavController,
@@ -76,6 +74,10 @@ class LoginPage implements AfterViewInit {
         }
         this.slides.lockSwipes(true);
         this.slides.enableKeyboardControl(false);
+    }
+
+    ngOnDestroy(): void {
+        this.stopListeningForConfirmation();
     }
 
     @action setRegistrationPassword(value: string) {
@@ -251,88 +253,29 @@ class LoginPage implements AfterViewInit {
     }
 
     private startListeningForConfirmation() {
-        if (!this.confirmationListener) {
-            this.confirmationListener = Observable.timer(2000, 2000);
+        if (!this.confirmationSubscription) {
             console.log(`waiting on confirmation for ${this.registrationEmail}`);
-            this.confirmationSubscription = this.confirmationListener.subscribe(() => {
-                this.server.hasEmailBeenConfirmed(this.registrationEmail).then(flag => {
-                    if (flag) {
-                        this.logger.info(`Email was confirmed. Wait for replication to start`);
-                        this.startReplicationAndWait();
-                    }
-                })
-            })
+            this.confirmationSubscription = Observable.timer(2000, 2000).pipe(
+                timeout(60 * 1000),
+                flatMap(() => {
+                    return this.server.hasEmailBeenConfirmed(this.registrationEmail);
+                }),
+                filter(confirmed => confirmed),
+                take(1)
+            ).subscribe(result => {
+                // technically because of the pipe/filter above, this should never be false.
+                if (result) {
+                    this.logger.info(`Email was confirmed. Logging in the user.. (result: ${result})`);
+                    this.login();
+                }
+            }, (err) => {
+                this.pageUtils.showError(err);
+            }, () => {
+                this.logger.info('startListeningForConfirmation has completed');
+            });
         } else {
             console.warn(`already have a confirmation listener, skipping`);
         }
-    }
-
-    private startReplicationAndWait() {
-        this.stopListeningForConfirmation();
-        this.switchModes(LoginPageMode.StartingReplication);
-
-        // Basically we're waiting to see if we can see ourselves + our organization in
-        // the local DB... if we can find both, and replication is started
-        // then we continue
-
-        // This will validate the login. it should be fine because its just been created and confirmed.
-        // the lifecycle kicks off replication as well.
-        this.pageUtils.runStartupLifecycle(this.nav);
-
-        console.log(`checking local DB for what we need ...`);
-
-        let checker = Observable.timer(1000, 1000)
-            .pipe(
-                map(() => this.server.db),
-                filter(db => db != null),
-                flatMap(() => {
-                    this.logger.info(`looking up ${this.registrationEmail}...`);
-                    return this.server.db_findPersonByEmail(this.registrationEmail)
-                }),
-                filter(person => {
-                    if (!person) {
-                        this.logger.info(`waiting for person with email: ${this.registrationEmail}`);
-                        return false;
-                    }
-
-                    if (!person.organization) {
-                        this.logger.info(`waiting for person to have an organization`);
-                        return false;
-                    }
-
-                    if (!person.organization.uuid) {
-                        this.logger.info(`waiting for person to have an organization WITH a UUID`);
-                        return false;
-                    }
-                    return true;
-                }),
-                flatMap(person => this.server.db_findByUUID(person.organization.uuid)),
-                filter(org => org != null),
-                timeout(10000),
-                take(1),
-                catchError(err => {
-                    throw new Error(`Could not find ${this.registrationEmail} within 10s`);
-                })
-            );
-
-        this.confirmationSubscription = checker.subscribe(
-            (org: Organization) => {
-                this.logger.debug(`I have got a person, and org! ${org.name}`)
-            },
-            err => {
-                this.pageUtils.showError(err, true);
-                this.confirmationSubscription.unsubscribe();
-                this.popBackHome();
-            },
-            () => {
-                this.switchToReadyToUse();
-            }
-        );
-    }
-
-    private switchToReadyToUse() {
-        this.stopListeningForConfirmation();
-        this.switchModes(LoginPageMode.ReadyToGo);
     }
 
     private stopListeningForConfirmation() {
@@ -340,8 +283,6 @@ class LoginPage implements AfterViewInit {
             this.confirmationSubscription.unsubscribe();
             this.confirmationSubscription = null;
         }
-
-        this.confirmationListener = null;
     }
 
     popBackHome() {

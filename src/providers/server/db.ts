@@ -546,10 +546,7 @@ class SchedulerDatabase implements IObjectStore {
     }
 
     async asyncStopReplication(destroy: boolean = false) {
-        if (this.server_sync) {
-            this.server_sync.cancel();
-            this.server_sync = null;
-        }
+        this.stopContinuousReplication();
         if (this.server_db) {
             if (destroy) {
                 await this.server_db.destroy();
@@ -557,6 +554,13 @@ class SchedulerDatabase implements IObjectStore {
                 await this.server_db.close();
             }
             this.server_db = null;
+        }
+    }
+
+    private stopContinuousReplication() {
+        if (this.server_sync) {
+            this.server_sync.cancel();
+            this.server_sync = null;
         }
     }
 
@@ -673,6 +677,8 @@ class SchedulerDatabase implements IObjectStore {
                     if (this._delegate) {
                         this._delegate.asyncTokenRejectedInContinuousReplication().then(r => {
                             if (r) {
+                                // making sure to clean up
+                                this.stopContinuousReplication();
                                 this.startContinuousReplication();
                             } else {
                                 this._delegate.tokenCouldNotBeRefreshedDuringReplication()

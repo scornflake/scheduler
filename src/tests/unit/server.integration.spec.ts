@@ -103,10 +103,7 @@ describe('server integration', () => {
                     provide: Storage,
                     useFactory: () => StorageMock.instance('state', initialState),
                 },
-                {
-                    provide: ConnectivityService,
-                    useFactory: () => connectivityInstance,
-                },
+                {provide: ConnectivityService, useFactory: () => connectivityInstance},
                 {
                     provide: JWT_OPTIONS,
                     useFactory: optionsFactory,

@@ -1,6 +1,10 @@
 import {LoggingService} from "ionic-logging-service";
 import * as log4javascript from "log4javascript";
 import {MockConfigurationService} from "../mock-logging-configuration";
+import {TestBed} from "@angular/core/testing";
+import {ApplicationInitStatus} from "@angular/core";
+import {ConnectivityService} from "../../common/network/connectivity";
+import {instance, mock} from "ts-mockito";
 
 /*
 Use this like:
@@ -14,8 +18,7 @@ Use this like:
                     multi: true
                 },
 
-It resets all logging, assuming you're using TestBed within a beforeEach (not a beforeAll)
-
+    It resets all logging, assuming you're using TestBed within a beforeEach (not a beforeAll)
  */
 export function resetLog4J() {
     log4javascript.getRootLogger().removeAllAppenders();
@@ -36,6 +39,26 @@ export function newLoggingServiceAfterReset(): LoggingService {
     return new LoggingService(new MockConfigurationService());
 }
 
+export async function waitForTestBedInitializers(): Promise<any> {
+    //https://github.com/angular/angular/issues/24218
+    // noinspection BadExpressionStatementJS
+    return TestBed.get(ApplicationInitStatus).donePromise;
+}
+
+export class ConnectivityServiceMock {
+    static _mock: ConnectivityService;
+    static _instance: ConnectivityService;
+
+    static factory() {
+        ConnectivityServiceMock._mock = mock(ConnectivityService);
+        ConnectivityServiceMock._instance = instance(ConnectivityServiceMock._mock);
+        return ConnectivityServiceMock._instance;
+    }
+
+    static Provider() {
+        return {provide: ConnectivityService, useFactory: () => ConnectivityServiceMock.factory};
+    }
+}
 
 export class HttpFlush {
     static expiredTokenResponse(request) {

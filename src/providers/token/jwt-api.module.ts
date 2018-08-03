@@ -5,13 +5,14 @@ import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
 import {AuthorizationService} from "./authorization.service";
 import {RefreshTokenInterceptor} from "./refresh.interceptor";
 import {StateProvider} from "../state/state";
+import {generateBlacklistedRoutes} from "./jwt-configuration";
 
 export function jwtOptionsFactory(state: StateProvider) {
     return {
         tokenGetter: () => {
             return state.loginToken;
         },
-        blacklistedRoutes: [],
+        blacklistedRoutes: generateBlacklistedRoutes(),
         whitelistedDomains: [
             'schedulerdb.shinywhitebox.com',
             'scheduler.shinywhitebox.com',
