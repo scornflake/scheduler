@@ -1,4 +1,4 @@
-<div *mobxAutorun="'trace'">
+<div>
     <ion-searchbar [ngModel]="nameFilter" (ngModelChange)="setNameFilter($event)"></ion-searchbar>
     <ion-list-header color="warning" *ngIf="numPeopleWithoutEmail > 0">{{numPeopleWithoutEmail}} people have no email
         address

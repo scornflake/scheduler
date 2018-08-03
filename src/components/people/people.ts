@@ -7,13 +7,27 @@ import {NamedObject} from "../../scheduling/base-types";
 import {action, computed, observable} from "mobx-angular";
 import {RootStore} from "../../store/root";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
+import {runInAction} from "mobx";
 
 @Component({
     selector: 'people',
     templateUrl: 'people.html',
 })
 export class PeopleComponent {
-    @Input() people: Array<Person>;
+    @observable private _people: Array<Person>;
+
+    get people(): Array<Person> {
+        return this._people;
+    }
+
+    @Input('people')
+    set people(value: Array<Person>) {
+        runInAction(() => {
+            this._people = value;
+        });
+    }
+
+
     @Output() delete = new EventEmitter<Person>();
     @Output() personAdded = new EventEmitter<Person>();
 
@@ -33,7 +47,7 @@ export class PeopleComponent {
     }
 
     @computed get sortedPeople(): Array<Person> {
-        let people = NamedObject.sortByName(this.people);
+        let people = NamedObject.sortByName(this._people);
         if (this.nameFilter.length > 0) {
             people = people.filter(p => p.name.toLowerCase().indexOf(this.nameFilter.toLowerCase()) >= 0);
         }
@@ -125,23 +139,25 @@ export class PeopleComponent {
                 {
                     text: 'Cancel',
                     handler: () => {
+                        // For some reason have to do this, or they dont close
+                        if (this.personList) {
+                            this.personList.closeSlidingItems();
+                        }
                     }
                 },
                 {
                     text: 'Delete',
                     role: 'cancel',
                     handler: () => {
-                        if(this.personList) {
+                        // For some reason have to do this, or they dont close
+                        if (this.personList) {
                             this.personList.closeSlidingItems();
                         }
                         try {
-                            // this.delete.emit(person);
+                            this.delete.emit(person);
                         } catch (err) {
                             this.pageUtils.showError(err);
                         }
-                        // alert.dismiss().then(() => {
-                        // });
-                        // return false;
                     },
                 }
             ]

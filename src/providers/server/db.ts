@@ -672,7 +672,7 @@ class SchedulerDatabase implements IObjectStore {
                 /*
                 21:32:15,898 db Replication error: {"status":401,"name":"unauthorized","message":"[\"Token Rejected\",token_rejected]","reason":"[\"Token Rejected\",token_rejected]"}
                  */
-                if (err['status'] == 401 && err['name'] == "unauthorized") {
+                if (err['status'] == 401) {
                     // Try to refresh the token
                     if (this._delegate) {
                         this._delegate.asyncTokenRejectedInContinuousReplication().then(r => {

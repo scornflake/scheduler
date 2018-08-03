@@ -4,7 +4,7 @@ import {Person} from "../../scheduling/people";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {RootStore} from "../../store/root";
 import {PageUtils} from "../page-utils";
-import {action} from "mobx-angular";
+import {action, computed} from "mobx-angular";
 
 @IonicPage({
     name: 'page-people',
@@ -32,14 +32,6 @@ export class PeoplePage {
         this.navCtrl.push('PersonDetailsPage', {person: person})
     }
 
-    // ngDoCheck() {
-    //     console.warn(`PeoplePage is being checked`);
-    // }
-    //
-    // ngOnChanges(changes) {
-    //     console.warn(`PeoplePage has changes`)
-    // }
-
     ngAfterViewInit() {
         // for debug
         if (!this.rootStore.people.length) {
@@ -50,8 +42,7 @@ export class PeoplePage {
         // this.show_person_detail(this.rootStore.people_store.find_person_with_name("Stuart Campbell"));
     }
 
-    @action
-    add_person(new_person: Person) {
+    @action add_person(new_person: Person) {
         console.log(`Adding new_person ${new_person} to rootstore/people`);
         this.rootStore.people.add(new_person);
         this.rootStore.asyncSaveOrUpdateDb(new_person).then(() => {
@@ -59,19 +50,14 @@ export class PeoplePage {
         });
     }
 
-    @action
-    delete_person(person: Person) {
-        try {
-            if (person.uuid == this.rootStore.loggedInPerson.uuid) {
-                this.pageUtils.showError('Hey! You cant delete yourself!');
-                return;
-            }
-            this.pageUtils.executeInZone(() => {
-                this.rootStore.people.remove(person);
-            });
-        } catch (er) {
-            this.pageUtils.showError(er);
+    @action delete_person(person: Person) {
+        if (person.uuid == this.rootStore.loggedInPerson.uuid) {
+            this.pageUtils.showError('Hey! You cant delete yourself!');
+            return;
         }
+        this.pageUtils.executeInZone(() => {
+            this.rootStore.people.remove(person);
+        });
     }
 
     addFromContacts() {

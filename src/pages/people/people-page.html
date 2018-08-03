@@ -15,10 +15,9 @@
     <saving-state></saving-state>
 </ion-header>
 
-<!--<ion-content *mobxTraceAutorun="'trace'">-->
-<ion-content >
+<ion-content *mobxTraceAutorun="'trace'">
     <people #personlist
-            [people]="rootStore.people.all"
+            [people]="this.rootStore.people.all"
             (personAdded)="add_person($event)"
             (delete)="delete_person($event)"></people>
 </ion-content>

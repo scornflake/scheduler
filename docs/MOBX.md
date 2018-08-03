@@ -3,9 +3,9 @@ What's the idea then?
 
 Observable
 ----------
-Make a bunch of state.
-Make this state 'observable' (using decorator, or observable() function).
-If any of this state changes, observers will be notified.
+- Make a bunch of state.
+- Make this state 'observable' (using decorator, or observable() function).
+- If any of this state changes, observers will be notified.
 
 Autorun
 -------
@@ -22,6 +22,22 @@ From what I can tell, that walks/renders the template, thus vars used in the tem
 Theory is, if the view accesses observable state, the directive re-calls detectChanges().
 
 
+The People-Page Problem (part 2)
+================================
+
+This starts with 'people list' not updating when changes are made remotely.  At the time, I didn't have mobxTraceAutorun enabled on page-people, or PeopleComponent.
+
+Local delete's would work fine.  Remote would not (the data is removed, but the UI doesn't update).
+
+The problem with mobx:
+- I put mobxTraceAutorun around, and failed. Completely. Now the local stuff doesn't work either.
+
+It seems to be because for PeopleComponent, we pass *a list of people*. Not an observable/async.  For whatever reason, when a change is made to 'all people', that list doesn't get re-examined.
+
+The Fix
+-------
+- Make 'people' @observable
+- Add a getter/setter, where the setter wraps the set in a runInAction()
 
 
 The People Problem

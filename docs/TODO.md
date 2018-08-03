@@ -6,9 +6,6 @@ TODO
 - Invites
     - Allow invites to users that do NOT have an account
     - When a user accepts, there ends up being TWO copies of that user (old login and new?)
-- People Page
-    - Doesn't refresh when an item is deleted by another user.
-    - Or if an item is updated by another user (username, for example)
 - As an admin:
     - I want to see a list of when people are on (on their 'person' page? on the plan page?)
 - How to test all navigation possibilities?
