@@ -3,7 +3,7 @@ import {
     ContentChildren,
     Directive,
     Input,
-    NgModule,
+    NgModule, NgZone,
     QueryList,
     Renderer,
     Self,
@@ -70,7 +70,7 @@ export class MobxTraceAutorun extends MobxAutorunDirective {
     private disabled: boolean = false;
     private trace: boolean = false;
 
-    constructor(templateRef: TemplateRef<any>, viewContainer: ViewContainerRef, renderer: Renderer) {
+    constructor(templateRef: TemplateRef<any>, viewContainer: ViewContainerRef, renderer: Renderer, private zone: NgZone) {
         super(templateRef, viewContainer, renderer);
     }
 
@@ -80,6 +80,8 @@ export class MobxTraceAutorun extends MobxAutorunDirective {
                 this.trace = true;
             }
             console.warn(`MobxTraceAutorun: options: ${this.options}, trace: ${this.trace}`);
+        } else {
+            // console.warn(`MobxTraceAutorun NONE: options=  ${this.options}`);
         }
         super.ngOnInit();
     }
@@ -92,11 +94,13 @@ export class MobxTraceAutorun extends MobxAutorunDirective {
         let autorunName = view._view.component
             ? view._view.component.constructor.name + ".detectChanges()" // angular 4+
             : view._view.parentView.context.constructor.name + ".detectChanges()"; // angular 2
-        this.dispose = autorun(function () {
+        this.dispose = autorun(() => {
             if (enableTracing == true) {
                 trace();
             }
-            view['detectChanges']();
+            this.zone.run(() => {
+                view['detectChanges']();
+            });
         }, {name: autorunName});
     }
 }

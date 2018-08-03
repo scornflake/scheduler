@@ -1,10 +1,10 @@
-<div>
+<div *mobxAutorun="'trace'">
     <ion-searchbar [ngModel]="nameFilter" (ngModelChange)="setNameFilter($event)"></ion-searchbar>
     <ion-list-header color="warning" *ngIf="numPeopleWithoutEmail > 0">{{numPeopleWithoutEmail}} people have no email
         address
     </ion-list-header>
     <ion-list-header color="primary">People</ion-list-header>
-    <ion-list>
+    <ion-list #personList>
         <ion-item-sliding *ngFor="let person of filteredPeople">
             <ion-item [attr.detail-push]="!inviteMode?'true':null" (tap)="showPersonDetail(person)">
                 <ion-label>

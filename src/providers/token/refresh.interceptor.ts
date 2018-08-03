@@ -30,7 +30,7 @@ export class RefreshTokenInterceptor implements HttpInterceptor {
                         let message = errorResponse.error.message || JSON.stringify(errorResponse.error);
                         this.logger.debug("intercept", `Received 401 response: ${err}. 'message' = ${message}`);
                         if (message.indexOf('expired') != -1) {
-                            this.logger.info("intercept", `Token is invalid, refreshing...`);
+                            this.logger.info("intercept", `Token is invalid @ ${req.url}, refreshing ...`);
                             return this.authorizationService.refresh()
                                 .pipe(
                                     mergeMap(() => {

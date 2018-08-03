@@ -10,6 +10,7 @@ import {computed} from "mobx-angular";
 import {delay} from "rxjs/operators";
 import {LifecycleCallbacks} from "../../providers/server/interfaces";
 import {NativePageTransitions} from "@ionic-native/native-page-transitions";
+import {ConnectivityService} from "../../common/network/connectivity";
 
 let __firstTime: boolean = true;
 
@@ -27,7 +28,8 @@ export class HomePage {
     constructor(private navCtrl: NavController,
                 private sheetAPI: GAPIS,
                 private pageUtils: PageUtils,
-                private logService:LoggingService,
+                private logService: LoggingService,
+                private connectivity: ConnectivityService,
                 private nativeTrans: NativePageTransitions,
                 public server: SchedulerServer,
                 public store: RootStore) {
@@ -95,10 +97,10 @@ export class HomePage {
             // this.createTeamWizard();
             // this.createPlanWizard();
 
-            // if (this.platform.is('cordova')) {
-            //     this.navCtrl.push('page-people', {create: true});
-            // } else {
-            //     this.navCtrl.push('page-profile');
+            // if (this.connectivity.onBrowser) {
+                this.navCtrl.push('page-people', {create: true});
+                // } else {
+                //     this.navCtrl.push('page-profile');
             // }
 
 

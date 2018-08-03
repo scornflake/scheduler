@@ -41,17 +41,19 @@
                         >
                         </welcome-wizard>
 
-                        <div *ngIf="!hasNoPlans">
-                            <show-plan *ngIf="!hasNoPlans" (editPlanClicked)="editPlan($event)"></show-plan>
-                            <div *ngIf="store.schedule$ | async as schedule">
-                                <schedule-viewer [schedule]="schedule"
-                                                 [me]="store.loggedInPerson$|async"></schedule-viewer>
-                                <person-schedule [schedule]="schedule"
-                                                 [person]="store.loggedInPerson$|async"></person-schedule>
-                                <person-unavailable *ngIf="store.loggedInPerson$|async as p"
-                                                    [person]="p"></person-unavailable>
+                        <!--<div *mobxTraceAutorun>-->
+                            <div *ngIf="!hasNoPlans">
+                                <show-plan *ngIf="!hasNoPlans" (editPlanClicked)="editPlan($event)"></show-plan>
+                                <div *ngIf="store.schedule$ | async as schedule">
+                                    <schedule-viewer [schedule]="schedule"
+                                                     [me]="store.loggedInPerson$|async"></schedule-viewer>
+                                    <person-schedule [schedule]="schedule"
+                                                     [person]="store.loggedInPerson$|async"></person-schedule>
+                                    <person-unavailable *ngIf="store.loggedInPerson$|async as p"
+                                                        [person]="p"></person-unavailable>
+                                </div>
                             </div>
-                        </div>
+                        <!--</div>-->
                     </ion-grid>
                 </ng-template>
 

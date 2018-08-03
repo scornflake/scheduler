@@ -1,6 +1,6 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {Component, EventEmitter, Input, Output, ViewChild} from '@angular/core';
 import {Person} from "../../scheduling/people";
-import {AlertController, NavController} from "ionic-angular";
+import {AlertController, List, NavController} from "ionic-angular";
 import {PageUtils} from "../../pages/page-utils";
 import {ObjectValidation} from "../../scheduling/shared";
 import {NamedObject} from "../../scheduling/base-types";
@@ -20,12 +20,14 @@ export class PeopleComponent {
     @observable nameFilter: string = "";
     @observable inviteMode: boolean;
 
+    @ViewChild(List) personList;
+
     private selections = new Array<Person>();
 
     constructor(private navCtrl: NavController,
                 private pageUtils: PageUtils,
                 private store: RootStore,
-                private server:SchedulerServer,
+                private server: SchedulerServer,
                 private alertCtrl: AlertController) {
         this.inviteMode = false;
     }
@@ -91,7 +93,7 @@ export class PeopleComponent {
 
     personSummaryRight(person: Person, showTeams: boolean = false): string {
         let things: Array<any> = [];
-        if(person.email) {
+        if (person.email) {
             things.push(person.email);
         }
         return things.join(", ");
@@ -129,8 +131,11 @@ export class PeopleComponent {
                     text: 'Delete',
                     role: 'cancel',
                     handler: () => {
+                        if(this.personList) {
+                            this.personList.closeSlidingItems();
+                        }
                         try {
-                            this.delete.emit(person);
+                            // this.delete.emit(person);
                         } catch (err) {
                             this.pageUtils.showError(err);
                         }
@@ -153,7 +158,7 @@ export class PeopleComponent {
     }
 
     selectPerson($event, person) {
-        if(this.isSelected(person)) {
+        if (this.isSelected(person)) {
             let index = this.selections.findIndex(p => p.uuid == person.uuid);
             this.selections.splice(index, 1);
         } else {
@@ -168,7 +173,7 @@ export class PeopleComponent {
                 this.inviteMode = false;
                 this.selections = [];
             }, err => this.pageUtils.showError(err))
-        } catch(err) {
+        } catch (err) {
             this.pageUtils.showError(err);
         }
     }

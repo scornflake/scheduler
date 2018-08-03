@@ -1,9 +1,10 @@
 TODO
 ====
 - PlanWizard doesn't work on android
-    - text disappears whn entering it
+    - text disappears when entering it
     - NEXT doesn't work on plan page (greyed out)
 - Invites
+    - Allow invites to users that do NOT have an account
     - When a user accepts, there ends up being TWO copies of that user (old login and new?)
 - People Page
     - Doesn't refresh when an item is deleted by another user.
@@ -12,7 +13,7 @@ TODO
     - I want to see a list of when people are on (on their 'person' page? on the plan page?)
 - How to test all navigation possibilities?
     - Basically, how to do SOME kind of UI testing?
-- Scheduler should
+- Scheduler should:
     - show the next coming date (not the first one)
         - show next, up to an including if next == today
     - Allow me to quickly find when someone is on (Jo called mentioned dates, I went to the SS instead cos I could see it. Want to make my default action the app/site)
@@ -94,6 +95,7 @@ What is known to be broken
 ====
 - Sync
   - **** changing the assignment on person, propagates, but 2nd client doesn't see the change in the UI. refresh works.
-  - I think this is bauise ion-segments are very, very broken. Apparently this is fixed in Ionic4. Not going to address.
+  - I think this is because ion-segments are very, very broken. Apparently this is fixed in Ionic4. Not going to address.
+    - Plan name (asegment) doesn't update on main page, if the schedule name is changed on another device
 
 

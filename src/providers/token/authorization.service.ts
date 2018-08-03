@@ -57,7 +57,7 @@ export class AuthorizationService {
 
         const refreshSubject = new ReplaySubject<RefreshResponse>(1);
         refreshSubject.subscribe((r: RefreshResponse) => {
-            this.logger.info(`Token refreshed with: ${r.token}`);
+            this.logger.debug(`Token refreshed: ${r.token}`);
             this.state.setLoginToken(r.token);
             this.notifyTokenRefreshed();
             return r;

@@ -66,7 +66,9 @@ export class PeoplePage {
                 this.pageUtils.showError('Hey! You cant delete yourself!');
                 return;
             }
-            this.rootStore.people.remove(person);
+            this.pageUtils.executeInZone(() => {
+                this.rootStore.people.remove(person);
+            });
         } catch (er) {
             this.pageUtils.showError(er);
         }

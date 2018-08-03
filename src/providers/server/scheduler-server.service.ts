@@ -523,6 +523,7 @@ class SchedulerServer implements ILifecycle, IReplicationNotification {
         // Ask auth to refresh. This will attempt to do so, saving the refresh token in state.
         // It's async so that the caller can wait on it, and do something useful when it's back.
         try {
+            this.logger.info("asyncTokenRejectedInContinuousReplication", `Refreshed token directly`);
             await this.auth.refresh().toPromise();
             return this.auth.isAuthenticatedAndNotExpired();
         } catch (err) {
