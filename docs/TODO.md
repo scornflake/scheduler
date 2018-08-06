@@ -5,12 +5,16 @@ TODO
     - NEXT doesn't work on plan page (greyed out)
 - Invites
     - Allow invites to users that do NOT have an account
+        - User receives invite, downloads app, creates account and *immediately* joins that org.
+            - This saves us creating an empty org for them
     - When a user accepts, there ends up being TWO copies of that user (old login and new?)
+    - Itd be nice for the server to send links to the app, for people to download
 - As an admin:
     - I want to see a list of when people are on (on their 'person' page? on the plan page?)
 - How to test all navigation possibilities?
     - Basically, how to do SOME kind of UI testing?
 - Scheduler should:
+    - As a user, not overly concerned with the plan 'range', so prob don't need to show it
     - show the next coming date (not the first one)
         - show next, up to an including if next == today
     - Allow me to quickly find when someone is on (Jo called mentioned dates, I went to the SS instead cos I could see it. Want to make my default action the app/site)
@@ -24,19 +28,12 @@ TODO
     - and what time it starts (e.g: 10am)
 - Make it so scheduler tells you if a required role isn't filled
     - Requires a role being 'required' (well, that's equal to min > 0)
-- Invites
-    - Itd be nice for the server to send links to the app, for people to download
-    - Then when the user creates an account, it knows there's a pending invite and auto joins them to that org
 - It would be GREAT to:
     - after running tests
     - and auto-deploy; at least for the test environment.
-- Replication / Token Refresh
-    - If token refresh fails, we wont restart replication. Need some way for replication to restart if the token is OK in the future.
-    - Get 'possible EventEmitter memory leak detected. 11 listeners added.' when using a very short token time (5s) on server, and restarting replication a couple of times
 - REST API.
     - Throttling.
     - Permissions
-    - Do users have to be logged in to access RoleSets?  No reason why not that I can think of, because they are not needed unless you have an account.
     - Check what is POST/PUT able. Reduce if necessary.
     - How do we enforce the exact same set of rules on the server, so data cannot be modified by malicious client?
         - **Especially**:
@@ -51,6 +48,14 @@ TODO
     - DB (of production)
     - Per org?
 - DB isn't showing an up to date version of info. Should reload this on page reload?
+
+Future
+======
+- Replication / Token Refresh
+    - If token refresh fails, we wont restart replication. Need some way for replication to restart if the token is OK in the future.
+        - For now: Logout/Login
+    - Get 'possible EventEmitter memory leak detected. 11 listeners added.' when using a very short token time (5s) on server, and restarting replication a couple of times
+
 
 
 Awaiting Confirmation

@@ -10,9 +10,7 @@ import {MockLoggingService} from "../mock-logging-configuration";
 import {jwtOptionsFactory} from "../../providers/token/jwt-api.module";
 import {Storage} from "@ionic/storage";
 import {StorageMock} from "ionic-mocks";
-import {ConnectivityService} from "../../common/network/connectivity";
 import {JwtHelperService} from "@auth0/angular-jwt/src/jwthelper.service";
-import {SWBSafeJSON} from "../../common/json/safe-stringify";
 
 describe('JWT blacklisting', () => {
 

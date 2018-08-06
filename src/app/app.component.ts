@@ -8,6 +8,7 @@ import {computed} from "mobx-angular";
 import {autorun} from "mobx";
 import {isUndefined} from "util";
 import {NativePageTransitions} from "@ionic-native/native-page-transitions";
+import {AccessControlProvider} from "../providers/access-control/access-control";
 
 @Component({
     templateUrl: 'app.html',
@@ -24,6 +25,7 @@ export class MyApp {
                 private statusBar: StatusBar,
                 private splashScreen: SplashScreen,
                 private native: NativePageTransitions,
+                private access: AccessControlProvider,
                 private server: SchedulerServer,
                 private menu: MenuController) {
         this.menu.enable(true, 'menu');
@@ -56,6 +58,13 @@ export class MyApp {
     @computed get loggedIn(): boolean {
         if (this.server) {
             return this.server.isLoggedIn;
+        }
+        return false;
+    }
+
+    loggedInAsManager(resource: string): boolean {
+        if (this.server) {
+            return this.server.isLoggedIn && this.access.canMaintain(resource);
         }
         return false;
     }
@@ -100,7 +109,7 @@ export class MyApp {
     }
 
     get devVisible(): boolean {
-        return true;
+        return this.access.isSuperuser();
     }
 
     openPage(p) {

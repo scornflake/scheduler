@@ -1,6 +1,5 @@
 import {IObjectStore, IReferenceResolver} from "../mapping/orm-mapper-type";
 import {OrmMapper} from "../mapping/orm-mapper";
-import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {IObjectCache} from "../mapping/cache";
 import {OrmConverterWriter} from "./orm-converter-writer";

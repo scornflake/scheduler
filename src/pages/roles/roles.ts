@@ -7,6 +7,7 @@ import {RoleSetResponse} from "../../common/interfaces";
 import {Role} from "../../scheduling/role";
 import {PageUtils} from "../page-utils";
 import PluralizeStatic from "pluralize";
+import {AccessControlProvider, ResourceType} from "../../providers/access-control/access-control";
 
 @IonicPage({
     name: 'page-roles',
@@ -19,10 +20,13 @@ import PluralizeStatic from "pluralize";
 export class RolesPage implements OnInit {
     private logger: Logger;
 
+    public RoleResource = ResourceType.Role;
+
     constructor(public navCtrl: NavController,
                 public store: RootStore,
                 public pageUtils: PageUtils,
                 private logService: LoggingService,
+                public accessControl: AccessControlProvider,
                 public server: SchedulerServer,
                 public alertController: AlertController,
                 public navParams: NavParams) {
@@ -31,16 +35,20 @@ export class RolesPage implements OnInit {
 
     ngOnInit() {
         // For debug
-        // if (this.store.roles.length == 0) {
-        //     this.navCtrl.pop();
-        // }
+        if (this.store.roles.length == 0) {
+            this.navCtrl.pop();
+        } else {
+            this.showRoleDetail(this.store.roles[0]);
+        }
     }
 
     ngAfterContentInit() {
         // For debug only
-        if (this.store.roles.length) {
-            this.showRoleDetail(this.store.roles[0]);
-        }
+        // if (this.store) {
+        //     if (this.store.roles.length > 0) {
+        //         this.showRoleDetail(this.store.roles[0]);
+        //     }
+        // }
     }
 
     addNewRole() {

@@ -3,10 +3,10 @@
         <ion-title>Roles</ion-title>
 
         <ion-buttons end>
-            <button ion-button icon-only (tap)="addNewRole()">
+            <button ion-button icon-only (tap)="addNewRole()" *ngIf="this.accessControl.canMaintain(RoleResource)">
                 <ion-icon name="add"></ion-icon>
             </button>
-            <button ion-button (tap)="addNewRoleSet()">
+            <button ion-button (tap)="addNewRoleSet()" *ngIf="this.accessControl.canMaintain(RoleResource)">
                 <ion-icon name="color-wand"></ion-icon>
             </button>
         </ion-buttons>
@@ -28,7 +28,7 @@
                         <p *sm>Used in {{showUsedInSummary(role, 2)}}</p>
                         <p *showItBootstrap="['md', 'lg', 'xl']">Used in {{showUsedInSummary(role, 3)}}</p>
                     </ion-item>
-                    <ion-item-options side="right">
+                    <ion-item-options side="right" *ngIf="this.accessControl.canMaintain(RoleResource)">
                         <button ion-button color="danger" (tap)="deleteRole(role)">Delete</button>
                     </ion-item-options>
                 </ion-item-sliding>

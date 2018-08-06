@@ -8,6 +8,7 @@ import {Storage} from "@ionic/storage";
 import {ConnectivityService} from "../../common/network/connectivity";
 import {isDefined} from "ionic-angular/util/util";
 import {IState} from "./state.interface";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 
 const STATE_ROOT = 'state';
 
@@ -40,6 +41,7 @@ export class StateProvider {
 
             runInAction(() => {
                 this._state = newState;
+                this.decodeToken();
                 this.logger.info(`Set state to: ${JSON.stringify(this._state)}`);
             });
 
@@ -84,14 +86,15 @@ export class StateProvider {
     }
 
     get loginToken(): string {
-        if(this.state) {
+        if (this.state) {
             return this.state.loginToken;
         }
         return null;
     }
 
-    @action setLoginToken(token: string) {
+    @action setLoginToken(token: string, decodedToken: any = null) {
         this.state.loginToken = token;
+        this.state.decodedToken = decodedToken;
     }
 
     get state(): IState {
@@ -112,24 +115,106 @@ export class StateProvider {
 
     clearTokens() {
         this.state.loginToken = null;
+        this.state.decodedToken = null;
     }
 
     @action setLoginTokenFromLoginResponse(good: boolean, lr: LoginResponse = null) {
         if (good) {
             let ur = lr.user;
-            if(!ur) {
+            if (!ur) {
                 throw new Error('No user returned from login response');
             }
             this.logger.info("setLoginTokenFromLoginResponse", `Set login token to ${lr.token || ''}, last person to: ${ur.uuid || ''}`);
             this.state.loginToken = lr.token;
             this.state.lastPersonUUID = ur.uuid;
             this.state.lastOrganizationUUID = ur.organization_uuid;
+            this.decodeToken();
         } else {
             this.state.loginToken = null;
+            this.state.decodedToken = null;
             this.state.lastPersonUUID = null;
             this.state.lastOrganizationUUID = null;
             this.logger.info("setLoginTokenFromLoginResponse", `Clearing state token/uuid because good == false`);
         }
+    }
+
+    private static urlBase64Decode(str) {
+        var output = str.replace(/-/g, '+').replace(/_/g, '/');
+        switch (output.length % 4) {
+            case 0: {
+                break;
+            }
+            case 2: {
+                output += '==';
+                break;
+            }
+            case 3: {
+                output += '=';
+                break;
+            }
+            default: {
+                throw 'Illegal base64url string!';
+            }
+        }
+        return StateProvider.b64DecodeUnicode(output);
+    };
+
+    private static b64decode(str) {
+        // credits for decoder goes to https://github.com/atk
+        var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+        var output = '';
+        str = String(str).replace(/=+$/, '');
+        if (str.length % 4 === 1) {
+            throw new Error("'atob' failed: The string to be decoded is not correctly encoded.");
+        }
+        for (
+            // initialize result and counters
+            var bc = 0, bs = void 0, buffer = void 0, idx = 0;
+            // get next character
+            (buffer = str.charAt(idx++));
+            // character found in table? initialize bit storage and add its ascii value;
+            ~buffer &&
+            ((bs = bc % 4 ? bs * 64 + buffer : buffer),
+                // and if not first of each 4 characters,
+                // convert the first 8 bits to one ascii character
+            bc++ % 4)
+                ? (output += String.fromCharCode(255 & (bs >> ((-2 * bc) & 6))))
+                : 0) {
+            // try to find character in table (0-63, not found => -1)
+            buffer = chars.indexOf(buffer);
+        }
+        return output;
+    };
+
+    private static b64DecodeUnicode(str) {
+        return decodeURIComponent(Array.prototype.map
+            .call(StateProvider.b64decode(str), function (c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            })
+            .join(''));
+    };
+
+
+    private decodeToken() {
+        if (this.loginToken) {
+            this.state.decodedToken = StateProvider.decodeJWTToken(this.loginToken);
+            this.logger.debug(`JWT token decoded to: ${SWBSafeJSON.stringify(this.state.decodedToken)}`)
+        } else {
+            this.logger.warn(`No JWT token. No decoding performed.`);
+            this.state.decodedToken = null;
+        }
+    }
+
+    static decodeJWTToken(token: string) {
+        var parts = token.split('.');
+        if (parts.length !== 3) {
+            throw new Error('The inspected token doesn\'t appear to be a JWT. Check to make sure it has three parts. decodeToken() error.');
+        }
+        var decoded = StateProvider.urlBase64Decode(parts[1]);
+        if (!decoded) {
+            throw new Error('Cannot decode the token.');
+        }
+        return JSON.parse(decoded);
     }
 }
 

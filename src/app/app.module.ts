@@ -43,6 +43,7 @@ import {EndpointsProvider} from '../providers/endpoints/endpoints';
 import {StateProvider} from '../providers/state/state';
 import {JWTAPIModule} from "../providers/token/jwt-api.module";
 import {doAppInitializersDeterministic} from "../common/app-initializer";
+import {AccessControlProvider} from '../providers/access-control/access-control';
 
 
 let config = {
@@ -134,6 +135,7 @@ export function ResponsiveDefinition() {
             multi: true
         },
         EndpointsProvider,
+        AccessControlProvider,
     ]
 })
 

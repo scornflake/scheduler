@@ -17,13 +17,15 @@ import {Storage} from "@ionic/storage";
 import {IState} from "../../providers/state/state.interface";
 import {HttpClient} from "@angular/common/http";
 import {LoginResponse, UserResponse} from "../../common/interfaces";
-import {APP_INITIALIZER, ApplicationInitStatus} from "@angular/core";
+import {APP_INITIALIZER} from "@angular/core";
 import {LoggingService} from "ionic-logging-service";
-import {reconfigureLoggingInitializer, waitForTestBedInitializers} from "./test-helpers";
+import {waitForTestBedInitializers} from "./test-helpers";
 
+let manager_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo0MCwidXNlcm5hbWUiOiJuZWlsQGNsb3VkbmluZS5uZXQubnoiLCJleHAiOjE1MzM1NDk3NDQsImVtYWlsIjoibmVpbEBjbG91ZG5pbmUubmV0Lm56Iiwib3JpZ19pYXQiOjE1MzM1NDg4NDQsInVpZCI6ImI1OTU0N2VlNDVlZTVjYjk4ODVmYzk4N2Q0MjY5MDhjNWE4OGEwYjRkYTBlMWYzMjNjMDAwOWRiYzA1NDgzZDkiLCJyb2xlcyI6WyJtYW5hZ2VyXzliYWM1MTJiLTQ4M2MtNGFjNy1hZjAxLTYwMDFlN2IzYWFlYyIsIm1lbWJlcl85YmFjNTEyYi00ODNjLTRhYzctYWYwMS02MDAxZTdiM2FhZWMiXX0.5AXQzZ__piO0oLR4XSkAiJ3wg8V7YpmIzadxY0RiBBs";
 
 let state: IState = {
     loginToken: "",
+    decodedToken: manager_token,
     lastPersonUUID: null,
     lastOrganizationUUID: null,
     isForcedOffline: false
@@ -106,7 +108,7 @@ describe('auth and state tests', () => {
         let lr: LoginResponse = {
             ok: true,
             detail: "",
-            token: "some-JWT-token",
+            token: manager_token,
             user: ur
         };
 
@@ -153,12 +155,12 @@ describe('auth and state tests', () => {
             let lr: LoginResponse = {
                 ok: true,
                 detail: "token washed up on shore, empty",
-                token: "I'm a super token!",
+                token: manager_token,
                 user: ur
             };
 
             auth.login('someone', 'hazzah!').subscribe(r => {
-                expect(sProv.loginToken).toEqual("I'm a super token!");
+                expect(sProv.loginToken).toEqual(manager_token);
                 done();
             });
 

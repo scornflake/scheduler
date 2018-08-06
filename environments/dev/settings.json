@@ -31,10 +31,14 @@
       },
       {
         "loggerName": "service.bridge",
-        "logLevel": "DEBUG"
+        "logLevel": "INFO"
       },
       {
         "loggerName": "service.refresh",
+        "logLevel": "INFO"
+      },
+      {
+        "loggerName": "service.access-control",
         "logLevel": "DEBUG"
       },
       {

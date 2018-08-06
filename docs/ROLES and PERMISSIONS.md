@@ -1,18 +1,37 @@
-Roles
+Thinking about Roles
 =====
-A named collection of permissions, defining what that person can do in the role.
-We have I think:
-- User
-    - see their own data
-    - change their own data
-    - see data they are associated with (i.e: teams and or plans)
-    - can make requests, i.e: I'm unavail on X.
-- Team Manager (manage the team, change plans made using the team, add new plans, remove owned plans)
-    - inherits user
-    - cannot change plans or teams they are not a manager for
-    - there could be many team managers.
-- Admin (can do anything)
+A named collection of permissions, defining what that person can do in that role.
 
+- User
+    - See their own data (profile, teams they are in, plans they are in, times they are on)
+    - change their own data
+        - e.g: I'm unavail on X.
+- Organization Manager
+    - Read/Write anything in this org
+    - Cannot delete superusers. Cannot delete other managers.
+    - Cannot demote privs for anyone equal to themselves (ie: can't revoke another managers Org privileges)
+- Admin
+    - can do anything
+
+
+
+Policies
+========
+
+User
+    - Can edit any data they own (Profile, Avail, Unavailability)
+    - Can view teams they are a member of
+
+Manager
+    - Can create new teams, edit teams, and delete teams
+
+
+Actions
+=======
+    - View
+    - Edit
+    - Delete
+    - Change permission of user
 
 
 

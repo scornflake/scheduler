@@ -6,10 +6,11 @@ import {OrmUtils} from "./orm-utils";
 import {OrmMapper} from "../mapping/orm-mapper";
 import {IObjectCache} from "../mapping/cache";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
-import {LoggingService} from "ionic-logging-service";
+import {Logger, LoggingService} from "ionic-logging-service";
 
 class OrmConverterReader {
     private utils: OrmUtils;
+    private logger: Logger;
 
     constructor(
         private mapper: OrmMapper,
@@ -17,7 +18,8 @@ class OrmConverterReader {
         private _resolver: IReferenceResolver,
         private _cache: IObjectCache
     ) {
-        this.utils = new OrmUtils(logService.getLogger('orm.reader'));
+        this.logger = logService.getLogger('orm.reader');
+        this.utils = new OrmUtils(this.logger);
     }
 
     setCache(cache: IObjectCache) {

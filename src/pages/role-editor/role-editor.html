@@ -10,13 +10,13 @@
     <ion-list no-margin>
         <ion-item>
             <ion-label stacked>Name</ion-label>
-            <ion-input [ngModel]="role.name" (ngModelChange)="role.setName($event)"></ion-input>
+            <ion-input [ngModel]="role.name" [readonly]="!canManage" (ngModelChange)="role.setName($event)"></ion-input>
         </ion-item>
     </ion-list>
     <ion-list-header color="light">Layout Priority ({{role.layout_priority}})</ion-list-header>
     <ion-list no-padding>
         <ion-item>
-            <ion-range min="0" max="10" [ngModel]="role.layout_priority"
+            <ion-range min="0" max="10" [disabled]="!canManage" [ngModel]="role.layout_priority"
                        (ngModelChange)="role.setLayoutPriority($event)">
                 <ion-label range-left>0</ion-label>
                 <ion-label range-right>20</ion-label>
@@ -25,11 +25,13 @@
     </ion-list>
 
     <ion-list-header color="light">Min/Max # of people {{role.minimum_needed}}/{{role.maximum_wanted}}</ion-list-header>
-    <ion-range min="0" max="6" [ngModel]="role.minimum_needed" (ngModelChange)="role.setMinimumNeeded($event)">
+    <ion-range min="0" max="6" [ngModel]="role.minimum_needed" [disabled]="!canManage"
+               (ngModelChange)="role.setMinimumNeeded($event)">
         <ion-label range-left>0</ion-label>
         <ion-label range-right>6</ion-label>
     </ion-range>
-    <ion-range min="0" max="6" [ngModel]="role.maximum_wanted" (ngModelChange)="role.setMaximumWanted($event)">
+    <ion-range min="0" max="6" [ngModel]="role.maximum_wanted" [disabled]="!canManage"
+               (ngModelChange)="role.setMaximumWanted($event)">
         <ion-label range-left>0</ion-label>
         <ion-label range-right>6</ion-label>
     </ion-range>
