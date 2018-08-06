@@ -38,11 +38,11 @@ describe('access control', () => {
     });
 
     it('manager can do things', function () {
-        expect(acProvider.canMaintain(ResourceType.Profile)).toBeTruthy();
-        expect(acProvider.canMaintain(ResourceType.Role)).toBeTruthy();
-        expect(acProvider.canMaintain(ResourceType.Team)).toBeTruthy();
-        expect(acProvider.canMaintain(ResourceType.Plan)).toBeTruthy();
-        expect(acProvider.canMaintain(ResourceType.Db)).toBeFalsy();
+        expect(acProvider.canUpdateAny(ResourceType.Profile)).toBeTruthy();
+        expect(acProvider.canUpdateAny(ResourceType.Role)).toBeTruthy();
+        expect(acProvider.canUpdateAny(ResourceType.Team)).toBeTruthy();
+        expect(acProvider.canUpdateAny(ResourceType.Plan)).toBeTruthy();
+        expect(acProvider.canUpdateAny(ResourceType.Db)).toBeFalsy();
     });
 
     it('user access to their own profile', () => {

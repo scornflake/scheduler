@@ -8,6 +8,7 @@ import {action, computed, observable} from "mobx-angular";
 import {RootStore} from "../../store/root";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {runInAction} from "mobx";
+import {AccessControlProvider, ResourceType} from "../../providers/access-control/access-control";
 
 @Component({
     selector: 'people',
@@ -36,14 +37,19 @@ export class PeopleComponent {
 
     @ViewChild(List) personList;
 
-    private selections = new Array<Person>();
+    private selections = [];
 
     constructor(private navCtrl: NavController,
                 private pageUtils: PageUtils,
+                private accessControl:AccessControlProvider,
                 private store: RootStore,
                 private server: SchedulerServer,
                 private alertCtrl: AlertController) {
         this.inviteMode = false;
+    }
+
+    get canManage() {
+        return this.accessControl.canUpdateAny(ResourceType.People);
     }
 
     @computed get sortedPeople(): Array<Person> {

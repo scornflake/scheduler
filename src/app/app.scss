@@ -18,7 +18,6 @@
   visibility: hidden !important;
 }
 
-
 body {
   -webkit-user-select: text;
   user-select: text;
@@ -88,7 +87,6 @@ body {
   display: none !important;
 }
 
-
 // Tips in the footer
 ion-footer {
   p.tip {
@@ -97,3 +95,10 @@ ion-footer {
   }
 }
 
+// Don't show segments
+.segment-disabled.keep-color {
+  opacity: 1 !important;
+  .segment-button {
+    color: #777777 !important;
+  }
+}

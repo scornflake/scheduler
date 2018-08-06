@@ -4,21 +4,21 @@
         <ion-list no-padding no-margin>
             <ion-item>
                 <ion-label>Name</ion-label>
-                <ion-input placeholder="Joe" [ngModel]="person.name" (ngModelChange)="person.setName($event)"></ion-input>
+                <ion-input placeholder="Joe" [ngModel]="person.name" [readonly]="!canEdit" (ngModelChange)="person.setName($event)"></ion-input>
             </ion-item>
             <ion-item>
                 <ion-label>Email</ion-label>
-                <ion-input [ngModel]="person.email" (ngModelChange)="person.setEmail($event)"></ion-input>
+                <ion-input [ngModel]="person.email" [readonly]="!canEdit" (ngModelChange)="person.setEmail($event)"></ion-input>
             </ion-item>
             <ion-item>
                 <ion-label>Phone</ion-label>
-                <ion-input [ngModel]="person.phone" (ngModelChange)="person.setPhone($event)"></ion-input>
+                <ion-input [ngModel]="person.phone" [readonly]="!canEdit" (ngModelChange)="person.setPhone($event)"></ion-input>
             </ion-item>
         </ion-list>
 
         <ion-list-header color="light">{{availabilityTitle}}</ion-list-header>
         <ion-item-group>
-            <availability-options [person]="person" (availabilityChange)="person.availability = $event"></availability-options>
+            <availability-options [person]="person" (availabilityChange)="person.availability = $event" [readonly]="!canEdit"></availability-options>
         </ion-item-group>
 
         <person-unavailable [person]="person"></person-unavailable>

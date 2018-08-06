@@ -20,8 +20,6 @@ import {AccessControlProvider, ResourceType} from "../../providers/access-contro
 export class RolesPage implements OnInit {
     private logger: Logger;
 
-    public RoleResource = ResourceType.Role;
-
     constructor(public navCtrl: NavController,
                 public store: RootStore,
                 public pageUtils: PageUtils,
@@ -35,11 +33,11 @@ export class RolesPage implements OnInit {
 
     ngOnInit() {
         // For debug
-        if (this.store.roles.length == 0) {
-            this.navCtrl.pop();
-        } else {
-            this.showRoleDetail(this.store.roles[0]);
-        }
+        // if (this.store.roles.length == 0) {
+        //     this.navCtrl.pop();
+        // } else {
+        //     this.showRoleDetail(this.store.roles[0]);
+        // }
     }
 
     ngAfterContentInit() {
@@ -49,6 +47,10 @@ export class RolesPage implements OnInit {
         //         this.showRoleDetail(this.store.roles[0]);
         //     }
         // }
+    }
+
+    get canManage() {
+        return this.accessControl.canUpdateAny(ResourceType.Role);
     }
 
     addNewRole() {

@@ -5,6 +5,7 @@ import {Logger, LoggingService} from "ionic-logging-service";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 
 enum ResourceType {
+    People = "people",
     Profile = "profile",
     Role = "role",
     Team = "team",
@@ -86,15 +87,21 @@ class AccessControlProvider {
         return noOne;
     }
 
-    canReadAny(resource: string) {
+    canReadAny(resource: ResourceType): boolean {
         let answer = this.accessControl.can(this.role).createAny(resource).granted;
         this.logger.debug(`Can ${this.role} read-any ${resource}? : ${answer}`);
         return answer;
     }
 
-    canMaintain(resource: string): boolean {
+    canUpdateAny(resource: ResourceType): boolean {
         let answer = this.accessControl.can(this.role).updateAny(resource).granted;
         this.logger.debug(`Can ${this.role} manage ${resource}? : ${answer}`);
+        return answer;
+    }
+
+    canUpdateOwn(resource: ResourceType): boolean {
+        let answer = this.accessControl.can(this.role).updateOwn(resource).granted;
+        this.logger.debug(`Can ${this.role} update own ${resource}? : ${answer}`);
         return answer;
     }
 

@@ -8,7 +8,7 @@ import {computed} from "mobx-angular";
 import {autorun} from "mobx";
 import {isUndefined} from "util";
 import {NativePageTransitions} from "@ionic-native/native-page-transitions";
-import {AccessControlProvider} from "../providers/access-control/access-control";
+import {AccessControlProvider, ResourceType} from "../providers/access-control/access-control";
 
 @Component({
     templateUrl: 'app.html',
@@ -64,7 +64,7 @@ export class MyApp {
 
     loggedInAsManager(resource: string): boolean {
         if (this.server) {
-            return this.server.isLoggedIn && this.access.canMaintain(resource);
+            return this.server.isLoggedIn && this.access.canUpdateAny(resource);
         }
         return false;
     }
@@ -76,14 +76,13 @@ export class MyApp {
                     {title: "Dashboard", page: 'home'},
                     {title: "Login", page: 'login', visible: () => !this.loggedIn},
                     {title: "Profile", page: 'page-profile', enabled: () => this.loggedIn},
-                    {title: "About", page: 'page-about'},
                 ]
             },
             {
-                title: "Admin", visible: () => this.loggedIn, items: [
-                    {title: "Roles", page: 'page-roles', enabled: () => this.loggedIn},
-                    {title: "People", page: 'page-people', enabled: () => this.loggedIn},
-                    {title: "Teams", page: 'page-teams', enabled: () => this.loggedIn},
+                title: "Details", visible: () => this.loggedIn, items: [
+                    {title: "Roles", page: 'page-roles', visible: () => this.loggedInAsManager(ResourceType.Role)},
+                    {title: "People", page: 'page-people', visible: () => this.loggedInAsManager(ResourceType.People)},
+                    {title: "Teams", page: 'page-teams', visible: () => this.loggedInAsManager(ResourceType.Team)},
                     {title: "Plans", page: 'page-plans', enabled: () => this.loggedIn},
                 ]
             },
@@ -97,6 +96,7 @@ export class MyApp {
                         },
                         enabled: () => this.loggedIn
                     },
+                    {title: "About", page: 'page-about'},
                 ]
             },
             {

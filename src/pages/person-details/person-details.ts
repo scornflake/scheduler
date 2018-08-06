@@ -3,6 +3,7 @@ import {IonicPage, NavController, NavParams, PopoverController, ViewController} 
 import {Person} from "../../scheduling/people";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {PageUtils} from "../page-utils";
+import {AccessControlProvider, ResourceType} from "../../providers/access-control/access-control";
 
 @IonicPage()
 @Component({
@@ -18,6 +19,7 @@ export class PersonDetailsPage {
     constructor(public navCtrl: NavController,
                 public navParams: NavParams,
                 public viewCtrl: ViewController,
+                public access: AccessControlProvider,
                 public pageUtils: PageUtils,
                 public popoverCtrl: PopoverController,
                 private loggingService: LoggingService) {
@@ -37,6 +39,10 @@ export class PersonDetailsPage {
         if (this.is_create) {
             this.viewCtrl.showBackButton(false);
         }
+    }
+
+    get canManage() {
+        return this.access.canUpdateAny(ResourceType.People);
     }
 
     cancel_editing() {

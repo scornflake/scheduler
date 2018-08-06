@@ -5,6 +5,7 @@ import {Logger, LoggingService} from "ionic-logging-service";
 import {RootStore} from "../../store/root";
 import {PageUtils} from "../page-utils";
 import {action, computed} from "mobx-angular";
+import {AccessControlProvider, ResourceType} from "../../providers/access-control/access-control";
 
 @IonicPage({
     name: 'page-people',
@@ -22,6 +23,7 @@ export class PeoplePage {
 
     constructor(public navCtrl: NavController,
                 public rootStore: RootStore,
+                private accessControl: AccessControlProvider,
                 public pageUtils: PageUtils,
                 public logService: LoggingService
     ) {
@@ -32,6 +34,10 @@ export class PeoplePage {
         this.navCtrl.push('PersonDetailsPage', {person: person})
     }
 
+    get canManage() {
+        return this.accessControl.canUpdateAny(ResourceType.People);
+    }
+
     ngAfterViewInit() {
         // for debug
         if (!this.rootStore.people.length) {
@@ -39,7 +45,7 @@ export class PeoplePage {
         }
         // for debug
         // this.add_new_person();
-        // this.show_person_detail(this.rootStore.people_store.find_person_with_name("Stuart Campbell"));
+        // this.show_person_detail(this.rootStore.people.firstThisTypeByName("Stuart Campbell"));
     }
 
     @action add_person(new_person: Person) {

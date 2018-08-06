@@ -4,10 +4,10 @@
             Your People
         </ion-title>
         <ion-buttons end *ngIf="pc">
-            <button ion-button icon-only (tap)="pc.addNewPerson()">
+            <button ion-button icon-only (tap)="pc.addNewPerson()" *ngIf="canManage">
                 <ion-icon name="add"></ion-icon>
             </button>
-            <button ion-button icon-only (tap)="pc.invitePeople()">
+            <button ion-button icon-only (tap)="pc.invitePeople()" *ngIf="canManage">
                 <ion-icon name="share"></ion-icon>
             </button>
         </ion-buttons>

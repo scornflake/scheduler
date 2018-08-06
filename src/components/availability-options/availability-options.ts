@@ -16,6 +16,8 @@ export class AvailabilityOptionsComponent implements OnInit {
     @observable _state = new ObservableMap();
     @observable type: string;
 
+    @Input() readonly: boolean = false;
+
     @Input('person')
     set person(p: Person) {
         runInAction(() => {

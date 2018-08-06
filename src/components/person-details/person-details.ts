@@ -3,6 +3,7 @@ import {NavController} from "ionic-angular";
 import {RootStore} from "../../store/root";
 import {Person} from "../../scheduling/people";
 import {observable} from "mobx-angular";
+import {AccessControlProvider, ResourceType} from "../../providers/access-control/access-control";
 
 @Component({
     selector: 'person-details',
@@ -15,7 +16,14 @@ export class PersonDetailsComponent {
     @Output() show_availability = new EventEmitter();
 
     constructor(public navCtrl: NavController,
+                public access: AccessControlProvider,
                 public rootStore: RootStore) {
+    }
+
+    get canEdit() {
+        // Can edit if this person == logged in person
+        let ownResource = this.rootStore.loggedInPerson.uuid == this.person.uuid;
+        return ownResource ? this.access.canUpdateOwn(ResourceType.People) : this.access.canUpdateAny(ResourceType.People);
     }
 
     ngOnInit() {
