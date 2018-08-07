@@ -148,12 +148,16 @@ class SchedulerDatabase implements IObjectStore {
                     opts.headers.set('Authorization', 'Bearer ' + this._state.loginToken);
                 }
                 this.logger.debug("remoteCouchOptions", `Fetching: ${url} with ${opts}`);
-                try {
-                    return PouchDB.fetch(url, opts);
-                } catch (err) {
+                return PouchDB.fetch(url, opts).catch(err => {
                     this.logger.error("remoteCouchOptions", `Error Fetching: ${url} with ${opts}, ${err}`);
-                    throw err;
-                }
+                    // If it is status == 401, don't throw it!
+                    if (err['status'] == 401) {
+                        // ignore
+                    } else {
+                        // ignore as well, for now, since we're getting odd rejection msgs in browser?
+                        // throw err;
+                    }
+                });
             }
         }
     }

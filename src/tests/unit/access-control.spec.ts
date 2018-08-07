@@ -42,31 +42,35 @@ describe('access control', () => {
         expect(acProvider.canUpdateAny(ResourceType.Role)).toBeTruthy();
         expect(acProvider.canUpdateAny(ResourceType.Team)).toBeTruthy();
         expect(acProvider.canUpdateAny(ResourceType.Plan)).toBeTruthy();
+        expect(acProvider.canUpdateAny(ResourceType.People)).toBeTruthy();
         expect(acProvider.canUpdateAny(ResourceType.Db)).toBeFalsy();
     });
 
     it('user access to their own profile', () => {
-        expect(accessControl.can('user').readOwn('profile').granted).toBeTruthy("cant read own");
-        expect(accessControl.can('user').readAny('profile').granted).toBeFalsy("can read any");
+        expect(accessControl.can('user').readOwn(ResourceType.Profile).granted).toBeTruthy("cant read own");
+        expect(accessControl.can('user').readAny(ResourceType.Profile).granted).toBeFalsy("can read any");
 
-        expect(accessControl.can('user').createOwn('profile').granted).toBeTruthy("cant create own");
-        expect(accessControl.can('user').updateOwn('profile').granted).toBeTruthy("cant update own");
-        expect(accessControl.can('user').updateAny('profile').granted).toBeFalsy("can update any");
+        expect(accessControl.can('user').createOwn(ResourceType.Profile).granted).toBeTruthy("cant create own");
+        expect(accessControl.can('user').updateOwn(ResourceType.Profile).granted).toBeTruthy("cant update own");
+        expect(accessControl.can('user').updateAny(ResourceType.Profile).granted).toBeFalsy("can update any");
 
-        expect(accessControl.can('user').deleteOwn('profile').granted).toBeTruthy("cant delete own");
-        expect(accessControl.can('user').deleteAny('profile').granted).toBeFalsy("can delete any");
+        expect(accessControl.can('user').updateOwn(ResourceType.People).granted).toBeTruthy("cant update own person");
+        expect(accessControl.can('user').updateAny(ResourceType.People).granted).toBeFalsy("can update any person");
+
+        expect(accessControl.can('user').deleteOwn(ResourceType.Profile).granted).toBeTruthy("cant delete own");
+        expect(accessControl.can('user').deleteAny(ResourceType.Profile).granted).toBeFalsy("can delete any");
     });
 
     it('if unknown role cant do anything', () => {
-        expect(accessControl.can(noOne).readOwn('profile').granted).toBeFalsy("shouldnt read");
-        expect(accessControl.can(noOne).createOwn('profile').granted).toBeFalsy("shouldnt create");
-        expect(accessControl.can(noOne).updateOwn('profile').granted).toBeFalsy("shouldnt update");
-        expect(accessControl.can(noOne).deleteOwn('profile').granted).toBeFalsy("shouldnt delete");
+        expect(accessControl.can(noOne).readOwn(ResourceType.Profile).granted).toBeFalsy("shouldnt read");
+        expect(accessControl.can(noOne).createOwn(ResourceType.Profile).granted).toBeFalsy("shouldnt create");
+        expect(accessControl.can(noOne).updateOwn(ResourceType.Profile).granted).toBeFalsy("shouldnt update");
+        expect(accessControl.can(noOne).deleteOwn(ResourceType.Profile).granted).toBeFalsy("shouldnt delete");
 
-        expect(accessControl.can(noOne).readAny('profile').granted).toBeFalsy("shouldnt read2");
-        expect(accessControl.can(noOne).createAny('profile').granted).toBeFalsy("shouldnt create2");
-        expect(accessControl.can(noOne).updateAny('profile').granted).toBeFalsy("shouldnt update2");
-        expect(accessControl.can(noOne).deleteAny('profile').granted).toBeFalsy("shouldnt delete2");
+        expect(accessControl.can(noOne).readAny(ResourceType.Profile).granted).toBeFalsy("shouldnt read2");
+        expect(accessControl.can(noOne).createAny(ResourceType.Profile).granted).toBeFalsy("shouldnt create2");
+        expect(accessControl.can(noOne).updateAny(ResourceType.Profile).granted).toBeFalsy("shouldnt update2");
+        expect(accessControl.can(noOne).deleteAny(ResourceType.Profile).granted).toBeFalsy("shouldnt delete2");
     });
 
 });

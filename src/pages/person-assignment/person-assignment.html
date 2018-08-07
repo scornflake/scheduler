@@ -8,44 +8,39 @@
 </ion-header>
 
 
-<ion-content *mobxAutorun>
+<ion-content *mobxTraceAutorun>
     <div *ngIf="person">
-        <!--<ion-list no-padding no-margin>-->
-            <!--<ion-item>-->
-                <!--<ion-label text-center>{{person_name_details}}</ion-label>-->
-            <!--</ion-item>-->
-        <!--</ion-list>-->
-
         <ion-list-header color="light">Availability</ion-list-header>
         <ion-item-group>
             <availability-options [person]="person"
+                                  [readonly]="!canEditPerson"
                                   (availabilityChange)="person.availability = $event"></availability-options>
         </ion-item-group>
 
         <ion-list-header color="light">
             Roles
             <ion-buttons item-end>
-                <button ion-button clear small (tap)="add_new_role()">
+                <button ion-button clear small (tap)="add_new_role()" *ngIf="canManagePlan">
                     Add Role
                 </button>
             </ion-buttons>
         </ion-list-header>
         <ion-item-group>
-            <role-summary [assignment]="assignment" (tapped)="role_tapped($event)"></role-summary>
+            <role-summary [readonly]="!canEditPerson" [assignment]="assignment" (tapped)="role_tapped($event)"></role-summary>
         </ion-item-group>
 
         <ion-list-header color="light">
             Rules
             <ion-buttons item-end>
-                <button ion-button clear small (tap)="add_new_rule()">
+                <button ion-button clear small (tap)="add_new_rule()" *ngIf="canManagePlan">
                     Add Rule
                 </button>
             </ion-buttons>
         </ion-list-header>
         <!--<ion-item-group>-->
-        <rule-details [assignment]="assignment"></rule-details>
+        <rule-details [readonly]="canEditPerson" [assignment]="assignment"></rule-details>
         <!--</ion-item-group>-->
 
-        <person-unavailable [person]="person"></person-unavailable>
+        <person-unavailable [person]="person" [readonly]="!canEditPerson"></person-unavailable>
     </div>
 </ion-content>

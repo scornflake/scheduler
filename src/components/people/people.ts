@@ -8,7 +8,6 @@ import {action, computed, observable} from "mobx-angular";
 import {RootStore} from "../../store/root";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {runInAction} from "mobx";
-import {AccessControlProvider, ResourceType} from "../../providers/access-control/access-control";
 
 @Component({
     selector: 'people',
@@ -20,6 +19,8 @@ export class PeopleComponent {
     get people(): Array<Person> {
         return this._people;
     }
+
+    @Input() readonly: boolean = false;
 
     @Input('people')
     set people(value: Array<Person>) {
@@ -41,15 +42,10 @@ export class PeopleComponent {
 
     constructor(private navCtrl: NavController,
                 private pageUtils: PageUtils,
-                private accessControl:AccessControlProvider,
                 private store: RootStore,
                 private server: SchedulerServer,
                 private alertCtrl: AlertController) {
         this.inviteMode = false;
-    }
-
-    get canManage() {
-        return this.accessControl.canUpdateAny(ResourceType.People);
     }
 
     @computed get sortedPeople(): Array<Person> {
@@ -83,14 +79,6 @@ export class PeopleComponent {
         }
         return 0;
     }
-
-    // ngDoCheck() {
-    //     console.warn(`PeopleComponent is being checked`);
-    // }
-    //
-    // ngOnChanges(changes) {
-    //     console.warn(`PeopleComponent has changes`)
-    // }
 
     public showPersonDetail(person: Person) {
         if (this.inviteMode) {

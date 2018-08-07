@@ -60,7 +60,7 @@ export class ServerError {
     originalError: any;
 
     constructor(serverError: any) {
-        if(serverError instanceof ServerError) {
+        if (serverError instanceof ServerError) {
             this.originalError = serverError.originalError;
             this.errors = serverError.errors;
         } else {
@@ -68,9 +68,13 @@ export class ServerError {
             let errorElement = serverError['error'];
             if (errorElement) {
                 this.errors = [];
-                for (let key of Object.keys(errorElement)) {
-                    let value: string[] = errorElement[key];
-                    this.errors.push({key: key, errors: value})
+                if (typeof errorElement === 'string') {
+                    this.originalError = errorElement;
+                } else {
+                    for (let key of Object.keys(errorElement)) {
+                        let value: string[] = errorElement[key];
+                        this.errors.push({key: key, errors: value})
+                    }
                 }
             }
         }
@@ -133,7 +137,7 @@ export class ServerError {
                 all += err.errors.join(", ");
             }
         }
-        if(all.length == 0) {
+        if (all.length == 0) {
             return this.originalError;
         }
         return all;

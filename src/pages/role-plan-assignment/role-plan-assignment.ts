@@ -3,6 +3,8 @@ import {IonicPage, NavController, NavParams} from 'ionic-angular';
 import {Assignment} from "../../scheduling/assignment";
 import {Role} from "../../scheduling/role";
 import {RootStore} from "../../store/root";
+import {PageUtils} from "../page-utils";
+import {ResourceType} from "../../providers/access-control/access-control";
 
 @IonicPage({
     name: 'page-role-plan-assignment',
@@ -18,6 +20,7 @@ export class RolePlanAssignmentPage {
 
     constructor(public navCtrl: NavController,
                 public store: RootStore,
+                public pageUtils: PageUtils,
                 public navParams: NavParams) {
         this.role = this.navParams.get('role') as Role;
         this.assignment = this.navParams.get('assignment') as Assignment;
@@ -28,5 +31,10 @@ export class RolePlanAssignmentPage {
             this.navCtrl.pop();
         }
     }
+
+    get canEditPerson(): boolean {
+        return this.pageUtils.canEdit(ResourceType.People, this.assignment.person.uuid == this.store.loggedInPerson.uuid);
+    }
+
 
 }

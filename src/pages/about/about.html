@@ -10,8 +10,13 @@
     <div class="about">
         <h1 no-padding no-margin>Cunning Plan</h1>
         <h5>Version: {{version}} ({{build}})</h5>
+        <h5>Roles: {{roles}}</h5>
         <h5>Environment: {{name}}</h5>
         <p class="light">(c) {{year}} shinywhitebox ltd</p>
+
+        <br>
+        <p></p>
+        <button color="secondary" ion-button (tap)="refreshToken()">Refresh Token</button>
     </div>
 </ion-content>
 

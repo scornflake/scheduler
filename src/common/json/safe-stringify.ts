@@ -7,6 +7,9 @@ class SWBSafeJSON {
         if (isUndefined(thing)) {
             return "undefined";
         }
+        if(typeof thing === 'string') {
+            return thing;
+        }
         return stringify(thing);
     }
 }

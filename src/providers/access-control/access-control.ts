@@ -31,6 +31,7 @@ class AccessControlProvider {
         return [
             ResourceType.Profile,
             ResourceType.Role,
+            ResourceType.People,
             ResourceType.Team,
             ResourceType.Plan,
         ];
@@ -74,7 +75,12 @@ class AccessControlProvider {
             this.logger.debug('Role is noOne because no roles on decoded token');
             return noOne;
         }
-        this.logger.debug(`Possible roles are: ${SWBSafeJSON.stringify(roles)}. Our org is: ${this.state.state.lastOrganizationUUID}`);
+
+        if (roles.indexOf('superuser') != -1) {
+            return "superuser";
+        }
+
+        // this.logger.debug(`Possible roles are: ${SWBSafeJSON.stringify(roles)}. Our org is: ${this.state.state.lastOrganizationUUID}`);
         let managerToken = `manager_${this.state.state.lastOrganizationUUID}`;
         if (roles.indexOf(managerToken) != -1) {
             return "manager"
@@ -87,21 +93,27 @@ class AccessControlProvider {
         return noOne;
     }
 
-    canReadAny(resource: ResourceType): boolean {
+    canReadAny(resource: ResourceType, logging: boolean = false): boolean {
         let answer = this.accessControl.can(this.role).createAny(resource).granted;
-        this.logger.debug(`Can ${this.role} read-any ${resource}? : ${answer}`);
+        if (logging) {
+            this.logger.debug("canReadAny", `Can ${this.role} read-any ${resource}? : ${answer}`);
+        }
         return answer;
     }
 
-    canUpdateAny(resource: ResourceType): boolean {
+    canUpdateAny(resource: ResourceType, logging: boolean = false): boolean {
         let answer = this.accessControl.can(this.role).updateAny(resource).granted;
-        this.logger.debug(`Can ${this.role} manage ${resource}? : ${answer}`);
+        if (logging) {
+            this.logger.debug("canUpdateAny", `Can ${this.role} update any ${resource}? : ${answer}`);
+        }
         return answer;
     }
 
-    canUpdateOwn(resource: ResourceType): boolean {
+    canUpdateOwn(resource: ResourceType, logging: boolean = false): boolean {
         let answer = this.accessControl.can(this.role).updateOwn(resource).granted;
-        this.logger.debug(`Can ${this.role} update own ${resource}? : ${answer}`);
+        if (logging) {
+            this.logger.debug("canUpdateOwn", `Can ${this.role} update own ${resource}? : ${answer}`);
+        }
         return answer;
     }
 

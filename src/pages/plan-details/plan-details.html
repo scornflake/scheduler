@@ -4,7 +4,7 @@
         <ion-title>Plan Detail</ion-title>
 
         <ion-buttons end>
-            <button item-end ion-button icon-only (tap)="add_assignment()">
+            <button item-end ion-button icon-only (tap)="add_assignment()" *ngIf="canManage">
                 <ion-icon name="add-circle"></ion-icon>
             </button>
         </ion-buttons>
@@ -18,21 +18,21 @@
         <ion-list no-padding no-margin>
             <ion-item>
                 <ion-label>Name</ion-label>
-                <ion-input text-right placeholder="Plan name" [ngModel]="plan.name"
+                <ion-input text-right placeholder="Plan name" [readonly]="!canManage" [ngModel]="plan.name"
                            (ngModelChange)="plan.setName($event)"></ion-input>
             </ion-item>
             <ion-item>
                 <ion-label>Start Date</ion-label>
-                <ion-datetime [(ngModel)]="startDate"></ion-datetime>
+                <ion-datetime class="keep-color" [disabled]="!canManage" [(ngModel)]="startDate"></ion-datetime>
             </ion-item>
             <ion-item>
                 <ion-label>End Date</ion-label>
-                <ion-datetime [ngModel]="plan.end_date.toISOString()"
+                <ion-datetime class="keep-color" [disabled]="!canManage" [ngModel]="plan.end_date.toISOString()"
                               (ngModelChange)="plan.setEndDateFromISO($event)"></ion-datetime>
             </ion-item>
             <ion-item>
                 <ion-label>Days between events</ion-label>
-                <ion-range min="1" max="7" [ngModel]="plan.days_per_period"
+                <ion-range [disabled]="!canManage" min="1" max="7" [ngModel]="plan.days_per_period"
                            (ngModelChange)="plan.setDaysPerPeriod($event)">
                     <ion-label range-left>1</ion-label>
                     <ion-label range-right>7</ion-label>
@@ -50,7 +50,7 @@
                     <h2>{{p.name}}</h2>
                     <p>{{description_for_person(p)}}</p>
                 </ion-item>
-                <ion-item-options side="right">
+                <ion-item-options side="right" *ngIf="canManage">
                     <button ion-button color="danger" (tap)="delete_assignment_for_person(p)">Delete</button>
                 </ion-item-options>
             </ion-item-sliding>

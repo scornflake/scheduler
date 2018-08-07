@@ -10,6 +10,7 @@ import {Role} from "../../scheduling/role";
 export class RoleDetailComponent {
     @Input('assignment') assignment: Assignment;
     @Input('role') role: Role;
+    @Input() readonly: boolean = false;
 
     constructor(public navCtrl: NavController) {
     }

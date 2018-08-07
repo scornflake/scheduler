@@ -3,7 +3,7 @@
         <ion-title>Plans</ion-title>
 
         <ion-buttons end>
-            <button ion-button icon-only (tap)="addPlan()">
+            <button ion-button icon-only (tap)="addPlan()" *ngIf="canManage">
                 <ion-icon name="add-circle"></ion-icon>
             </button>
         </ion-buttons>
@@ -19,10 +19,10 @@
                 <h2>{{plan.name}}</h2>
                 <p>From {{plan.start_date|date:'mediumDate'}} to {{plan.end_date|date:'mediumDate'}}</p>
             </ion-item>
-            <ion-item-options side="right">
+            <ion-item-options side="right" *ngIf="canManage">
                 <button ion-button color="danger" (tap)="deletePlan(plan)">Delete</button>
             </ion-item-options>
-            <ion-item-options side="left">
+            <ion-item-options side="left" *ngIf="canManage">
                 <button ion-button color="primary" (tap)="duplicatePlan(plan, idx)">Duplicate</button>
             </ion-item-options>
         </ion-item-sliding>

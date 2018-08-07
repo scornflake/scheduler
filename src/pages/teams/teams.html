@@ -2,7 +2,7 @@
     <ion-navbar>
         <ion-title>Teams</ion-title>
         <ion-buttons end>
-            <button ion-button icon-only (tap)="add_new_team()">
+            <button ion-button icon-only (tap)="add_new_team()" *ngIf="canManage">
                 <ion-icon name="add-circle"></ion-icon>
             </button>
         </ion-buttons>
@@ -17,7 +17,7 @@
             <ion-item detail-push (tap)="showTeamDetail(t)">
                 <ion-label>{{t.name}}</ion-label>
             </ion-item>
-            <ion-item-options side="right">
+            <ion-item-options side="right" *ngIf="canManage">
                 <button ion-button color="danger" (tap)="deleteTeam(t)">Delete</button>
             </ion-item-options>
         </ion-item-sliding>

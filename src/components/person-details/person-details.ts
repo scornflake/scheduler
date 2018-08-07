@@ -4,6 +4,7 @@ import {RootStore} from "../../store/root";
 import {Person} from "../../scheduling/people";
 import {observable} from "mobx-angular";
 import {AccessControlProvider, ResourceType} from "../../providers/access-control/access-control";
+import {PageUtils} from "../../pages/page-utils";
 
 @Component({
     selector: 'person-details',
@@ -17,13 +18,14 @@ export class PersonDetailsComponent {
 
     constructor(public navCtrl: NavController,
                 public access: AccessControlProvider,
+                public pageUtils: PageUtils,
                 public rootStore: RootStore) {
     }
 
     get canEdit() {
         // Can edit if this person == logged in person
         let ownResource = this.rootStore.loggedInPerson.uuid == this.person.uuid;
-        return ownResource ? this.access.canUpdateOwn(ResourceType.People) : this.access.canUpdateAny(ResourceType.People);
+        return this.pageUtils.canEdit(ResourceType.People, ownResource);
     }
 
     ngOnInit() {

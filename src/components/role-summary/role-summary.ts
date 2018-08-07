@@ -7,6 +7,7 @@ import {Role} from "../../scheduling/role";
     templateUrl: 'role-summary.html'
 })
 export class RoleSummaryComponent {
+    @Input() readonly: boolean = false;
     @Input() assignment: Assignment;
     @Output() tapped = new EventEmitter<Role>();
 

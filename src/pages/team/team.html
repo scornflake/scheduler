@@ -2,12 +2,13 @@
 
     <ion-navbar>
         <ion-title text-center *ngIf="has_add_button">Add New Team</ion-title>
-        <ion-title text-center *ngIf="!has_add_button">Edit Team</ion-title>
+        <ion-title text-center *ngIf="has_edit_button">Edit Team</ion-title>
+        <ion-title text-center *ngIf="!canManage">Team</ion-title>
         <ion-buttons end>
-            <button ion-button icon-only (tap)="pc.addNewPerson()">
+            <button ion-button icon-only (tap)="pc.addNewPerson()" *ngIf="canManage">
                 <ion-icon name="person-add"></ion-icon>
             </button>
-            <button ion-button icon-only (tap)="addFromExisting()">
+            <button ion-button icon-only (tap)="addFromExisting()" *ngIf="canManage">
                 <ion-icon name="people"></ion-icon>
             </button>
         </ion-buttons>
@@ -21,10 +22,11 @@
         <ion-list no-margin>
             <ion-item>
                 <ion-label>Name</ion-label>
-                <ion-input [ngModel]="team.name" (ngModelChange)="team.setName($event)"></ion-input>
+                <ion-input [ngModel]="team.name" (ngModelChange)="team.setName($event)" [readonly]="!canManage"></ion-input>
             </ion-item>
         </ion-list>
         <people #peoplelist
+                [readonly]="!canManage"
                 [people]="team.people"
                 (personAdded)="add_person_to_team($event)"
                 (delete)="delete_from_team($event)">

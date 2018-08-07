@@ -4,7 +4,7 @@
             <h2>{{role.name}}</h2>
             <ion-badge item-end>Weight {{weight_for(role)}}</ion-badge>
         </ion-item>
-        <ion-item-options side="right">
+        <ion-item-options side="right" *ngIf="!readonly">
             <button ion-button color="danger" (tap)="delete_role(role)">Delete</button>
         </ion-item-options>
     </ion-item-sliding>

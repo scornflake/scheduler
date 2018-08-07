@@ -1,4 +1,4 @@
-<ion-list-header color="light" *ngIf="!readOnly">
+<ion-list-header color="light" *ngIf="!readonly">
     {{title}}
     <button item-end ion-button clear icon-only (tap)="addUnavailability()">
         <ion-icon name="code"></ion-icon>
@@ -7,7 +7,7 @@
         <ion-icon name="code-working"></ion-icon>
     </button>
 </ion-list-header>
-<ion-list-header color="light" *ngIf="readOnly">
+<ion-list-header color="light" *ngIf="readonly">
     {{title}}
 </ion-list-header>
 
@@ -22,7 +22,7 @@
                 <ion-label *ngIf="!u.isDateRange">{{u.fromDate|date:'longDate'}}</ion-label>
                 <ion-label *ngIf="u.isDateRange">{{u.fromDate|date:'longDate'}} to {{u.toDate|date:'longDate'}}</ion-label>
             </ion-item>
-            <ion-item-options side="right">
+            <ion-item-options side="right" *ngIf="!readonly">
                 <button ion-button color="danger" (tap)="deleteUnavailability(u)">Delete</button>
             </ion-item-options>
         </ion-item-sliding>

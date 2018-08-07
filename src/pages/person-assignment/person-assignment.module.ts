@@ -2,8 +2,8 @@ import {NgModule} from '@angular/core';
 import {IonicPageModule} from 'ionic-angular';
 import {PersonAssignmentPage} from './person-assignment';
 import {ComponentsModule} from "../../components/components.module";
-import {MobxAngularModule} from "mobx-angular";
 import {ResponsiveModule} from "ng2-responsive";
+import {SchedulerDirectivesModule} from "../../common/directives";
 
 @NgModule({
     declarations: [
@@ -11,8 +11,8 @@ import {ResponsiveModule} from "ng2-responsive";
     ],
     imports: [
         ComponentsModule,
-        MobxAngularModule,
         ResponsiveModule,
+        SchedulerDirectivesModule,
         IonicPageModule.forChild(PersonAssignmentPage),
     ],
 })

@@ -6,6 +6,7 @@ import {PageUtils} from "../page-utils";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {action, computed} from "mobx-angular";
+import {AccessControlProvider, ResourceType} from "../../providers/access-control/access-control";
 
 @IonicPage({
     name: 'page-teams',
@@ -22,6 +23,7 @@ export class TeamsPage {
                 public rootStore: RootStore,
                 public appRef: ApplicationRef,
                 public server: SchedulerServer,
+                public access: AccessControlProvider,
                 private logService: LoggingService,
                 public pageUtils: PageUtils,
                 public navParams: NavParams) {
@@ -40,13 +42,10 @@ export class TeamsPage {
         // }
     }
 
-    // ngDoCheck() {
-    //     console.warn(`TeamsPage is being checked`);
-    // }
-    //
-    // ngOnChanges(changes) {
-    //     console.warn(`TeamsPage has changes`)
-    // }
+    get canManage() {
+        // Can edit if this person == logged in person
+        return this.access.canUpdateAny(ResourceType.Team);
+    }
 
     @action add_new_team() {
         let team = new Team("");

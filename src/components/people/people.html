@@ -15,7 +15,7 @@
                 <ion-checkbox item-end *ngIf="inviteMode" [ngModel]="isSelected(person)"
                               (ngModelChange)="selectPerson($event, person)"></ion-checkbox>
             </ion-item>
-            <ion-item-options side="right" *ngIf="canManage">
+            <ion-item-options side="right" *ngIf="!readonly">
                 <button ion-button color="danger" (tap)="delete_person(person)">Delete</button>
             </ion-item-options>
         </ion-item-sliding>

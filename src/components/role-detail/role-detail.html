@@ -5,9 +5,8 @@
     </ion-item>
     <ion-item *ngIf="role != null">
         <h2>Weighting</h2>
-        <ion-segment item-end col-6 [ngModel]="weight_for(role)" (ngModelChange)="set_weight_for(role, $event)">
+        <ion-segment class="keep-color" item-end col-6 [ngModel]="weight_for(role)" (ngModelChange)="set_weight_for(role, $event)" [disabled]="readonly">
             <ion-segment-button *ngFor="let w of role_weightings" value="{{w}}">{{w}}</ion-segment-button>
         </ion-segment>
     </ion-item>
-    <saving-state></saving-state>
 </ion-list>

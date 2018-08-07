@@ -95,7 +95,17 @@ ion-footer {
   }
 }
 
-// Don't show segments
+// Don't dim segments/controls that are disabled because of permissions
+.datetime-disabled.keep-color {
+  opacity: 1 !important;
+}
+
+.item-datetime-disabled {
+  ion-label {
+    opacity: 1 !important;
+  }
+}
+
 .segment-disabled.keep-color {
   opacity: 1 !important;
   .segment-button {

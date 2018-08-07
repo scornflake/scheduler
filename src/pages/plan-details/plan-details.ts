@@ -5,6 +5,9 @@ import {Person} from "../../scheduling/people";
 import {PageUtils} from "../page-utils";
 import {NamedObject} from "../../scheduling/base-types";
 import {action, computed, observable} from "mobx-angular";
+import {AccessControlProvider, ResourceType} from "../../providers/access-control/access-control";
+import {RootStore} from "../../store/root";
+import {Logger, LoggingService} from "ionic-logging-service";
 
 @IonicPage({
     name: 'page-plan-details',
@@ -17,11 +20,16 @@ import {action, computed, observable} from "mobx-angular";
 export class PlanDetailsPage {
     plan: Plan;
     @observable name_filter: string;
+    private logger: Logger;
 
     constructor(public navCtrl: NavController,
                 public alertCtrl: AlertController,
+                public access: AccessControlProvider,
+                public logService: LoggingService,
+                public rootStore: RootStore,
                 public pageUtils: PageUtils,
                 public navParams: NavParams) {
+        this.logger = this.logService.getLogger('page.plan-details');
     }
 
     ngOnInit() {
@@ -31,13 +39,16 @@ export class PlanDetailsPage {
         // this.plan.setEndDate(new Date());
 
         if (this.plan == null) {
-            this.navCtrl.pop();
+            // this.navCtrl.pop();
         } else {
             // for debugging
             // this.showAssignment(this.plan.people[0]);
         }
     }
 
+    get canManage() {
+        return this.access.canUpdateAny(ResourceType.Plan);
+    }
 
     @computed get sorted_people(): Array<Person> {
         return NamedObject.sortByName(this.plan.people).filter(p => {
@@ -124,7 +135,7 @@ export class PlanDetailsPage {
     showAssignment(person) {
         let assignment = this.plan.get_or_create_assignment_for(person);
         if (assignment) {
-            console.log(`Showing assignment for ${assignment.person.name} and plan ${this.plan.name}`);
+            this.logger.info(`Showing assignment for ${assignment.person.name} and plan ${this.plan.name}`);
             this.navCtrl.push('page-person-assignment', {
                 plan: this.plan,
                 person: person

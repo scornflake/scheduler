@@ -21,6 +21,6 @@
             <availability-options [person]="person" (availabilityChange)="person.availability = $event" [readonly]="!canEdit"></availability-options>
         </ion-item-group>
 
-        <person-unavailable [person]="person"></person-unavailable>
+        <person-unavailable [person]="person" [readonly]="!canEdit"></person-unavailable>
     </div>
 </div>

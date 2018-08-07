@@ -94,7 +94,7 @@ export class StateProvider {
 
     @action setLoginToken(token: string, decodedToken: any = null) {
         this.state.loginToken = token;
-        this.state.decodedToken = decodedToken;
+        this.decodeToken();
     }
 
     get state(): IState {

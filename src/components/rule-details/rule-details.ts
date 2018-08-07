@@ -8,6 +8,7 @@ import {Assignment} from "../../scheduling/assignment";
 })
 export class RuleDetailsComponent {
     @Input('assignment') assignment: Assignment;
+    @Input() readonly: boolean = false;
 
     constructor() {
     }

@@ -7,6 +7,7 @@ import {ObjectValidation} from "../../scheduling/shared";
 import {PageUtils} from "../page-utils";
 import {NamedObject} from "../../scheduling/base-types";
 import {Logger, LoggingService} from "ionic-logging-service";
+import {AccessControlProvider, ResourceType} from "../../providers/access-control/access-control";
 
 @IonicPage({
     name: 'page-team',
@@ -26,6 +27,7 @@ export class TeamPage {
                 public viewCtrl: ViewController,
                 public pageUtils: PageUtils,
                 public alertCtrl: AlertController,
+                public access: AccessControlProvider,
                 public cd: ChangeDetectorRef,
                 private logService: LoggingService,
                 public zone: NgZone,
@@ -36,16 +38,16 @@ export class TeamPage {
         this.logger = this.logService.getLogger('page.team')
     }
 
-    // ngDoCheck() {
-    //     console.warn(`TeamPage is being checked`);
-    // }
-    //
-    // ngOnChanges(changes) {
-    //     console.warn(`TeamPage has changes`)
-    // }
-
     get has_add_button() {
-        return this.callback != null;
+        return this.callback != null && this.canManage;
+    }
+
+    get has_edit_button() {
+        return this.callback == null && this.canManage;
+    }
+
+    get canManage() {
+        return this.access.canUpdateAny(ResourceType.Team);
     }
 
     ionViewDidLoad() {

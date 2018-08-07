@@ -14,7 +14,7 @@ import {Logger, LoggingService} from "ionic-logging-service";
 export class PersonUnavailableComponent {
     @Input() title = 'Unavailable';
     @Input() person: Person;
-    @Input() readOnly: boolean = false;
+    @Input() readonly: boolean = false;
 
     private logger: Logger;
 

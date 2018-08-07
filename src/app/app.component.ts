@@ -62,7 +62,7 @@ export class MyApp {
         return false;
     }
 
-    loggedInAsManager(resource: string): boolean {
+    loggedInAsManager(resource: ResourceType): boolean {
         if (this.server) {
             return this.server.isLoggedIn && this.access.canUpdateAny(resource);
         }

@@ -7,6 +7,7 @@ import {NamedObject} from "../../scheduling/base-types";
 import {Team} from "../../scheduling/teams";
 import {action, computed} from "mobx-angular";
 import * as moment from "moment";
+import {AccessControlProvider, ResourceType} from "../../providers/access-control/access-control";
 
 @IonicPage({
     name: 'page-plans',
@@ -22,6 +23,7 @@ export class PlansPage {
     constructor(public navCtrl: NavController,
                 public rootStore: RootStore,
                 public alertCtrl: AlertController,
+                public access: AccessControlProvider,
                 public pageUtils: PageUtils,
                 public navParams: NavParams) {
     }
@@ -30,16 +32,20 @@ export class PlansPage {
         return this.rootStore.plans.all.sort();
     }
 
+    get canManage() {
+        return this.access.canUpdateAny(ResourceType.Plan);
+    }
+
     ionViewDidLoad() {
         // for debugging, pop to first page if no plans
-    //     if (this.plans.length == 0) {
-    //         this.navCtrl.pop();
-    //     } else {
-    //         // For Debug, show first plan
-    //         if (this.plans.length) {
-    //             this.showPlanDetail(this.plans[0])
-    //         }
-    //     }
+        // if (this.plans.length == 0) {
+        //     this.navCtrl.pop();
+        // } else {
+        //     // For Debug, show first plan
+        //     if (this.plans.length) {
+        //         this.showPlanDetail(this.plans[0])
+        //     }
+        // }
     }
 
     @action addPlan() {

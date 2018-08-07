@@ -8,6 +8,8 @@ import {RootStore} from "../../store/root";
 import {Role} from "../../scheduling/role";
 import {Plan} from "../../scheduling/plan";
 import {computed, observable} from "mobx-angular";
+import {ResourceType} from "../../providers/access-control/access-control";
+import {PageUtils} from "../page-utils";
 
 @IonicPage({
     name: 'page-person-assignment',
@@ -26,6 +28,7 @@ export class PersonAssignmentPage {
     constructor(public navCtrl: NavController,
                 public rootStore: RootStore,
                 public alertCtrl: AlertController,
+                public pageUtils: PageUtils,
                 public popoverCtrl: PopoverController,
                 public navParams: NavParams) {
 
@@ -38,6 +41,14 @@ export class PersonAssignmentPage {
             return this.plan.assignmentFor(this.person);
         }
         return null;
+    }
+
+    get canEditPerson(): boolean {
+        return this.pageUtils.canEdit(ResourceType.People, this.person.uuid == this.rootStore.loggedInPerson.uuid, true);
+    }
+
+    get canManagePlan(): boolean {
+        return this.pageUtils.canManage(ResourceType.Plan);
     }
 
     ionViewDidLoad() {

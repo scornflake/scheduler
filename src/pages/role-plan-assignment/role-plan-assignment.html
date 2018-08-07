@@ -8,5 +8,5 @@
 
 <ion-content no-padding *ngIf="role">
   <ion-list-header color="light">Details</ion-list-header>
-  <role-detail [role]="role" [assignment]="assignment"></role-detail>
+  <role-detail [role]="role" [assignment]="assignment" [readonly]="!canEditPerson"></role-detail>
 </ion-content>

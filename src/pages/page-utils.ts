@@ -12,6 +12,8 @@ import {NativePageTransitions} from "@ionic-native/native-page-transitions";
 import {Observable} from "rxjs/Observable";
 import {BehaviorSubject, Subscription} from "rxjs";
 import {TokenStates} from "../providers/token/authorization.service";
+import {AccessControlProvider, ResourceType} from "../providers/access-control/access-control";
+import {RootStore} from "../store/root";
 
 interface LifecycleEvent {
     event: LifecycleCallbacks;
@@ -26,10 +28,12 @@ class PageUtils implements OnInit {
     constructor(private toastController: ToastController,
                 private alertCtrlr: AlertController,
                 private logService: LoggingService,
+                private access: AccessControlProvider,
+                @Inject(forwardRef(() => RootStore)) private store,
                 private nativeTransitions: NativePageTransitions,
                 private zoneRef: NgZone,
                 @Inject(forwardRef(() => SchedulerServer)) private server) {
-        this.logger = this.logService.getLogger('page.utils');
+        this.logger = logService.getLogger('page.utils');
     }
 
     ngOnInit() {
@@ -45,6 +49,23 @@ class PageUtils implements OnInit {
 
     showMessage(message: string) {
         this.show_alert(message, {cssClass: 'success'}, false);
+    }
+
+    canManage(resource: ResourceType, logging: boolean = false) {
+        return this.access.canUpdateAny(resource);
+    }
+
+    canEdit(resource: ResourceType, ownResource: boolean = false, logging: boolean = false) {
+        // Can edit if this person == logged in person
+        if (!this.store) {
+            this.logger.debug(`Can edit ${resource}? No, no store instance`);
+            return false;
+        }
+        if (!this.store.loggedInPerson) {
+            this.logger.debug(`Can edit ${resource}? No, no logged in person`);
+            return false;
+        }
+        return ownResource ? this.access.canUpdateOwn(resource, logging) : this.access.canUpdateAny(resource, logging);
     }
 
     lifecycleCallback(navCtrl: NavController): ILifecycleCallback {

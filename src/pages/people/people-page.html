@@ -17,6 +17,7 @@
 
 <ion-content *mobxTraceAutorun="'trace'">
     <people #personlist
+            [readonly]="!canManage"
             [people]="this.rootStore.people.all"
             (personAdded)="add_person($event)"
             (delete)="delete_person($event)"></people>
