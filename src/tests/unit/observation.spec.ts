@@ -45,8 +45,6 @@ describe('observation', () => {
             SetupDefaultRoles();
             done();
         });
-
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
     });
 
     afterEach(() => {

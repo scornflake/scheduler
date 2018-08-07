@@ -9,7 +9,6 @@ describe('delete the db!', () => {
         let logService = newLoggingServiceAfterReset();
         let mapper = new OrmMapper(logService);
 
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = 1500;
         SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, null, mapper, logService).then(new_db => {
             new_db.destroyDatabase().then(() => {
                 console.log(`starting destroy of db...`);

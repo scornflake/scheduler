@@ -42,10 +42,12 @@ describe('app based tests', () => {
     let computerRoleRef;
 
     beforeAll(() => {
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 1500;
         SetupDefaultRoles();
     });
 
     afterAll(() => {
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
         CleanupDefaultRoles();
     });
 
@@ -62,8 +64,6 @@ describe('app based tests', () => {
         cache = new SimpleCache();
         mapper = new OrmMapper(logService);
         mapper.addConfiguration(scheduler_db_map);
-
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = 1500;
 
         SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, null, mapper, logService).then(new_db => {
             db = new_db;

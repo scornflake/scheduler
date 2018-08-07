@@ -6,6 +6,24 @@ import {ApplicationInitStatus} from "@angular/core";
 import {ConnectivityService} from "../../common/network/connectivity";
 import {instance, mock} from "ts-mockito";
 
+export let testOptionsFactory = (st) => {
+    return {
+        tokenGetter: () => {
+            if(st === undefined) {
+                console.error(`Could not give token: no 'st' was passed into testOptionsFactory. Check TestBed setup.`);
+            }
+            return st.loginToken;
+        },
+        blacklistedRoutes: [],
+        whitelistedDomains: [
+            "localhost:8000",
+            "scheduler.shinywhitebox.com",
+            "schedulerdb.shinywhitebox.com"
+        ]
+    }
+};
+
+
 /*
 Use this like:
                 {provide: LoggingService, useClass: MockLoggingService},

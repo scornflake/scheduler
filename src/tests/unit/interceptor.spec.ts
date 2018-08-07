@@ -4,26 +4,22 @@ import {MyApp} from "../../app/app.component";
 import {IonicModule} from "ionic-angular";
 import {HttpClientTestingModule, HttpTestingController} from "@angular/common/http/testing";
 import {ConnectivityService} from "../../common/network/connectivity";
-import {NetworkMock, StorageMock} from "ionic-mocks";
+import {StorageMock} from "ionic-mocks";
 import {EndpointsProvider} from "../../providers/endpoints/endpoints";
 import {ConfigurationService} from "ionic-configuration-service";
 import {MockConfigurationService} from "../mock-logging-configuration";
-import {Network} from "@ionic-native/network";
-import {instance, mock, when} from "ts-mockito";
-import {JwtInterceptor, JwtModule} from '@auth0/angular-jwt';
+import {instance, mock} from "ts-mockito";
+import {JWT_OPTIONS, JwtInterceptor} from '@auth0/angular-jwt';
 import {JwtHelperService} from "@auth0/angular-jwt/src/jwthelper.service";
 import {loadStateAsPromise, StateProvider} from "../../providers/state/state";
 import {Storage} from "@ionic/storage";
 import {IState} from "../../providers/state/state.interface";
-import {JWT_OPTIONS} from '@auth0/angular-jwt';
-import {HTTP_INTERCEPTORS, HttpClient, HttpErrorResponse, HttpRequest} from "@angular/common/http";
-import {LoginResponse, UserResponse} from "../../common/interfaces";
+import {HTTP_INTERCEPTORS, HttpClient, HttpRequest} from "@angular/common/http";
+import {UserResponse} from "../../common/interfaces";
 import {APP_INITIALIZER, ApplicationInitStatus} from "@angular/core";
 import {RefreshTokenInterceptor} from "../../providers/token/refresh.interceptor";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
-import {JWTAPIModule, jwtOptionsFactory} from "../../providers/token/jwt-api.module";
-import {httpFactory} from "@angular/http/src/http_module";
-import {HttpFlush} from "./test-helpers";
+import {HttpFlush, testOptionsFactory} from "./test-helpers";
 import {LoggingService} from "ionic-logging-service";
 
 let initialState: IState = {
@@ -31,21 +27,6 @@ let initialState: IState = {
     lastPersonUUID: null,
     lastOrganizationUUID: null,
     isForcedOffline: false
-};
-
-let optionsFactory = (st) => {
-    return {
-        tokenGetter: () => {
-            // console.log(`Returning token: ${st.loginToken}`);
-            return st.loginToken;
-        },
-        blacklistedRoutes: [],
-        whitelistedDomains: [
-            "localhost:8000",
-            "scheduler.shinywhitebox.com",
-            "schedulerdb.shinywhitebox.com"
-        ]
-    }
 };
 
 describe('refresh interceptor tests', () => {
@@ -101,7 +82,7 @@ describe('refresh interceptor tests', () => {
                 },
                 {
                     provide: JWT_OPTIONS,
-                    useFactory: optionsFactory,
+                    useFactory: testOptionsFactory,
                     deps: [StateProvider]
                 },
                 {

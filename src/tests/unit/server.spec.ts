@@ -62,7 +62,6 @@ describe('scheduler server', () => {
             is_active: true
         };
 
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
         SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, null, mapper, logService).then(new_db => {
             db = new_db;
             server = new SchedulerServer(

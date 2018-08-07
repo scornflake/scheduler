@@ -19,7 +19,7 @@ import {HttpClient} from "@angular/common/http";
 import {LoginResponse, UserResponse} from "../../common/interfaces";
 import {APP_INITIALIZER} from "@angular/core";
 import {LoggingService} from "ionic-logging-service";
-import {waitForTestBedInitializers} from "./test-helpers";
+import {testOptionsFactory, waitForTestBedInitializers} from "./test-helpers";
 
 let manager_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo0MCwidXNlcm5hbWUiOiJuZWlsQGNsb3VkbmluZS5uZXQubnoiLCJleHAiOjE1MzM1NDk3NDQsImVtYWlsIjoibmVpbEBjbG91ZG5pbmUubmV0Lm56Iiwib3JpZ19pYXQiOjE1MzM1NDg4NDQsInVpZCI6ImI1OTU0N2VlNDVlZTVjYjk4ODVmYzk4N2Q0MjY5MDhjNWE4OGEwYjRkYTBlMWYzMjNjMDAwOWRiYzA1NDgzZDkiLCJyb2xlcyI6WyJtYW5hZ2VyXzliYWM1MTJiLTQ4M2MtNGFjNy1hZjAxLTYwMDFlN2IzYWFlYyIsIm1lbWJlcl85YmFjNTEyYi00ODNjLTRhYzctYWYwMS02MDAxZTdiM2FhZWMiXX0.5AXQzZ__piO0oLR4XSkAiJ3wg8V7YpmIzadxY0RiBBs";
 
@@ -29,15 +29,6 @@ let state: IState = {
     lastPersonUUID: null,
     lastOrganizationUUID: null,
     isForcedOffline: false
-};
-
-let optionsFactory = () => {
-    return {
-        tokenGetter: () => {
-            return state.loginToken;
-        },
-        blacklistedRoutes: []
-    }
 };
 
 describe('auth and state tests', () => {
@@ -95,7 +86,8 @@ describe('auth and state tests', () => {
                 },
                 {
                     provide: JWT_OPTIONS,
-                    useFactory: optionsFactory,
+                    useFactory: testOptionsFactory,
+                    deps: []
                 },
                 EndpointsProvider,
             ],
@@ -129,7 +121,7 @@ describe('auth and state tests', () => {
         // if the current user token remains valid.
 
         state = {
-            loginToken: "abcefg",
+            loginToken: manager_token,
             lastPersonUUID: "!2345",
             lastOrganizationUUID: "abcdefg",
             isForcedOffline: false
@@ -146,8 +138,6 @@ describe('auth and state tests', () => {
         // if we change the force flag, that shouldnt affect the comparison.
         stateProv.state.isForcedOffline = true;
         expect(stateProv.hasStateChangedSinceLastLifecycleRun()).toBeFalsy();
-
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000;
     });
 
     it('should set login token if login succeeds', (done) => {
@@ -166,7 +156,7 @@ describe('auth and state tests', () => {
 
             backend.expectOne(r => r.url.includes("api/login")).flush(lr);
         })();
-    });
+    }, 2000);
 
     it('should clear token if login fails', (done) => {
         inject([AuthorizationService, StateProvider, HttpClient, HttpTestingController], (auth, sProv, http, backend) => {
@@ -184,5 +174,5 @@ describe('auth and state tests', () => {
 
             backend.expectOne(r => r.url.includes("api/login")).flush(lr);
         })();
-    });
+    }, 2000);
 });

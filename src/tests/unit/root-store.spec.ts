@@ -31,7 +31,6 @@ describe('root store', () => {
         team = new Team('Super Team', [neil]);
         plan = new Plan('Pin a tail on it', team);
 
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = 4000;
         SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, null, mapper, logService).then(new_db => {
             db = new_db;
             db.setCache(cache);

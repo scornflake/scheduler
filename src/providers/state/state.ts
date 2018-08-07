@@ -196,8 +196,13 @@ export class StateProvider {
 
 
     private decodeToken() {
-        if (this.loginToken) {
-            this.state.decodedToken = StateProvider.decodeJWTToken(this.loginToken);
+        if (this.loginToken && this.loginToken != null) {
+            try {
+                this.state.decodedToken = StateProvider.decodeJWTToken(this.loginToken);
+            } catch(err) {
+                console.error(`Could not decode: ${this.loginToken}, ${err}`);
+                throw err;
+            }
             this.logger.debug(`JWT token decoded to: ${SWBSafeJSON.stringify(this.state.decodedToken)}`)
         } else {
             this.logger.warn(`No JWT token. No decoding performed.`);

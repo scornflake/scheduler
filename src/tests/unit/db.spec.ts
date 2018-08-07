@@ -135,13 +135,12 @@ describe('db', () => {
         // And... mappings for this test
         mapper.addConfiguration(test_config);
 
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = 500;
         SchedulerDatabase.ConstructAndWait(MockConfigurationService.dbName, null, mapper, logService).then(new_db => {
             db = new_db;
             db.setCache(cache);
             done();
         });
-    });
+    }, 500);
 
     it('can create reference of person object', function () {
         let person = new Person("Me!");
