@@ -44,7 +44,7 @@ export class PersonAssignmentPage {
     }
 
     get canEditPerson(): boolean {
-        return this.pageUtils.canEdit(ResourceType.People, this.person.uuid == this.rootStore.loggedInPerson.uuid, true);
+        return this.pageUtils.canEdit(ResourceType.People, this.person.uuid == this.rootStore.loggedInPerson.uuid);
     }
 
     get canManagePlan(): boolean {

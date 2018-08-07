@@ -75,7 +75,7 @@ Performance / Deployment
 
 Scheduling
 ===
-- BUG: TryToScheduleWith will put you on with the other person, even if you're unavailable on that day.
+- BUG: TryToScheduleWith will put you on with the other person, even if you're unavailable on that day (or scheduled on some other role that day).
 - Unavailable: often want to show that in a calendar view. Just to see it.
 - Roles: when shown for an assignment, should be shown in role priority order.
     - Currently for Cher, it shows Worship Leader after Keys. Should be other way around (to imply importance)
@@ -98,6 +98,6 @@ What is known to be broken
 - Sync
   - **** changing the assignment on person, propagates, but 2nd client doesn't see the change in the UI. refresh works.
   - I think this is because ion-segments are very, very broken. Apparently this is fixed in Ionic4. Not going to address.
-    - Plan name (asegment) doesn't update on main page, if the schedule name is changed on another device
+    - Plan name (a segment) doesn't update on main page, if the schedule name is changed on another device
 
 
