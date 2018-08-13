@@ -32,6 +32,7 @@ class GAPIS {
     private init_done: boolean;
 
     ready: Subject<boolean>;
+    progress: Subject<number>;
     selectedSheet: Subject<Spreadsheet>;
     private logger: Logger;
 
@@ -42,6 +43,7 @@ class GAPIS {
 
         this.selectedSheet = new BehaviorSubject(null);
         this.ready = new BehaviorSubject(false);
+        this.progress = new BehaviorSubject(0);
         this.logger = logSvc.getLogger('google');
 
         this.logger.info("ngOnInit", "Loading GAPI...");
@@ -178,6 +180,7 @@ class GAPIS {
     }
 
     findSheetWithIDIn(ss: Spreadsheet, sheetTabId: number): Sheet | undefined {
+        this.logger.debug(`Trying to find sheet with ID ${sheetTabId} in ${ss.properties.title}, ${ss.sheets.length} sheets...`);
         return ss.sheets.find(s => {
             let isThisTheOne = s.properties.sheetId === sheetTabId;
             this.logger.debug(`${s.properties.sheetId} === ${sheetTabId}?  : ${isThisTheOne}`);
@@ -224,101 +227,98 @@ class GAPIS {
         });
     }
 
-    clearAndWriteSchedule(spreadsheet: Spreadsheet, sheet: Sheet, schedule: ScheduleWithRules): Observable<number> {
+    async clearAndWriteSchedule(spreadsheet: Spreadsheet, sheet: Sheet, schedule: ScheduleWithRules) {
         // Righteo. Lets do a batch update!
-        let progressObservable = new Subject<number>();
-        progressObservable.next(0);
+        this.progress.next(0);
         let num_format_rules = sheet.conditionalFormats ? sheet.conditionalFormats.length : 0;
         this.logger.info("clearAndWriteSchedule", "Clearing sheet (with " + num_format_rules + " format rules)...");
 
-        gapi.client.sheets.spreadsheets.values.clear({
+        await gapi.client.sheets.spreadsheets.values.clear({
             spreadsheetId: spreadsheet.spreadsheetId,
             range: GAPIS.range_for_sheet(sheet)
-        }).then((clear_response) => {
-            progressObservable.next(0.25);
-            this.logger.info("clearAndWriteSchedule", "Sending new data...");
-            let fields = schedule.jsonFields();
-            let rows = schedule.jsonResult().map(row => {
-                // Want to remap this structure
-                let new_row = [formatDateForGoogleSpreadsheet(row.date)];
-                for (let field of fields) {
-                    if (field.name == 'Date') continue;
-                    let all_names = _.map(row[field.name], p => p.name);
-                    new_row.push(_.join(all_names, ", "));
-                }
-                return new_row;
-            });
-
-            let data: ValueRange[] = [
-                {
-                    range: GAPIS.range_for_sheet(sheet, "1:1"),
-                    values: [fields.map(field => field.name)]
-                }
-            ];
-
-            let row_index = 2;
-            for (let r of rows) {
-                data.push({
-                    range: GAPIS.range_for_sheet(sheet, "" + row_index + ":" + row_index),
-                    values: [r]
-                });
-                row_index++;
-            }
-
-            let searchRow = rows.length + 5;
-            let searchCondition = "=and(search($B$" + searchRow + ",B2), len($B$" + searchRow + ")>0)";
-
-            // Add in the Search Titles
-            data.push({
-                range: GAPIS.range_for_sheet(sheet, "B" + (searchRow - 1) + ":B" + (searchRow - 1)),
-                values: [['Super Search!']]
-            });
-            data.push({
-                range: GAPIS.range_for_sheet(sheet, "" + (searchRow) + ":" + (searchRow)),
-                values: [['Enter name here:']]
-            });
-
-            this.logger.debug(`Going up to Google: ${SWBSafeJSON.stringify(data)}`);
-
-            progressObservable.next(0.5);
-            gapi.client.sheets.spreadsheets.values.batchUpdate({
-                spreadsheetId: spreadsheet.spreadsheetId,
-                resource: {
-                    valueInputOption: "USER_ENTERED",
-                    data: data
-                }
-            }).then((r) => {
-                progressObservable.next(0.66);
-                this.logger.info("clearAndWriteSchedule", "Updated all data. Formatting...");
-                let requests = [];
-                for (let index = num_format_rules - 1; index >= 0; index--) {
-                    requests.push({
-                            deleteConditionalFormatRule: {
-                                sheetId: sheet.properties.sheetId,
-                                index: 0
-                            },
-                        }
-                    )
-                }
-                if (requests.length > 0) {
-                    progressObservable.next(0.75);
-                    gapi.client.sheets.spreadsheets.batchUpdate({
-                        spreadsheetId: spreadsheet.spreadsheetId,
-                        requests: requests
-                    }).then(this.setConditionalFormats(spreadsheet, sheet, rows, fields, searchCondition, progressObservable)).catch(error => progressObservable.error(error));
-                } else {
-                    this.setConditionalFormats(spreadsheet, sheet, rows, fields, searchCondition, progressObservable);
-                }
-            }).catch(error => {
-                progressObservable.error(error);
-            })
         });
-        return progressObservable;
+
+        this.progress.next(0.25);
+        this.logger.info("clearAndWriteSchedule", "Sending new cell data...");
+        let fields = schedule.jsonFields();
+        let rows = schedule.jsonResult().map(row => {
+            // Want to remap this structure
+            let new_row = [formatDateForGoogleSpreadsheet(row.date)];
+            for (let field of fields) {
+                if (field.name == 'Date') continue;
+                let all_names = _.map(row[field.name], p => p.name);
+                new_row.push(_.join(all_names, ", "));
+            }
+            return new_row;
+        });
+
+        let data: ValueRange[] = [
+            {
+                range: GAPIS.range_for_sheet(sheet, "1:1"),
+                values: [fields.map(field => field.name)]
+            }
+        ];
+
+        let row_index = 2;
+        for (let r of rows) {
+            data.push({
+                range: GAPIS.range_for_sheet(sheet, "" + row_index + ":" + row_index),
+                values: [r]
+            });
+            row_index++;
+        }
+
+        let searchRow = rows.length + 5;
+        let searchCondition = "=and(search($B$" + searchRow + ",B2), len($B$" + searchRow + ")>0)";
+
+        // Add in the Search Titles
+        data.push({
+            range: GAPIS.range_for_sheet(sheet, "B" + (searchRow - 1) + ":B" + (searchRow - 1)),
+            values: [['Super Search!']]
+        });
+        data.push({
+            range: GAPIS.range_for_sheet(sheet, "" + (searchRow) + ":" + (searchRow)),
+            values: [['Enter name here:']]
+        });
+
+        this.logger.debug(`Going up to Google: ${SWBSafeJSON.stringify(data)}`);
+
+        this.progress.next(0.50);
+        await gapi.client.sheets.spreadsheets.values.batchUpdate({
+            spreadsheetId: spreadsheet.spreadsheetId,
+            resource: {
+                valueInputOption: "USER_ENTERED",
+                data: data
+            }
+        });
+
+        this.progress.next(0.66);
+        this.logger.info("clearAndWriteSchedule", "Updated all data. Formatting...");
+        let formatRequests = [];
+        for (let index = num_format_rules - 1; index >= 0; index--) {
+            formatRequests.push({
+                    deleteConditionalFormatRule: {
+                        sheetId: sheet.properties.sheetId,
+                        index: 0
+                    },
+                }
+            )
+        }
+        if (formatRequests.length > 0) {
+            this.progress.next(0.75);
+            await gapi.client.sheets.spreadsheets.batchUpdate({
+                spreadsheetId: spreadsheet.spreadsheetId,
+                requests: formatRequests
+            });
+        }
+        await this.setConditionalFormats(spreadsheet, sheet, rows, fields, searchCondition);
+        this.progress.next(1.0);
+        this.logger.info("clearAndWriteSchedule", "Finished updating Google Sheet");
     }
 
-    private setConditionalFormats(spreadsheet: gapi.client.sheets.Spreadsheet, sheet: gapi.client.sheets.Sheet, rows: string[][], fields: any[], searchCondition: string, progressObservable: Subject<number>) {
-        progressObservable.next(0.85);
-        gapi.client.sheets.spreadsheets.batchUpdate({
+    private async setConditionalFormats(spreadsheet: gapi.client.sheets.Spreadsheet, sheet: gapi.client.sheets.Sheet, rows: string[][], fields: any[], searchCondition: string) {
+        this.progress.next(0.85);
+        await gapi.client.sheets.spreadsheets.batchUpdate({
             spreadsheetId: spreadsheet.spreadsheetId,
             requests: [
                 {
@@ -353,80 +353,76 @@ class GAPIS {
                     }
                 }
             ]
-        }).then((v) => {
-            progressObservable.next(0.95);
-            gapi.client.sheets.spreadsheets.batchUpdate({
-                spreadsheetId: spreadsheet.spreadsheetId,
-                requests: [
-                    {
-                        addConditionalFormatRule: {
-                            rule: {
-                                ranges: [
-                                    {
-                                        sheetId: sheet.properties.sheetId,
-                                        startRowIndex: 1,
-                                        endRowIndex: rows.length + 1,
-                                        startColumnIndex: 1,
-                                        endColumnIndex: fields.length
-                                    }
-                                ],
-                                booleanRule: {
-                                    condition: {
-                                        type: "CUSTOM_FORMULA",
-                                        values: [
-                                            {
-                                                userEnteredValue: searchCondition
-                                            }
-                                        ]
-                                    },
-                                    format: {
-                                        textFormat: {
-                                            foregroundColor: {
-                                                red: 1, green: 1, blue: 1
-                                            },
-                                        },
-                                        backgroundColor: {
-                                            red: 0.5, green: 0.6, blue: 0.2
+        });
+
+        this.progress.next(0.95);
+        await gapi.client.sheets.spreadsheets.batchUpdate({
+            spreadsheetId: spreadsheet.spreadsheetId,
+            requests: [
+                {
+                    addConditionalFormatRule: {
+                        rule: {
+                            ranges: [
+                                {
+                                    sheetId: sheet.properties.sheetId,
+                                    startRowIndex: 1,
+                                    endRowIndex: rows.length + 1,
+                                    startColumnIndex: 1,
+                                    endColumnIndex: fields.length
+                                }
+                            ],
+                            booleanRule: {
+                                condition: {
+                                    type: "CUSTOM_FORMULA",
+                                    values: [
+                                        {
+                                            userEnteredValue: searchCondition
                                         }
-                                    }
-                                }
-                            },
-                            index: 0
-                        },
-                    },
-                    {
-                        repeatCell: {
-                            range: {
-                                sheetId: sheet.properties.sheetId,
-                                startRowIndex: 0,
-                                endRowIndex: 1
-                            },
-                            cell: {
-                                userEnteredFormat: {
+                                    ]
+                                },
+                                format: {
                                     textFormat: {
-                                        bold: true
+                                        foregroundColor: {
+                                            red: 1, green: 1, blue: 1
+                                        },
+                                    },
+                                    backgroundColor: {
+                                        red: 0.5, green: 0.6, blue: 0.2
                                     }
                                 }
-                            },
-                            fields: "userEnteredFormat.textFormat.bold"
-                        },
-                    },
-                    {
-                        autoResizeDimensions: {
-                            dimensions: {
-                                sheetId: sheet.properties.sheetId,
-                                dimension: "COLUMNS",
-                                startIndex: 0,
-                                endIndex: 20
                             }
+                        },
+                        index: 0
+                    },
+                },
+                {
+                    repeatCell: {
+                        range: {
+                            sheetId: sheet.properties.sheetId,
+                            startRowIndex: 0,
+                            endRowIndex: 1
+                        },
+                        cell: {
+                            userEnteredFormat: {
+                                textFormat: {
+                                    bold: true
+                                }
+                            }
+                        },
+                        fields: "userEnteredFormat.textFormat.bold"
+                    },
+                },
+                {
+                    autoResizeDimensions: {
+                        dimensions: {
+                            sheetId: sheet.properties.sheetId,
+                            dimension: "COLUMNS",
+                            startIndex: 0,
+                            endIndex: 20
                         }
                     }
-                ]
-            }).then((r) => {
-                progressObservable.next(1.0);
-                this.logger.info("setConditionalFormats", "Finished updating Google Sheet");
-                progressObservable.complete();
-            }).catch(error => progressObservable.error(error))
+                }
+            ]
         });
     }
 }

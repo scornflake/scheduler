@@ -73,18 +73,23 @@ export class SharePage implements OnInit {
         this.store.schedule$.subscribe(schedule => {
             if (schedule) {
                 let sheet = this.sheetAPI.findSheetWithIDIn(this.selectedSheet, this.preferences.google_sheet_tab_id);
-                this.sheetAPI.clearAndWriteSchedule(this.selectedSheet, sheet, schedule).subscribe(progress => {
+                this.sheetAPI.progress.subscribe(progressValue => {
                     this.isExporting = true;
-                    this.exportProgress = progress * 100;
-                }, err => {
+                    this.exportProgress = progressValue * 100;
+                });
+                try {
+                    this.sheetAPI.clearAndWriteSchedule(this.selectedSheet, sheet, schedule).then(() => {
+                            this.pageUtils.showMessage('Exported successfully');
+                        }
+                    );
+                } catch (err) {
                     let message = err['result']['error']['message'] || err;
                     this.logger.error(`Error: ${SWBSafeJSON.stringify(message)}`);
                     this.pageUtils.showError(message, true);
+                } finally {
                     this.isExporting = false;
-                }, () => {
-                    this.isExporting = false;
-                    this.pageUtils.showMessage('Exported successfully');
-                })
+                    this.exportProgress = 0;
+                }
             }
         });
     }

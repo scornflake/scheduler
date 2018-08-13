@@ -13,17 +13,6 @@
                 <ion-icon name="more"></ion-icon>
             </button>
         </ion-buttons>
-        <!--<button ion-button-->
-        <!--(click)="clear_selection()"-->
-        <!--[disabled]="!rootStore.ui_store.have_selection">Deselect-->
-        <!--</button>-->
-        <!--<button ion-button *ngIf="!rootStore.ui_store.signed_in_to_google"-->
-        <!--(click)="login()">Login-->
-        <!--</button>-->
-        <!--<button ion-button *ngIf="rootStore.ui_store.signed_in_to_google"-->
-        <!--(click)="logout()">Logout-->
-        <!--</button>-->
-        <!--</ion-buttons>-->
     </ion-toolbar>
     <saving-state></saving-state>
 </ion-header>
@@ -77,15 +66,6 @@
     </div>
 </ion-content>
 
-<!--<ion-footer>-->
-<!--<div *ngIf="notSignedIn">-->
-<!--<button class="signInButton" col-4 offset-4 ion-button (tap)="startSignIn()">Sign In</button>-->
-<!--</div>-->
-
-<!--<ion-buttons>-->
-<!--<button small ion-button (tap)="change_state()">Test</button>-->
-<!--</ion-buttons>-->
-
 
 <!--<ion-buttons *ngIf="(store.saved_state$ | async) as state">-->
 <!--<button small ion-button-->
@@ -96,12 +76,6 @@
 <!--</button>-->
 <!--<button small ion-button *ngIf="!state.have_previous_selection"-->
 <!--(click)="select_previous_schedule()">Select Previous...-->
-<!--</button>-->
-<!--<button small ion-button *ngIf="store.ui_store.signed_in_to_google"-->
-<!--(click)="export_as_sheets()">Export Sheet...-->
-<!--</button>-->
-<!--<button small ion-button *ngIf="store.ui_store.signed_in_to_google"-->
-<!--(click)="clear_sheet_state()">Clear State-->
 <!--</button>-->
 <!--</ion-buttons>-->
 <!--</ion-footer>-->
