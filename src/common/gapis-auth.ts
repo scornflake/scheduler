@@ -22,6 +22,7 @@ import {autorun} from "mobx";
 import Spreadsheet = gapi.client.sheets.Spreadsheet;
 import Sheet = gapi.client.sheets.Sheet;
 import ValueRange = gapi.client.sheets.ValueRange;
+import {SWBSafeJSON} from "./json/safe-stringify";
 
 const API_KEY = "AIzaSyCVhzG0pEB1NfZsxpdPPon3XhEK4pctEYE";
 
@@ -223,19 +224,19 @@ class GAPIS {
         });
     }
 
-    clear_and_write_schedule(spreadsheet: Spreadsheet, sheet: Sheet, schedule: ScheduleWithRules): Observable<number> {
+    clearAndWriteSchedule(spreadsheet: Spreadsheet, sheet: Sheet, schedule: ScheduleWithRules): Observable<number> {
         // Righteo. Lets do a batch update!
         let progressObservable = new Subject<number>();
         progressObservable.next(0);
         let num_format_rules = sheet.conditionalFormats ? sheet.conditionalFormats.length : 0;
-        this.logger.info("clear_and_write_schedule", "Clearing sheet (with " + num_format_rules + " format rules)...");
+        this.logger.info("clearAndWriteSchedule", "Clearing sheet (with " + num_format_rules + " format rules)...");
 
         gapi.client.sheets.spreadsheets.values.clear({
             spreadsheetId: spreadsheet.spreadsheetId,
             range: GAPIS.range_for_sheet(sheet)
         }).then((clear_response) => {
             progressObservable.next(0.25);
-            this.logger.info("clear_and_write_schedule", "Sending new data...");
+            this.logger.info("clearAndWriteSchedule", "Sending new data...");
             let fields = schedule.jsonFields();
             let rows = schedule.jsonResult().map(row => {
                 // Want to remap this structure
@@ -251,7 +252,7 @@ class GAPIS {
             let data: ValueRange[] = [
                 {
                     range: GAPIS.range_for_sheet(sheet, "1:1"),
-                    values: [fields]
+                    values: [fields.map(field => field.name)]
                 }
             ];
 
@@ -277,6 +278,8 @@ class GAPIS {
                 values: [['Enter name here:']]
             });
 
+            this.logger.debug(`Going up to Google: ${SWBSafeJSON.stringify(data)}`);
+
             progressObservable.next(0.5);
             gapi.client.sheets.spreadsheets.values.batchUpdate({
                 spreadsheetId: spreadsheet.spreadsheetId,
@@ -286,7 +289,7 @@ class GAPIS {
                 }
             }).then((r) => {
                 progressObservable.next(0.66);
-                this.logger.info("clear_and_write_schedule", "Updated all data. Formatting...");
+                this.logger.info("clearAndWriteSchedule", "Updated all data. Formatting...");
                 let requests = [];
                 for (let index = num_format_rules - 1; index >= 0; index--) {
                     requests.push({
@@ -302,10 +305,12 @@ class GAPIS {
                     gapi.client.sheets.spreadsheets.batchUpdate({
                         spreadsheetId: spreadsheet.spreadsheetId,
                         requests: requests
-                    }).then(this.setConditionalFormats(spreadsheet, sheet, rows, fields, searchCondition, progressObservable));
+                    }).then(this.setConditionalFormats(spreadsheet, sheet, rows, fields, searchCondition, progressObservable)).catch(error => progressObservable.error(error));
                 } else {
                     this.setConditionalFormats(spreadsheet, sheet, rows, fields, searchCondition, progressObservable);
                 }
+            }).catch(error => {
+                progressObservable.error(error);
             })
         });
         return progressObservable;
@@ -421,7 +426,7 @@ class GAPIS {
                 progressObservable.next(1.0);
                 this.logger.info("setConditionalFormats", "Finished updating Google Sheet");
                 progressObservable.complete();
-            })
+            }).catch(error => progressObservable.error(error))
         });
     }
 }

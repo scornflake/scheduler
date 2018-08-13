@@ -79,7 +79,7 @@
       },
       {
         "loggerName": "google",
-        "logLevel": "INFO"
+        "logLevel": "DEBUG"
       },
       {
         "loggerName": "db",

@@ -8,6 +8,7 @@ import {Preferences} from "../../scheduling/people";
 import {computed} from "mobx-angular";
 import Spreadsheet = gapi.client.sheets.Spreadsheet;
 import {PageUtils} from "../page-utils";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 
 @IonicPage({
     name: 'page-share',
@@ -22,6 +23,8 @@ export class SharePage implements OnInit {
 
     selectedSheet: Spreadsheet;
     selectedSheetTabName: string = "";
+    isExporting: boolean;
+    exportProgress: number;
 
     constructor(public navCtrl: NavController,
                 @Inject(forwardRef(() => GAPIS)) public sheetAPI,
@@ -56,6 +59,9 @@ export class SharePage implements OnInit {
     }
 
     get canExportSheet(): boolean {
+        if (this.isExporting) {
+            return false;
+        }
         return this.selectedSheet !== undefined && this.preferences.google_sheet_tab_id != null;
     }
 
@@ -63,13 +69,21 @@ export class SharePage implements OnInit {
         if (!this.canExportSheet) {
             return;
         }
+        this.exportProgress = 0;
         this.store.schedule$.subscribe(schedule => {
             if (schedule) {
                 let sheet = this.sheetAPI.findSheetWithIDIn(this.selectedSheet, this.preferences.google_sheet_tab_id);
-                this.sheetAPI.clear_and_write_schedule(this.selectedSheet, sheet, schedule).subscribe(progress => {
-                    this.pageUtils.showMessage('Exported successfully');
+                this.sheetAPI.clearAndWriteSchedule(this.selectedSheet, sheet, schedule).subscribe(progress => {
+                    this.isExporting = true;
+                    this.exportProgress = progress * 100;
                 }, err => {
-                    this.pageUtils.showError(err);
+                    let message = err['result']['error']['message'] || err;
+                    this.logger.error(`Error: ${SWBSafeJSON.stringify(message)}`);
+                    this.pageUtils.showError(message, true);
+                    this.isExporting = false;
+                }, () => {
+                    this.isExporting = false;
+                    this.pageUtils.showMessage('Exported successfully');
                 })
             }
         });

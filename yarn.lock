@@ -438,9 +438,9 @@ accepts@~1.3.4, accepts@~1.3.5:
     mime-types "~2.1.18"
     negotiator "0.6.1"
 
-accessControl@^2.2.1:
+accesscontrol@^2.2.1:
   version "2.2.1"
-  resolved "https://registry.yarnpkg.com/accessControl/-/accessControl-2.2.1.tgz#c942c48e330841c619682309a8c3aeec6bec66eb"
+  resolved "https://registry.yarnpkg.com/accesscontrol/-/accesscontrol-2.2.1.tgz#c942c48e330841c619682309a8c3aeec6bec66eb"
   dependencies:
     notation "^1.3.6"
 
@@ -574,6 +574,10 @@ android-versions@^1.2.1:
 angular-pipes@^6.5.3:
   version "6.5.3"
   resolved "https://registry.yarnpkg.com/angular-pipes/-/angular-pipes-6.5.3.tgz#6bed37c51ebc2adaf3412663bfe25179d0489b02"
+
+angular-progress-bar@1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/angular-progress-bar/-/angular-progress-bar-1.0.3.tgz#0b313a6be1d994661d7ff284204c96c29fd610f5"
 
 angular2-template-loader@^0.6.2:
   version "0.6.2"

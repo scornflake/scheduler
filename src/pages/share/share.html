@@ -44,6 +44,7 @@
                 </ion-row>
             </ion-grid>
             <button [disabled]="!canExportSheet" ion-button (click)="exportScheduleToSheet()">Export</button>
+            <progress-bar *ngIf="isExporting" [progress]="exportProgress"></progress-bar>
         </div>
 
         <ng-template #selectSheet>

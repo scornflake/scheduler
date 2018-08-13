@@ -8,7 +8,7 @@ class GoogleSheetExporter {
     }
 
     write_to_sheet(spreadsheet: Spreadsheet, sheet: Sheet) {
-        this.api.clear_and_write_schedule(spreadsheet, sheet, this.schedule);
+        this.api.clearAndWriteSchedule(spreadsheet, sheet, this.schedule);
     }
 }
 

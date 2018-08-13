@@ -7,7 +7,7 @@
 </ion-header>
 
 <ion-content>
-  <ion-spinner *ngIf="loading"></ion-spinner>
+  <ion-spinner class="center-spinner" *ngIf="loading"></ion-spinner>
   <ion-list>
     <ion-item (tap)="select_sheet(s)" *ngFor="let s of sheets">{{s?.properties?.title}}</ion-item>
   </ion-list>
