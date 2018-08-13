@@ -2,7 +2,6 @@ import {Injectable} from '@angular/core';
 import {ConfigurationService} from "ionic-configuration-service";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {Logger, LoggingService} from "ionic-logging-service";
-import {LoggingWrapper} from "../../common/logging-wrapper";
 import {isUndefined} from "util";
 
 @Injectable()

@@ -107,7 +107,7 @@ export class PeopleComponent {
         return things.join(", ");
     }
 
-    invitePeople() {
+    @action invitePeople() {
         this.inviteMode = !this.inviteMode;
     }
 
@@ -176,7 +176,7 @@ export class PeopleComponent {
         }
     }
 
-    sendInvites() {
+    @action sendInvites() {
         try {
             this.server.sendInvites(this.selections).then(() => {
                 this.pageUtils.showMessage(`Sent ${this.numPeopleSelected} invites`);

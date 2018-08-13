@@ -1,6 +1,6 @@
 ///<reference path="./fix.broken.gapi.types.d.ts"/>
 ///<reference path="../../node_modules/@types/gapi.client.sheets/index.d.ts"/>
-import {ApplicationRef, Injectable} from "@angular/core";
+import {ApplicationRef, forwardRef, Inject, Injectable} from "@angular/core";
 import {credentials, DISCOVERY_DOCS, SCOPES} from "./auth-common";
 import {Observable} from "rxjs/Observable";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
@@ -8,17 +8,20 @@ import {Subject} from "rxjs/Subject";
 import {fromPromise} from "rxjs/observable/fromPromise"
 
 import * as _ from 'lodash';
-
-import {Logger} from "ionic-logging-service";
 import {formatDateForGoogleSpreadsheet} from "../scheduling/common/date-utils";
-import {LoggingWrapper} from "./logging-wrapper";
 import {RESTServer} from "../providers/server/server";
 import {RootStore} from "../store/root";
 import {UIStore} from "../store/UIState";
+import {Preferences} from "../scheduling/people";
+import {action, computed} from "mobx-angular";
+import {BehaviorSubject} from "rxjs";
+import {flatMap} from "rxjs/operators";
+import {Logger, LoggingService} from "ionic-logging-service";
+import {of} from "rxjs/observable/of";
+import {autorun} from "mobx";
 import Spreadsheet = gapi.client.sheets.Spreadsheet;
 import Sheet = gapi.client.sheets.Sheet;
 import ValueRange = gapi.client.sheets.ValueRange;
-import {Preferences} from "../scheduling/people";
 
 const API_KEY = "AIzaSyCVhzG0pEB1NfZsxpdPPon3XhEK4pctEYE";
 
@@ -26,16 +29,21 @@ const API_KEY = "AIzaSyCVhzG0pEB1NfZsxpdPPon3XhEK4pctEYE";
 @Injectable()
 class GAPIS {
     private init_done: boolean;
-    private callback: any;
+
+    ready: Subject<boolean>;
+    selectedSheet: Subject<Spreadsheet>;
+    private logger: Logger;
 
     constructor(private rootStore: RootStore,
-                private server: RESTServer,
+                private logSvc: LoggingService,
+                @Inject(forwardRef(() => RESTServer)) private server,
                 private appRef: ApplicationRef) {
-    }
 
-    init(callback = null) {
-        LoggingWrapper.info("gapi", "Loading GAPI...");
-        this.callback = callback;
+        this.selectedSheet = new BehaviorSubject(null);
+        this.ready = new BehaviorSubject(false);
+        this.logger = logSvc.getLogger('google');
+
+        this.logger.info("ngOnInit", "Loading GAPI...");
 
         this.initClient = this.initClient.bind(this);
         this.loadDrive = this.loadDrive.bind(this);
@@ -44,37 +52,40 @@ class GAPIS {
         this.loadAuthentication();
     }
 
-    authenticate() {
-        if (!this.init_done) {
-            this.init(this.authenticate);
-            return;
-        }
-        // gapi.auth2.getAuthInstance().signIn();
-        gapi.auth2.getAuthInstance().grantOfflineAccess().then(this.offlineAccess.bind(this));
-
-    }
-
-    offlineAccess(json) {
-        const {code} = json;
-        this.server.storeGoogleAccessCode(code).subscribe(r => {
-            if (!r.ok) {
-                LoggingWrapper.error("gapi", r.detail)
-            } else {
-                LoggingWrapper.info("gapi", "Server stored and converted the one-time code to a token!");
+    private listenForChangesToSelectedSheet() {
+        autorun(() => {
+            if (this.state) {
+                if (this.state.google_sheet_id === undefined || this.state.google_sheet_id === null) {
+                    this.logger.warn("listenForChangesToSelectedSheet", `No sheet selected. Setting selected sheet to null`);
+                    this.selectedSheet.next(null)
+                } else {
+                    this.logger.warn("listenForChangesToSelectedSheet", `Get selected sheet`);
+                    this.load_sheet_with_id(this.state.google_sheet_id).subscribe(this.selectedSheet);
+                }
             }
         })
     }
 
+    authenticate() {
+        return this.ready.pipe(
+            flatMap(() => {
+                    this.logger.info("authenticate", `Begin auth`);
+                    return gapi.auth2.getAuthInstance().signIn();
+                }
+            ));
+    }
+
     signout() {
-        if (!this.init_done) {
-            this.init(this.signout);
-            return;
-        }
-        gapi.auth2.getAuthInstance().signOut();
+        return this.ready.pipe(
+            flatMap(() => {
+                    this.logger.info("signout", `Signing out`);
+                    return gapi.auth2.getAuthInstance().disconnect()
+                }
+            ));
     }
 
     list_all_sheets(): Observable<any> {
-        LoggingWrapper.info("gapi", "Listing all sheets");
+        this.logger.info("list_all_sheets", "Listing all sheets");
         let sheets_only = {
             q: "mimeType='application/vnd.google-apps.spreadsheet'"
         };
@@ -91,7 +102,7 @@ class GAPIS {
     }
 
     private initClient() {
-        LoggingWrapper.info("gapi", "Initializing GAPI...");
+        this.logger.info("initClient", "Initializing GAPI...");
         gapi.client.init({
             apiKey: API_KEY,
             clientId: credentials.installed.client_id,
@@ -105,40 +116,55 @@ class GAPIS {
             this.updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
 
             this.init_done = true;
-            if (this.callback) {
-                this.callback();
-                this.callback = null;
-            }
+            this.ready.next(true);
+
+            this.logger.info("initClient", "Initializing GAPI complete");
+            this.listenForChangesToSelectedSheet();
         });
     }
 
+    @computed get isSignedInToGoogle(): boolean {
+        let store = this.ui_store;
+        return store.signed_in_to_google;
+    }
+
+    @action
     private updateSigninStatus(isSignedIn: boolean) {
-        LoggingWrapper.info("gapi", "Updating signed in state to: " + isSignedIn);
+        this.logger.info("updateSigninStatus", "Updating signed in state to: " + isSignedIn);
         let store = this.ui_store;
         store.signed_in_to_google = isSignedIn;
         this.appRef.tick();
     }
 
     private loadAuthentication() {
-        LoggingWrapper.info("gapi", "Loading Auth API...");
+        this.logger.info("loadAuthentication", "Loading Auth API...");
         gapi.load('client:auth2', this.loadDrive);
     }
 
     private loadDrive() {
-        LoggingWrapper.info("gapi", "Loading drive API...");
+        this.logger.info("loadDrive", "Loading drive API...");
         gapi.client.load('drive', 'v3').then((v) => {
             this.loadSheets();
         });
     }
 
     private loadSheets() {
-        LoggingWrapper.info("gapi", "Loading sheets API...");
+        this.logger.info("loadSheets", "Loading sheets API...");
         gapi.client.load('sheets', 'v4').then((v) => {
             this.initClient();
         });
     }
 
-    get state(): Preferences {
+    @computed get state(): Preferences {
+        if (!this.rootStore) {
+            return null;
+        }
+        if (!this.rootStore.ui_store) {
+            return null;
+        }
+        if (!this.rootStore.ui_store.loggedInPerson) {
+            return null;
+        }
         return this.rootStore.ui_store.loggedInPerson.preferences;
     }
 
@@ -146,34 +172,48 @@ class GAPIS {
         return this.rootStore.ui_store;
     }
 
+    get selectedSheet$(): Observable<Spreadsheet> {
+        return this.selectedSheet;
+    }
+
+    findSheetWithIDIn(ss: Spreadsheet, sheetTabId: number): Sheet | undefined {
+        return ss.sheets.find(s => {
+            let isThisTheOne = s.properties.sheetId === sheetTabId;
+            this.logger.debug(`${s.properties.sheetId} === ${sheetTabId}?  : ${isThisTheOne}`);
+            return isThisTheOne;
+        });
+    }
+
     public load_sheet_with_id(sheet_id): Observable<Spreadsheet> {
+        if (sheet_id === undefined || sheet_id === null) {
+            this.logger.warn("load_sheet_with_id", `sheet_id is null, returning observable with null`);
+            return of(null);
+        }
+
         return Observable.create((observer) => {
-            LoggingWrapper.info("gapi", `Loading spreadsheet with ID: ${sheet_id}`);
-            if (sheet_id == null || sheet_id == "") {
-                // throw new Error("No sheet");
-                throw new Error("No sheet ID specified");
-            }
+            this.logger.debug("gapi", `Loading spreadsheet with ID: ${sheet_id}`);
             // Try to read this sheet to see if we can
             let request = {spreadsheetId: sheet_id, includeGridData: true};
             gapi.client.sheets.spreadsheets.get(request).then((result) => {
                 // this.logger.info("Hey! We got the sheet! Awesome!");
                 observer.next(result.result);
                 observer.complete();
+                this.logger.info("gapi", `Loaded spreadsheet with ID: ${sheet_id}`);
             });
         });
     }
 
-    range_for_sheet(s: Sheet, range?: string): string {
+    static range_for_sheet(s: Sheet, range?: string): string {
         if (!range) {
             return "'" + s.properties.title + "'";
         }
         return "'" + s.properties.title + "'!" + range;
     }
 
-    read_spreadsheet_data(spreadsheet: Spreadsheet, sheet: Sheet): Observable<Array<any>> {
+    static read_spreadsheet_data(spreadsheet: Spreadsheet, sheet: Sheet): Observable<Array<any>> {
         let promise = gapi.client.sheets.spreadsheets.values.get({
             spreadsheetId: spreadsheet.spreadsheetId,
-            range: this.range_for_sheet(sheet),
+            range: GAPIS.range_for_sheet(sheet),
             includeGridData: true
         });
 
@@ -188,14 +228,14 @@ class GAPIS {
         let progressObservable = new Subject<number>();
         progressObservable.next(0);
         let num_format_rules = sheet.conditionalFormats ? sheet.conditionalFormats.length : 0;
-        LoggingWrapper.info("gapi", "Clearing sheet (with " + num_format_rules + " format rules)...");
+        this.logger.info("clear_and_write_schedule", "Clearing sheet (with " + num_format_rules + " format rules)...");
 
         gapi.client.sheets.spreadsheets.values.clear({
             spreadsheetId: spreadsheet.spreadsheetId,
-            range: this.range_for_sheet(sheet)
+            range: GAPIS.range_for_sheet(sheet)
         }).then((clear_response) => {
             progressObservable.next(0.25);
-            LoggingWrapper.info("gapi", "Sending new data...");
+            this.logger.info("clear_and_write_schedule", "Sending new data...");
             let fields = schedule.jsonFields();
             let rows = schedule.jsonResult().map(row => {
                 // Want to remap this structure
@@ -210,7 +250,7 @@ class GAPIS {
 
             let data: ValueRange[] = [
                 {
-                    range: this.range_for_sheet(sheet, "1:1"),
+                    range: GAPIS.range_for_sheet(sheet, "1:1"),
                     values: [fields]
                 }
             ];
@@ -218,7 +258,7 @@ class GAPIS {
             let row_index = 2;
             for (let r of rows) {
                 data.push({
-                    range: this.range_for_sheet(sheet, "" + row_index + ":" + row_index),
+                    range: GAPIS.range_for_sheet(sheet, "" + row_index + ":" + row_index),
                     values: [r]
                 });
                 row_index++;
@@ -229,11 +269,11 @@ class GAPIS {
 
             // Add in the Search Titles
             data.push({
-                range: this.range_for_sheet(sheet, "B" + (searchRow - 1) + ":B" + (searchRow - 1)),
+                range: GAPIS.range_for_sheet(sheet, "B" + (searchRow - 1) + ":B" + (searchRow - 1)),
                 values: [['Super Search!']]
             });
             data.push({
-                range: this.range_for_sheet(sheet, "" + (searchRow) + ":" + (searchRow)),
+                range: GAPIS.range_for_sheet(sheet, "" + (searchRow) + ":" + (searchRow)),
                 values: [['Enter name here:']]
             });
 
@@ -246,7 +286,7 @@ class GAPIS {
                 }
             }).then((r) => {
                 progressObservable.next(0.66);
-                LoggingWrapper.info("gapi", "Updated all data. Formatting...");
+                this.logger.info("clear_and_write_schedule", "Updated all data. Formatting...");
                 let requests = [];
                 for (let index = num_format_rules - 1; index >= 0; index--) {
                     requests.push({
@@ -379,7 +419,7 @@ class GAPIS {
                 ]
             }).then((r) => {
                 progressObservable.next(1.0);
-                LoggingWrapper.info("gapi", "Finished updating Google Sheet");
+                this.logger.info("setConditionalFormats", "Finished updating Google Sheet");
                 progressObservable.complete();
             })
         });

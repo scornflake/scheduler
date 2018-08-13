@@ -20,6 +20,7 @@ TODO
     - Allow me to quickly find when someone is on (Jo called mentioned dates, I went to the SS instead cos I could see it. Want to make my default action the app/site)
 - Login validation should show only if > 0 chars:
     - don't show 'email should be valid' if nothing typed in
+
     - don't show 'email should be valid' or 'password blah' until first 'login' is pressed
 - No 'forgot password' function.
 - Make it possible to specify:
@@ -48,6 +49,8 @@ TODO
     - DB (of production)
     - Per org?
 - DB isn't showing an up to date version of info. Should reload this on page reload?
+- Sheets
+    - This app hasn't been verified by Google yet. Only proceed if you know and trust the developer.
 
 Future
 ======

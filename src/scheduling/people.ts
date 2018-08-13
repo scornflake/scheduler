@@ -55,6 +55,16 @@ class Preferences extends ObjectWithUUID {
             this.selected_plan_uuid = value;
         }
     }
+
+    @action setSheetToExportTo(spreadsheetId: any, sheetId: number) {
+        this.google_sheet_id = spreadsheetId;
+        this.google_sheet_tab_id = sheetId;
+    }
+
+    @action clearSelectedSheet() {
+        this.google_sheet_id = null;
+        this.google_sheet_tab_id = null;
+    }
 }
 
 class Invitation extends TypedObject {

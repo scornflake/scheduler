@@ -6,8 +6,8 @@
 
 </ion-header>
 
-<ion-content padding>
-    <ion-spinner *ngIf="loading"></ion-spinner>
+<ion-content>
+    <ion-spinner class="center-spinner" *ngIf="loading"></ion-spinner>
     <ion-list>
         <ion-item (tap)="selectSheet(s)" *ngFor="let s of sheets">{{s.name}}</ion-item>
     </ion-list>

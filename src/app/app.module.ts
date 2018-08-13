@@ -44,6 +44,7 @@ import {StateProvider} from '../providers/state/state';
 import {JWTAPIModule} from "../providers/token/jwt-api.module";
 import {doAppInitializersDeterministic} from "../common/app-initializer";
 import {AccessControlProvider} from '../providers/access-control/access-control';
+import {SharePageModule} from "../pages/share/share.module";
 
 
 let config = {
@@ -91,6 +92,7 @@ export function ResponsiveDefinition() {
         PlanWizardPageModule,
         SchedulerDirectivesModule,
         JWTAPIModule,
+        SharePageModule,
     ],
     bootstrap: [IonicApp],
     entryComponents: [

@@ -213,7 +213,9 @@ export class StateProvider {
     static decodeJWTToken(token: string) {
         var parts = token.split('.');
         if (parts.length !== 3) {
-            throw new Error('The inspected token doesn\'t appear to be a JWT. Check to make sure it has three parts. decodeToken() error.');
+            // throw new Error('The inspected token doesn\'t appear to be a JWT. Check to make sure it has three parts. decodeToken() error.');
+            console.error('The inspected token doesn\'t appear to be a JWT. Check to make sure it has three parts. decodeToken() error.');
+            return null;
         }
         var decoded = StateProvider.urlBase64Decode(parts[1]);
         if (!decoded) {

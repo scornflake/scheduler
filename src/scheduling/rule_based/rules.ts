@@ -299,6 +299,14 @@ class TryToScheduleWith extends SecondaryAction {
     @action execute(schedule_at_date: ScheduleAtDate, schedule: ScheduleWithRules) {
         // If this line includes a use of self, does it also include a use of the other person?
         let score_for_owner = schedule_at_date.score_for_person(this.owner);
+        let original_roles = schedule_at_date.roles_of_person(this.owner);
+
+        // If the moving the person FROM any of the roles would reduce the role count to below what is required, don't do it
+        for(let role of original_roles) {
+            if(schedule_at_date.people_in_role(role).length < role.minimum_needed) {
+                return false;
+            }
+        }
 
         if (score_for_owner) {
             let score_for_other = schedule_at_date.score_for_person(this.other_person);
@@ -317,6 +325,19 @@ class TryToScheduleWith extends SecondaryAction {
                     // This SD must include the other person
                     if (!s.includes_person(this.other_person)) {
                         return false;
+                    }
+
+                    // Can't already include the owner
+                    if(s.includes_person(this.owner)) {
+                        return false;
+                    }
+
+                    // If there's already someone doing that role, can't have too many
+                    for(let role of original_roles) {
+                        let peopleInRole = s.people_in_role(role);
+                        if(peopleInRole.length >= role.maximum_wanted) {
+                            return false;
+                        }
                     }
 
                     // It's not us, and it does contain the other person! Yay!

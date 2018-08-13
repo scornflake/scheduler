@@ -23,19 +23,19 @@
       },
       {
         "loggerName": "service",
-        "logLevel": "INFO"
+        "logLevel": "WARN"
       },
       {
         "loggerName": "service.store",
-        "logLevel": "INFO"
+        "logLevel": "WARN"
       },
       {
         "loggerName": "service.bridge",
-        "logLevel": "INFO"
+        "logLevel": "WARN"
       },
       {
         "loggerName": "service.refresh",
-        "logLevel": "INFO"
+        "logLevel": "WARN"
       },
       {
         "loggerName": "service.access-control",
@@ -43,11 +43,11 @@
       },
       {
         "loggerName": "model",
-        "logLevel": "INFO"
+        "logLevel": "WARN"
       },
       {
         "loggerName": "page",
-        "logLevel": "INFO"
+        "logLevel": "WARN"
       },
       {
         "loggerName": "page.home",
@@ -59,11 +59,19 @@
       },
       {
         "loggerName": "page.utils",
+        "logLevel": "INFO"
+      },
+      {
+        "loggerName": "page.share",
+        "logLevel": "DEBUG"
+      },
+      {
+        "loggerName": "page.sheet",
         "logLevel": "DEBUG"
       },
       {
         "loggerName": "component",
-        "logLevel": "INFO"
+        "logLevel": "WARN"
       },
       {
         "loggerName": "component.schedule.view",
@@ -71,11 +79,11 @@
       },
       {
         "loggerName": "google",
-        "logLevel": "WARN"
+        "logLevel": "INFO"
       },
       {
         "loggerName": "db",
-        "logLevel": "INFO"
+        "logLevel": "WARN"
       },
       {
         "loggerName": "orm",
@@ -83,15 +91,15 @@
       },
       {
         "loggerName": "db.mapping",
-        "logLevel": "INFO"
+        "logLevel": "WARN"
       },
       {
         "loggerName": "db.tracking",
-        "logLevel": "INFO"
+        "logLevel": "WARN"
       },
       {
         "loggerName": "db.converter",
-        "logLevel": "INFO"
+        "logLevel": "WARN"
       }
     ],
     "browserConsoleAppender": {

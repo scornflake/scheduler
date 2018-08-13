@@ -81,6 +81,9 @@ export class NPBCStoreConstruction {
         /*
         Add unavailability here
          */
+        neil.addUnavailableRange(csd(2018, 10, 11), csd(2018, 10, 16));
+        cherilyn.addUnavailableRange(csd(2018, 10, 11), csd(2018, 10, 16));
+
         chris.addUnavailable(csd(2018, 7, 15));
 
         jeremy_selfe.addUnavailable(csd(2018, 6, 3));

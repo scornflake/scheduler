@@ -1,0 +1,56 @@
+<ion-header>
+    <ion-navbar>
+        <ion-title>Share</ion-title>
+    </ion-navbar>
+</ion-header>
+
+<ion-content>
+<!--<ion-content *mobxTraceAutorun="'trace'">-->
+    <ion-slides *ngIf="!loggedInToGoogle; else signedIn">
+        <ion-slide>
+            To share to a google sheet, sign in to google.
+            <p></p>
+            <button ion-button (tap)="loginToGoogle()">Sign in to Google</button>
+        </ion-slide>
+        <ion-slide>
+
+        </ion-slide>
+    </ion-slides>
+
+    <ng-template #signedIn>
+        <div *ngIf="sheetAPI.selectedSheet$|async as sheet; else selectSheet">
+            <h1>Share to Google Sheet</h1>
+            <ion-grid>
+                <ion-row>
+                    <ion-col>
+                        Selected Sheet
+                    </ion-col>
+                    <ion-col>
+                        {{sheet.properties.title}}
+                    </ion-col>
+                    <ion-col>
+                    </ion-col>
+                </ion-row>
+                <ion-row>
+                    <ion-col>
+                        Selected Tab
+                    </ion-col>
+                    <ion-col>
+                        {{selectedSheetTabName}}
+                    </ion-col>
+                    <ion-col>
+                        <button ion-button (click)="clearSheetSelection()">Clear Selection</button>
+                    </ion-col>
+                </ion-row>
+            </ion-grid>
+            <button [disabled]="!canExportSheet" ion-button (click)="exportScheduleToSheet()">Export</button>
+        </div>
+
+        <ng-template #selectSheet>
+            <h1>No spreadsheet selected</h1>
+            <button ion-button (click)="selectSheetToExportInto()">Select a sheet</button>
+
+        </ng-template>
+        <button text-center ion-button (click)="logoutOfGoogle()">Sign Out</button>
+    </ng-template>
+</ion-content>

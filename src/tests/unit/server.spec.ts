@@ -18,7 +18,6 @@ import {AuthorizationService} from "../../providers/token/authorization.service"
 import {HttpErrorResponse} from "@angular/common/http";
 import {TestILifecycleCallback} from "./server.callback";
 import {newLoggingServiceAfterReset} from "./test-helpers";
-import {ILifecycleCallback} from "../../providers/server/interfaces";
 
 describe('scheduler server', () => {
     let server: SchedulerServer;
