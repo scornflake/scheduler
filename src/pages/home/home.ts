@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {AfterContentInit, Component} from '@angular/core';
 import {IonicPage, NavController} from 'ionic-angular';
 import {CSVExporter} from "../../scheduling/exporter/csv.exporter";
 import {Logger, LoggingService} from "ionic-logging-service";
@@ -6,11 +6,13 @@ import {RootStore} from "../../store/root";
 import {LifecycleEvent, PageUtils} from "../page-utils";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {computed} from "mobx-angular";
-import {delay} from "rxjs/operators";
+import {delay, takeUntil} from "rxjs/operators";
 import {LifecycleCallbacks} from "../../providers/server/interfaces";
 import {NativePageTransitions} from "@ionic-native/native-page-transitions";
 import {ConnectivityService} from "../../common/network/connectivity";
 import {ResourceType} from "../../providers/access-control/access-control";
+import {ObjectWithUUID} from "../../scheduling/base-types";
+import {Subject} from "rxjs";
 
 let __firstTime: boolean = true;
 
@@ -22,8 +24,10 @@ let __firstTime: boolean = true;
     selector: 'page-home',
     templateUrl: 'home.html',
 })
-export class HomePage {
+export class HomePage implements AfterContentInit {
     private logger: Logger;
+    private id: string;
+    private ngUnsubscribe: Subject<any>;
 
     constructor(private navCtrl: NavController,
                 private pageUtils: PageUtils,
@@ -34,6 +38,9 @@ export class HomePage {
                 public store: RootStore) {
 
         this.logger = this.logService.getLogger("page.home");
+        this.id = ObjectWithUUID.guid();
+        this.ngUnsubscribe = new Subject();
+        this.logger.info('constructor', `Creating a HomePage object ${this.id}`);
     }
 
     showAbout() {
@@ -41,9 +48,22 @@ export class HomePage {
     }
 
     ngOnInit() {
-        // this.sheetAPI.init();
+    }
+
+    ngOnDestroy() {
+        this.ngUnsubscribe.next();
+        this.ngUnsubscribe.complete();
+        this.logger.info('ngOnDestroy', `Destroy a HomePage object ${this.id}`);
+    }
+
+    ngAfterContentInit() {
+        this.doStartupLifecycle();
+    }
+
+    private doStartupLifecycle() {
         this.pageUtils.runStartupLifecycleAsStream()
             .pipe(
+                takeUntil(this.ngUnsubscribe),
                 /*
                 Dont debounce here - you can loose fast changes in state
                  */
@@ -51,38 +71,49 @@ export class HomePage {
                 delay(500)
             )
             .subscribe((event: LifecycleEvent) => {
-                switch (event.event) {
-                    case LifecycleCallbacks.showError: {
-                        this.pageUtils.showError(event.args);
-                        break;
-                    }
+                this.pageUtils.executeInZone(() => {
+                    switch (event.event) {
+                        case LifecycleCallbacks.showError: {
+                            this.pageUtils.showError(event.args);
+                            break;
+                        }
 
-                    case LifecycleCallbacks.applicationHasStarted: {
-                        this.nativeTrans.fade({
-                            duration: 1000,
-                        });
-                        this.navCtrl.setRoot('home', {});
-                        break;
-                    }
+                        case LifecycleCallbacks.applicationHasStarted: {
+                            this.nativeTrans.fade({
+                                duration: 1000,
+                            });
+                            this.logger.info(`doStartupLifecycle`, `runStartupLifecycle start...`);
 
-                    case LifecycleCallbacks.showLoginPage: {
-                        this.logger.info(`show login page, because: ${event.args}`);
-                        this.nativeTrans.fade({
-                            duration: 1000,
-                        });
-                        this.navCtrl.setRoot('login', {});
+                            // Note: I took this out when debugging multiple HomePage's being created.
+                            // Not sure why it was in place.
+                            //
+                            // If I return here, and wonder "why did I take this out? It's needed in X, then *beware*!
+                            // You'll get MULTIPLE instantiations of the HomePage (if that's where you start) if you just uncomment it
+                            // this.navCtrl.setRoot('home', {});
+                            break;
+                        }
+
+                        case LifecycleCallbacks.showLoginPage: {
+                            this.logger.info("doStartupLifecycle", `show login page, because: ${event.args}`);
+                            this.nativeTrans.fade({
+                                duration: 1000,
+                            });
+                            this.navCtrl.setRoot('login', {});
+                        }
                     }
-                }
+                });
             }, err => {
                 this.pageUtils.showError(err);
             }, () => {
-                this.logger.info(`ngOnInit`, 'runStartupLifecycle complete!');
+                this.logger.info(`doStartupLifecycle`, 'runStartupLifecycle complete!');
                 this.firstTimeRun();
             });
-
     }
 
     get canShare(): boolean {
+        if(this.connectivity.onDevice) {
+            return false;
+        }
         return this.pageUtils.canManage(ResourceType.Plan);
     }
 
@@ -103,6 +134,8 @@ export class HomePage {
             // this.navCtrl.push('page-db');
             // this.navCtrl.push('page-roles');
             // this.navCtrl.push('page-about');
+            this.shareSchedule();
+            // this.navCtrl.push('page-share');
             // this.navCtrl.push('page-people', {create: true});
             // this.navCtrl.push('page-teams', {create: true});
             // this.navCtrl.push('page-plans', {create: true});
@@ -125,7 +158,11 @@ export class HomePage {
     }
 
     shareSchedule() {
-        this.navCtrl.push('page-share');
+        if(this.canShare) {
+            this.navCtrl.push('page-share');
+        } else {
+            console.warn(`Can't share, not enabled`);
+        }
     }
 
     export_as_csv() {

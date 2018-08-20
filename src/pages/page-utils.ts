@@ -1,6 +1,6 @@
 import {ObjectValidation} from "../scheduling/shared";
 import {AlertController, NavController, ToastController} from "ionic-angular";
-import {forwardRef, Inject, Injectable, NgZone, OnInit} from "@angular/core";
+import {ApplicationRef, forwardRef, Inject, Injectable, NgZone, OnInit} from "@angular/core";
 import deepEqual from "deep-equal";
 import {ToastOptions} from "ionic-angular/components/toast/toast-options";
 import {SchedulerServer} from "../providers/server/scheduler-server.service";
@@ -28,6 +28,7 @@ class PageUtils implements OnInit {
     constructor(private toastController: ToastController,
                 private alertCtrlr: AlertController,
                 private logService: LoggingService,
+                private appRef: ApplicationRef,
                 private access: AccessControlProvider,
                 @Inject(forwardRef(() => RootStore)) private store,
                 private nativeTransitions: NativePageTransitions,
@@ -97,6 +98,9 @@ class PageUtils implements OnInit {
         } as ILifecycleCallback;
     }
 
+    tick() {
+        this.appRef.tick();
+    }
 
     async runStartupLifecycle(navCtrl: NavController): Promise<boolean> {
         return await this.server.asyncRunStartupLifecycle(this.lifecycleCallback(navCtrl));

@@ -5,7 +5,7 @@ import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {Person} from "../../scheduling/people";
 import {Observable} from "rxjs/Observable";
-import {forwardRef, Inject, Injectable} from "@angular/core";
+import {forwardRef, Inject, Injectable, NgZone} from "@angular/core";
 import {Organization} from "../../scheduling/organization";
 import {IReplicationNotification, ReplicationStatus, SchedulerDatabase} from "./db";
 import {ObjectWithUUID} from "../../scheduling/base-types";
@@ -38,6 +38,7 @@ class SchedulerServer implements ILifecycle, IReplicationNotification {
     constructor(@Inject(forwardRef(() => RootStore)) private store,
                 private restAPI: RESTServer,
                 private auth: AuthorizationService,
+                private zone: NgZone,
                 private state: StateProvider,
                 private logService: LoggingService,
                 private connectivity: ConnectivityService,
@@ -335,7 +336,11 @@ class SchedulerServer implements ILifecycle, IReplicationNotification {
 
         // Start replication
         let couch = this.configurationService.getValue('server')['couch'];
-        await newDb.startReplicationFor(couch, organizationUUID);
+
+        // TODO: Does this ruin replication?
+        await this.zone.runOutsideAngular(() => {
+            return newDb.startReplicationFor(couch, organizationUUID);
+        });
 
         // Wait for replication to go quiet (no updates in a bit)
         // Me: Don't need this now that the DB does a sync(non-live) FIRST, followed by setting up live.

@@ -1,14 +1,17 @@
-import {Component, forwardRef, Inject, OnInit} from '@angular/core';
-import {IonicPage, NavController, NavParams} from 'ionic-angular';
+import {AfterViewInit, Component, forwardRef, Inject, OnDestroy, OnInit} from '@angular/core';
+import {AlertController, IonicPage, NavController, NavParams} from 'ionic-angular';
 import {GAPIS} from "../../common/gapis-auth";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {SheetSelectionPage} from "../sheet-selection/sheet-selection";
 import {RootStore} from "../../store/root";
 import {Preferences} from "../../scheduling/people";
-import {computed} from "mobx-angular";
-import Spreadsheet = gapi.client.sheets.Spreadsheet;
 import {PageUtils} from "../page-utils";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
+import {Subject} from "rxjs";
+import {takeUntil} from "rxjs/operators";
+import {action, computed, observable} from "mobx-angular";
+import Spreadsheet = gapi.client.sheets.Spreadsheet;
+
 
 @IonicPage({
     name: 'page-share',
@@ -17,48 +20,55 @@ import {SWBSafeJSON} from "../../common/json/safe-stringify";
 @Component({
     selector: 'page-share',
     templateUrl: 'share.html',
+    // changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SharePage implements OnInit {
+export class SharePage implements OnInit, AfterViewInit, OnDestroy {
     private logger: Logger;
 
-    selectedSheet: Spreadsheet;
+    @observable selectedSheet: Spreadsheet;
     selectedSheetTabName: string = "";
     isExporting: boolean;
     exportProgress: number;
+    private ngUnsubscribe: Subject<any>;
 
     constructor(public navCtrl: NavController,
                 @Inject(forwardRef(() => GAPIS)) public sheetAPI,
                 private store: RootStore,
+                private alertCtrlr: AlertController,
                 private pageUtils: PageUtils,
                 private logService: LoggingService,
                 public navParams: NavParams) {
         this.logger = this.logService.getLogger("page.share");
+        this.ngUnsubscribe = new Subject();
     }
 
     ngOnInit() {
+    }
+
+    ngAfterViewInit() {
         if (this.store.loggedInPerson == null) {
-            this.navCtrl.pop();
+            this.logger.info('ngAfterViewInit', `opps no person! bye!`);
+            if (this.navCtrl.canGoBack()) {
+                this.navCtrl.pop();
+            }
+            return;
         }
 
-        this.sheetAPI.selectedSheet$.subscribe(aSheet => {
-            this.selectedSheet = aSheet;
-            if (aSheet) {
-                const tabId = this.preferences.google_sheet_tab_id;
-                if (tabId) {
-                    let sheet = this.sheetAPI.findSheetWithIDIn(aSheet, tabId);
-                    if (sheet !== undefined) {
-                        this.selectedSheetTabName = sheet.properties.title;
-                    } else {
-                        this.selectedSheetTabName = "<not selected>";
-                    }
-                } else {
-                    this.selectedSheetTabName = "<not selected>";
-                }
-            }
+        this.logger.info("ngAfterViewInit", "start of init");
+        this.sheetAPI.selectedSheet$.pipe(
+            takeUntil(this.ngUnsubscribe)
+        ).subscribe(aSheet => {
+            this.selectSheet(aSheet);
         })
     }
 
-    get canExportSheet(): boolean {
+    ngOnDestroy() {
+        this.ngUnsubscribe.next();
+        this.ngUnsubscribe.complete();
+        this.logger.info(`Share ngOnDestroy`);
+    }
+
+    @computed get canExportSheet(): boolean {
         if (this.isExporting) {
             return false;
         }
@@ -69,6 +79,27 @@ export class SharePage implements OnInit {
         if (!this.canExportSheet) {
             return;
         }
+
+        const alert = this.alertCtrlr.create({
+            title: "Are you sure?",
+            subTitle: "This will erase everything in the selected sheet",
+            buttons: [
+                {
+                    text: "No",
+                    role: "danger"
+                },
+                {
+                    text: "Yes",
+                    handler: () => {
+                        this._exportScheduleToSheet();
+                    }
+                },
+            ]
+        });
+        alert.present();
+    }
+
+    private _exportScheduleToSheet() {
         this.exportProgress = 0;
         this.store.schedule$.subscribe(schedule => {
             if (schedule) {
@@ -80,6 +111,8 @@ export class SharePage implements OnInit {
                 try {
                     this.sheetAPI.clearAndWriteSchedule(this.selectedSheet, sheet, schedule).then(() => {
                             this.pageUtils.showMessage('Exported successfully');
+                            this.isExporting = false;
+                            this.exportProgress = 0;
                         }
                     );
                 } catch (err) {
@@ -176,4 +209,23 @@ export class SharePage implements OnInit {
     }
 
 
+    @action
+    private selectSheet(aSheet: any) {
+        if (aSheet) {
+            const tabId = this.preferences.google_sheet_tab_id;
+            if (tabId) {
+                let sheet = this.sheetAPI.findSheetWithIDIn(aSheet, tabId);
+                if (sheet !== undefined) {
+                    this.selectedSheetTabName = sheet.properties.title;
+                    this.selectedSheet = aSheet;
+                    this.logger.info("ngAfterViewInit", `Selected sheet: ${this.selectedSheet.properties.title}`);
+                    return;
+                }
+            }
+
+            this.selectedSheetTabName = "<not selected>";
+            this.selectedSheet = null;
+            this.logger.info("ngAfterViewInit", `No selected sheet?`);
+        }
+    }
 }

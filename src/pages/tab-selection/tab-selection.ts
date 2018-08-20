@@ -48,7 +48,7 @@ export class TabSelectionPage {
     }
 
     select_sheet(sheet) {
-        console.log("Selected: " + sheet);
+        // console.log("Selected: " + sheet);
         if (this.done) {
             this.done(this.spreadsheet, sheet);
         }

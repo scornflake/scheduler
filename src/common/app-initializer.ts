@@ -6,7 +6,8 @@ import {EndpointsProvider} from "../providers/endpoints/endpoints";
 export function doAppInitializersDeterministic(config: ConfigurationService,
                                                logging: LoggingService,
                                                state: StateProvider,
-                                               endpoints: EndpointsProvider) {
+                                               endpoints: EndpointsProvider
+                                               ) {
     return async () => {
         console.log(`Loading settings...`);
         await config.load("assets/settings.json");

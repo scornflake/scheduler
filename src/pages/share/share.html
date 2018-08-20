@@ -4,54 +4,59 @@
     </ion-navbar>
 </ion-header>
 
-<ion-content>
-<!--<ion-content *mobxTraceAutorun="'trace'">-->
-    <ion-slides *ngIf="!loggedInToGoogle; else signedIn">
-        <ion-slide>
-            To share to a google sheet, sign in to google.
-            <p></p>
-            <button ion-button (tap)="loginToGoogle()">Sign in to Google</button>
-        </ion-slide>
-        <ion-slide>
-
-        </ion-slide>
-    </ion-slides>
-
-    <ng-template #signedIn>
-        <div *ngIf="sheetAPI.selectedSheet$|async as sheet; else selectSheet">
-            <h1>Share to Google Sheet</h1>
+<!--<ion-content>-->
+<ion-content *mobxTraceAutorun="'trace'">
+    <div *ngIf="sheetAPI.ready$|async as googleIsReady; else loadingGAPIS">
+        <div *ngIf="!loggedInToGoogle; else signedIn">
             <ion-grid>
                 <ion-row>
                     <ion-col>
-                        Selected Sheet
-                    </ion-col>
-                    <ion-col>
-                        {{sheet.properties.title}}
-                    </ion-col>
-                    <ion-col>
+                        <h3 text-center>To share to a google sheet, sign in to google.</h3>
                     </ion-col>
                 </ion-row>
                 <ion-row>
                     <ion-col>
-                        Selected Tab
-                    </ion-col>
-                    <ion-col>
-                        {{selectedSheetTabName}}
-                    </ion-col>
-                    <ion-col>
-                        <button ion-button (click)="clearSheetSelection()">Clear Selection</button>
+                        <button class="centered-button" ion-button (tap)="loginToGoogle()">Sign in to Google</button>
                     </ion-col>
                 </ion-row>
             </ion-grid>
-            <button [disabled]="!canExportSheet" ion-button (click)="exportScheduleToSheet()">Export</button>
-            <progress-bar *ngIf="isExporting" [progress]="exportProgress"></progress-bar>
         </div>
 
-        <ng-template #selectSheet>
-            <h1>No spreadsheet selected</h1>
-            <button ion-button (click)="selectSheetToExportInto()">Select a sheet</button>
+        <ng-template #signedIn>
+            <div *ngIf="sheetAPI.selectedSheet$|async as sheet; else selectSheet">
+                <ion-list>
+                    <ion-list-header color="light">
+                        Share to Google Sheet
+                    </ion-list-header>
+                    <ion-item>
+                        <ion-label stacked>Selected Sheet</ion-label>
+                        <ion-input [readonly]="true" [value]="sheet.properties.title"></ion-input>
+                    </ion-item>
+                    <ion-item>
+                        <ion-label stacked>Tab</ion-label>
+                        <ion-input [readonly]="true" [value]="selectedSheetTabName"></ion-input>
+                    </ion-item>
+                    <ion-item>
+                        <button class="centered-button" ion-button (click)="clearSheetSelection()">Clear Selection
+                        </button>
+                    </ion-item>
+                </ion-list>
 
+                <p>
+                <button class="centered-button" color="secondary" [disabled]="!canExportSheet" ion-button (click)="exportScheduleToSheet()">Export</button>
+                <progress-bar *ngIf="isExporting" [progress]="exportProgress"></progress-bar>
+            </div>
+
+            <ng-template #selectSheet>
+                <h2 text-center>No spreadsheet selected</h2>
+                <button class="centered-button" ion-button (click)="selectSheetToExportInto()">Select a sheet</button>
+            </ng-template>
         </ng-template>
-        <button text-center ion-button (click)="logoutOfGoogle()">Sign Out</button>
+    </div>
+    <ng-template #loadingGAPIS>
+        <ion-spinner class="center-spinner"></ion-spinner>
     </ng-template>
 </ion-content>
+<ion-footer no-lines padding>
+    <button class="centered-button" text-center ion-button (click)="logoutOfGoogle()">Sign Out</button>
+</ion-footer>

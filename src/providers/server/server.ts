@@ -58,10 +58,12 @@ export class RESTServer {
     // }
 
     async getOwnUserDetails(): Promise<any> {
-        let url = this.endpoints.userDetails();
         try {
-            return await this.http.get(url).toPromise();
+            let url = this.endpoints.userDetails();
+            let getObservable = this.http.get(url);
+            return getObservable.toPromise();
         } catch(err) {
+            this.logger.error("getOwnUserDetails", `Cant get user. Throwing ${SWBSafeJSON.stringify(err)}).`);
             throw new ServerError(err);
         }
     }

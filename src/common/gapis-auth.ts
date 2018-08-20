@@ -14,35 +14,37 @@ import {RootStore} from "../store/root";
 import {UIStore} from "../store/UIState";
 import {Preferences} from "../scheduling/people";
 import {action, computed} from "mobx-angular";
-import {BehaviorSubject} from "rxjs";
+import {BehaviorSubject, ReplaySubject} from "rxjs";
 import {flatMap} from "rxjs/operators";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {of} from "rxjs/observable/of";
-import {autorun} from "mobx";
+import {autorun, trace} from "mobx";
 import Spreadsheet = gapi.client.sheets.Spreadsheet;
 import Sheet = gapi.client.sheets.Sheet;
 import ValueRange = gapi.client.sheets.ValueRange;
 import {SWBSafeJSON} from "./json/safe-stringify";
+import {PageUtils} from "../pages/page-utils";
 
 const API_KEY = "AIzaSyCVhzG0pEB1NfZsxpdPPon3XhEK4pctEYE";
 
 
 @Injectable()
 class GAPIS {
-    private init_done: boolean;
+    ready$: Subject<boolean>;
+    selectedSheet$: Subject<Spreadsheet>;
 
-    ready: Subject<boolean>;
+    private initDone: boolean;
     progress: Subject<number>;
-    selectedSheet: Subject<Spreadsheet>;
     private logger: Logger;
 
     constructor(private rootStore: RootStore,
                 private logSvc: LoggingService,
+                private pageUtils: PageUtils,
                 @Inject(forwardRef(() => RESTServer)) private server,
                 private appRef: ApplicationRef) {
 
-        this.selectedSheet = new BehaviorSubject(null);
-        this.ready = new BehaviorSubject(false);
+        this.ready$ = new BehaviorSubject(false);
+        this.selectedSheet$ = new ReplaySubject(1);
         this.progress = new BehaviorSubject(0);
         this.logger = logSvc.getLogger('google');
 
@@ -57,20 +59,25 @@ class GAPIS {
 
     private listenForChangesToSelectedSheet() {
         autorun(() => {
+            trace();
             if (this.state) {
                 if (this.state.google_sheet_id === undefined || this.state.google_sheet_id === null) {
                     this.logger.warn("listenForChangesToSelectedSheet", `No sheet selected. Setting selected sheet to null`);
-                    this.selectedSheet.next(null)
+                    this.selectedSheet$.next(null)
                 } else {
                     this.logger.warn("listenForChangesToSelectedSheet", `Get selected sheet`);
-                    this.load_sheet_with_id(this.state.google_sheet_id).subscribe(this.selectedSheet);
+                    this.load_sheet_with_id(this.state.google_sheet_id).subscribe((n) => {
+                        this.selectedSheet$.next(n);
+                    }, (err) => {
+                        this.selectedSheet$.next(null)
+                    });
                 }
             }
         })
     }
 
     authenticate() {
-        return this.ready.pipe(
+        return this.ready$.pipe(
             flatMap(() => {
                     this.logger.info("authenticate", `Begin auth`);
                     return gapi.auth2.getAuthInstance().signIn();
@@ -79,7 +86,7 @@ class GAPIS {
     }
 
     signout() {
-        return this.ready.pipe(
+        return this.ready$.pipe(
             flatMap(() => {
                     this.logger.info("signout", `Signing out`);
                     return gapi.auth2.getAuthInstance().disconnect()
@@ -117,12 +124,17 @@ class GAPIS {
 
             // Handle the initial sign-in state.
             this.updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
-
-            this.init_done = true;
-            this.ready.next(true);
+            this.initDone = true;
 
             this.logger.info("initClient", "Initializing GAPI complete");
-            this.listenForChangesToSelectedSheet();
+            try {
+                this.listenForChangesToSelectedSheet();
+            } catch(err) {
+                console.error(`error while doing listenForChangesToSelectedSheet, ${SWBSafeJSON.stringify(err)}`)
+            }
+            this.pageUtils.executeInZone(() => {
+                this.ready$.next(true);
+            });
         });
     }
 
@@ -153,7 +165,7 @@ class GAPIS {
 
     private loadSheets() {
         this.logger.info("loadSheets", "Loading sheets API...");
-        gapi.client.load('sheets', 'v4').then((v) => {
+        gapi.client.load('sheets', 'v4').then(() => {
             this.initClient();
         });
     }
@@ -173,10 +185,6 @@ class GAPIS {
 
     get ui_store(): UIStore {
         return this.rootStore.ui_store;
-    }
-
-    get selectedSheet$(): Observable<Spreadsheet> {
-        return this.selectedSheet;
     }
 
     findSheetWithIDIn(ss: Spreadsheet, sheetTabId: number): Sheet | undefined {
@@ -200,9 +208,15 @@ class GAPIS {
             let request = {spreadsheetId: sheet_id, includeGridData: true};
             gapi.client.sheets.spreadsheets.get(request).then((result) => {
                 // this.logger.info("Hey! We got the sheet! Awesome!");
-                observer.next(result.result);
-                observer.complete();
                 this.logger.info("gapi", `Loaded spreadsheet with ID: ${sheet_id}`);
+                this.pageUtils.executeInZone(() => {
+                    observer.next(result.result);
+                    observer.complete();
+                });
+            }, (reason) => {
+                console.error(`Failed to load: ${SWBSafeJSON.stringify(reason)}`);
+                observer.error(reason);
+                return null;
             });
         });
     }
