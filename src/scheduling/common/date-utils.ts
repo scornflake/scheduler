@@ -29,6 +29,14 @@ let formatDateForGoogleSpreadsheet = (date: Date): string => {
     return date.toDateString();
 };
 
+let formatForAsYMDIonicDateString = (date) => {
+    return moment(date).format("YYYY-MM-DD");
+};
+
+let formatAsPlanDate = (date) => {
+    return moment(date).format("MMM D, YYYY");
+};
+
 let parseDateFromSpreadsheetDate = (date_as_string: string): Date => {
     let moment_date = parseMomentDateFromSpreadsheetDate(date_as_string);
     if (moment_date && moment_date.isValid()) {
@@ -55,11 +63,13 @@ let dayAndHourForDate = (date: Date): string => {
 let csd = constructSensibleDate;
 
 export {
+    formatForAsYMDIonicDateString,
+    formatDateForGoogleSpreadsheet,
+    formatAsPlanDate,
     constructSensibleDate,
     addDaysToDate,
     isDateValid,
     throwOnInvalidDate,
-    formatDateForGoogleSpreadsheet,
     dayAndHourForDate,
     parseDateFromSpreadsheetDate,
     parseMomentDateFromSpreadsheetDate,

@@ -24,8 +24,7 @@ export class PlansPage {
                 public rootStore: RootStore,
                 public alertCtrl: AlertController,
                 public access: AccessControlProvider,
-                public pageUtils: PageUtils,
-                public navParams: NavParams) {
+                public pageUtils: PageUtils) {
     }
 
     @computed get plans() {

@@ -29,14 +29,6 @@ export class PersonUnavailableComponent {
         });
     }
 
-    toCalendarDate(date: Date) {
-        return {
-            year: date.getFullYear(),
-            month: date.getMonth() + 1,
-            date: date.getDate()
-        }
-    }
-
     deleteUnavailability(u) {
         this.person.removeUnavailable(u);
     }
@@ -46,10 +38,10 @@ export class PersonUnavailableComponent {
         this.unavailability.forEach(u => {
             if (u.isDateRange) {
                 u.dateRange.forEach(d => {
-                    existingEvents.push(this.toCalendarDate(d));
+                    existingEvents.push(CalendarComponent.toCalendarDate(d));
                 })
             } else {
-                existingEvents.push(this.toCalendarDate(u.fromDate))
+                existingEvents.push(CalendarComponent.toCalendarDate(u.fromDate))
             }
         });
         return existingEvents;

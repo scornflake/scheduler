@@ -10,6 +10,7 @@ import {distinctUntilChanged, map} from "rxjs/operators";
 import {Network} from "@ionic-native/network";
 import {action, computed, observable} from "mobx-angular";
 import {runInAction} from "mobx";
+import {from} from "../../../node_modules/rxjs/observable/from";
 
 @Injectable()
 class ConnectivityService implements OnDestroy {
@@ -117,6 +118,10 @@ class ConnectivityService implements OnDestroy {
 
     get onBrowser(): boolean {
         return !this.onDevice;
+    }
+
+    get onBrowser$(): Observable<boolean> {
+        return from(this.platform.ready().then(() => !this.onDevice));
     }
 
     get network$(): Observable<boolean> {

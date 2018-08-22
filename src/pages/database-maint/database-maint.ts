@@ -262,8 +262,8 @@ export class DatabaseMaintPage implements OnDestroy {
             plan = this.store.plans.add(new Plan("Sunday Morning Service", team));
             this.pageUtils.showMessage('Adding new default plan')
         }
-        plan.start_date = csd(2018, 6, 3);
-        plan.end_date = csd(2018, 9, 30);
+        plan.start_date = csd(2018, 10, 3);
+        plan.end_date = csd(2018, 12, 31);
 
         NPBCStoreConstruction.AttachRolesToPlan(plan);
 

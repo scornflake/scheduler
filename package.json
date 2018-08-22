@@ -66,6 +66,7 @@
     "google-auth-library": "^1.4.0",
     "googleapis": "^28.1.0",
     "i": "^0.3.6",
+    "include-media": "^1.4.9",
     "ionic": "^3.20.0",
     "ionic-angular": "3.9.2",
     "ionic-configuration-service": "^6.0.0",

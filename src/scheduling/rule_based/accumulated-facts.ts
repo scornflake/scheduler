@@ -143,7 +143,7 @@ export class AccumulatedFacts {
         return [false, "clear!"];
     }
 
-    get_next_suitable_assignment_for(role: Role): IAssignment {
+    get_next_suitable_assignment_for(role: Role): IAssignment | null {
         // runs the pick rules for this role
         let pick_rules = this.all_pick_rules.get(role);
         if (!pick_rules) {
@@ -155,26 +155,59 @@ export class AccumulatedFacts {
                 let result = rule.execute(this);
                 if (result) return result;
             }
-            if (rule instanceof UsageWeightedSequential) {
-                let assignments = rule.execute(this, role);
-                let availableAssignments = assignments.filter(possible_assignment => {
-                    let [has_exclusion, reason] = this.has_exclusion_for(this.current_date, possible_assignment.person, role);
-                    if (has_exclusion) {
-                        return false;
-                    }
-                    return this.is_person_available(possible_assignment.person, this.current_date, true);
-
-                });
-                if (availableAssignments.length) {
-                    this.add_decision(`Possibilities in UW order: ${availableAssignments.map(a => {
-                        let usages = this.number_of_times_role_used_by_person(role, a);
-                        return `${a.person.name} (${usages})`;
-                    }).join(",")}`);
-                    return availableAssignments[0];
-                }
-                return null;
-            }
+            // if (rule instanceof UsageWeightedSequential) {
+            //     let assignments = rule.execute(this, role);
+            //     let availableAssignments = assignments.filter(possible_assignment => {
+            //         let [has_exclusion, reason] = this.has_exclusion_for(this.current_date, possible_assignment.person, role);
+            //         if (has_exclusion) {
+            //             return false;
+            //         }
+            //         return this.is_person_available(possible_assignment.person, this.current_date, true);
+            //
+            //     });
+            //     if (availableAssignments.length) {
+            //         this.add_decision(`Possibilities in UW order: ${availableAssignments.map(a => {
+            //             let usages = this.number_of_times_role_used_by_person(role, a);
+            //             return `${a.person.name} (${usages})`;
+            //         }).join(",")}`);
+            //         return availableAssignments[0];
+            //     }
+            //     return null;
+            // }
         }
+        /*
+        Lets try doing usage weighted sequential based on total usages, not just the role
+         */
+        let assignments = this.assignmentsAbleToDoRoleSortedByTotalUsage(role);
+        if (assignments.length) {
+            this.add_decision(`Possibilities in UW order: ${assignments.map(a => {
+                return `${a.assignment.person.name} (${a.usage})`;
+            }).join(",")}`);
+            return assignments[0].assignment;
+        }
+        return null;
+    }
+
+    private assignmentsAbleToDoRoleSortedByTotalUsage(role: Role): Array<{ assignment: IAssignment, usage: number }> {
+        let possibleAvailableAssignments = this.service.assignments_with_role(role).filter(possible => {
+            let [has_exclusion, reason] = this.has_exclusion_for(this.current_date, possible.person, role);
+            if (has_exclusion) {
+                return false;
+            }
+            return this.is_person_available(possible.person, this.current_date, true);
+        }).map(a => {
+            return {assignment: a, usage: this.totalUsageForAssignmentThusFar(a)}
+        });
+
+        return possibleAvailableAssignments.sort((a1, a2) => {
+            if (a1.usage < a2.usage) {
+                return -1;
+            }
+            if (a1.usage > a2.usage) {
+                return 1;
+            }
+            return 0;
+        });
     }
 
     get_next_suitable_role_for_assignment(assignment: IAssignment): { role: Role, reason: string } {
@@ -192,14 +225,21 @@ export class AccumulatedFacts {
                     }
                 }
             }
+
+            /*
+            Lets try:
+            Counting ALL usages of the roles that this person might be in. In reality, that's counting
+            all usages across the plan, but sorting by role weight
+             */
             if (rule instanceof WeightedRoles) {
-                let result = rule.execute(this, assignment);
                 let currentState = rule.getRolesByTotalNumberOfTimesAssignmentPlaced(this, assignment);
                 let arrayOfInfo = [];
                 for (let role of Array.from(currentState.keys())) {
                     let info = currentState.get(role);
                     arrayOfInfo.push(`${role.name} weight:${info.normalizedWeighting.toFixed(2)},score:${info.normalizedUsageCount.toFixed(2)}`);
                 }
+
+                let result = rule.execute(this, assignment);
                 return {
                     role: result[0],
                     reason: `Next suitable: ${result[0].name}. Weighted roles: ${arrayOfInfo.join(", ")}`
@@ -207,6 +247,18 @@ export class AccumulatedFacts {
             }
         }
         return null;
+    }
+
+    totalUsageForAssignmentThusFar(assignment: IAssignment) {
+        // find out, so far, the usage
+        let totalCount = 0;
+        for (let role of Array.from(this.usage_counts.keys())) {
+            let counter = this.usage_counts.get(role);
+            if (counter.has(assignment)) {
+                totalCount += counter.get(assignment);
+            }
+        }
+        return totalCount;
     }
 
     private get_person_count_for_role(role: Role, assignment: IAssignment): Map<IAssignment, number> {
@@ -263,10 +315,6 @@ export class AccumulatedFacts {
         let facts = this.filter(start_date, end_date);
         // this.logger.info(" - facts: " + SafeJSON.Stringify(facts));
         return facts.filter(fact => fact.includes_person(person));
-    }
-
-    index_of_person_in_role_group(person: Person, role: Role) {
-        return 0;
     }
 
     use_this_person_in_role(assignment: IAssignment, role: Role) {
@@ -361,4 +409,3 @@ export class AccumulatedFacts {
     }
 
 }
-

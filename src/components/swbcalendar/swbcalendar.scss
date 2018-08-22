@@ -18,3 +18,30 @@ swbcalendar {
   min-height: 523px !important;
 }
 
+@include media(">=tablet") {
+  .calendar .popover-content {
+    left: 20% !important;
+    min-width: 60% !important;
+  }
+
+  .dual-calendar .popover-content {
+    left: 20% !important;
+    top: 5% !important;
+    min-width: 60%;
+    min-height: 523px !important;
+  }
+}
+
+@include media(">=desktop") {
+  .calendar .popover-content {
+    left: 30% !important;
+    min-width: 40% !important;
+  }
+
+  .dual-calendar .popover-content {
+    left: 30% !important;
+    top: 5% !important;
+    min-width: 40%;
+    min-height: 523px !important;
+  }
+}

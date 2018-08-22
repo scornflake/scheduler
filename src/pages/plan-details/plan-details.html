@@ -23,12 +23,23 @@
             </ion-item>
             <ion-item>
                 <ion-label>Start Date</ion-label>
-                <ion-datetime class="keep-color" [disabled]="!canManage" [(ngModel)]="startDate"></ion-datetime>
+
+                <ion-datetime *ngIf="!useCalendar" class="keep-color" [disabled]="!canManage" [(ngModel)]="startDate"
+                              [min]="minDate" [max]="maxDate"></ion-datetime>
+
+                <ion-input [readonly]="true" text-right *ngIf="useCalendar" [ngModel]="startDateFormatted"
+                           (click)="selectStartDate()"></ion-input>
+                <button *ngIf="useCalendar" item-end ion-button float-right (click)="selectStartDate()">Choose</button>
             </ion-item>
             <ion-item>
                 <ion-label>End Date</ion-label>
-                <ion-datetime class="keep-color" [disabled]="!canManage" [ngModel]="plan.end_date.toISOString()"
+                <ion-datetime *ngIf="!useCalendar" class="keep-color" [disabled]="!canManage"
+                              [ngModel]="plan.end_date.toISOString()" [min]="minDate" [max]="maxDate"
                               (ngModelChange)="plan.setEndDateFromISO($event)"></ion-datetime>
+
+                <ion-input [readonly]="true" text-right *ngIf="useCalendar" [ngModel]="endDateFormatted"
+                           (click)="selectEndDate()"></ion-input>
+                <button *ngIf="useCalendar" item-end ion-button float-right (click)="selectEndDate()">Choose</button>
             </ion-item>
             <ion-item>
                 <ion-label>Days between events</ion-label>

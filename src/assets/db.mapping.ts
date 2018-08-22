@@ -20,6 +20,7 @@ import {
 import {csd} from "../scheduling/common/date-utils";
 import {Role} from "../scheduling/role";
 import {Assignment} from "../scheduling/assignment";
+import {Snapshot} from "../scheduling/rule_based/snapshot";
 
 let scheduler_db_map: ClassFieldMapping = {
     classes: [
@@ -37,6 +38,14 @@ let scheduler_db_map: ClassFieldMapping = {
             ],
             inherit: 'NamedObject',
             factory: () => new Role('New Role')
+        },
+        {
+            name: 'Snapshot',
+            fields: [
+                {name: '*'}
+            ],
+            inherit: 'NamedObject',
+            factory: () => new Snapshot('Snapshot')
         },
         {
             name: 'Invitation',

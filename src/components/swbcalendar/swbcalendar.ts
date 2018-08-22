@@ -1,15 +1,20 @@
-import {Component, Input} from '@angular/core';
+import {AfterViewInit, Component, Input, OnInit, QueryList, ViewChildren} from '@angular/core';
 import {DaySelectedCallback, RangeSelectedCallback} from "./calendar-interface";
 import {NavParams, ViewController} from "ionic-angular";
+import * as moment from "moment";
+import {Calendar} from "../ion-calendar/ion-calendar";
 
 @Component({
     selector: 'swbcalendar',
     templateUrl: 'swbcalendar.html'
 })
-export class CalendarComponent {
+export class CalendarComponent implements OnInit, AfterViewInit {
     @Input() range: boolean = false;
     @Input() daySelectedCallback: DaySelectedCallback;
     @Input() rangeSelectedCallback: RangeSelectedCallback;
+    @Input() startAt: Date = null;
+
+    @ViewChildren(Calendar) calendars: QueryList<Calendar>;
 
     private startDate: any;
     private endDate: any;
@@ -22,9 +27,38 @@ export class CalendarComponent {
         this.daySelectedCallback = this.navParams.get('daySelectedCallback');
         this.rangeSelectedCallback = this.navParams.get('rangeSelectedCallback');
         this.range = this.navParams.get('range');
+        this.startAt = this.navParams.get('startAt') || null;
 
         if (!this.existingEvents) {
             this.existingEvents = [];
+        }
+    }
+
+    get singleCalendar(): Calendar {
+        if (this.calendars && this.calendars.length > 0) {
+            return this.calendars.toArray()[0];
+        }
+        return null;
+    }
+
+    ngOnInit() {
+    }
+
+    ngAfterViewInit() {
+        if (this.startAt) {
+            let momentDate = moment(this.startAt);
+            let cal = this.singleCalendar;
+            if (momentDate && cal) {
+                cal.jumpToDate(momentDate);
+            }
+        }
+    }
+
+    static toCalendarDate(date: Date) {
+        return {
+            year: date.getFullYear(),
+            month: date.getMonth() + 1,
+            date: date.getDate()
         }
     }
 

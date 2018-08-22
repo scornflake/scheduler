@@ -1,5 +1,5 @@
-import {Component} from '@angular/core';
-import {AlertController, IonicPage, NavController, NavParams} from 'ionic-angular';
+import {Component, OnDestroy, OnInit} from '@angular/core';
+import {AlertController, IonicPage, NavController, NavParams, PopoverController} from 'ionic-angular';
 import {Plan} from "../../scheduling/plan";
 import {Person} from "../../scheduling/people";
 import {PageUtils} from "../page-utils";
@@ -9,6 +9,13 @@ import {AccessControlProvider, ResourceType} from "../../providers/access-contro
 import {RootStore} from "../../store/root";
 import {Logger, LoggingService} from "ionic-logging-service";
 
+import * as moment from "moment";
+import {formatAsPlanDate, formatForAsYMDIonicDateString} from "../../scheduling/common/date-utils";
+import {ConnectivityService} from "../../common/network/connectivity";
+import {CalendarComponent} from "../../components/swbcalendar/swbcalendar";
+import {Subject} from "rxjs";
+import {takeUntil} from "rxjs/operators";
+
 @IonicPage({
     name: 'page-plan-details',
     defaultHistory: ['page-plans', 'home']
@@ -17,37 +24,77 @@ import {Logger, LoggingService} from "ionic-logging-service";
     selector: 'page-plan-details',
     templateUrl: 'plan-details.html',
 })
-export class PlanDetailsPage {
+export class PlanDetailsPage implements OnInit, OnDestroy {
+    useCalendar: boolean = false;
     plan: Plan;
     @observable name_filter: string;
     private logger: Logger;
+    private ngUnsubscribe: Subject<any>;
 
     constructor(public navCtrl: NavController,
                 public alertCtrl: AlertController,
                 public access: AccessControlProvider,
+                private popover: PopoverController,
+                private device: ConnectivityService,
                 public logService: LoggingService,
                 public rootStore: RootStore,
                 public pageUtils: PageUtils,
                 public navParams: NavParams) {
         this.logger = this.logService.getLogger('page.plan-details');
+        this.ngUnsubscribe = new Subject();
     }
 
     ngOnInit() {
         this.plan = this.navParams.get('plan');
-        // this.plan = new Plan('Some Fake Plan', new Team('Some Team'));
-        // this.plan.setStartDate(new Date());
-        // this.plan.setEndDate(new Date());
 
         if (this.plan == null) {
-            // this.navCtrl.pop();
         } else {
             // for debugging
             // this.showAssignment(this.plan.people[0]);
         }
+
+        this.device.onBrowser$.pipe(takeUntil(this.ngUnsubscribe)).subscribe(flag => this.useCalendar = flag)
+    }
+
+    ngOnDestroy() {
+        this.ngUnsubscribe.next();
+        this.ngUnsubscribe.complete();
+    }
+
+    get minDate(): string {
+        return formatForAsYMDIonicDateString(moment().subtract(6, 'months'))
+    }
+
+    get maxDate(): string {
+        return formatForAsYMDIonicDateString(moment().add(6, 'months'))
     }
 
     get canManage() {
         return this.access.canUpdateAny(ResourceType.Plan);
+    }
+
+    selectStartDate() {
+        let pop = this.popover.create(CalendarComponent, {
+            range: false,
+            startAt: this.plan.start_date,
+            daySelectedCallback: (event) => {
+                this.plan.setStartDate(new Date(event.year, event.month, event.date));
+                return true;
+            }
+        }, {cssClass: 'calendar'});
+        pop.present();
+    }
+
+    selectEndDate() {
+        let pop = this.popover.create(CalendarComponent, {
+            range: false,
+            startAt: this.plan.end_date,
+            daySelectedCallback: (event) => {
+                this.plan.setEndDate(new Date(event.year, event.month, event.date));
+                return true;
+            }
+        }, {cssClass: 'calendar'});
+        pop.present();
     }
 
     @computed get sorted_people(): Array<Person> {
@@ -60,9 +107,11 @@ export class PlanDetailsPage {
     }
 
     get startDate(): string {
-        let isoString = this.plan.start_date.toISOString();
-        // console.warn(`return start date of: ${isoString}`);
-        return isoString;
+        return this.plan.start_date.toISOString();
+    }
+
+    get startDateFormatted(): string {
+        return formatAsPlanDate(this.plan.start_date);
     }
 
     set startDate(value: string) {
@@ -71,6 +120,10 @@ export class PlanDetailsPage {
 
     get endDate(): string {
         return this.plan.end_date.toISOString();
+    }
+
+    get endDateFormatted(): string {
+        return formatAsPlanDate(this.plan.end_date);
     }
 
     set endDate(value: string) {

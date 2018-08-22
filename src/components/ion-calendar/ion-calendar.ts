@@ -1,6 +1,7 @@
 import {Component, Input, Output, EventEmitter} from '@angular/core';
 import * as moment from 'moment';
 import * as _ from "lodash";
+import {Moment} from "moment";
 
 export interface singularDate {
     year: number,
@@ -62,23 +63,29 @@ export class Calendar {
         }
     }
 
-    // Jump to today
-    today() {
-        this.displayYear = this.currentYear;
-        this.displayMonth = this.currentMonth;
-        this.createMonth(this.currentYear, this.currentMonth);
+    // Jump to some date, maybe without emitting a change
+    jumpToDate(thatDate: Moment, emitChange: boolean = false) {
+        this.displayYear = thatDate.year();
+        this.displayMonth = thatDate.month();
+        this.createMonth(thatDate.year(), thatDate.month());
 
         // Mark today as a selection
         let todayIndex = _.findIndex(this.dateArray, {
-            year: this.currentYear,
-            month: this.currentMonth,
-            date: this.currentDate,
+            year: thatDate.year(),
+            month: thatDate.month(),
+            date: thatDate.date(),
             isThisMonth: true
-        })
+        });
         this.lastSelect = todayIndex;
-        this.dateArray[todayIndex].isSelect = true;
 
-        this.onDaySelect.emit(this.dateArray[todayIndex]);
+        if(emitChange) {
+            this.dateArray[todayIndex].isSelect = true;
+        }
+    }
+
+    // Jump to today
+    today() {
+        this.jumpToDate(moment(), true);
     }
 
     isInEvents(year: number, month: number, date: number) {
