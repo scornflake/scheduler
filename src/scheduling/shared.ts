@@ -5,6 +5,7 @@ import {isUndefined} from "util";
 import {delete_from_array} from "./common/base_model";
 import {Role} from "./role";
 import {ConditionalRule} from "./rule_based/rules";
+import {LoggingWrapper} from "../common/logging-wrapper";
 
 interface ICloneable {
     createClone(): any;
@@ -44,13 +45,14 @@ class ObjectValidation {
 class ScheduleScore {
     person?: Person;
     roles: Array<Role>;
-    decisions: Array<string>;
     score: number;
+
+    private _decisions: Array<string>;
 
     constructor(role: Role) {
         this.roles = [role];
         this.score = 0;
-        this.decisions = [];
+        this._decisions = [];
     }
 
     has_role(role: Role) {
@@ -58,7 +60,7 @@ class ScheduleScore {
     }
 
     valueOf() {
-        return "Score: " + this.score + " for role: " + this.roles.join(", ");
+        return `Score: ${this.score} for role: ${this.roles.join(", ")}`;
     }
 
     addRole(role: Role) {
@@ -67,6 +69,30 @@ class ScheduleScore {
 
     removeRole(r: Role) {
         delete_from_array(this.roles, r);
+    }
+
+    set decisions(dec: string[]) {
+        let logger = LoggingWrapper.getLogger('model.score');
+        if (logger) {
+            logger.debug(`Set decisions for ${this.person ? this.person.name : '<null>'} to ${dec}`);
+        }
+        this._decisions = dec;
+    }
+
+    get decisions(): string[] {
+        return this._decisions;
+    }
+
+    add_decisions(decisions: string[]) {
+        if(decisions) {
+            this.decisions = this.decisions.concat(decisions)
+        }
+    }
+
+    add_decision(reason: string) {
+        if (reason) {
+            this.decisions.push(reason)
+        }
     }
 }
 
@@ -256,10 +282,8 @@ class ScheduleAtDate {
 
             // Migrate their decisions over as well
             let new_score = to_date.score_for(owner);
-            new_score.decisions = new_score.decisions.concat(score_for_owner.decisions);
-            if (reason) {
-                new_score.decisions.push(reason)
-            }
+            new_score.add_decisions(score_for_owner.decisions);
+            new_score.add_decision(reason)
         }
     }
 

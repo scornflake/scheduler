@@ -1,19 +1,23 @@
 import {FixedRoleOnDate, OnThisDate, UsageWeightedSequential, WeightedRoles} from "../../scheduling/rule_based/rules";
 import {Person} from "../../scheduling/people";
-import {RuleFacts} from "../../scheduling/rule_based/rule-facts";
-import {SWBSafeJSON} from "../../common/json/safe-stringify";
-import {CleanupDefaultRoles, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
+import {AccumulatedFacts} from "../../scheduling/rule_based/accumulated-facts";
+import {CleanupDefaultRoles, defaultComputerRole, defaultSoundRole, SetupDefaultRoles} from "../sample-data";
 import {Plan} from "../../scheduling/plan";
 import {Assignment} from "../../scheduling/assignment";
 import {Team} from "../../scheduling/teams";
 import {Role} from "../../scheduling/role";
 import {PersonManager, SchedulerObjectStore} from "../../scheduling/common/scheduler-store";
+import {SWBSafeJSON} from "../../common/json/safe-stringify";
 
 describe('rules', () => {
     let people_store: PersonManager;
-    let state, service;
+    let state: AccumulatedFacts, service;
     let neil: Person, bob: Person, tim: Person;
-    let neil_assign: Assignment, bob_assign: Assignment, tim_assign: Assignment;
+
+    let neil_assign: Assignment;
+    let bob_assign: Assignment;
+    let tim_assign: Assignment;
+
     let date: Date;
     let team: Team;
 
@@ -29,7 +33,7 @@ describe('rules', () => {
         people_store = new SchedulerObjectStore().people;
         team = new Team("Foo Bar");
         service = new Plan("rules tests", team);
-        state = new RuleFacts(service);
+        state = new AccumulatedFacts(service);
 
         // If we have people in order, it just returns sequentially
         neil = team.getOrAddPerson(new Person("Neil"));
@@ -173,6 +177,27 @@ describe('rules', () => {
 
             state.current_date = new Date(2000, 0, 0);
             expect(rule.execute(state)).toEqual(null);
+        });
+
+        it('if someone is in a role, their weighting increases and sorting returns different thing', () => {
+            let soundGuy = team.add(new Person("Sound"));
+            let sound_assign = service.assignmentFor(soundGuy).addRole(defaultSoundRole, 3);
+            service.assignmentFor(soundGuy).addRole(defaultComputerRole, 1);
+
+            let computerGuy = team.add(new Person("Computer"));
+            let computer_assign = service.assignmentFor(computerGuy).addRole(defaultComputerRole, 3);
+            service.assignmentFor(computerGuy).addRole(defaultSoundRole, 1);
+
+            // start assuming no usage
+            expect(state.number_of_times_role_used_by_person(defaultComputerRole, sound_assign)).toEqual(0);
+            expect(state.number_of_times_role_used_by_person(defaultSoundRole, sound_assign)).toEqual(0);
+            expect(state.number_of_times_role_used_by_person(defaultComputerRole, computer_assign)).toEqual(0);
+            expect(state.number_of_times_role_used_by_person(defaultSoundRole, computer_assign)).toEqual(0);
+
+            // Recreate, to get an up to date list of pick rules
+            state = new AccumulatedFacts(service);
+            const next_role = state.get_next_suitable_role_for_assignment(sound_assign);
+            console.warn(`${SWBSafeJSON.stringify(next_role)}`);
         });
 
         it('state can record usage score for people', () => {

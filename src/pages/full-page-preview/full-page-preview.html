@@ -1,0 +1,27 @@
+<ion-header>
+
+    <ion-navbar>
+        <ion-title>Schedule Viewer</ion-title>
+    </ion-navbar>
+
+</ion-header>
+
+
+<ion-content *mobxTraceAutorun="'trace'">
+    <div *ngIf="store.uiStore$|async as ui">
+        <div *ngIf="server">
+            <div *ngIf="server.isLoggedIn">
+                <div class="loading" *ngIf="!server.isReady; else main">
+                    <ion-spinner [duration]="1000"></ion-spinner>
+                </div>
+                <ng-template #main>
+                    <div *ngIf="store.schedule$ | async as schedule">
+                        <schedule-viewer [schedule]="schedule"
+                                         [full]="true"
+                                         [me]="store.loggedInPerson$|async"></schedule-viewer>
+                    </div>
+                </ng-template>
+            </div>
+        </div>
+    </div>
+</ion-content>

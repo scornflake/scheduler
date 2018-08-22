@@ -30,16 +30,6 @@ export class NPBCStoreConstruction {
     constructor() {
     }
 
-    // static SetupOrganization(org_store, name: string) {
-    //     let org = org_store.find_by_name(name);
-    //     if (!org) {
-    //         let organization = new Organization(name);
-    //         org_store.add_organisation(organization);
-    //         return organization;
-    //     }
-    //     return null;
-    // }
-
     static async load(url: string, httpClient: HttpClient) {
         try {
             return await httpClient.get(url).toPromise();
@@ -119,7 +109,8 @@ export class NPBCStoreConstruction {
 
     }
 
-    @action static AddPeopleToPlanWithRoles(service: Plan, team: Team) {
+    @action
+    static AddPeopleToPlanWithRoles(service: Plan, team: Team) {
         let neil = team.findPersonWithName("Neil Clayton");
         let cherilyn = team.findPersonWithName("Cherilyn Clayton");
         // let kylie = team.findPersonWithName("Kylie Welch-Herekiuha");
@@ -147,6 +138,7 @@ export class NPBCStoreConstruction {
         let jeremy_w = team.findPersonWithName("Jeremy Watson");
         let john_sutherland = team.findPersonWithName("John Sutherland");
 
+        let kim = team.findPersonWithName('Kim TP');
 
         service.assignmentFor(neil)
             .addRole(defaultSoundRole, 1)
@@ -189,7 +181,8 @@ export class NPBCStoreConstruction {
             .addRole(defaultDrumsRole);
 
         service.assignmentFor(ben)
-            .addRole(defaultBass, 1);
+            .addRole(defaultDrumsRole, 1)
+            .addRole(defaultBass, 3);
 
         // service.assignmentFor(courtney)
         //     .addRole(defaultVocalsRole);
@@ -227,7 +220,7 @@ export class NPBCStoreConstruction {
             .addRole(defaultComputerRole);
 
         service.assignmentFor(andre_l)
-            .addRole(defaultSoundRole)
+            .addRole(defaultSoundRole, 2)
             .addRole(defaultElectricGuitar);
 
         service.assignmentFor(suzie_l)
@@ -239,7 +232,11 @@ export class NPBCStoreConstruction {
 
         service.assignmentFor(john_sutherland)
             .addRole(defaultSoundRole)
-            .addRole(defaultComputerRole, 2)
+            .addRole(defaultComputerRole, 2);
+
+        service.assignmentFor(kim)
+            .addRole(defaultElectricGuitar);
+
     }
 
     static async asyncFixPeoplesEmail(peopleStore: PersonManager, http: HttpClient) {
@@ -253,8 +250,8 @@ export class NPBCStoreConstruction {
             let name = record['name'];
 
             let person = peopleStore.firstThisTypeByName(name, false);
-            if(person) {
-                if(person.email != email) {
+            if (person) {
+                if (person.email != email) {
                     person.setEmail(email);
                 }
             }
@@ -306,8 +303,10 @@ export class NPBCStoreConstruction {
         let suzie_l = aint("Suzie Legg");
         let jeremy_w = aint("Jeremy Watson");
         let john_sutherland = aint("John Sutherland");
+        let kim = aint('Kim TP');
 
         neil.avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);
+        kim.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
         cherilyn.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
         christine.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
         stuart.avail_every(4, AvailabilityUnit.EVERY_N_WEEKS);

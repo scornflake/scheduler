@@ -1,6 +1,6 @@
 import {Availability, AvailabilityUnit} from "./availability";
 import {throwOnInvalidDate} from "./common/date-utils";
-import {RuleFacts} from "./rule_based/rule-facts";
+import {AccumulatedFacts} from "./rule_based/accumulated-facts";
 
 import {Unavailability} from "./unavailability";
 import * as _ from "lodash";
@@ -187,7 +187,7 @@ class Person extends NamedObject {
         }
     }
 
-    is_available(date: Date, facts: RuleFacts, record_unavailability: boolean = false) {
+    is_available(date: Date, facts: AccumulatedFacts, record_unavailability: boolean = false) {
         // console.log("Testing availability with: " + this.availability.constructor.name);
         throwOnInvalidDate(date);
         return this.availability.is_available(this, date, facts, record_unavailability);

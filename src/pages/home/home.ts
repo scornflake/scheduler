@@ -1,5 +1,5 @@
-import {AfterContentInit, Component} from '@angular/core';
-import {IonicPage, NavController} from 'ionic-angular';
+import {AfterContentInit, Component, OnDestroy} from '@angular/core';
+import {IonicPage, NavController, PopoverController} from 'ionic-angular';
 import {CSVExporter} from "../../scheduling/exporter/csv.exporter";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {RootStore} from "../../store/root";
@@ -13,6 +13,7 @@ import {ConnectivityService} from "../../common/network/connectivity";
 import {ResourceType} from "../../providers/access-control/access-control";
 import {ObjectWithUUID} from "../../scheduling/base-types";
 import {Subject} from "rxjs";
+import {SubMenuComponent} from "../../components/sub-menu/sub-menu";
 
 let __firstTime: boolean = true;
 
@@ -24,7 +25,7 @@ let __firstTime: boolean = true;
     selector: 'page-home',
     templateUrl: 'home.html',
 })
-export class HomePage implements AfterContentInit {
+export class HomePage implements AfterContentInit, OnDestroy {
     private logger: Logger;
     private id: string;
     private ngUnsubscribe: Subject<any>;
@@ -32,6 +33,7 @@ export class HomePage implements AfterContentInit {
     constructor(private navCtrl: NavController,
                 private pageUtils: PageUtils,
                 private logService: LoggingService,
+                private popover: PopoverController,
                 private connectivity: ConnectivityService,
                 private nativeTrans: NativePageTransitions,
                 public server: SchedulerServer,
@@ -58,6 +60,23 @@ export class HomePage implements AfterContentInit {
 
     ngAfterContentInit() {
         this.doStartupLifecycle();
+    }
+
+    public showSubmenu(ev: UIEvent) {
+        let items = [
+            {
+                title: "Share",
+                visible: () => this.canShare,
+                handler: this.shareSchedule.bind(this)
+            },
+            {
+                title: "Show Full",
+                visible: () => this.connectivity.onBrowser,
+                handler: this.showInFullSize.bind(this)
+            }
+        ];
+        let popover = this.popover.create(SubMenuComponent, {items: items});
+        popover.present({ev: ev});
     }
 
     private doStartupLifecycle() {
@@ -111,7 +130,7 @@ export class HomePage implements AfterContentInit {
     }
 
     get canShare(): boolean {
-        if(this.connectivity.onDevice) {
+        if (this.connectivity.onDevice) {
             return false;
         }
         return this.pageUtils.canManage(ResourceType.Plan);
@@ -134,7 +153,7 @@ export class HomePage implements AfterContentInit {
             // this.navCtrl.push('page-db');
             // this.navCtrl.push('page-roles');
             // this.navCtrl.push('page-about');
-            this.shareSchedule();
+            // this.shareSchedule();
             // this.navCtrl.push('page-share');
             // this.navCtrl.push('page-people', {create: true});
             // this.navCtrl.push('page-teams', {create: true});
@@ -158,7 +177,7 @@ export class HomePage implements AfterContentInit {
     }
 
     shareSchedule() {
-        if(this.canShare) {
+        if (this.canShare) {
             this.navCtrl.push('page-share');
         } else {
             console.warn(`Can't share, not enabled`);
@@ -192,5 +211,9 @@ export class HomePage implements AfterContentInit {
         this.navCtrl.push('page-profile');
         // let popover = this.popoverCtrlr.create(NotificationsComponent);
         // popover.present({ev: $event})
+    }
+
+    private showInFullSize() {
+        window.open("/#/full", '#fullscreen');
     }
 }

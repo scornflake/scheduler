@@ -4,11 +4,12 @@ import {Person} from "../../scheduling/people";
 import {PopoverController, Slides} from "ionic-angular";
 import {ReasonsComponent} from "../reasons/reasons";
 import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
-import {computed} from "mobx-angular";
+import {computed, observable} from "mobx-angular";
 import {RootStore} from "../../store/root";
 import {ScheduleAtDate} from "../../scheduling/shared";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {Role} from "../../scheduling/role";
+import {runInAction} from "mobx";
 
 @Component({
     // changeDetection: ChangeDetectionStrategy.OnPush,
@@ -16,13 +17,26 @@ import {Role} from "../../scheduling/role";
     templateUrl: 'schedule-viewer.html'
 })
 export class ScheduleViewerComponent implements OnInit, OnDestroy {
-    @Input() schedule: ScheduleWithRules;
+    @Input('schedule')
+    set schedule(s: ScheduleWithRules) {
+        runInAction(() => {
+            this._schedule = s;
+        });
+    };
+
+    get schedule(): ScheduleWithRules {
+        return this._schedule;
+    }
+
     @Input() me: Person;
+    @Input() full: boolean = false;
 
     @ViewChild(Slides) slides: Slides;
 
     colSelectedDate: Date;
     private logger: Logger;
+
+    @observable private _schedule: ScheduleWithRules;
 
     constructor(private store: RootStore,
                 private appRef: ApplicationRef,
@@ -43,20 +57,24 @@ export class ScheduleViewerComponent implements OnInit, OnDestroy {
     ngOnDestroy() {
     }
 
-    get roles(): Array<Role> {
+    @computed get observableSchedule(): ScheduleWithRules {
+        return this._schedule;
+    }
+
+    @computed get roles(): Array<Role> {
         return this.schedule.plan.roles;
     }
 
-    get colSelectableDates(): Date[] {
+    @computed get colSelectableDates(): Date[] {
         return this.schedule.dates.map(sd => sd.date);
     }
 
-    get colSelectedSchedule(): ScheduleAtDate {
+    @computed get colSelectedSchedule(): ScheduleAtDate {
         return this.schedule.scheduleForDate(this.colSelectedDate);
     }
 
     get rowMode(): boolean {
-        return false;
+        return this.full == true;
     }
 
     @computed
@@ -116,6 +134,19 @@ export class ScheduleViewerComponent implements OnInit, OnDestroy {
 
         let date_for_row = row['date'];
         return this.schedule.is_person_in_exclusion_zone(person, role, date_for_row);
+    }
+
+    clicked(obj: Object, date: Date) {
+        if (obj instanceof Person) {
+            let person = this.selected_person;
+            if(!person) {
+                return false;
+            }
+            if (obj.uuid == person.uuid && this.store.ui_store.selected_date == date) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /*

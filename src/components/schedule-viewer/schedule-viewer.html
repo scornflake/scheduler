@@ -1,27 +1,51 @@
 <div *mobxTraceAutorun>
     <div *ngIf="rowMode; else colMode">
-        <ion-grid>
+        <ion-grid class="full" no-padding>
             <ion-row>
-                <ion-col class="heading" *ngFor="let header of headers">{{header.name|uppercase}}</ion-col>
-            </ion-row>
-            <ion-row *ngFor="let row of rows; let i = index" [ngClass]="{'even':i % 2 == 0}">
                 <ion-col>
-                    {{row['date']?.toDateString()}}
+                    <ion-grid>
+                        <ion-row>
+                            <ion-col class="heading" *ngFor="let header of headers">{{header.name|uppercase}}</ion-col>
+                        </ion-row>
+                        <ion-row *ngFor="let row of rows; let i = index" [ngClass]="{'even':i % 2 == 0}">
+                            <ion-col>
+                                {{row['date']?.toDateString()}}
+                            </ion-col>
+                            <ion-col *ngFor="let key of keys_for_row(row); let i = index"
+                                     [ngClass]="{'range':in_exclusion_zone(row, key), 'notrange':!in_exclusion_zone(row, key)}"
+                            >
+                                <div *ngFor="let obj of value_as_array(row[key])"
+                                     [ngClass]="{
+                                     'selected':selected_and_in_role(obj, key),
+                                     'notselected':!selected_and_in_role(obj, key),
+                                     'clicked':clicked(obj, row['date'])
+                                     }"
+                                     (click)="select(obj, row['date'], key)">
+                                    {{textFor(obj)}}
+                                </div>
+                            </ion-col>
+                        </ion-row>
+                    </ion-grid>
                 </ion-col>
-                <ion-col *ngFor="let key of keys_for_row(row); let i = index"
-                         [ngClass]="{'range':in_exclusion_zone(row, key)}"
-                >
-                    <div *ngFor="let obj of value_as_array(row[key])"
-                         [ngClass]="{'selected':selected_and_in_role(obj, key)}"
-                         (click)="select(obj, row['date'], key)">
-                        {{textFor(obj)}}
-                    </div>
+
+                <ion-col col-2>
+                    <ion-grid no-padding>
+                        <ion-row>
+                            <ion-col *ngIf="store.ui_store.have_selection">
+                                <reasons *ngIf="store.schedule$|async as schedule"
+                                         [decisions]="schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"
+                                >
+                                </reasons>
+                            </ion-col>
+                        </ion-row>
+                    </ion-grid>
                 </ion-col>
             </ion-row>
         </ion-grid>
     </div>
-    <ng-template #colMode no-padding>
-        <div class="horizSchedule" *ngIf="schedule">
+
+    <ng-template #colMode>
+        <div class="small" *ngIf="schedule">
             <!-- shows only when in small mode -->
             <div *xs>
                 <div *ngIf="store.selectedPlan$|async as plan" text-center class="smallDate">
@@ -29,7 +53,7 @@
                 </div>
             </div>
 
-            <ion-grid class="horizScheduleHeading" no-padding>
+            <ion-grid class="subheading" no-padding>
                 <ion-row align-items-center>
                     <button ion-col ion-button icon-only col-auto (tap)="selectNextDate(-1)">
                         <ion-icon name="arrow-back"></ion-icon>

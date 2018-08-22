@@ -227,8 +227,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
                 trace();
                 let plan = this.ui_store.selectedPlan;
                 if (plan) {
-                    let schedule;
-                    schedule = new ScheduleWithRules(plan, this.previousSchedule);
+                    let schedule = new ScheduleWithRules(plan, this.previousSchedule);
                     this.logger.info(`Regenerating schedule for plan ${plan.name}`);
                     schedule.createSchedule();
                     return schedule;

@@ -10,7 +10,7 @@ import {
     defaultSoundRole, SetupDefaultRoles
 } from "../sample-data";
 import {Plan} from "../../scheduling/plan";
-import {RuleFacts} from "../../scheduling/rule_based/rule-facts";
+import {AccumulatedFacts} from "../../scheduling/rule_based/accumulated-facts";
 import {Assignment} from "../../scheduling/assignment";
 import {Team} from "../../scheduling/teams";
 import {Role} from "../../scheduling/role";
@@ -98,7 +98,7 @@ describe('service', () => {
     describe('rules', () => {
         let rob: Person;
         let neil_assignment: Assignment, rob_assignment: Assignment;
-        let state: RuleFacts;
+        let state: AccumulatedFacts;
         let date: Date;
 
         beforeEach(() => {
@@ -113,7 +113,7 @@ describe('service', () => {
             rob = team.add(new Person("rob"));
             rob_assignment = plan.assignmentFor(rob).addRole(defaultBass).addRole(defaultSoundRole);
 
-            state = new RuleFacts(plan);
+            state = new AccumulatedFacts(plan);
             state.current_date = date;
         });
 

@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import {Person} from "../people";
-import {RuleFacts} from "./rule-facts";
+import {AccumulatedFacts} from "./accumulated-facts";
 import {Availability} from "../availability";
 import {daysBetween, IAssignment, ScheduleAtDate} from "../shared";
 import {ScheduleWithRules} from "./scheduler";
@@ -63,7 +63,7 @@ class FixedRoleOnDate extends Rule {
         this.role = role;
     }
 
-    @action execute(state: RuleFacts): Role {
+    @action execute(state: AccumulatedFacts): Role {
         if (this.date == state.current_date) {
             return this.role;
         }
@@ -86,27 +86,39 @@ class WeightedRoles extends Rule {
         });
     }
 
-    @action execute(state: RuleFacts, assignment: IAssignment): Array<Role> {
-        // sort by current score, highest first.
+    getRolesByTotalNumberOfTimesAssignmentPlaced(state: AccumulatedFacts, assignment: IAssignment): Map<Role, { normalizedWeighting: number, normalizedUsageCount: number }> {
+        // sort by current weight, highest first.
         let roles_in_weight_order = this.roles_sorted_by_weight;
 
         let roles = Array.from(this.weightedRoles.keys());
         let total_usages = state.total_number_of_times_person_placed_in_roles(assignment, roles);
-        if (total_usages == 0) {
-            return roles_in_weight_order;
-        }
 
         // Sort based on realtime score
-        return _.sortBy(roles_in_weight_order, role => {
-            let role_weighting = this.weightedRoles.get(role);
-
+        let result = new Map<Role, { normalizedWeighting: number, normalizedUsageCount: number }>();
+        for (let role of roles_in_weight_order) {
             let current_score = state.number_of_times_role_used_by_person(role, assignment);
-            let runtime_weighting = current_score / total_usages;
-            // this.logger.info(role.name + ", weight: " + role_weighting + ". Has score: " + current_score + ". Runtime weight: " + runtime_weighting);
+            let normalized_current_score = 0;
+            if (total_usages > 0) {
+                normalized_current_score = current_score / total_usages;
+            }
+            result.set(role, {
+                normalizedWeighting: this.weightedRoles.get(role),
+                normalizedUsageCount: normalized_current_score
+            });
+        }
+        return result;
+    }
 
-            if (runtime_weighting < role_weighting) {
+    @action execute(state: AccumulatedFacts, assignment: IAssignment): Array<Role> {
+        // sort by current score, highest first.
+        let scored_role_state = this.getRolesByTotalNumberOfTimesAssignmentPlaced(state, assignment);
+
+        // Sort based on realtime score
+        return _.sortBy(Array.from(scored_role_state.keys()), role => {
+            let role_state_info = scored_role_state.get(role);
+            if (role_state_info.normalizedUsageCount < role_state_info.normalizedWeighting) {
                 return -1;
-            } else if (runtime_weighting > role_weighting) {
+            } else if (role_state_info.normalizedUsageCount > role_state_info.normalizedWeighting) {
                 return 1;
             }
             return 0;
@@ -134,7 +146,7 @@ class OnThisDate extends Rule {
         this.assignment = assignment;
     }
 
-    @action execute(state: RuleFacts): IAssignment {
+    @action execute(state: AccumulatedFacts): IAssignment {
         let hasPrimaryRole = this.assignment.hasPrimaryRole(this.role);
         if (state.current_date == this.date && hasPrimaryRole) {
             return this.assignment;
@@ -158,7 +170,7 @@ class UsageWeightedSequential extends Rule {
         });
     }
 
-    @action execute(state: RuleFacts, role: Role): Array<IAssignment> {
+    @action execute(state: AccumulatedFacts, role: Role): Array<IAssignment> {
         // Sort by number
         return Array.from(this.usages.keys()).sort((a1, a2) => {
             let usageForP1 = state.number_of_times_role_used_by_person(role, a1);
@@ -166,15 +178,6 @@ class UsageWeightedSequential extends Rule {
             if (usageForP1 < usageForP2) {
                 return -1;
             } else if (usageForP1 > usageForP2) {
-                return 1;
-            }
-
-            // Compare by index
-            let p1Index = state.index_of_person_in_role_group(a1.person, role);
-            let p2Index = state.index_of_person_in_role_group(a2.person, role);
-            if (p1Index < p2Index) {
-                return -1;
-            } else if (p1Index > p2Index) {
                 return 1;
             }
             return 0;
@@ -190,11 +193,11 @@ class ConditionalRule extends Rule {
         this.actions = new Array<ConditionAction>();
     }
 
-    condition(stat: RuleFacts, person: Person, role: Role) {
+    condition(stat: AccumulatedFacts, person: Person, role: Role) {
         return false;
     }
 
-    run(stat: RuleFacts, person: Person, role: Role) {
+    run(stat: AccumulatedFacts, person: Person, role: Role) {
         if (this.condition(stat, person, role)) {
             _.sortBy(this.actions, o => o.priority).forEach(r => {
                 r.executeAction(stat, person, role);
@@ -217,7 +220,7 @@ class AssignedToRoleCondition extends ConditionalRule {
         }
     }
 
-    condition(stat: RuleFacts, person: Person, role: Role): boolean {
+    condition(stat: AccumulatedFacts, person: Person, role: Role): boolean {
         if (this.role) {
             return this.role.uuid == role.uuid;
         }
@@ -237,7 +240,7 @@ class AssignedToRoleCondition extends ConditionalRule {
 }
 
 class ConditionAction extends Rule {
-    executeAction(stat: RuleFacts, person: Person, role: Role) {
+    executeAction(stat: AccumulatedFacts, person: Person, role: Role) {
     }
 }
 
@@ -251,7 +254,7 @@ class ScheduleOn extends ConditionAction {
         this.role = role;
     }
 
-    @action executeAction(stat: RuleFacts, person: Person, role: Role) {
+    @action executeAction(stat: AccumulatedFacts, person: Person, role: Role) {
         let assignment = stat.service.get_assignment_for(person);
         if (stat.place_person_in_role(assignment, this.role, stat.current_date)) {
             stat.add_decision(`ScheduleOn executed, adding ${this.person} to role ${this.role}`);
@@ -302,8 +305,8 @@ class TryToScheduleWith extends SecondaryAction {
         let original_roles = schedule_at_date.roles_of_person(this.owner);
 
         // If the moving the person FROM any of the roles would reduce the role count to below what is required, don't do it
-        for(let role of original_roles) {
-            if(schedule_at_date.people_in_role(role).length < role.minimum_needed) {
+        for (let role of original_roles) {
+            if (schedule_at_date.people_in_role(role).length < role.minimum_needed) {
                 return false;
             }
         }
@@ -328,14 +331,14 @@ class TryToScheduleWith extends SecondaryAction {
                     }
 
                     // Can't already include the owner
-                    if(s.includes_person(this.owner)) {
+                    if (s.includes_person(this.owner)) {
                         return false;
                     }
 
                     // If there's already someone doing that role, can't have too many
-                    for(let role of original_roles) {
+                    for (let role of original_roles) {
                         let peopleInRole = s.people_in_role(role);
-                        if(peopleInRole.length >= role.maximum_wanted) {
+                        if (peopleInRole.length >= role.maximum_wanted) {
                             return false;
                         }
                     }

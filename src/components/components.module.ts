@@ -23,6 +23,7 @@ import {ShowPlanComponent} from './show-plan/show-plan';
 import {WelcomeWizardComponent} from './welcome-wizard/welcome-wizard';
 import {SchedulerDirectivesModule} from "../common/directives";
 import {NotificationsComponent} from './notifications/notifications';
+import {SubMenuComponent} from './sub-menu/sub-menu';
 
 @NgModule({
     declarations: [
@@ -45,6 +46,7 @@ import {NotificationsComponent} from './notifications/notifications';
         ShowPlanComponent,
         WelcomeWizardComponent,
         NotificationsComponent,
+        SubMenuComponent,
     ],
     imports: [
         IonicModule,
@@ -55,6 +57,7 @@ import {NotificationsComponent} from './notifications/notifications';
     ],
     entryComponents: [
         CalendarComponent,
+        SubMenuComponent,
         NotificationsComponent,
     ],
     exports: [
@@ -77,6 +80,7 @@ import {NotificationsComponent} from './notifications/notifications';
         ShowPlanComponent,
         WelcomeWizardComponent,
         NotificationsComponent,
+        SubMenuComponent,
     ]
 })
 export class ComponentsModule {

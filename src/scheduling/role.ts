@@ -10,7 +10,7 @@ class Role extends NamedObject {
     @observable layout_priority: number;
     @observable display_order: number;
 
-    constructor(name: string, min_required: number = 1, maximum = 1, layout_priority = 1) {
+    constructor(name: string, min_required: number = 1, maximum = 10, layout_priority = 1) {
         super();
         this.name = name;
         this.minimum_needed = min_required;

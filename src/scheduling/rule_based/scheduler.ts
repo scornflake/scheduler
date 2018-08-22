@@ -1,8 +1,8 @@
 import {ScheduleAtDate} from "../shared";
 import {Person} from "../people";
 import * as _ from 'lodash';
-import {dayAndHourForDate} from "../common/date-utils";
-import {RuleFacts} from "./rule-facts";
+import {csd, dayAndHourForDate} from "../common/date-utils";
+import {AccumulatedFacts} from "./accumulated-facts";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {Assignment} from "../assignment";
 import {Plan} from "../plan";
@@ -10,14 +10,17 @@ import {LoggingWrapper} from "../../common/logging-wrapper";
 import {Role} from "../role";
 import {action, computed, observable} from "mobx-angular";
 import {ObjectWithUUID} from "../base-types";
+import {LogLevel} from "ionic-logging-service";
 
 class ScheduleWithRules {
     @observable plan: Plan;
-    @observable facts: RuleFacts;
+    @observable facts: AccumulatedFacts;
     free_text: {};
     id: string = ObjectWithUUID.guid();
 
     private previous_scheduler: ScheduleWithRules;
+
+    static loggerName = "scheduler";
 
     constructor(plan: Plan, previous: ScheduleWithRules = null) {
         if (!plan) {
@@ -27,7 +30,7 @@ class ScheduleWithRules {
         this.plan.validate();
         this.free_text = {};
         if (previous) {
-            this.warmupSsing(previous);
+            this.warmupUsing(previous);
         }
 
         this.clear_working_state();
@@ -50,12 +53,12 @@ class ScheduleWithRules {
             throw new Error("No service defined, cannot create the schedule");
         }
         let schedule_duration = this.plan.schedule_duration_in_days;
-        LoggingWrapper.info("scheduler", "Working from " + this.plan.start_date + " to: " + this.plan.end_date);
-        LoggingWrapper.debug("scheduler", "Schedule is " + schedule_duration + " days long");
+        LoggingWrapper.info(ScheduleWithRules.loggerName, "Working from " + this.plan.start_date + " to: " + this.plan.end_date);
+        LoggingWrapper.debug(ScheduleWithRules.loggerName, "Schedule is " + schedule_duration + " days long");
 
         let role_groups = this.plan.roles_in_layout_order_grouped;
         let role_names = role_groups.map(roleGroup => SWBSafeJSON.stringify(roleGroup.roles.map(r => r.name)));
-        LoggingWrapper.debug("scheduler", "Roles (in order of importance): " + SWBSafeJSON.stringify(role_names));
+        LoggingWrapper.debug(ScheduleWithRules.loggerName, "Roles (in order of importance): " + SWBSafeJSON.stringify(role_names));
 
         this.facts.begin();
 
@@ -68,13 +71,22 @@ class ScheduleWithRules {
         this.facts.begin_new_role_group(role_group);
 
         let current_date = this.plan.start_date;
-        LoggingWrapper.debug("scheduler", "\r\nNext group: " + SWBSafeJSON.stringify(role_group.map(r => r.name)));
+        LoggingWrapper.debug(ScheduleWithRules.loggerName, "\r\nNext group: " + SWBSafeJSON.stringify(role_group.map(r => r.name)));
 
         // Iterate through all dates
         let iterations = 0;
 
         while (current_date.valueOf() <= this.plan.end_date.valueOf()) {
-            LoggingWrapper.debug("scheduler", "Next date: " + current_date);
+            let oldLogLevel: number = -1;
+            let dateAtHour = dayAndHourForDate(current_date);
+            let debugDate = csd(2018, 7, 29);
+            let isCertainDay = dateAtHour == dayAndHourForDate(debugDate);
+            // let isCertainRole = role_group.find(r => r.name == "Sound");
+            if (isCertainDay) {
+                oldLogLevel = LoggingWrapper.setLogLevel(ScheduleWithRules.loggerName, LogLevel.DEBUG, `Debugging ${debugDate}`);
+            }
+
+            LoggingWrapper.debug(ScheduleWithRules.loggerName, `Next date: ${current_date}`);
 
             for (let role of role_group) {
                 this.facts.begin_new_role(current_date);
@@ -85,10 +97,12 @@ class ScheduleWithRules {
             // Move to the next date
             current_date = this.choose_next_schedule_date(current_date);
 
+            LoggingWrapper.setLogLevel(ScheduleWithRules.loggerName, oldLogLevel, `Finish debug of ${debugDate}`);
+
             // This is taking 10,000 reasons too far!
             iterations++;
             if (iterations > 10000) {
-                LoggingWrapper.error("scheduler","Max iterations - bug!?");
+                LoggingWrapper.error(ScheduleWithRules.loggerName, "Max iterations - bug!?");
                 break
             }
 
@@ -128,11 +142,11 @@ class ScheduleWithRules {
             throw new Error("No facts defined. Cannot process role");
         }
         let specific_day = this.facts.get_schedule_for_date(current_date);
-        LoggingWrapper.debug("scheduler", `Processing role ${role}`);
+        LoggingWrapper.debug(ScheduleWithRules.loggerName, `Processing role ${role}`);
 
         // If already at max for this role, ignore it.
         if (this.is_role_filled_for_date(role, current_date)) {
-            LoggingWrapper.debug("scheduler", "Not processing " + role.name + ", already have " + role.maximum_wanted + " slotted in");
+            LoggingWrapper.debug(ScheduleWithRules.loggerName, `Not processing ${role.name}, already have ${role.maximum_wanted} assigned`);
             return;
         }
 
@@ -141,7 +155,7 @@ class ScheduleWithRules {
 
         // Setup our available people (which at the beginning, is 'everyone')
         if (assignments_for_this_role.length == 0) {
-            // this.logger.debug("Laying out role: " + role.name + " ... skipping (no one to do it)");
+            LoggingWrapper.debug(ScheduleWithRules.loggerName, `Laying out role: ${role.name} ... skipping (no one to do it)`);
             return;
         }
 
@@ -160,10 +174,9 @@ class ScheduleWithRules {
                 break;
             }
 
-            let message = "Can " + next_suitable_assignment.name + " do role " + role.name + "?";
-            this.facts.add_decision(message);
-
-            if (_.includes(specific_day.people_in_role(role), next_suitable_assignment.person)) {
+            let canThisPersonDoRole = !_.includes(specific_day.people_in_role(role), next_suitable_assignment.person);
+            this.facts.add_decision(`Can ${next_suitable_assignment.name} do role ${role.name}? ${canThisPersonDoRole ? 'Yes' : 'No'}`);
+            if (!canThisPersonDoRole) {
                 let message = "Skipping " + next_suitable_assignment.name + ", they are already on it";
                 // TODO: Fix? this is a hack to make sure we don't infinite loop. If we get here, looping would bring us right back unless we change engine state
                 this.facts.use_this_person_in_role(next_suitable_assignment, role);
@@ -171,17 +184,19 @@ class ScheduleWithRules {
                 continue;
             }
 
-            let next_wanted_role_for_assignment = this.facts.get_next_suitable_role_for_assignment(next_suitable_assignment);
+            let get_next_suitable_role = this.facts.get_next_suitable_role_for_assignment(next_suitable_assignment);
+            let next_wanted_role_for_assignment = get_next_suitable_role.role;
 
             // Only let this happen if the role is within the current group being processed
             // TODO: This could be optional (might not want role_groups being mutually exclusive like this)
             if (_.includes(role_group, next_wanted_role_for_assignment) && !this.is_role_filled_for_date(next_wanted_role_for_assignment, current_date)) {
                 if (next_wanted_role_for_assignment.uuid != role.uuid) {
+                    let other_decision = "Swapping " + next_suitable_assignment.name + " into " + next_wanted_role_for_assignment + " instead of " + role + " due to a role weighting";
 
-                    let other_decision = "Putting " + next_suitable_assignment.name + " into " + next_wanted_role_for_assignment + " instead of " + role + " due to a role weighting";
-
+                    this.facts.add_decision(get_next_suitable_role.reason);
                     if (this.facts.place_person_in_role(next_suitable_assignment, next_wanted_role_for_assignment, current_date, true, true, other_decision)) {
                         // now continue with the loop, because we still havn't found someone for the role we were originally looking for.
+                        this.facts.set_decisions_for(next_suitable_assignment, next_wanted_role_for_assignment, current_date, false);
                         this.facts.add_decision("Check role " + role + " again because of weighted placement");
                         continue;
                     }
@@ -190,7 +205,7 @@ class ScheduleWithRules {
 
             // OK. So. Turns out the role is the same.
             // Place the person, and we're done filling this role.
-            let did_place = this.facts.place_person_in_role(next_suitable_assignment, role, current_date);
+            let did_place = this.facts.place_person_in_role(next_suitable_assignment, role, current_date, true, true, `Place ${next_suitable_assignment.person} into ${role.name} because ${get_next_suitable_role.reason}`);
             if (did_place) {
                 person_placed_into_role = next_suitable_assignment;
             }
@@ -216,18 +231,18 @@ class ScheduleWithRules {
 
     private choose_next_schedule_date(date: Date): Date {
         let next_date = new Date(date);
-        // this.logger.debug("Moving from date ... : " + next_date);
+        LoggingWrapper.debug(ScheduleWithRules.loggerName, `Moving from date ... : ${next_date}`);
         next_date.setDate(date.getDate() + this.plan.days_per_period);
-        // this.logger.debug(".... to date ... : " + next_date);
+        LoggingWrapper.debug(ScheduleWithRules.loggerName, `.... to date ... : ${next_date}`);
         return next_date;
     }
 
     @action
     private clear_working_state() {
-        this.facts = new RuleFacts(this.plan);
+        this.facts = new AccumulatedFacts(this.plan);
         if (this.previous_scheduler) {
             this.facts.copyUsageDataFrom(this.previous_scheduler.facts);
-            LoggingWrapper.info("scheduler", "Taking usage data from previous schedule...");
+            LoggingWrapper.info(ScheduleWithRules.loggerName, "Taking usage data from previous schedule...");
         }
         this.prepare_rules_for_execution();
     }
@@ -314,9 +329,9 @@ class ScheduleWithRules {
         return role_map[role.uuid];
     }
 
-    warmupSsing(previous_schedule: ScheduleWithRules) {
+    warmupUsing(previous_schedule: ScheduleWithRules) {
         this.previous_scheduler = previous_schedule;
-        LoggingWrapper.info("scheduler", "Warming up using a previous schedule...");
+        LoggingWrapper.info(ScheduleWithRules.loggerName, "Warming up using a previous schedule...");
     }
 
     private prepare_rules_for_execution() {

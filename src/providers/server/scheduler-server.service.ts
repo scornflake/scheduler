@@ -38,7 +38,7 @@ class SchedulerServer implements ILifecycle, IReplicationNotification {
     constructor(@Inject(forwardRef(() => RootStore)) private store,
                 private restAPI: RESTServer,
                 private auth: AuthorizationService,
-                private zone: NgZone,
+                // private zone: NgZone,
                 private state: StateProvider,
                 private logService: LoggingService,
                 private connectivity: ConnectivityService,
@@ -338,9 +338,9 @@ class SchedulerServer implements ILifecycle, IReplicationNotification {
         let couch = this.configurationService.getValue('server')['couch'];
 
         // TODO: Does this ruin replication?
-        await this.zone.runOutsideAngular(() => {
-            return newDb.startReplicationFor(couch, organizationUUID);
-        });
+        // await this.zone.runOutsideAngular(() => {
+        await newDb.startReplicationFor(couch, organizationUUID);
+        // });
 
         // Wait for replication to go quiet (no updates in a bit)
         // Me: Don't need this now that the DB does a sync(non-live) FIRST, followed by setting up live.

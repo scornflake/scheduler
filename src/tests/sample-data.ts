@@ -30,7 +30,7 @@ function SetupDefaultRoles() {
         defaultDrumsRole = new Role("Drums", 1, 1, instrumentPriority);
         defaultKeysRole = new Role("Keys", 1, 1, instrumentPriority);
         defaultAcousticGuitar = new Role("Guitar (Acoustic)", 0, 2, instrumentPriority);
-        defaultElectricGuitar = new Role("Guitar (Electric)", 0, 1, instrumentPriority);
+        defaultElectricGuitar = new Role("Guitar (Electric)", 0, 3, instrumentPriority);
         defaultVocalsRole = new Role("Vocals", 1, 3, instrumentPriority);
         defaultSaxRole = new Role("Sax", 0, 2, instrumentPriority);
         console.info(`Setup default roles`);

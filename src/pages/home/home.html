@@ -5,11 +5,11 @@
             <ion-icon name="menu"></ion-icon>
         </button>
         <ion-buttons end class="notifications" *ngIf="store.loggedInPerson$|async as person">
-            <button ion-button icon-only (tap)="shareSchedule()" *ngIf="canShare">
-                <ion-icon name="share"></ion-icon>
-            </button>
             <button ion-button (tap)="showNotifications($event)" *ngIf="person.invites.length > 0">
                 <ion-badge color="danger">{{person?.invites.length}}</ion-badge>
+                <!--<ion-icon name="more"></ion-icon>-->
+            </button>
+            <button ion-button icon-only (tap)="showSubmenu($event)">
                 <ion-icon name="more"></ion-icon>
             </button>
         </ion-buttons>
@@ -18,9 +18,9 @@
 </ion-header>
 
 <ion-content>
-    <div *ngIf="store.uiStore$|async as ui; else notSignedIn">
+    <div *ngIf="store.uiStore$|async as ui">
         <div *ngIf="server">
-            <div *ngIf="server.isLoggedIn; else notSignedIn">
+            <div *ngIf="server.isLoggedIn">
                 <div class="loading" *ngIf="!server.isReady; else main">
                     <ion-spinner [duration]="1000"></ion-spinner>
                 </div>
@@ -48,19 +48,6 @@
                         <!--</div>-->
                     </ion-grid>
                 </ng-template>
-
-
-                <!--<ion-grid *ngIf="store.schedule$ | async as schedule" no-padding>-->
-                <!--<ion-row>-->
-                <!--<ion-col *ngIf="store.ui_store.have_selection">-->
-                <!--<person-editor></person-editor>-->
-                <!--<reasons *ngIf="store.schedule$|async as schedule"-->
-                <!--[decisions]="schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"-->
-                <!--&gt;-->
-                <!--</reasons>-->
-                <!--</ion-col>-->
-                <!--</ion-row>-->
-                <!--</ion-grid>-->
             </div>
         </div>
     </div>

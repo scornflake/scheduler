@@ -151,10 +151,10 @@ Rule Execution / Iterators
 
 So. Have iterators. And they suck.
 
-The original idea was that i'd be lazily returning state. Now, with RuleFacts, I can't think of a good reason to continue doing it (and it doesn't read well in code either)
+The original idea was that i'd be lazily returning state. Now, with AccumulatedFacts, I can't think of a good reason to continue doing it (and it doesn't read well in code either)
 
-Rather: Shouldn't the rules ALWAYS return the same state, given the same RuleFacts?
-So the usage of people over time, state currently baked into the rules themselves... shouldn't this be moved into RuleFacts?
+Rather: Shouldn't the rules ALWAYS return the same state, given the same AccumulatedFacts?
+So the usage of people over time, state currently baked into the rules themselves... shouldn't this be moved into AccumulatedFacts?
 
 Then:
 1. Rules execute, and use current facts to return a result.

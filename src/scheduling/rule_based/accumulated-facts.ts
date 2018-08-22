@@ -1,5 +1,4 @@
 import {FixedRoleOnDate, OnThisDate, Rule, UsageWeightedSequential, WeightedRoles} from "./rules";
-import {Logger} from "ionic-logging-service";
 import {dayAndHourForDate, throwOnInvalidDate} from "../common/date-utils";
 import {Person} from "../people";
 import {Exclusion, IAssignment, ScheduleAtDate} from "../shared";
@@ -9,7 +8,7 @@ import {Plan} from "../plan";
 import {Role} from "../role";
 import {action} from "mobx-angular";
 
-export class RuleFacts {
+export class AccumulatedFacts {
     current_date: Date;
     decisions_for_date: Array<string>;
     service: Plan;
@@ -33,7 +32,7 @@ export class RuleFacts {
         this.usage_counts = new Map<Role, Map<IAssignment, number>>();
     }
 
-    copyUsageDataFrom(previous_facts: RuleFacts) {
+    copyUsageDataFrom(previous_facts: AccumulatedFacts) {
         this.usage_counts = new Map<Role, Map<IAssignment, number>>();
         for (let person of Array.from(previous_facts.exclusion_zones.keys())) {
             let zones = previous_facts.exclusion_zones.get(person);
@@ -61,13 +60,13 @@ export class RuleFacts {
 
     get_schedule_for_date(date: Date): ScheduleAtDate {
         if (isUndefined(date)) {
-            LoggingWrapper.error("scheduler.rules.facts","Cannot return a schedule for a null date");
+            LoggingWrapper.error("scheduler.rules.facts", "Cannot return a schedule for a null date");
             return null;
         }
         let dateAtHour = dayAndHourForDate(date);
         let schedule = this.dates.get(dateAtHour);
         if (schedule == null) {
-            LoggingWrapper.debug("scheduler.rules.facts","Create new schedule for " + dateAtHour);
+            LoggingWrapper.debug("scheduler.rules.facts", "Create new schedule for " + dateAtHour);
             schedule = new ScheduleAtDate(date);
             this.dates.set(dateAtHour, schedule);
             return schedule;
@@ -158,30 +157,27 @@ export class RuleFacts {
             }
             if (rule instanceof UsageWeightedSequential) {
                 let assignments = rule.execute(this, role);
-                if (assignments.length) {
-                    for (let possible_assignment of assignments) {
-                        // can't already be in the role on this date
-                        let [has_exclusion, reason] = this.has_exclusion_for(this.current_date, possible_assignment.person, role);
-                        if (has_exclusion) {
-                            this.add_decision(possible_assignment.name + " cant do it, they have an exclusion: " + reason);
-                            continue;
-                        }
-
-                        // Must be available
-                        if (!this.is_person_available(possible_assignment.person, this.current_date, true)) {
-                            // No need to add decision. This will be done automatically.
-                            continue;
-                        }
-
-                        return possible_assignment;
+                let availableAssignments = assignments.filter(possible_assignment => {
+                    let [has_exclusion, reason] = this.has_exclusion_for(this.current_date, possible_assignment.person, role);
+                    if (has_exclusion) {
+                        return false;
                     }
+                    return this.is_person_available(possible_assignment.person, this.current_date, true);
+
+                });
+                if (availableAssignments.length) {
+                    this.add_decision(`Possibilities in UW order: ${availableAssignments.map(a => {
+                        let usages = this.number_of_times_role_used_by_person(role, a);
+                        return `${a.person.name} (${usages})`;
+                    }).join(",")}`);
+                    return availableAssignments[0];
                 }
                 return null;
             }
         }
     }
 
-    get_next_suitable_role_for_assignment(assignment: IAssignment) {
+    get_next_suitable_role_for_assignment(assignment: IAssignment): { role: Role, reason: string } {
         let role_rules = this.all_role_rules.get(assignment);
         if (!role_rules) {
             return null;
@@ -189,11 +185,25 @@ export class RuleFacts {
         for (let rule of role_rules) {
             if (rule instanceof FixedRoleOnDate) {
                 let result = rule.execute(this);
-                if (result) return result;
+                if (result) {
+                    return {
+                        role: result,
+                        reason: `explicit ${rule.role} on ${rule.date}`
+                    }
+                }
             }
             if (rule instanceof WeightedRoles) {
                 let result = rule.execute(this, assignment);
-                return result[0];
+                let currentState = rule.getRolesByTotalNumberOfTimesAssignmentPlaced(this, assignment);
+                let arrayOfInfo = [];
+                for (let role of Array.from(currentState.keys())) {
+                    let info = currentState.get(role);
+                    arrayOfInfo.push(`${role.name} weight:${info.normalizedWeighting.toFixed(2)},score:${info.normalizedUsageCount.toFixed(2)}`);
+                }
+                return {
+                    role: result[0],
+                    reason: `Next suitable: ${result[0].name}. Weighted roles: ${arrayOfInfo.join(", ")}`
+                }
             }
         }
         return null;
@@ -207,14 +217,14 @@ export class RuleFacts {
             throw new Error("Person cannot be null here");
         }
         if (!this.usage_counts.has(role)) {
-            LoggingWrapper.debug("scheduler.rules.facts","Creating new role counter for " + role.name);
+            LoggingWrapper.debug("scheduler.rules.facts", "Creating new role counter for " + role.name);
             let new_count = new Map<IAssignment, number>();
             this.usage_counts.set(role, new_count);
         }
 
         let by_person = this.usage_counts.get(role);
         if (!by_person.has(assignment)) {
-            LoggingWrapper.info("scheduler.rules.facts","Starting count at 0 for " + assignment.person.name);
+            LoggingWrapper.info("scheduler.rules.facts", "Starting count at 0 for " + assignment.person.name);
             by_person.set(assignment, 0);
         }
         return by_person;

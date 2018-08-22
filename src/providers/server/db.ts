@@ -633,7 +633,7 @@ class SchedulerDatabase implements IObjectStore {
             .on('change', (change) => {
                 this.lastSeenReplicationStatus = ReplicationStatus.ProcessingPull;
                 this.saveNotifications$.next(SavingState.FinishedSaving);
-                if (change['direction'] == 'pull') {
+                if (change['direction'] == 'pull' || 1) {
                     let data = change.change;
                     let docs = data.docs;
 
@@ -661,6 +661,8 @@ class SchedulerDatabase implements IObjectStore {
                     });
                     this.saveNotifications$.next(SavingState.FinishedSaving);
                     this.replicationNotifications$.next(this.lastSeenReplicationStatus);
+                } else if (change['direction'] == 'push') {
+                    console.log(`got push change:`);
                 }
             })
             .on('paused', (info) => {

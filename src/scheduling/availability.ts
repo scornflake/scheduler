@@ -1,6 +1,6 @@
 import {Person} from "./people";
 import {throwOnInvalidDate} from "./common/date-utils";
-import {RuleFacts} from "./rule_based/rule-facts";
+import {AccumulatedFacts} from "./rule_based/accumulated-facts";
 import {LoggingWrapper} from "../common/logging-wrapper";
 import {ObjectWithUUID} from "./base-types";
 import {observable} from "mobx-angular";
@@ -50,7 +50,7 @@ export class Availability extends ObjectWithUUID {
         this.unit = unit;
     }
 
-    is_available(person: Person, date: Date, facts: RuleFacts, record_unavailability: boolean) {
+    is_available(person: Person, date: Date, facts: AccumulatedFacts, record_unavailability: boolean) {
         return true;
     }
 
@@ -118,7 +118,7 @@ export class AvailabilityEveryNOfM extends Availability {
         return end_date;
     }
 
-    is_available(person: Person, date: Date, facts: RuleFacts, record_unavailability: boolean) {
+    is_available(person: Person, date: Date, facts: AccumulatedFacts, record_unavailability: boolean) {
         // How many times have I done something .... in the last 'M' weeks?
         throwOnInvalidDate(date);
         let end_date = new Date(date);

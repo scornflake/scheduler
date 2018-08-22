@@ -39,11 +39,15 @@
       },
       {
         "loggerName": "service.access-control",
-        "logLevel": "DEBUG"
+        "logLevel": "WARN"
       },
       {
         "loggerName": "model",
         "logLevel": "WARN"
+      },
+      {
+        "loggerName": "model.score",
+        "logLevel": "INFO"
       },
       {
         "loggerName": "page",
@@ -51,15 +55,15 @@
       },
       {
         "loggerName": "page.home",
-        "logLevel": "INFO"
+        "logLevel": "WARN"
       },
       {
         "loggerName": "page.login",
-        "logLevel": "INFO"
+        "logLevel": "WARN"
       },
       {
         "loggerName": "page.utils",
-        "logLevel": "INFO"
+        "logLevel": "WARN"
       },
       {
         "loggerName": "page.share",
@@ -83,7 +87,7 @@
       },
       {
         "loggerName": "db",
-        "logLevel": "WARN"
+        "logLevel": "INFO"
       },
       {
         "loggerName": "orm",

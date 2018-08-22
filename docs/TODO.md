@@ -18,6 +18,7 @@ TODO
     - show the next coming date (not the first one)
         - show next, up to an including if next == today
     - Allow me to quickly find when someone is on (Jo called mentioned dates, I went to the SS instead cos I could see it. Want to make my default action the app/site)
+    - Show me the number of weeks/events left in the schedule before it's end (e.g: 4 weeks left)
 - Login validation should show only if > 0 chars:
     - don't show 'email should be valid' if nothing typed in
 
@@ -78,9 +79,12 @@ Performance / Deployment
 
 Scheduling
 ===
-- BUG: TryToScheduleWith will put you on with the other person, even if you're unavailable on that day (or scheduled on some other role that day).
+- "Fills Slot":
+    - Id like to have one electric guitar, but on some days two.
+    - Could do this with 'Elec #1 / Elec #2' but don't always want *another* role.
+    -
 - Unavailable: often want to show that in a calendar view. Just to see it.
-- Roles: when shown for an assignment, should be shown in role priority order.
+- Roles: when shown for an role, should be shown in role priority order.
     - Currently for Cher, it shows Worship Leader after Keys. Should be other way around (to imply importance)
     - If there are roles with differing priority, this should be shown somehow (number, color?). Color could work if everyone in that role had that background color.
 - Want to see why a spot is empty. If someone cannot be scheduled on, record that as well (so we can show that 'Foo not available because X')
@@ -99,7 +103,7 @@ iPad
 What is known to be broken
 ====
 - Sync
-  - **** changing the assignment on person, propagates, but 2nd client doesn't see the change in the UI. refresh works.
+  - **** changing the role on person, propagates, but 2nd client doesn't see the change in the UI. refresh works.
   - I think this is because ion-segments are very, very broken. Apparently this is fixed in Ionic4. Not going to address.
     - Plan name (a segment) doesn't update on main page, if the schedule name is changed on another device
 
