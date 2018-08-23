@@ -3,42 +3,43 @@
         <ion-grid class="full" no-padding>
             <ion-row>
                 <ion-col>
-                    <ion-grid>
-                        <ion-row>
-                            <ion-col class="heading" *ngFor="let header of headers">{{header.name|uppercase}}</ion-col>
-                        </ion-row>
-                        <ion-row *ngFor="let row of rows; let i = index" [ngClass]="{'even':i % 2 == 0}">
-                            <ion-col>
-                                {{row['date']?.toDateString()}}
-                            </ion-col>
-                            <ion-col *ngFor="let key of keys_for_row(row); let i = index"
-                                     [ngClass]="{'range':in_exclusion_zone(row, key), 'notrange':!in_exclusion_zone(row, key)}"
-                            >
-                                <div *ngFor="let obj of value_as_array(row[key])"
-                                     [ngClass]="{
+                    <ion-row align-items-center>
+                        <ion-col class="heading" *ngFor="let header of headers">{{header.name|uppercase}}</ion-col>
+                    </ion-row>
+                    <ion-row *ngFor="let row of rows; let i = index" [ngClass]="{'even':i % 2 == 0}">
+                        <ion-col class="data notselected">
+                            {{row['date']?.toDateString()}}
+                        </ion-col>
+                        <ion-col *ngFor="let key of keys_for_row(row); let i = index"
+                                 class="data"
+                                 [ngClass]="{'range':in_exclusion_zone(row, key), 'notrange':!in_exclusion_zone(row, key)}"
+                        >
+                            <div *ngFor="let obj of value_as_array(row[key])"
+                                 [ngClass]="{
                                      'selected':selected_and_in_role(obj, key),
                                      'notselected':!selected_and_in_role(obj, key),
                                      'clicked':clicked(obj, row['date'])
                                      }"
-                                     (click)="select(obj, row['date'], key)">
-                                    {{textFor(obj)}}
-                                </div>
-                            </ion-col>
-                        </ion-row>
-                    </ion-grid>
+                                 (click)="select(obj, row['date'], key)">
+                                {{textFor(obj)}}
+                            </div>
+                        </ion-col>
+                    </ion-row>
                 </ion-col>
 
                 <ion-col col-2>
-                    <ion-grid no-padding>
-                        <ion-row>
-                            <ion-col *ngIf="store.ui_store.have_selection">
-                                <reasons *ngIf="store.schedule$|async as schedule"
-                                         [decisions]="schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"
-                                >
-                                </reasons>
-                            </ion-col>
-                        </ion-row>
-                    </ion-grid>
+                    <ion-row align-items-center>
+                        <ion-col class="heading">Reasons</ion-col>
+                    </ion-row>
+                    <ion-row>
+                        <ion-col *ngIf="store.ui_store.have_selection; else noReasons">
+                            <reasons *ngIf="store.schedule$|async as schedule"
+                                     [decisions]="schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"
+                            >
+                            </reasons>
+                        </ion-col>
+                        <ng-template ion-col #noReasons></ng-template>
+                    </ion-row>
                 </ion-col>
             </ion-row>
         </ion-grid>

@@ -38,6 +38,7 @@
                             <show-plan *ngIf="!hasNoPlans" (editPlanClicked)="editPlan($event)"></show-plan>
                             <div *ngIf="store.schedule$ | async as schedule">
                                 <schedule-viewer [schedule]="schedule"
+                                                 [selectClosestDay]="true"
                                                  [me]="store.loggedInPerson$|async"></schedule-viewer>
                                 <person-schedule [schedule]="schedule"
                                                  [person]="store.loggedInPerson$|async"></person-schedule>

@@ -1,4 +1,4 @@
-import {ApplicationRef, Component, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, ApplicationRef, Component, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {isArray} from "util";
 import {Person} from "../../scheduling/people";
 import {PopoverController, Slides} from "ionic-angular";
@@ -10,13 +10,14 @@ import {ScheduleAtDate} from "../../scheduling/shared";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {Role} from "../../scheduling/role";
 import {runInAction} from "mobx";
+import * as moment from "moment";
 
 @Component({
     // changeDetection: ChangeDetectionStrategy.OnPush,
     selector: 'schedule-viewer',
     templateUrl: 'schedule-viewer.html'
 })
-export class ScheduleViewerComponent implements OnInit, OnDestroy {
+export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy {
     @Input('schedule')
     set schedule(s: ScheduleWithRules) {
         runInAction(() => {
@@ -30,6 +31,7 @@ export class ScheduleViewerComponent implements OnInit, OnDestroy {
 
     @Input() me: Person;
     @Input() full: boolean = false;
+    @Input() selectClosestDay: boolean = false;
 
     @ViewChild(Slides) slides: Slides;
 
@@ -51,6 +53,12 @@ export class ScheduleViewerComponent implements OnInit, OnDestroy {
             if (this.schedule) {
                 this.colSelectedDate = this.schedule.dates[0].date;
             }
+        }
+    }
+
+    ngAfterViewInit() {
+        if (this.selectClosestDay) {
+            this.selectClosestDayInSchedule();
         }
     }
 
@@ -136,10 +144,36 @@ export class ScheduleViewerComponent implements OnInit, OnDestroy {
         return this.schedule.is_person_in_exclusion_zone(person, role, date_for_row);
     }
 
+    describe_exclusion_position(row, role_name: string): string[] {
+        let person = this.selected_person;
+        if (!person) {
+            return [];
+        }
+        let role = this.schedule.plan.find_role(role_name);
+        if (!role) {
+            return [];
+        }
+        let names = [];
+        let date_for_row = row['date'];
+        let zones = this.schedule.facts.get_exclusion_zones(this.selected_person, role, date_for_row);
+        for (let zone of zones) {
+            let hoursDiffFromStart = moment(zone.start_date).diff(date_for_row, 'days');
+            if (hoursDiffFromStart >= 0 && hoursDiffFromStart <= 1) {
+                names.push('start')
+            }
+            let hoursDiff = moment(date_for_row).diff(zone.end_date, 'days');
+            this.logger.info(`${zone.end_date} is ${hoursDiff} from ${date_for_row}`);
+            if (hoursDiff >= 0 && hoursDiffFromStart <= 7) {
+                names.push('end')
+            }
+        }
+        return names;
+    }
+
     clicked(obj: Object, date: Date) {
         if (obj instanceof Person) {
             let person = this.selected_person;
-            if(!person) {
+            if (!person) {
                 return false;
             }
             if (obj.uuid == person.uuid && this.store.ui_store.selected_date == date) {
@@ -219,5 +253,30 @@ export class ScheduleViewerComponent implements OnInit, OnDestroy {
         // select the correct date for the given sd
         let currentIndex = this.slides.getActiveIndex();
         this.colSelectedDate = this.schedule.dates[currentIndex].date;
+    }
+
+    private selectClosestDayInSchedule() {
+        const todaysDate = moment();
+        let index = 0;
+        if (this.schedule === undefined) {
+            this.logger.warn(`Didn't select closet date, no schedule!`);
+            return;
+        }
+        if (this.schedule.dates === undefined) {
+            this.logger.warn(`Didn't select closet date, no schedule dates!`);
+            return;
+        }
+        for (let date of this.schedule.dates.map(sd => sd.date)) {
+            if (moment(date).isAfter(todaysDate)) {
+                // use the previous index!
+                this.logger.info(`Selecting slide ${index} as it's directly before ${date}`);
+                setTimeout(() => {
+                    this.colSelectedDate = date;
+                    this.slides.slideTo(index);
+                }, 500);
+                return;
+            }
+            index++;
+        }
     }
 }

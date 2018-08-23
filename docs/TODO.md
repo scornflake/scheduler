@@ -11,6 +11,7 @@ TODO
     - Itd be nice for the server to send links to the app, for people to download
 - As an admin:
     - I want to see a list of when people are on (on their 'person' page? on the plan page?)
+        - Can see this on 'full'
 - How to test all navigation possibilities?
     - Basically, how to do SOME kind of UI testing?
 - Scheduler should:

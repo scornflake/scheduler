@@ -159,6 +159,7 @@ export class HomePage implements AfterContentInit, OnDestroy {
             // this.navCtrl.push('page-teams', {create: true});
             // this.navCtrl.push('page-plans', {create: true});
             // this.navCtrl.push('page-test-utils', {create: true});
+
             __firstTime = false;
         }
     }

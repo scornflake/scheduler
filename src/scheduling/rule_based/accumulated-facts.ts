@@ -1,4 +1,4 @@
-import {FixedRoleOnDate, OnThisDate, Rule, UsageWeightedSequential, WeightedRoles} from "./rules";
+import {FixedRoleOnDate, OnThisDate, Rule, WeightedRoles} from "./rules";
 import {dayAndHourForDate, throwOnInvalidDate} from "../common/date-utils";
 import {Person} from "../people";
 import {Exclusion, IAssignment, ScheduleAtDate} from "../shared";
@@ -341,19 +341,22 @@ export class AccumulatedFacts {
     }
 
     is_person_in_exclusion_zone(person: Person, role: Role, date_for_row: Date) {
+        let zones = this.get_exclusion_zones(person, role, date_for_row);
+        return zones.filter(z => z.includes_date(date_for_row)).length > 0;
+    }
+
+    get_exclusion_zones(person: Person, role: Role, date_for_row: Date): Array<Exclusion> {
         let exclusion_zones = this.exclusion_zones.get(person);
         if (!exclusion_zones) {
-            return false;
+            return [];
         }
 
         // lets find those zones relating directly to this role
         let zones_matching_role = exclusion_zones.filter(z => z.role.uuid == role.uuid);
         if (!zones_matching_role.length) {
-            return false;
+            return [];
         }
-
-        let containining_this_date = zones_matching_role.filter(z => z.includes_date(date_for_row));
-        return containining_this_date.length > 0;
+        return zones_matching_role;
     }
 
     place_person_in_role(assignment: IAssignment,

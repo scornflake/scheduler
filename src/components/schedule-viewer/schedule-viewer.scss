@@ -4,22 +4,39 @@ schedule-viewer {
       padding: 0px !important;
     }
     .heading {
+      background-color: map_get($colors, 'light');
       font-weight: bold;
+      display: inline-block;
+      padding-top: 5px !important;
       padding-left: 5px !important;
+      min-height: 3.7rem !important;
+      vertical-align: middle;
     }
     .range {
       border-left: 5px solid rgba(map_get($colors, 'dark'), 0.75);
+    }
+
+    /*
+    Select all 'first' columns in a set of consecutive rows having .range
+     */
+    ion-row .range.start {
+      border-top-left-radius: 8px;
+    }
+    ion-row .range.end {
+      border-bottom-left-radius: 8px;
     }
     .notrange {
       border-left: 5px solid transparent;
     }
     .even {
-      background-color: rgba(black, 0.05);
+      .data {
+        background-color: rgba(black, 0.05);
+      }
     }
     .selected, .clicked, .notselected {
-      padding-top: 5px;
-      padding-bottom: 5px;
-      padding-left: 5px;
+      padding-top: 5px !important;
+      padding-bottom: 5px !important;
+      padding-left: 5px !important;
       &.selected {
         color: white;
         background-color: rgba(map_get($colors, 'secondary'), 0.6);
@@ -39,7 +56,6 @@ schedule-viewer {
   .smallDate {
     border-bottom: 1px solid #eee !important;
     padding-bottom: 10px;
-    //margin-bottom: 10px;
     margin-top: 8px;
   }
 
@@ -47,7 +63,7 @@ schedule-viewer {
     .heading, .subheading {
       font-weight: bold;
       background: map_get($colors, 'primary');
-      color: white; //map_get($colors, 'light');
+      color: white; //map_get($colors, ' light ');
     }
 
     .horizScheduleGrid {
