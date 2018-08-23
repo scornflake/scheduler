@@ -15,6 +15,7 @@ import {ObjectWithUUID} from "../../scheduling/base-types";
 import {Subject} from "rxjs";
 import {SubMenuComponent} from "../../components/sub-menu/sub-menu";
 import * as pluralize from "pluralize";
+import {FullPagePreviewPage} from "../full-page-preview/full-page-preview";
 
 let __firstTime: boolean = true;
 
@@ -68,7 +69,8 @@ export class HomePage implements AfterContentInit, OnDestroy {
         let items = [
             {
                 title: `${numInvites} ${pluralize('invite', numInvites)}`,
-                handler: () => {}
+                handler: () => {
+                }
             },
             {
                 title: "Share",
@@ -77,7 +79,7 @@ export class HomePage implements AfterContentInit, OnDestroy {
             },
             {
                 title: "Show Full",
-                enabled: () => this.connectivity.onBrowser,
+                enabled: () => true,
                 handler: this.showInFullSize.bind(this)
             }
         ];
@@ -221,6 +223,10 @@ export class HomePage implements AfterContentInit, OnDestroy {
     }
 
     private showInFullSize() {
-        window.open("/#/full", '#fullscreen');
+        if (this.connectivity.onBrowser) {
+            window.open("/#/full", '#fullscreen');
+        } else {
+            this.navCtrl.push('page-full')
+        }
     }
 }

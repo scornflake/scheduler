@@ -1,5 +1,12 @@
 TODO
 ====
+- Full View
+    - If on tablet, doesnt look right
+        - Fix date column, left side
+        - Make roles scroll
+        - Word wrapping in columns is breaking the CSS grid drawing and also screwing up the header heights (see guitars)
+        - Provide more width for info
+        - Search bar on iOS is broken (the title shows through it)
 - PlanWizard doesn't work on android
     - text disappears when entering it
     - NEXT doesn't work on plan page (greyed out)
