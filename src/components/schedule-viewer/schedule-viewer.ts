@@ -11,6 +11,7 @@ import {Logger, LoggingService} from "ionic-logging-service";
 import {Role} from "../../scheduling/role";
 import {runInAction} from "mobx";
 import * as moment from "moment";
+import {AccessControlProvider} from "../../providers/access-control/access-control";
 
 @Component({
     // changeDetection: ChangeDetectionStrategy.OnPush,
@@ -18,6 +19,8 @@ import * as moment from "moment";
     templateUrl: 'schedule-viewer.html'
 })
 export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy {
+    private selectedButton: number = 0;
+
     @Input('schedule')
     set schedule(s: ScheduleWithRules) {
         runInAction(() => {
@@ -49,6 +52,7 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
 
     constructor(private store: RootStore,
                 private appRef: ApplicationRef,
+                private access: AccessControlProvider,
                 private logService: LoggingService,
                 public popoverCtrl: PopoverController) {
         this.logger = this.logService.getLogger('component.schedule.view')
@@ -70,6 +74,26 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
     }
 
     ngOnDestroy() {
+    }
+
+    showInfoClicked() {
+        this.selectedButton = 0;
+    }
+
+    showReasonsClicked() {
+        this.selectedButton = 1;
+    }
+
+    get showReasons():boolean {
+        return this.selectedButton == 1;
+    }
+
+    get showInfo():boolean {
+        return this.selectedButton == 0;
+    }
+
+    get isSuperuser(): boolean {
+        return this.access.isSuperuser();
     }
 
     @computed get observableSchedule(): ScheduleWithRules {
@@ -222,7 +246,7 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
             this.logger.info("Selecting: " + obj + " on " + date.toDateString() + " for " + role.name);
 
             this.store.ui_store.select(obj, date, role);
-            if(tick) {
+            if (tick) {
                 this.appRef.tick();
             }
         }
@@ -315,10 +339,10 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
                 // Select first match of this person
                 for (let sd of this.schedule.dates) {
                     let assign = sd.assignment_for_person(person);
-                    if(!assign) {
+                    if (!assign) {
                         continue;
                     }
-                    if(assign.roles) {
+                    if (assign.roles) {
                         if (assign.roles.length > 0) {
                             this.select(person, sd.date, assign.roles[0].name, false);
                             return;

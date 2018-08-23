@@ -1,5 +1,11 @@
 schedule-viewer {
   .full {
+    .tabs {
+      button {
+        margin: 0;
+        height: 3.7rem !important;
+      }
+    }
     .col {
       padding: 0px !important;
     }

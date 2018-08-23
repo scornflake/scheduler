@@ -1,13 +1,24 @@
 <div *ngIf="person">
     <div *ngIf="schedule as sd">
         <ion-list-header color="light">Scheduled On</ion-list-header>
-        <ion-item *ngFor="let sd of scheduled_dates">
-            <ion-label class="hidden-sm-up">
-                {{sd.date|date}} - {{sd.score_for(person).roles|pluck:'name'|join:", "}}
-            </ion-label>
-            <ion-label class="hidden-xs-down">
-                {{sd.date|date:'longDate'}} - {{sd.score_for(person).roles|pluck:'name'|join:", "}}
-            </ion-label>
-        </ion-item>
+        <ion-list *ngIf="stacked; else notStacked">
+            <ion-item *ngFor="let sd of scheduled_dates">
+                <ion-label stacked>{{sd.date|date}}</ion-label>
+                <ion-input [readonly]="true" [value]="sd.score_for(person)?.roles|pluck:'name'|join:', '"></ion-input>
+            </ion-item>
+        </ion-list>
+
+        <ng-template #notStacked>
+            <ion-list no-padding>
+                <ion-item *ngFor="let sd of scheduled_dates">
+                    <ion-label class="hidden-sm-up">
+                        {{sd.date|date}} - {{sd.score_for(person)?.roles|pluck:'name'|join:", "}}
+                    </ion-label>
+                    <ion-label class="hidden-xs-down">
+                        {{sd.date|date:'longDate'}} - {{sd.score_for(person)?.roles|pluck:'name'|join:", "}}
+                    </ion-label>
+                </ion-item>
+            </ion-list>
+        </ng-template>
     </div>
 </div>

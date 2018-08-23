@@ -1,4 +1,4 @@
-import {Component, Input} from '@angular/core';
+import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
 import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
 import {RootStore} from "../../store/root";
 import {Person} from "../../scheduling/people";
@@ -12,20 +12,13 @@ import {computed} from "mobx-angular";
 export class PersonScheduleComponent {
     @Input() schedule: ScheduleWithRules;
     @Input() person: Person;
+    @Input() stacked: boolean = false;
 
     constructor(public store: RootStore) {
     }
 
-    // ngDoCheck() {
-    //     console.warn(`PersonScheduleComponent is being checked`);
-    // }
-    //
-    // ngOnChanges(changes) {
-    //     console.warn(`PersonScheduleComponent has changes`)
-    // }
-
     @computed get scheduled_dates(): Array<ScheduleAtDate> {
-        if (!this.person || !this.schedule) {
+        if (this.person === undefined || this.schedule === undefined || this.person == null || this.schedule == null) {
             console.warn(`no schedule for ${this.person} so return []`);
             return [];
         }

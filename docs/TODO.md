@@ -17,6 +17,9 @@ TODO
 - Scheduler should:
     - As a user, not overly concerned with the plan 'range', so prob don't need to show it
     - Allow me to quickly find when someone is on (Jo called mentioned dates, I went to the SS instead cos I could see it. Want to make my default action the app/site)
+        - How do I enable key shortcuts? e.g: press S to show the search bar.
+        - Cursor keys to move selection
+    - BUG: When selecting people, the dates in 'Scheduled On' dont change. Dunno why.
     - Show me the number of weeks/events left in the schedule before it's end (e.g: 4 weeks left)
 - Login validation should show only if > 0 chars:
     - don't show 'email should be valid' if nothing typed in
