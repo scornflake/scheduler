@@ -1,9 +1,8 @@
-import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
+import {Component, Input} from '@angular/core';
 import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
 import {RootStore} from "../../store/root";
 import {Person} from "../../scheduling/people";
 import {ScheduleAtDate} from "../../scheduling/shared";
-import {computed} from "mobx-angular";
 
 @Component({
     selector: 'person-schedule',
@@ -11,22 +10,33 @@ import {computed} from "mobx-angular";
 })
 export class PersonScheduleComponent {
     @Input() schedule: ScheduleWithRules;
-    @Input() person: Person;
+
+    @Input('person')
+    set person(newPerson: Person) {
+        this._person = newPerson;
+    }
+
+    get person() {
+        return this._person;
+    }
+
     @Input() stacked: boolean = false;
+
+    private _person: Person;
 
     constructor(public store: RootStore) {
     }
 
-    @computed get scheduled_dates(): Array<ScheduleAtDate> {
-        if (this.person === undefined || this.schedule === undefined || this.person == null || this.schedule == null) {
-            console.warn(`no schedule for ${this.person} so return []`);
+    get scheduled_dates(): Array<ScheduleAtDate> {
+        if (this._person === undefined || this.schedule === undefined || this._person == null || this.schedule == null) {
+            console.warn(`no schedule for ${this._person} so return []`);
             return [];
         }
         return this.schedule.dates.filter(sd => {
             let allPeople = sd.people;
-            // let dump = allPeople.map(p => `${p.email}=${p.uuid}`);
-            // console.log(`people for: ${sd.date} = ${SafeJSON.stringify(dump)}`);
-            return allPeople.indexOf(this.person) != -1;
+            // let dump = allPeople.map(p => `${p.name}=${p.uuid}`);
+            // console.log(`people for: ${sd.date} = ${SWBSafeJSON.stringify(dump)}`);
+            return allPeople.indexOf(this._person) != -1;
         });
     }
 }

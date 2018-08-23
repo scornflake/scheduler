@@ -40,9 +40,9 @@
                         <ion-col *ngIf="store.ui_store.have_selection; else noInfo">
                             <div *ngIf="store.schedule$|async as schedule">
                                 <h6 text-center>{{selected_person.name}}</h6>
-                                <div *ngIf="selected_person as person">
-                                    <person-schedule [stacked]="true" [schedule]="schedule" [person]="person"></person-schedule>
-                                    <person-unavailable [person]="person"></person-unavailable>
+                                <div *ngIf="selected_person">
+                                    <person-schedule [stacked]="true" [schedule]="schedule" [person]="selected_person"></person-schedule>
+                                    <person-unavailable [person]="selected_person"></person-unavailable>
                                 </div>
                             </div>
                         </ion-col>
