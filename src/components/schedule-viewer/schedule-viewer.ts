@@ -33,10 +33,17 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
     @Input() full: boolean = false;
     @Input() selectClosestDay: boolean = false;
 
+    @Input('search')
+    set search(searchString: string) {
+        this._searchString = searchString;
+        this.selectFirstMatchingAssignmentFor(this._searchString);
+    }
+
     @ViewChild(Slides) slides: Slides;
 
     colSelectedDate: Date;
     private logger: Logger;
+    private _searchString: string;
 
     @observable private _schedule: ScheduleWithRules;
 
@@ -204,13 +211,20 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
         }
     }
 
-    select(obj: Object, date: Date, role_name: string) {
+    deselect() {
+        this.store.ui_store.clear_selection();
+        // this.appRef.tick();
+    }
+
+    select(obj: Object, date: Date, role_name: string, tick: boolean = true) {
         if (obj instanceof Person) {
             let role = this.schedule.plan.find_role(role_name);
             this.logger.info("Selecting: " + obj + " on " + date.toDateString() + " for " + role.name);
 
             this.store.ui_store.select(obj, date, role);
-            this.appRef.tick();
+            if(tick) {
+                this.appRef.tick();
+            }
         }
     }
 
@@ -277,6 +291,41 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
                 return;
             }
             index++;
+        }
+    }
+
+    private selectFirstMatchingAssignmentFor(search: string) {
+        if (search === undefined) {
+            return;
+        }
+        if (search == '') {
+            this.deselect();
+            return;
+        }
+
+        if (!this.store.schedule) {
+            this.deselect();
+            return;
+        }
+
+        let plan = this.store.schedule.plan;
+
+        for (let person of plan.team.people) {
+            if (person.name.toLowerCase().indexOf(search.toLowerCase()) != -1) {
+                // Select first match of this person
+                for (let sd of this.schedule.dates) {
+                    let assign = sd.assignment_for_person(person);
+                    if(!assign) {
+                        continue;
+                    }
+                    if(assign.roles) {
+                        if (assign.roles.length > 0) {
+                            this.select(person, sd.date, assign.roles[0].name, false);
+                            return;
+                        }
+                    }
+                }
+            }
         }
     }
 }

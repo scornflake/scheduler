@@ -10,6 +10,7 @@ import {Plan} from "../../scheduling/plan";
 import {computed, observable} from "mobx-angular";
 import {ResourceType} from "../../providers/access-control/access-control";
 import {PageUtils} from "../page-utils";
+import {ScheduleWithRules} from "../../scheduling/rule_based/scheduler";
 
 @IonicPage({
     name: 'page-person-assignment',

@@ -26,7 +26,8 @@
             </ion-buttons>
         </ion-list-header>
         <ion-item-group>
-            <role-summary [readonly]="!canEditPerson" [assignment]="assignment" (tapped)="role_tapped($event)"></role-summary>
+            <role-summary [readonly]="!canEditPerson" [assignment]="assignment"
+                          (tapped)="role_tapped($event)"></role-summary>
         </ion-item-group>
 
         <ion-list-header color="light">
@@ -42,5 +43,12 @@
         <!--</ion-item-group>-->
 
         <person-unavailable [person]="person" [readonly]="!canEditPerson"></person-unavailable>
+
+        <div *ngIf="canEditPerson">
+            <person-schedule
+                    *ngIf="this.rootStore.schedule$|async as schedule"
+                    [schedule]="schedule"
+                    [person]="person"></person-schedule>
+        </div>
     </div>
 </ion-content>

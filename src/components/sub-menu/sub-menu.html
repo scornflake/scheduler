@@ -1,7 +1,9 @@
 <ion-content>
     <ion-list>
-        <ion-item *ngFor="let item of items" (tap)="callItemHandler(item)">
-            <ion-label *ngIf="itemVisible(item)">{{item.title}}</ion-label>
+        <ion-item *ngFor="let item of this.visibleItems"
+                  (tap)="callItemHandler(item)">
+            <ion-label [ngClass]="{'disabled': !testItemFor(item, 'enabled')}">{{item.title}}</ion-label>
         </ion-item>
     </ion-list>
 </ion-content>
+

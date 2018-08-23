@@ -1,9 +1,12 @@
 <ion-header>
-
     <ion-navbar>
-        <ion-title>Schedule Viewer</ion-title>
+        <ion-title>Schedule Viewer<span *ngIf="store.selectedPlan$ | async as plan"> for {{plan.start_date|date:'MMMM d'}} - {{plan.end_date|date:'MMMM d'}}</span>
+        </ion-title>
+        <ion-searchbar *ngIf="showSearch" [(ngModel)]="searchString" [showCancelButton]="true" (ionCancel)="showSearch = !showSearch"></ion-searchbar>
+        <ion-buttons end *ngIf="!showSearch">
+            <button ion-button (click)="showSearch = !showSearch">Search</button>
+        </ion-buttons>
     </ion-navbar>
-
 </ion-header>
 
 
@@ -17,6 +20,7 @@
                 <ng-template #main>
                     <div *ngIf="store.schedule$ | async as schedule">
                         <schedule-viewer [schedule]="schedule"
+                                         [search]="searchString"
                                          [full]="true"
                                          [me]="store.loggedInPerson$|async"></schedule-viewer>
                     </div>

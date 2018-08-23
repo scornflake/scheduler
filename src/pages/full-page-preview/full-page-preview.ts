@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, Input} from '@angular/core';
 import {IonicPage, NavController, NavParams} from 'ionic-angular';
 import {RootStore} from "../../store/root";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
@@ -18,6 +18,9 @@ import {delay, takeUntil} from "rxjs/operators";
 })
 export class FullPagePreviewPage {
     private ngUnsubscribe: Subject<any>;
+    private _searchString: string;
+
+    showSearch: boolean = false;
 
     constructor(public navCtrl: NavController,
                 public store: RootStore,
@@ -35,6 +38,14 @@ export class FullPagePreviewPage {
     ngOnDestroy() {
         this.ngUnsubscribe.next();
         this.ngUnsubscribe.complete();
+    }
+
+    set searchString(value: string) {
+        this._searchString = value;
+    }
+
+    get searchString(): string {
+        return this._searchString;
     }
 
     private doStartupLifecycle() {

@@ -14,6 +14,7 @@ import {ResourceType} from "../../providers/access-control/access-control";
 import {ObjectWithUUID} from "../../scheduling/base-types";
 import {Subject} from "rxjs";
 import {SubMenuComponent} from "../../components/sub-menu/sub-menu";
+import * as pluralize from "pluralize";
 
 let __firstTime: boolean = true;
 
@@ -63,15 +64,20 @@ export class HomePage implements AfterContentInit, OnDestroy {
     }
 
     public showSubmenu(ev: UIEvent) {
+        let numInvites = this.store.loggedInPerson.invites.length;
         let items = [
             {
+                title: `${numInvites} ${pluralize('invite', numInvites)}`,
+                handler: () => {}
+            },
+            {
                 title: "Share",
-                visible: () => this.canShare,
+                enabled: () => this.canShare,
                 handler: this.shareSchedule.bind(this)
             },
             {
                 title: "Show Full",
-                visible: () => this.connectivity.onBrowser,
+                enabled: () => this.connectivity.onBrowser,
                 handler: this.showInFullSize.bind(this)
             }
         ];

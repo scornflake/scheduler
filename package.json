@@ -45,7 +45,7 @@
     "@types/gapi.client": "^1.0.0",
     "@types/gapi.client.drive": "^3.0.1",
     "@types/gapi.client.sheets": "^4.0.0",
-    "@types/pluralize": "^0.0.28",
+    "@types/pluralize": "^0.0.29",
     "@types/pouchdb-find": "^6.3.2",
     "accesscontrol": "^2.2.1",
     "angular-pipes": "^6.5.3",
