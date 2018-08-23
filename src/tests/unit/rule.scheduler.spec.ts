@@ -206,6 +206,8 @@ describe('role scheduler', () => {
         // Put neil on Guitar, and daniel on guitar as well
         // Should see that the maximum number of placements in 'guitar' is one, not two.
         let roleToTestWith = defaultElectricGuitar;
+        let oldMax = roleToTestWith.maximum_wanted;
+        roleToTestWith.maximum_wanted = 1;
         expect(roleToTestWith.maximum_wanted).toBe(1);
         plan.assignmentFor(neil).remove_role(sound).addRole(roleToTestWith);
         neil.availability = new Availability(1, AvailabilityUnit.AVAIL_ANYTIME);
@@ -222,6 +224,8 @@ describe('role scheduler', () => {
         expect(firstSchedule).not.toBeNull("expected to get a firstSchedule");
         expect(firstSchedule.people_in_role(roleToTestWith).length).toBe(1, "expected one person to be in role 'accoustic guitar'");
         console.log(schedule.jsonResult());
+
+        roleToTestWith.maximum_wanted = oldMax;
     });
 
     it('distributes among roles evenly', () => {
