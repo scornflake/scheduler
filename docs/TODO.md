@@ -1,7 +1,7 @@
 TODO
 ====
 - Full View
-    - If on tablet, doesnt look right
+    - If on tablet, doesn't look right
         - Fix date column, left side
         - Make roles scroll
         - Word wrapping in columns is breaking the CSS grid drawing and also screwing up the header heights (see guitars)

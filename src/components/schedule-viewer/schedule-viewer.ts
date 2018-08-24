@@ -25,6 +25,7 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
     set schedule(s: ScheduleWithRules) {
         runInAction(() => {
             this._schedule = s;
+            this.afterScheduleSet();
         });
     };
 
@@ -59,18 +60,50 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
     }
 
     ngOnInit() {
-        this.colSelectedDate = this.store.loggedInPerson.preferences.last_selected_date;
-        if (!this.colSelectedDate) {
-            if (this.schedule) {
-                this.colSelectedDate = this.schedule.dates[0].date;
-            }
-        }
+        this.afterScheduleSet();
     }
 
     ngAfterViewInit() {
-        if (this.selectClosestDay) {
-            this.selectClosestDayInSchedule();
+    }
+
+    // slideTo2(index: number, thenDo): Observable<any> {
+    //     const startedWaiting = moment();
+    //     const maximumWaitTimeInSeconds = 3;
+    //
+    //     const isReady = val => this.slides._snapGrid !== undefined;
+    //
+    //     const doTheThing = interval(50).pipe(
+    //         timeout(maximumWaitTimeInSeconds * 1000),
+    //
+    //     );
+    //
+    //     return doTheThing.pipe(
+    //         takeUntil(filter(isReady))
+    //     )
+    // }
+
+    slideTo(index: number, thenDo) {
+        if (this.slides === undefined || this.slides._snapGrid === undefined) {
+            console.warn(`Try again to ${index}... no slides yet`);
+            setTimeout(() => {
+                this.slideTo(index, thenDo);
+            }, 50)
+        } else {
+            this.slides.slideTo(index);
+            thenDo();
         }
+    }
+
+    private afterScheduleSet() {
+        this.slideTo(0, () => {
+            this.colSelectedDate = this.store.loggedInPerson.preferences.last_selected_date;
+            if (!this.colSelectedDate) {
+                if (this.schedule) {
+                    this.colSelectedDate = this.schedule.dates[0].date;
+                }
+            }
+            this.selectClosestDayInSchedule();
+        });
     }
 
     ngOnDestroy() {
@@ -84,11 +117,11 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
         this.selectedButton = 1;
     }
 
-    get showReasons():boolean {
+    get showReasons(): boolean {
         return this.selectedButton == 1;
     }
 
-    get showInfo():boolean {
+    get showInfo(): boolean {
         return this.selectedButton == 0;
     }
 
@@ -294,6 +327,13 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
     }
 
     private selectClosestDayInSchedule() {
+        if (!this.selectClosestDay) {
+            return;
+        }
+        if (!this.schedule) {
+            return;
+        }
+
         const todaysDate = moment();
         let index = 0;
         if (this.schedule === undefined) {
@@ -308,10 +348,9 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
             if (moment(date).isAfter(todaysDate)) {
                 // use the previous index!
                 this.logger.info(`Selecting slide ${index} as it's directly before ${date}`);
-                setTimeout(() => {
+                this.slideTo(index, () => {
                     this.colSelectedDate = date;
-                    this.slides.slideTo(index);
-                }, 500);
+                });
                 return;
             }
             index++;
