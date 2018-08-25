@@ -46,6 +46,8 @@ import {doAppInitializersDeterministic} from "../common/app-initializer";
 import {AccessControlProvider} from '../providers/access-control/access-control';
 import {SharePageModule} from "../pages/share/share.module";
 import {MyErrorHandler} from "./the.error.handler";
+import {AgGridModule} from "../../node_modules/ag-grid-angular/src/aggrid.module";
+import {ScheduleViewerComponent} from "../components/schedule-viewer/schedule-viewer";
 
 
 let config = {
@@ -94,6 +96,7 @@ export function ResponsiveDefinition() {
         SchedulerDirectivesModule,
         JWTAPIModule,
         SharePageModule,
+        AgGridModule.withComponents([]),
     ],
     bootstrap: [IonicApp],
     entryComponents: [

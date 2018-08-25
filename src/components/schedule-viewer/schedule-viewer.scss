@@ -1,4 +1,21 @@
 schedule-viewer {
+  .rowModeGrid {
+    width: 100%;
+    position: absolute;
+    top: 0;
+    bottom: 50px;
+    display: inline-block;
+
+    ag-grid-angular {
+      width: 100%;
+      height: 100%;
+    }
+
+    .ag-cell {
+      white-space: normal !important;
+    }
+  }
+
   .full {
     .tabs {
       button {

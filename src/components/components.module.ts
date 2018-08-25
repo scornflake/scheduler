@@ -24,6 +24,7 @@ import {WelcomeWizardComponent} from './welcome-wizard/welcome-wizard';
 import {SchedulerDirectivesModule} from "../common/directives";
 import {NotificationsComponent} from './notifications/notifications';
 import {SubMenuComponent} from './sub-menu/sub-menu';
+import {AgGridModule} from "../../node_modules/ag-grid-angular/src/aggrid.module";
 
 @NgModule({
     declarations: [
@@ -54,6 +55,7 @@ import {SubMenuComponent} from './sub-menu/sub-menu';
         MobxAngularModule,
         SchedulerDirectivesModule,
         ResponsiveModule,
+        AgGridModule.withComponents([ScheduleViewerComponent]),
     ],
     entryComponents: [
         CalendarComponent,

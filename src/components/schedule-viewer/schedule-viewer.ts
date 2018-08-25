@@ -1,4 +1,14 @@
-import {AfterViewInit, ApplicationRef, Component, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {
+    AfterViewInit,
+    ApplicationRef,
+    Component,
+    HostListener,
+    Input,
+    NgZone,
+    OnDestroy,
+    OnInit,
+    ViewChild
+} from '@angular/core';
 import {isArray} from "util";
 import {Person} from "../../scheduling/people";
 import {PopoverController, Slides} from "ionic-angular";
@@ -11,7 +21,9 @@ import {Logger, LoggingService} from "ionic-logging-service";
 import {Role} from "../../scheduling/role";
 import {runInAction} from "mobx";
 import * as moment from "moment";
+import {Moment} from "moment";
 import {AccessControlProvider} from "../../providers/access-control/access-control";
+import {AgGridNg2} from "../../../node_modules/ag-grid-angular/src/agGridNg2";
 
 @Component({
     // changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,6 +32,9 @@ import {AccessControlProvider} from "../../providers/access-control/access-contr
 })
 export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy {
     private selectedButton: number = 0;
+    private _agGridHeaders: Array<Object>;
+    private _agGridRows: Array<Object>;
+    private resizeTimeout: NodeJS.Timer;
 
     @Input('schedule')
     set schedule(s: ScheduleWithRules) {
@@ -44,6 +59,7 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
     }
 
     @ViewChild(Slides) slides: Slides;
+    @ViewChild(AgGridNg2) grid: AgGridNg2;
 
     colSelectedDate: Date;
     private logger: Logger;
@@ -53,6 +69,7 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
 
     constructor(private store: RootStore,
                 private appRef: ApplicationRef,
+                private zone: NgZone,
                 private access: AccessControlProvider,
                 private logService: LoggingService,
                 public popoverCtrl: PopoverController) {
@@ -82,12 +99,19 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
     //     )
     // }
 
-    slideTo(index: number, thenDo) {
+    slideTo(index: number, thenDo, startedAt: Moment = moment()) {
+        const maxTimeToWaitInSeconds = 3;
+        let timeDifferenceInSeconds = moment().diff(startedAt, 'second');
+        if (timeDifferenceInSeconds > maxTimeToWaitInSeconds) {
+            console.warn(`More than ${maxTimeToWaitInSeconds} seconds. Giving up.`);
+            thenDo();
+            return;
+        }
         if (this.slides === undefined || this.slides._snapGrid === undefined) {
-            console.warn(`Try again to ${index}... no slides yet`);
+            // console.warn(`Try again to ${index}... no slides yet (${timeDifferenceInSeconds})`);
             setTimeout(() => {
-                this.slideTo(index, thenDo);
-            }, 50)
+                this.slideTo(index, thenDo, startedAt);
+            }, 100)
         } else {
             this.slides.slideTo(index);
             thenDo();
@@ -95,15 +119,19 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
     }
 
     private afterScheduleSet() {
-        this.slideTo(0, () => {
-            this.colSelectedDate = this.store.loggedInPerson.preferences.last_selected_date;
-            if (!this.colSelectedDate) {
-                if (this.schedule) {
-                    this.colSelectedDate = this.schedule.dates[0].date;
+        if (!this.rowMode) {
+            this.slideTo(0, () => {
+                this.colSelectedDate = this.store.loggedInPerson.preferences.last_selected_date;
+                if (!this.colSelectedDate) {
+                    if (this.schedule) {
+                        this.colSelectedDate = this.schedule.dates[0].date;
+                    }
                 }
-            }
-            this.selectClosestDayInSchedule();
-        });
+                this.selectClosestDayInSchedule();
+            });
+        } else {
+            this.createAgGridData();
+        }
     }
 
     ngOnDestroy() {
@@ -391,4 +419,66 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
             }
         }
     }
+
+    get agRowData() {
+        return this._agGridRows;
+    }
+
+    get agColumnDefs() {
+        if (this._agGridHeaders === undefined) {
+            return [];
+        }
+        return this._agGridHeaders;
+    }
+
+    @HostListener('window:resize', ['$event'])
+    private handleResize(event) {
+        clearTimeout(this.resizeTimeout);
+        this.resizeTimeout = setTimeout(() => {
+            // console.log(`Windows resized`);
+            this.autoSizeGrid();
+        }, 33)
+    }
+
+    private createAgGridData() {
+        this._agGridHeaders = this.headers.map(h => {
+            let columnDef = {
+                headerName: h.name.toUpperCase(),
+                field: h.name,
+                autoHeight: true,
+                valueFormatter: (params) => {
+                    let theValueArray = this.value_as_array(params.value);
+                    return theValueArray.map(v => this.textFor(v)).join(", ");
+                }
+            };
+            if (h.name == 'Date') {
+                columnDef.field = 'date';
+                columnDef['suppressSizeToFit'] = true;
+                columnDef['width'] = 130;
+                // @ts-ignore
+                columnDef['valueFormatter'] = 'value.toDateString()';
+                columnDef['pinned'] = 'left';
+            }
+            return columnDef
+        });
+        this._agGridRows = this.rows;
+
+        setTimeout(() => {
+            this.autoSizeGrid();
+        }, 50);
+    }
+
+    autoHeightGrid() {
+        this.grid.api.resetRowHeights();
+    }
+
+    onGridReady(event) {
+        this.autoSizeGrid();
+    }
+
+    autoSizeGrid() {
+        this.grid.api.sizeColumnsToFit();
+        this.autoHeightGrid();
+    }
+
 }

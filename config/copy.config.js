@@ -26,6 +26,10 @@ module.exports = {
     copySettings: {
         src: ['{{ROOT}}/environments/' + envDirectory + "/*.json"],
         dest: '{{WWW}}/assets'
+    },
+    copyAGGridCSS: {
+        src: ['{{ROOT}}/node_modules/ag-grid/dist/styles/**'],
+        dest: '{{WWW}}/assets/css'
     }
 };
 
