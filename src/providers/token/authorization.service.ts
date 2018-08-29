@@ -8,6 +8,7 @@ import {Logger, LoggingService} from "ionic-logging-service";
 import {JwtHelperService} from '@auth0/angular-jwt';
 import {isString} from "util";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
+import {timeout} from "rxjs/operators";
 
 export enum TokenStates {
     TokenOK,
@@ -33,7 +34,7 @@ export class AuthorizationService {
     login(username: string, password: string): Observable<LoginResponse> {
         let url = this.endpoints.login(username, password);
         // this.logger.info(`Calling ${url}`);
-        const loginObservable = this.httpClient.get<LoginResponse>(url);
+        const loginObservable = this.httpClient.get<LoginResponse>(url).pipe(timeout(15));
 
         const subject = new ReplaySubject<LoginResponse>(1);
         subject.subscribe((r: LoginResponse) => {

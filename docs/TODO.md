@@ -2,6 +2,8 @@ TODO
 ====
 - Full View
     - Get sizing right, so that it can scroll
+    - Select people
+    - Show info / reasons
     - If on tablet, doesn't look right
         - Fix date column, left side.
             - Not move it
@@ -30,6 +32,7 @@ TODO
         - How do I enable key shortcuts? e.g: press S to show the search bar.
         - Cursor keys to move selection
     - Show me the number of weeks/events left in the schedule before it's end (e.g: 4 weeks left)
+- Login should timeout
 - Login validation should show only if > 0 chars:
     - don't show 'email should be valid' if nothing typed in
     - don't show 'email should be valid' or 'password blah' until first 'login' is pressed

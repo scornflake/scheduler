@@ -5,6 +5,10 @@ schedule-viewer {
     min-height: 100%;
     //border: 5px solid green;
 
+    //position: absolute;
+    //top: 0;
+    //bottom: 0;
+
     ag-grid-angular {
       //border: 2px solid red;
       height: 100%;
@@ -23,7 +27,7 @@ schedule-viewer {
       }
     }
     .col {
-      padding: 0px !important;
+      padding: 0 !important;
     }
     .heading {
       background-color: map_get($colors, 'light');

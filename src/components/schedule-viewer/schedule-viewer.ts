@@ -23,7 +23,7 @@ import {runInAction} from "mobx";
 import * as moment from "moment";
 import {Moment} from "moment";
 import {AccessControlProvider} from "../../providers/access-control/access-control";
-import {AgGridNg2} from "../../../node_modules/ag-grid-angular/src/agGridNg2";
+import {AgGridNg2} from "ag-grid-angular/src/agGridNg2";
 
 @Component({
     // changeDetection: ChangeDetectionStrategy.OnPush,
@@ -445,6 +445,7 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
             let columnDef = {
                 headerName: h.name.toUpperCase(),
                 field: h.name,
+                minWidth: 100,
                 autoHeight: true,
                 valueFormatter: (params) => {
                     let theValueArray = this.value_as_array(params.value);
@@ -457,6 +458,7 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
                 columnDef['width'] = 130;
                 // @ts-ignore
                 columnDef['valueFormatter'] = 'value.toDateString()';
+                columnDef['suppressMovable'] = true;
                 columnDef['pinned'] = 'left';
             }
             return columnDef

@@ -7,7 +7,7 @@ export function doAppInitializersDeterministic(config: ConfigurationService,
                                                logging: LoggingService,
                                                state: StateProvider,
                                                endpoints: EndpointsProvider
-                                               ) {
+) {
     return async () => {
         console.log(`Loading settings...`);
         await config.load("assets/settings.json");
@@ -26,15 +26,16 @@ export function doAppInitializersDeterministic(config: ConfigurationService,
 
 
 why it fails:
-- In general, because there's a race between constructors and APP_INITIALIZERs
-- cos the App isn't initialized yet so the LogWrapper doesn't have an injector0, so it can't provide a logger.
+- In general, because there's a race between constructors and APP_INITIALIZERs.
+- Constructors are given various instantiated objects (with app initializers), but these initializers havn't fired yet.
+- So the LogWrapper doesn't have an injector, so it can't provide a logger.
 
 
 - Is there a way to init Logging... once. Without using an AppInitializer?
 - Logging needs the ConfigService.
 
 So neither of these can be mentioned in an APP_INITIALIZER (Im guessing?)
-Hmm. Nah. That just configures it. It shoudl be OK to get instances before config.
+Hmm. Nah. That just configures it. It should be OK to get instances before config.
 
 Prob is that LogWrapper, used in constructors, can be used BEFORE LogService.
 Either: Use LogService in all constructors, or use LogWrapper and NEVER inject
