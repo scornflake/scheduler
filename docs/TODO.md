@@ -115,3 +115,18 @@ What is known to be broken
     - Plan name (a segment) doesn't update on main page, if the schedule name is changed on another device
 
 
+
+
+
+Talking with Jeremy
+====
+- Role assignment to person when creating the team/people in the first place (two columns)?
+    - Nope, not if we're removing teams?
+- Clear the input field on 'new plan' when entering text
+- When setting a date, it'd be nice to show a calendar
+- Should warn of people that are not assigned to any role
+- Tap to add role on the 'assignment details' header
+- 'add person to plan' - should be a full screen selector, with selection checkboxes, search. (almost like a full 'people' page)
+- Doesn't show scheduled stuff for a plan that's being created, and isn't selected
+- Teams can be removed
+    - Put Roles on Plan (so a plan only shows those roles)
