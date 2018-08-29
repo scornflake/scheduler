@@ -1,8 +1,11 @@
 TODO
 ====
 - Full View
+    - Get sizing right, so that it can scroll
     - If on tablet, doesn't look right
-        - Fix date column, left side
+        - Fix date column, left side.
+            - Not move it
+            - Cant resize it
         - Make roles scroll
         - Word wrapping in columns is breaking the CSS grid drawing and also screwing up the header heights (see guitars)
         - Provide more width for info

@@ -1,83 +1,79 @@
 <div *mobxTraceAutorun>
     <div *ngIf="rowMode; else colMode" class="rowModeGrid">
         <button ion-button (click)="autoSizeGrid()">Size</button>
-        <ion-grid no-padding>
-            <ion-row>
-                <ion-col>
-                    <ag-grid-angular
-                            class="ag-theme-balham"
-                            (gridReady)="onGridReady($event)"
-                            [headerHeight]="50"
-                            [enableColResize]="true"
-                            [gridAutoHeight]="true"
-                            [autoSizePadding]="30"
-                            [rowData]="agRowData"
-                            [columnDefs]="agColumnDefs"
-                    >
-                    </ag-grid-angular>
-                </ion-col>
-            </ion-row>
-        </ion-grid>
+        <div class="gridContainer" ion-fixed>
+            <ag-grid-angular
+                    class="ag-theme-balham"
+                    (gridReady)="onGridReady($event)"
+                    [headerHeight]="50"
+                    [enableColResize]="true"
+                    [gridAutoHeight]="false"
+                    [autoSizePadding]="30"
+                    [rowData]="agRowData"
+                    [columnDefs]="agColumnDefs"
+            >
+            </ag-grid-angular>
+        </div>
         <!--<ion-grid class="full" no-padding>-->
-            <!--<ion-row>-->
-                <!--<ion-col>-->
-                    <!--<ion-row align-items-center>-->
-                        <!--<ion-col class="heading" *ngFor="let header of headers">{{header.name|uppercase}}</ion-col>-->
-                    <!--</ion-row>-->
-                    <!--<ion-row *ngFor="let row of rows; let i = index" [ngClass]="{'even':i % 2 == 0}">-->
-                        <!--<ion-col class="data notselected">-->
-                            <!--{{row['date']?.toDateString()}}-->
-                        <!--</ion-col>-->
-                        <!--<ion-col *ngFor="let key of keys_for_row(row); let i = index"-->
-                                 <!--class="data"-->
-                                 <!--[ngClass]="{'range':in_exclusion_zone(row, key), 'notrange':!in_exclusion_zone(row, key)}"-->
-                        <!--&gt;-->
-                            <!--<div *ngFor="let obj of value_as_array(row[key])"-->
-                                 <!--[ngClass]="{-->
-                                     <!--'selected':selected_and_in_role(obj, key),-->
-                                     <!--'notselected':!selected_and_in_role(obj, key),-->
-                                     <!--'clicked':clicked(obj, row['date'])-->
-                                     <!--}"-->
-                                 <!--(click)="select(obj, row['date'], key)">-->
-                                <!--{{textFor(obj)}}-->
-                            <!--</div>-->
-                        <!--</ion-col>-->
-                    <!--</ion-row>-->
-                <!--</ion-col>-->
+        <!--<ion-row>-->
+        <!--<ion-col>-->
+        <!--<ion-row align-items-center>-->
+        <!--<ion-col class="heading" *ngFor="let header of headers">{{header.name|uppercase}}</ion-col>-->
+        <!--</ion-row>-->
+        <!--<ion-row *ngFor="let row of rows; let i = index" [ngClass]="{'even':i % 2 == 0}">-->
+        <!--<ion-col class="data notselected">-->
+        <!--{{row['date']?.toDateString()}}-->
+        <!--</ion-col>-->
+        <!--<ion-col *ngFor="let key of keys_for_row(row); let i = index"-->
+        <!--class="data"-->
+        <!--[ngClass]="{'range':in_exclusion_zone(row, key), 'notrange':!in_exclusion_zone(row, key)}"-->
+        <!--&gt;-->
+        <!--<div *ngFor="let obj of value_as_array(row[key])"-->
+        <!--[ngClass]="{-->
+        <!--'selected':selected_and_in_role(obj, key),-->
+        <!--'notselected':!selected_and_in_role(obj, key),-->
+        <!--'clicked':clicked(obj, row['date'])-->
+        <!--}"-->
+        <!--(click)="select(obj, row['date'], key)">-->
+        <!--{{textFor(obj)}}-->
+        <!--</div>-->
+        <!--</ion-col>-->
+        <!--</ion-row>-->
+        <!--</ion-col>-->
 
-                <!--<ion-col col-2>-->
-                    <!--<ion-row class="tabs">-->
-                        <!--<ion-col>-->
-                            <!--<button full ion-button color="light" (click)="showInfoClicked()">Info</button>-->
-                        <!--</ion-col>-->
-                        <!--<ion-col *ngIf="isSuperuser">-->
-                            <!--<button full ion-button color="light" (click)="showReasonsClicked()">Reasons</button>-->
-                        <!--</ion-col>-->
-                    <!--</ion-row>-->
-                    <!--<ion-row *ngIf="showInfo">-->
-                        <!--<ion-col *ngIf="store.ui_store.have_selection; else noInfo">-->
-                            <!--<div *ngIf="store.schedule$|async as schedule">-->
-                                <!--<h6 text-center>{{selected_person.name}}</h6>-->
-                                <!--<div *ngIf="selected_person">-->
-                                    <!--<person-schedule [stacked]="true" [schedule]="schedule"-->
-                                                     <!--[person]="selected_person"></person-schedule>-->
-                                    <!--<person-unavailable [person]="selected_person"></person-unavailable>-->
-                                <!--</div>-->
-                            <!--</div>-->
-                        <!--</ion-col>-->
-                        <!--<ng-template ion-col #noInfo></ng-template>-->
-                    <!--</ion-row>-->
-                    <!--<ion-row *ngIf="showReasons">-->
-                        <!--<ion-col *ngIf="store.ui_store.have_selection; else noReasons">-->
-                            <!--<reasons *ngIf="store.schedule$|async as schedule"-->
-                                     <!--[decisions]="schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"-->
-                            <!--&gt;-->
-                            <!--</reasons>-->
-                        <!--</ion-col>-->
-                        <!--<ng-template ion-col #noReasons></ng-template>-->
-                    <!--</ion-row>-->
-                <!--</ion-col>-->
-            <!--</ion-row>-->
+        <!--<ion-col col-2>-->
+        <!--<ion-row class="tabs">-->
+        <!--<ion-col>-->
+        <!--<button full ion-button color="light" (click)="showInfoClicked()">Info</button>-->
+        <!--</ion-col>-->
+        <!--<ion-col *ngIf="isSuperuser">-->
+        <!--<button full ion-button color="light" (click)="showReasonsClicked()">Reasons</button>-->
+        <!--</ion-col>-->
+        <!--</ion-row>-->
+        <!--<ion-row *ngIf="showInfo">-->
+        <!--<ion-col *ngIf="store.ui_store.have_selection; else noInfo">-->
+        <!--<div *ngIf="store.schedule$|async as schedule">-->
+        <!--<h6 text-center>{{selected_person.name}}</h6>-->
+        <!--<div *ngIf="selected_person">-->
+        <!--<person-schedule [stacked]="true" [schedule]="schedule"-->
+        <!--[person]="selected_person"></person-schedule>-->
+        <!--<person-unavailable [person]="selected_person"></person-unavailable>-->
+        <!--</div>-->
+        <!--</div>-->
+        <!--</ion-col>-->
+        <!--<ng-template ion-col #noInfo></ng-template>-->
+        <!--</ion-row>-->
+        <!--<ion-row *ngIf="showReasons">-->
+        <!--<ion-col *ngIf="store.ui_store.have_selection; else noReasons">-->
+        <!--<reasons *ngIf="store.schedule$|async as schedule"-->
+        <!--[decisions]="schedule.reasons_for(store.ui_store.selected_person, store.ui_store.selected_date)"-->
+        <!--&gt;-->
+        <!--</reasons>-->
+        <!--</ion-col>-->
+        <!--<ng-template ion-col #noReasons></ng-template>-->
+        <!--</ion-row>-->
+        <!--</ion-col>-->
+        <!--</ion-row>-->
         <!--</ion-grid>-->
     </div>
 
