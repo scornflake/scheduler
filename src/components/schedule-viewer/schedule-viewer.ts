@@ -468,17 +468,17 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
         }, 50);
     }
 
-    autoHeightGrid() {
-        this.grid.api.resetRowHeights();
-    }
-
     onGridReady(event) {
         this.autoSizeGrid();
     }
 
     autoSizeGrid() {
-        this.grid.api.sizeColumnsToFit();
-        this.autoHeightGrid();
+        if(this.grid) {
+            this.grid.api.sizeColumnsToFit();
+        }
+        if(this.grid) {
+            this.grid.api.resetRowHeights();
+        }
     }
 
 }

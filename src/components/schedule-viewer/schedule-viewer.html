@@ -1,18 +1,23 @@
 <div *mobxTraceAutorun>
     <div *ngIf="rowMode; else colMode" class="rowModeGrid">
         <button ion-button (click)="autoSizeGrid()">Size</button>
-        <button ion-button (click)="autoHeightGrid()">Height</button>
-        <ag-grid-angular
-                class="ag-theme-balham"
-                (gridReady)="onGridReady($event)"
-                [headerHeight]="50"
-                [enableColResize]="true"
-                [gridAutoHeight]="true"
-                [autoSizePadding]="30"
-                [rowData]="agRowData"
-                [columnDefs]="agColumnDefs"
-        >
-        </ag-grid-angular>
+        <ion-grid no-padding>
+            <ion-row>
+                <ion-col>
+                    <ag-grid-angular
+                            class="ag-theme-balham"
+                            (gridReady)="onGridReady($event)"
+                            [headerHeight]="50"
+                            [enableColResize]="true"
+                            [gridAutoHeight]="true"
+                            [autoSizePadding]="30"
+                            [rowData]="agRowData"
+                            [columnDefs]="agColumnDefs"
+                    >
+                    </ag-grid-angular>
+                </ion-col>
+            </ion-row>
+        </ion-grid>
         <!--<ion-grid class="full" no-padding>-->
             <!--<ion-row>-->
                 <!--<ion-col>-->

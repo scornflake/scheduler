@@ -1,14 +1,14 @@
 schedule-viewer {
   .rowModeGrid {
     width: 100%;
-    position: absolute;
-    top: 0;
-    bottom: 50px;
+    max-height: 800px !important;
     display: inline-block;
+    border: 5px solid green;
+    overflow: hidden;
 
     ag-grid-angular {
-      width: 100%;
-      height: 100%;
+      //height: 100%;
+      border: 2px solid red;
     }
 
     .ag-cell {

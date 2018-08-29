@@ -25,29 +25,26 @@
                     <ion-spinner [duration]="1000"></ion-spinner>
                 </div>
                 <ng-template #main>
-                    <ion-grid no-padding>
-                        <welcome-wizard
-                                *ngIf="hasNoPlans"
-                                (createPlanClicked)="createPlanWizard()"
-                                (createTeamClicked)="createTeamWizard()"
-                        >
-                        </welcome-wizard>
+                    <welcome-wizard
+                            *ngIf="hasNoPlans"
+                            (createPlanClicked)="createPlanWizard()"
+                            (createTeamClicked)="createTeamWizard()"
+                    >
+                    </welcome-wizard>
 
-                        <!--<div *mobxTraceAutorun>-->
-                        <div *ngIf="!hasNoPlans">
-                            <show-plan *ngIf="!hasNoPlans" (editPlanClicked)="editPlan($event)"></show-plan>
-                            <div *ngIf="store.schedule$ | async as schedule">
-                                <schedule-viewer [schedule]="schedule"
-                                                 [selectClosestDay]="true"
-                                                 [me]="store.loggedInPerson$|async"></schedule-viewer>
-                                <person-schedule [schedule]="schedule"
-                                                 [person]="store.loggedInPerson$|async"></person-schedule>
-                                <person-unavailable *ngIf="store.loggedInPerson$|async as p"
-                                                    [person]="p"></person-unavailable>
-                            </div>
+                    <div *ngIf="!hasNoPlans">
+                        <show-plan *ngIf="!hasNoPlans" (editPlanClicked)="editPlan($event)"></show-plan>
+                        <div *ngIf="store.schedule$ | async as schedule">
+                            <schedule-viewer [schedule]="schedule"
+                                             [selectClosestDay]="true"
+                                             [me]="store.loggedInPerson$|async"></schedule-viewer>
+                            <person-schedule [schedule]="schedule"
+                                             [person]="store.loggedInPerson$|async"></person-schedule>
+                            <person-unavailable *ngIf="store.loggedInPerson$|async as p"
+                                                [person]="p"></person-unavailable>
                         </div>
-                        <!--</div>-->
-                    </ion-grid>
+                    </div>
+                    <!--</div>-->
                 </ng-template>
             </div>
         </div>
