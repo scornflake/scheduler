@@ -13,6 +13,11 @@ import {runInAction} from "mobx";
 import * as moment from "moment";
 import {AccessControlProvider} from "../../providers/access-control/access-control";
 
+enum ViewMode {
+    phone = 'phone',
+    browser = 'browser'
+}
+
 @Component({
     // changeDetection: ChangeDetectionStrategy.OnPush,
     selector: 'schedule-viewer',
@@ -20,6 +25,7 @@ import {AccessControlProvider} from "../../providers/access-control/access-contr
 })
 export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy {
     private selectedButton: number = 0;
+    private lastSlideCommand: any;
 
     @Input('schedule')
     set schedule(s: ScheduleWithRules) {
@@ -34,7 +40,7 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
     }
 
     @Input() me: Person;
-    @Input() full: boolean = false;
+    @Input() viewMode: ViewMode = ViewMode.phone;
     @Input() selectClosestDay: boolean = false;
 
     @Input('search')
@@ -83,14 +89,28 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
     // }
 
     slideTo(index: number, thenDo) {
+        // Only do this if in not in rowMode
+        if (this.viewMode) {
+            this.logger.info(`Ignored request to slide to ${index}, we're in rowMode`);
+            thenDo();
+            return;
+        }
+        this.clearSliderTimeout();
         if (this.slides === undefined || this.slides._snapGrid === undefined) {
             console.warn(`Try again to ${index}... no slides yet`);
-            setTimeout(() => {
+            this.lastSlideCommand = setTimeout(() => {
                 this.slideTo(index, thenDo);
             }, 50)
         } else {
             this.slides.slideTo(index);
             thenDo();
+        }
+    }
+
+    private clearSliderTimeout() {
+        if (this.lastSlideCommand) {
+            window.clearTimeout(this.lastSlideCommand);
+            this.lastSlideCommand = null;
         }
     }
 
@@ -107,6 +127,7 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
     }
 
     ngOnDestroy() {
+        this.clearSliderTimeout();
     }
 
     showInfoClicked() {
@@ -129,6 +150,10 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
         return this.access.isSuperuser();
     }
 
+    get inBrowserMode(): boolean {
+        return this.viewMode === ViewMode.browser;
+    }
+
     @computed get observableSchedule(): ScheduleWithRules {
         return this._schedule;
     }
@@ -143,10 +168,6 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
 
     @computed get colSelectedSchedule(): ScheduleAtDate {
         return this.schedule.scheduleForDate(this.colSelectedDate);
-    }
-
-    get rowMode(): boolean {
-        return this.full == true;
     }
 
     @computed

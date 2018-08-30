@@ -34,7 +34,6 @@ export class AuthorizationService {
         let url = this.endpoints.login(username, password);
         // this.logger.info(`Calling ${url}`);
         const loginObservable = this.httpClient.get<LoginResponse>(url);
-
         const subject = new ReplaySubject<LoginResponse>(1);
         subject.subscribe((r: LoginResponse) => {
             this.logger.info(`Got login response: ${SWBSafeJSON.stringify(r)}`);
@@ -101,11 +100,11 @@ export class AuthorizationService {
         let result = false;
 
         // going to go with any 'status 401' here
-        if(err['status'] === 401) {
+        if (err['status'] === 401) {
             return true;
         }
 
-        if(err instanceof HttpErrorResponse || err instanceof ServerError) {
+        if (err instanceof HttpErrorResponse || err instanceof ServerError) {
             let message = err instanceof ServerError ? err.allErrors : `${err.message} ${SWBSafeJSON.stringify(err.error)}`;
             if (err.status == 401 && message.indexOf('expired') != -1) {
                 result = true;

@@ -1,6 +1,6 @@
 <div *mobxTraceAutorun>
-    <div *ngIf="rowMode; else colMode">
-        <ion-grid class="full" no-padding>
+    <div *ngIf="inBrowserMode; else phoneMode" ion-fixed>
+        <ion-grid class="rowMode" no-padding>
             <ion-row>
                 <ion-col>
                     <ion-row align-items-center>
@@ -27,7 +27,7 @@
                     </ion-row>
                 </ion-col>
 
-                <ion-col col-2>
+                <ion-col col-2 col-md-3>
                     <ion-row class="tabs">
                         <ion-col>
                             <button full ion-button color="light" (click)="showInfoClicked()">Info</button>
@@ -41,7 +41,8 @@
                             <div *ngIf="store.schedule$|async as schedule">
                                 <h6 text-center>{{selected_person.name}}</h6>
                                 <div *ngIf="selected_person">
-                                    <person-schedule [stacked]="true" [schedule]="schedule" [person]="selected_person"></person-schedule>
+                                    <person-schedule [stacked]="true" [schedule]="schedule"
+                                                     [person]="selected_person"></person-schedule>
                                     <person-unavailable [person]="selected_person"></person-unavailable>
                                 </div>
                             </div>
@@ -62,7 +63,7 @@
         </ion-grid>
     </div>
 
-    <ng-template #colMode>
+    <ng-template #phoneMode>
         <div class="small" *ngIf="schedule">
             <!-- shows only when in small mode -->
             <div *xs>

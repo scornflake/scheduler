@@ -54,7 +54,7 @@ export class NPBCStoreConstruction {
         let robp = team.findPersonWithName("Rob Penhey");
         let dave = team.findPersonWithName("Dave Humphries");
         let ralph = team.findPersonWithName("Ralph Lambert");
-        let anita = team.findPersonWithName("Anita Lambert");
+        // let anita = team.findPersonWithName("Anita Lambert");
         let annie = team.findPersonWithName("Annie McMullen");
         let jo = team.findPersonWithName("Jo Marquet");
         let allie = team.findPersonWithName("Allie Pope");
@@ -78,6 +78,15 @@ export class NPBCStoreConstruction {
 
         jeremy_selfe.addUnavailable(csd(2018, 6, 3));
         jeremy_selfe.addUnavailable(csd(2018, 7, 1));
+
+        // New avail since 30th Aug
+        jeremy_selfe.addUnavailable(csd(2018, 10, 14), 'Preaching');
+        jeremy_selfe.addUnavailable(csd(2018, 10, 21), 'Ignite');
+        jeremy_selfe.addUnavailable(csd(2018, 11, 11), 'Baptist Hui');
+        jeremy_selfe.addUnavailable(csd(2018, 11, 18), 'Preaching');
+        jeremy_selfe.addUnavailable(csd(2018, 12, 2), 'Friends');
+        jeremy_selfe.addUnavailable(csd(2018, 12, 30), 'Preaching');
+
 
         cherilyn.addUnavailableRange(csd(2018, 7, 14), csd(2018, 7, 29));
         cherilyn.addUnavailable(csd(2018, 6, 17), 'ob meeting');
@@ -125,7 +134,7 @@ export class NPBCStoreConstruction {
         let robp = team.findPersonWithName("Rob Penhey");
         let dave = team.findPersonWithName("Dave Humphries");
         let ralph = team.findPersonWithName("Ralph Lambert");
-        let anita = team.findPersonWithName("Anita Lambert");
+        // let anita = team.findPersonWithName("Anita Lambert");
         let annie = team.findPersonWithName("Annie McMullen");
         let jo = team.findPersonWithName("Jo Marquet");
         let allie = team.findPersonWithName("Allie Pope");
@@ -169,9 +178,9 @@ export class NPBCStoreConstruction {
             .addRole(defaultElectricGuitar)
             .if_assigned_to(defaultLeaderRole).thenDo(new ScheduleOn(jeremy_selfe, defaultElectricGuitar));
 
-        service.assignmentFor(ralph)
-            .addRole(defaultAcousticGuitar)
-            .if_assigned_to(defaultAcousticGuitar).thenDo(new ScheduleOn(anita, defaultVocalsRole));
+        // service.assignmentFor(ralph)
+        //     .addRole(defaultAcousticGuitar)
+        //     .if_assigned_to(defaultAcousticGuitar).thenDo(new ScheduleOn(anita, defaultVocalsRole));
 
         service.assignmentFor(daniel)
             .addRole(defaultDrumsRole, 3)
@@ -199,8 +208,8 @@ export class NPBCStoreConstruction {
             .addRole(defaultVocalsRole)
             .if_assigned_to(defaultAcousticGuitar).thenDo(new ScheduleOn(dave, defaultVocalsRole));
 
-        service.assignmentFor(anita)
-            .addRole(defaultVocalsRole);
+        // service.assignmentFor(anita)
+        //     .addRole(defaultVocalsRole);
 
         service.assignmentFor(annie)
             .addRole(defaultVocalsRole);
@@ -291,7 +300,7 @@ export class NPBCStoreConstruction {
         let robp = aint("Rob Penhey");
         let dave = aint("Dave Humphries");
         let ralph = aint("Ralph Lambert");
-        let anita = aint("Anita Lambert");
+        // let anita = aint("Anita Lambert");
         let annie = aint("Annie McMullen");
         let jo = aint("Jo Marquet");
         let allie = aint("Allie Pope");
@@ -320,7 +329,7 @@ export class NPBCStoreConstruction {
         robs.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
         dave.avail_every(2.2, AvailabilityUnit.EVERY_N_WEEKS);
         annie.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
-        anita.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
+        // anita.avail_every(2, AvailabilityUnit.EVERY_N_WEEKS);
         jo.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
         allie.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);
         chris.avail_every(3, AvailabilityUnit.EVERY_N_WEEKS);

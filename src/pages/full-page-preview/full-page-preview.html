@@ -21,7 +21,7 @@
                     <div *ngIf="store.schedule$ | async as schedule">
                         <schedule-viewer [schedule]="schedule"
                                          [search]="searchString"
-                                         [full]="true"
+                                         [viewMode]="'browser'"
                                          [me]="store.loggedInPerson$|async"></schedule-viewer>
                     </div>
                 </ng-template>

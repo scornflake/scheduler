@@ -8,7 +8,7 @@ import {Preferences} from "../../scheduling/people";
 import {PageUtils} from "../page-utils";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {Subject} from "rxjs";
-import {takeUntil} from "rxjs/operators";
+import {take, takeUntil} from "rxjs/operators";
 import {action, computed, observable} from "mobx-angular";
 import Spreadsheet = gapi.client.sheets.Spreadsheet;
 
@@ -99,32 +99,33 @@ export class SharePage implements OnInit, AfterViewInit, OnDestroy {
         alert.present();
     }
 
-    private _exportScheduleToSheet() {
+    /*
+    You can downgrade to your old version by running: npm i --save -E ionic@3.20.0
+     */
+    private async _exportScheduleToSheet() {
         this.exportProgress = 0;
-        this.store.schedule$.subscribe(schedule => {
+        let schedule = await this.store.schedule$.pipe(take(1)).toPromise();
+        if (schedule) {
             if (schedule) {
                 let sheet = this.sheetAPI.findSheetWithIDIn(this.selectedSheet, this.preferences.google_sheet_tab_id);
-                this.sheetAPI.progress.subscribe(progressValue => {
+                let progressSubscription = this.sheetAPI.progress.subscribe(progressValue => {
                     this.isExporting = true;
                     this.exportProgress = progressValue * 100;
                 });
                 try {
-                    this.sheetAPI.clearAndWriteSchedule(this.selectedSheet, sheet, schedule).then(() => {
-                            this.pageUtils.showMessage('Exported successfully');
-                            this.isExporting = false;
-                            this.exportProgress = 0;
-                        }
-                    );
+                    await this.sheetAPI.clearAndWriteSchedule(this.selectedSheet, sheet, schedule);
+                    this.pageUtils.showMessage('Exported successfully');
+                    this.isExporting = false;
+                    this.exportProgress = 0;
                 } catch (err) {
                     let message = err['result']['error']['message'] || err;
                     this.logger.error(`Error: ${SWBSafeJSON.stringify(message)}`);
                     this.pageUtils.showError(message, true);
-                } finally {
-                    this.isExporting = false;
-                    this.exportProgress = 0;
                 }
             }
-        });
+        } else {
+            this.pageUtils.showError('No schedule');
+        }
     }
 
     @computed get loggedInToGoogle(): boolean {

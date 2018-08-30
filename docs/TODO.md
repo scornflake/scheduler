@@ -1,9 +1,9 @@
 TODO
 ====
 - Full View
-    - If on tablet, doesn't look right
+    - If on iPad, doesn't look right
         - Fix date column, left side
-        - Make roles scroll
+        - Make roles scroll (but not date)
         - Word wrapping in columns is breaking the CSS grid drawing and also screwing up the header heights (see guitars)
         - Provide more width for info
         - Search bar on iOS is broken (the title shows through it)
@@ -19,8 +19,6 @@ TODO
 - As an admin:
     - I want to see a list of when people are on (on their 'person' page? on the plan page?)
         - Can see this on 'full'
-- How to test all navigation possibilities?
-    - Basically, how to do SOME kind of UI testing?
 - Scheduler should:
     - As a user, not overly concerned with the plan 'range', so prob don't need to show it
     - Allow me to quickly find when someone is on (Jo called mentioned dates, I went to the SS instead cos I could see it. Want to make my default action the app/site)
@@ -59,6 +57,8 @@ TODO
 - DB isn't showing an up to date version of info. Should reload this on page reload?
 - Sheets
     - This app hasn't been verified by Google yet. Only proceed if you know and trust the developer.
+- How to test all navigation possibilities?
+    - Basically, how to do SOME kind of UI testing?
 
 Future
 ======
