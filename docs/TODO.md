@@ -1,12 +1,5 @@
 TODO
 ====
-- Full View
-    - If on iPad, doesn't look right
-        - Fix date column, left side
-        - Make roles scroll (but not date)
-        - Word wrapping in columns is breaking the CSS grid drawing and also screwing up the header heights (see guitars)
-        - Provide more width for info
-        - Search bar on iOS is broken (the title shows through it)
 - PlanWizard doesn't work on android
     - text disappears when entering it
     - NEXT doesn't work on plan page (greyed out)
@@ -16,9 +9,6 @@ TODO
             - This saves us creating an empty org for them
     - When a user accepts, there ends up being TWO copies of that user (old login and new?)
     - Itd be nice for the server to send links to the app, for people to download
-- As an admin:
-    - I want to see a list of when people are on (on their 'person' page? on the plan page?)
-        - Can see this on 'full'
 - Scheduler should:
     - As a user, not overly concerned with the plan 'range', so prob don't need to show it
     - Allow me to quickly find when someone is on (Jo called mentioned dates, I went to the SS instead cos I could see it. Want to make my default action the app/site)

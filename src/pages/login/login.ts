@@ -215,8 +215,8 @@ class LoginPage implements AfterViewInit, OnDestroy {
             this.slides.lockSwipes(false);
             this.slides.slideTo(mode);
             this.slides.lockSwipes(true);
+            this.firstSwitch = false;
         }, waitPeriod);
-        this.firstSwitch = false;
     }
 
     @action
