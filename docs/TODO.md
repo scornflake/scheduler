@@ -1,5 +1,7 @@
 TODO
 ====
+- Login
+    - No 'change password' function.
 - PlanWizard doesn't work on android
     - text disappears when entering it
     - NEXT doesn't work on plan page (greyed out)
@@ -15,10 +17,6 @@ TODO
         - How do I enable key shortcuts? e.g: press S to show the search bar.
         - Cursor keys to move selection
     - Show me the number of weeks/events left in the schedule before it's end (e.g: 4 weeks left)
-- Login validation should show only if > 0 chars:
-    - don't show 'email should be valid' if nothing typed in
-    - don't show 'email should be valid' or 'password blah' until first 'login' is pressed
-- No 'forgot password' function.
 - Make it possible to specify:
     - period of the plan (days in between each);
     - What is the minimum period? Days? Hours?

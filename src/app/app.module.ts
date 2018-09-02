@@ -80,6 +80,8 @@ export function ResponsiveDefinition() {
         TabSelectionPageModule,
         HomePageModule,
         LoginPageModule,
+        // Took out for now. Maybe add later, but for now just use existing Django functionality.
+        // ForgotPasswordPageModule,
         PeoplePageModule,
         AboutPageModule,
         TeamsPageModule,

@@ -1,8 +1,8 @@
 import {TypedObject} from "./base-types";
 import {dayAndHourForDate} from "./common/date-utils";
-import * as moment from "moment";
 import {observable} from "mobx-angular";
 
+import * as moment from "moment";
 import Moment from "moment";
 import {extendMoment} from 'moment-range';
 

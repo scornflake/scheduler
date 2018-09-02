@@ -12,6 +12,7 @@ import {Role} from "../../scheduling/role";
 import {runInAction} from "mobx";
 import * as moment from "moment";
 import {AccessControlProvider} from "../../providers/access-control/access-control";
+import {PageUtils} from "../../pages/page-utils";
 
 enum ViewMode {
     phone = 'phone',
@@ -60,6 +61,7 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
     constructor(private store: RootStore,
                 private appRef: ApplicationRef,
                 private access: AccessControlProvider,
+                private pageUtils: PageUtils,
                 private logService: LoggingService,
                 public popoverCtrl: PopoverController) {
         this.logger = this.logService.getLogger('component.schedule.view')
@@ -95,23 +97,7 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
             thenDo();
             return;
         }
-        this.clearSliderTimeout();
-        if (this.slides === undefined || this.slides._snapGrid === undefined) {
-            console.warn(`Try again to ${index}... no slides yet`);
-            this.lastSlideCommand = setTimeout(() => {
-                this.slideTo(index, thenDo);
-            }, 50)
-        } else {
-            this.slides.slideTo(index);
-            thenDo();
-        }
-    }
-
-    private clearSliderTimeout() {
-        if (this.lastSlideCommand) {
-            window.clearTimeout(this.lastSlideCommand);
-            this.lastSlideCommand = null;
-        }
+        this.pageUtils.slideTo(this.slides, index, thenDo);
     }
 
     private afterScheduleSet() {
@@ -127,7 +113,7 @@ export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy
     }
 
     ngOnDestroy() {
-        this.clearSliderTimeout();
+        this.pageUtils.clearSliderTimeout();
     }
 
     showInfoClicked() {

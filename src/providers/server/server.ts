@@ -62,19 +62,24 @@ export class RESTServer {
             let url = this.endpoints.userDetails();
             let getObservable = this.http.get(url);
             return getObservable.toPromise();
-        } catch(err) {
+        } catch (err) {
             this.logger.error("getOwnUserDetails", `Cant get user. Throwing ${SWBSafeJSON.stringify(err)}).`);
             throw new ServerError(err);
         }
     }
 
-    async hasEmailBeenConfirmed(email: string): Promise<boolean> {
-        let url = this.endpoints.validateLogin(email, true);
+    async hasEmailBeenConfirmed(email: string, wasAResetEmail: boolean): Promise<boolean> {
+        let url = this.endpoints.validateLogin(email, true, wasAResetEmail);
         return await this.http.get(url).map((resp: object) => {
-                if (resp['active']) {
+                this.logger.warn("hasEmailBeenConfirmed", `${email} received ${SWBSafeJSON.stringify(resp)}`);
+                if (resp.hasOwnProperty("reset_email_confirmed")) {
+                    this.logger.warn(`Using reset_email_confirmed`);
+                    return resp['reset_email_confirmed'];
+                }
+                if (resp.hasOwnProperty("active")) {
+                    this.logger.warn(`Using active`);
                     return resp['active'];
                 }
-                console.warn(`hasEmailBeenConfirmed, for ${email} received ${SWBSafeJSON.stringify(resp)}`);
                 return false;
             }
         ).toPromise();
@@ -200,5 +205,21 @@ export class RESTServer {
         } catch (e) {
             throw new ServerError(e);
         }
+    }
+
+    async forgotPassword(registrationEmail: string) {
+        let forgotCommand = {
+            email: registrationEmail
+        };
+        try {
+            let url = this.endpoints.forgotPassword();
+            return await this.http.post(url, forgotCommand).toPromise();
+        } catch (e) {
+            throw new ServerError(e);
+        }
+    }
+
+    changePassword(registrationEmail: string, newPassword: string) {
+
     }
 }

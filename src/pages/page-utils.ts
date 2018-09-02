@@ -1,5 +1,5 @@
 import {ObjectValidation} from "../scheduling/shared";
-import {AlertController, NavController, ToastController} from "ionic-angular";
+import {AlertController, NavController, Slides, ToastController} from "ionic-angular";
 import {ApplicationRef, forwardRef, Inject, Injectable, NgZone, OnInit} from "@angular/core";
 import deepEqual from "deep-equal";
 import {ToastOptions} from "ionic-angular/components/toast/toast-options";
@@ -14,16 +14,21 @@ import {BehaviorSubject, Subscription} from "rxjs";
 import {TokenStates} from "../providers/token/authorization.service";
 import {AccessControlProvider, ResourceType} from "../providers/access-control/access-control";
 import {RootStore} from "../store/root";
+import * as moment from "moment";
 
 interface LifecycleEvent {
     event: LifecycleCallbacks;
     args: any;
 }
 
+type PredicateFunction = () => Observable<boolean> | Promise<boolean>;
+
 @Injectable()
 class PageUtils implements OnInit {
     private logger: Logger;
     private authNotificationSubscription: Subscription;
+    private lastSlideCommand: any;
+    private startedSlideAt: moment.Moment | any;
 
     constructor(private toastController: ToastController,
                 private alertCtrlr: AlertController,
@@ -210,6 +215,53 @@ class PageUtils implements OnInit {
         t.present();
     }
 
+    /*
+    This exists to fix broken-ness in ion-slide, which doesnt
+    seem to be constructed right. You can't access its slides property until 'some time later'
+     */
+    slideTo(slides: Slides, index: number, thenDo) {
+        this.startedSlideAt = moment();
+        this.trySlideTo(slides, index, 3, thenDo);
+    }
+
+    private trySlideTo(slides: Slides, index: number, timeoutInSeconds, thenDo) {
+        this.clearSliderTimeout();
+
+        let timeSoFar = moment().diff(this.startedSlideAt, 'seconds');
+        if (timeSoFar > timeoutInSeconds) {
+            this.logger.info(`Ignoring slide to ${index}, timed out waiting for slides to appear`);
+            thenDo();
+            return;
+        }
+
+        if (slides === undefined || slides._snapGrid === undefined) {
+            this.logger.warn(`Try again to ${index}... no slides yet`);
+            this.lastSlideCommand = setTimeout(() => {
+                this.trySlideTo(slides, index, timeoutInSeconds, thenDo);
+            }, 50)
+        } else {
+            this.logger.info(`Slides are OK. Sliding to index ${index}`);
+            slides.slideTo(index);
+            thenDo();
+        }
+    }
+
+    clearSliderTimeout() {
+        if (this.lastSlideCommand) {
+            window.clearTimeout(this.lastSlideCommand);
+            this.lastSlideCommand = null;
+        }
+    }
+
+    // waitFor(interval: number, timeoutInSeconds: number, predicateFunction: PredicateFunction): Observer<any> {
+    //     return Observable.timer(interval, interval)
+    //         .pipe(
+    //             timeout(timeoutInSeconds * 1000),
+    //             flatMap(predicateFunction),
+    //             filter(confirmed => confirmed),
+    //             take(1)
+    //         );
+    // }
 }
 
 

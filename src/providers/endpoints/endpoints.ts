@@ -63,10 +63,13 @@ export class EndpointsProvider {
     //     return options;
     // }
 
-    validateLogin(username: string, active: boolean = false) {
+    validateLogin(username: string, active: boolean = false, wasResetEmail: boolean = false) {
         let url = this.api_url("validate_login/" + `?email=${username.toLowerCase()}`);
         if (active) {
             url = `${url}&active=1`;
+        }
+        if(wasResetEmail) {
+            url = `${url}&check_reset=1`
         }
         return url;
     }
@@ -101,5 +104,13 @@ export class EndpointsProvider {
 
     refreshToken() {
         return this.general_url("api-token-refresh/")
+    }
+
+    forgotPassword() {
+        return this.api_url("forgot/")
+    }
+
+    forgotPasswordPage() {
+        return this.general_url("password_reset/")
     }
 }

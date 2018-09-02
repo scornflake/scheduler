@@ -33,7 +33,7 @@
                                                    placeholder="Email" formControlName="email"
                                                    [ngModel]="registrationEmail"
                                                    (ngModelChange)="setRegistrationEmail($event)"
-                                                   required>
+                                                   >
                                         </ion-input>
                                     </ion-item>
 
@@ -44,7 +44,7 @@
                                                    [ngModel]="registrationPassword"
                                                    (ngModelChange)="setRegistrationPassword($event)"
                                                    formControlName="password"
-                                                   required>
+                                                   >
                                         </ion-input>
                                     </ion-item>
                                 </ion-list>
@@ -78,14 +78,18 @@
                                 (click)="switchToCreate()">
                             Create New Account
                         </button>
+                        <button ion-col text-center *ngIf="!isCreateAccount" ion-button class="register-btn" clear
+                                (click)="showForgotPassword()">
+                            Forgot Password
+                        </button>
                         <button ion-col text-center *ngIf="isCreateAccount" ion-button class="register-btn" clear
                                 (click)="switchToLogin()">
                             Login with existing
                         </button>
-
                     </ion-row>
                 </ion-grid>
             </ion-slide>
+
             <ion-slide class="waitingForConfirm">
                 <ion-grid>
                     <ion-row>
@@ -107,6 +111,7 @@
                     </ion-row>
                 </ion-grid>
             </ion-slide>
+
         </ion-slides>
     </div>
 </ion-content>

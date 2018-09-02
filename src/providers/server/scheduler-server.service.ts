@@ -92,6 +92,13 @@ class SchedulerServer implements ILifecycle, IReplicationNotification {
     async loginUser(username: string, password: string): Promise<LoginResponse> {
         this.raiseExceptionIfNotOnline('loginUser');
 
+        if (!username) {
+            throw new ServerError('Username is required')
+        }
+        if (!password) {
+            throw new ServerError('Password is required')
+        }
+
         try {
             this.logger.info(`Logging in user: ${username}`);
             return await this.auth.login(username, password).toPromise();
@@ -115,7 +122,12 @@ class SchedulerServer implements ILifecycle, IReplicationNotification {
 
     async hasEmailBeenConfirmed(email: string): Promise<boolean> {
         this.raiseExceptionIfNotOnline('hasEmailBeenConfirmed');
-        return this.restAPI.hasEmailBeenConfirmed(email);
+        return this.restAPI.hasEmailBeenConfirmed(email, false);
+    }
+
+    async hasResetEmailBeenConfirmed(email: string): Promise<boolean> {
+        this.raiseExceptionIfNotOnline('hasResetEmailBeenConfirmed');
+        return this.restAPI.hasEmailBeenConfirmed(email, true);
     }
 
     async saveOrganization(organization: Organization): Promise<Organization> {

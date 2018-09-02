@@ -58,12 +58,16 @@
         "logLevel": "WARN"
       },
       {
+        "loggerName": "page.forgot",
+        "logLevel": "INFO"
+      },
+      {
         "loggerName": "page.login",
         "logLevel": "WARN"
       },
       {
         "loggerName": "page.utils",
-        "logLevel": "WARN"
+        "logLevel": "INFO"
       },
       {
         "loggerName": "page.share",
@@ -76,6 +80,10 @@
       {
         "loggerName": "component",
         "logLevel": "WARN"
+      },
+      {
+        "loggerName": "component.errors",
+        "logLevel": "INFO"
       },
       {
         "loggerName": "component.schedule.view",

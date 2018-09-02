@@ -13,6 +13,7 @@ import {ServerError} from "../../common/interfaces";
 import "rxjs/add/observable/timer";
 import {Storage} from '@ionic/storage';
 import {runInAction} from "mobx";
+import {EndpointsProvider} from "../../providers/endpoints/endpoints";
 
 enum LoginPageMode {
     LoginOrCreate = 0,
@@ -51,6 +52,7 @@ class LoginPage implements AfterViewInit, OnDestroy {
                 protected logService: LoggingService,
                 protected server: SchedulerServer,
                 protected storage: Storage,
+                protected endpoints: EndpointsProvider,
                 protected formBuilder: FormBuilder,
                 protected pageUtils: PageUtils,
                 protected loadingCtrl: LoadingController) {
@@ -225,7 +227,7 @@ class LoginPage implements AfterViewInit, OnDestroy {
         this.loginForm = this.formBuilder.group({
             'name': ["", [Validators.required]],
             'email': ["",
-                [Validators.email, Validators.required],
+                [Validators.email],
                 this.validateUsernameUsable.bind(this)
             ],
             'password': ["", [Validators.required, Validators.minLength(8)]],
@@ -235,14 +237,22 @@ class LoginPage implements AfterViewInit, OnDestroy {
         this.switchModes(LoginPageMode.LoginOrCreate);
     }
 
+    itChanged(event) {
+        console.log(`changed: ${event}`);
+    }
+
+    // @HostListener('window:change', ['$event'])
+    // private handleResize(event) {
+    //     console.log(`changed: ${event}`);
+    // }
+
     @action
     switchToLogin() {
         this.logger.info(`Switching to login`);
         this.loginForm = this.formBuilder.group({
-            'email': ["", [Validators.email, Validators.required]],
-            'password': ["", [Validators.required, Validators.minLength(8)]],
+            'email': [],
+            'password': [],
         });
-        // this.loginForm.reset();
         this.isCreateAccount = false;
         this.switchModes(LoginPageMode.LoginOrCreate);
     }
@@ -256,7 +266,7 @@ class LoginPage implements AfterViewInit, OnDestroy {
         if (!this.confirmationSubscription) {
             console.log(`waiting on confirmation for ${this.registrationEmail}`);
             this.confirmationSubscription = Observable.timer(2000, 2000).pipe(
-                timeout(60 * 1000),
+                timeout(120 * 1000),
                 flatMap(() => {
                     return this.server.hasEmailBeenConfirmed(this.registrationEmail);
                 }),
@@ -293,6 +303,10 @@ class LoginPage implements AfterViewInit, OnDestroy {
         this.login();
 
         // this.nav.popTo('home');
+    }
+
+    showForgotPassword() {
+        window.open(this.endpoints.forgotPasswordPage())
     }
 }
 
