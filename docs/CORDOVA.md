@@ -4,6 +4,11 @@ ionic cordova platform add ios
 
 If you 'remove', that'll blow away the platform/ios folder and project.
 
+XCode
+---
+* You'll need to disable automatic signing and choose the 'match' profile for debug/prod.
+* You need to reset the AssociatedDomains to applinks:cunningplanapp.shinywhitebox.com
+
 Running the iPad simulator
 ---
 By default it won't work because of some old version of ios-sim. It must be updated.

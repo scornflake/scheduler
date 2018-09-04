@@ -18,7 +18,7 @@ export class SpreadsheetReader {
 
     constructor(ppl_manager: PersonManager, private logService: LoggingService) {
         this.problems = new Map<string, Set<string>>();
-        this.logger = logService.getLogger("spreadsheet.reader");
+        this.logger = this.logService.getLogger("spreadsheet.reader");
         this.people = ppl_manager;
     }
 

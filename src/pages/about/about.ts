@@ -4,7 +4,6 @@ import * as moment from "moment";
 import {HttpClient} from "@angular/common/http";
 import {EndpointsProvider} from "../../providers/endpoints/endpoints";
 import {ConfigurationService} from "ionic-configuration-service";
-import {RootStore} from "../../store/root";
 import {StateProvider} from "../../providers/state/state";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {AuthorizationService} from "../../providers/token/authorization.service";

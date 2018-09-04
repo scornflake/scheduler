@@ -1,7 +1,5 @@
 import {AppModule} from "../app/app.module";
 import {Logger, LoggingService, LogLevel} from "ionic-logging-service";
-import {MockConfigurationService} from "../tests/mock-logging-configuration";
-import {SWBSafeJSON} from "./json/safe-stringify";
 
 export class LoggingWrapper {
     private static loggerMap: Map<string, Logger>;

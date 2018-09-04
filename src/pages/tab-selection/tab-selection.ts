@@ -27,7 +27,7 @@ export class TabSelectionPage {
                 private logSvc: LoggingService,
                 private api: GAPIS) {
 
-        this.logger = logSvc.getLogger('page.sheet.select');
+        this.logger = this.logSvc.getLogger('page.sheet.select');
         this.sheet_id = navParams.get('sheet_id');
         this.done = navParams.get('done');
         this.title = navParams.get('title') || "Select a sheet to use";

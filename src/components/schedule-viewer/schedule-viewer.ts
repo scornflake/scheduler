@@ -26,7 +26,6 @@ enum ViewMode {
 })
 export class ScheduleViewerComponent implements OnInit, AfterViewInit, OnDestroy {
     private selectedButton: number = 0;
-    private lastSlideCommand: any;
 
     @Input('schedule')
     set schedule(s: ScheduleWithRules) {

@@ -1,8 +1,7 @@
-import {forwardRef, Inject, Injectable} from '@angular/core';
+import {Injectable} from '@angular/core';
 import {AccessControl} from "accesscontrol";
 import {StateProvider} from "../state/state";
 import {Logger, LoggingService} from "ionic-logging-service";
-import {SWBSafeJSON} from "../../common/json/safe-stringify";
 
 enum ResourceType {
     People = "people",
@@ -23,7 +22,7 @@ class AccessControlProvider {
     constructor(private  state: StateProvider, private logService: LoggingService) {
         let grants = AccessControlProvider.defaultGrants();
         // console.log(`Grants: ${JSON.stringify(grants)}`);
-        this.logger = logService.getLogger('service.access-control');
+        this.logger = this.logService.getLogger('service.access-control');
         this.accessControl = new AccessControl(grants);
     }
 

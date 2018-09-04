@@ -1,5 +1,5 @@
 import {Component, QueryList, ViewChildren} from '@angular/core';
-import {AlertController, IonicPage, ItemSliding, NavController, NavParams} from 'ionic-angular';
+import {AlertController, IonicPage, ItemSliding, NavController} from 'ionic-angular';
 import {Plan} from "../../scheduling/plan";
 import {RootStore} from "../../store/root";
 import {PageUtils} from "../page-utils";

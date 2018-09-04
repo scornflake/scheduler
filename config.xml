@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget android-versionCode="35" id="com.shinywhitebox.scheduler" ios-CFBundleVersion="35" version="0.0.6" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>Scheduler</name>
+    <name>CunningPlan</name>
     <description>Make scheduling the simplest part of your job</description>
-    <author email="neil@shinywhitebox.com" href="https://scheuler.shinywhitebox.com">shinywhitebox ltd</author>
+    <author email="neil@shinywhitebox.com" href="https://cunningplan.shinywhitebox.com">shinywhitebox ltd</author>
     <content src="index.html" />
     <access origin="*" />
     <allow-intent href="http://*/*" />
@@ -82,8 +82,8 @@
     <allow-navigation href="http://192.168.1.168:8100" />
     <allow-navigation href="http://192.168.1.168:8101" />
     <allow-navigation href="http://192.168.1.168:5984" />
-    <allow-navigation href="https://scheduler.shinywhitebox.com" />
-    <allow-navigation href="https://schedulerdb.shinywhitebox.com" />
+    <allow-navigation href="https://cunningplan.shinywhitebox.com" />
+    <allow-navigation href="https://cunningplandb.shinywhitebox.com" />
     <plugin name="ionic-plugin-keyboard" spec="^2.2.1" />
     <plugin name="cordova-plugin-whitelist" spec="^1.3.1" />
     <plugin name="cordova-plugin-device" spec="^1.1.4" />
@@ -94,9 +94,9 @@
     <plugin name="cordova-plugin-statusbar" spec="^2.4.2" />
     <plugin name="com.telerik.plugins.nativepagetransitions" spec="^0.6.5" />
     <plugin name="ionic-plugin-deeplinks" spec="^1.0.17">
-        <variable name="URL_SCHEME" value="scheduler" />
+        <variable name="URL_SCHEME" value="cunningplan" />
         <variable name="DEEPLINK_SCHEME" value="https" />
-        <variable name="DEEPLINK_HOST" value="scheduler.shinywhitebox.com" />
+        <variable name="DEEPLINK_HOST" value="cunningplan.shinywhitebox.com" />
         <variable name="ANDROID_PATH_PREFIX" value="/" />
         <variable name="ANDROID_2_PATH_PREFIX" value="/" />
         <variable name="ANDROID_3_PATH_PREFIX" value="/" />
@@ -114,5 +114,5 @@
     <plugin name="cordova-plugin-inappbrowser" spec="^3.0.0" />
     <engine name="browser" spec="5.0.1" />
     <engine name="android" spec="7.0.0" />
-    <engine name="ios" spec="4.5.4" />
+    <engine name="ios" spec="~4.5.5" />
 </widget>

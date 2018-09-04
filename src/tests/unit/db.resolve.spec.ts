@@ -3,8 +3,6 @@ import {Person} from "../../scheduling/people";
 import {scheduler_db_map} from "../../assets/db.mapping";
 import {OrmMapper} from "../../providers/mapping/orm-mapper";
 import {IObjectCache, SimpleCache} from "../../providers/mapping/cache";
-import {LoggingService} from "ionic-logging-service";
-import {MockConfigurationService} from "../mock-logging-configuration";
 import {newLoggingServiceAfterReset} from "./test-helpers";
 
 describe('db lookups', () => {

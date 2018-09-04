@@ -17,8 +17,8 @@ export let testOptionsFactory = (st) => {
         blacklistedRoutes: [],
         whitelistedDomains: [
             "localhost:8000",
-            "scheduler.shinywhitebox.com",
-            "schedulerdb.shinywhitebox.com"
+            "cunningplan.shinywhitebox.com",
+            "cunningplandb.shinywhitebox.com"
         ]
     }
 };

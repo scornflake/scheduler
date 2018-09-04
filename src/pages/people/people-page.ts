@@ -4,7 +4,7 @@ import {Person} from "../../scheduling/people";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {RootStore} from "../../store/root";
 import {PageUtils} from "../page-utils";
-import {action, computed} from "mobx-angular";
+import {action} from "mobx-angular";
 import {AccessControlProvider, ResourceType} from "../../providers/access-control/access-control";
 
 @IonicPage({
@@ -27,7 +27,7 @@ export class PeoplePage {
                 public pageUtils: PageUtils,
                 public logService: LoggingService
     ) {
-        this.logger = logService.getLogger('page.people');
+        this.logger = this.logService.getLogger('page.people');
     }
 
     public show_person_detail(person: Person) {

@@ -1,7 +1,6 @@
 import {IObjectStore, IReferenceResolver, ObjectReference, PropertyMapping} from "../mapping/orm-mapper-type";
 import {OrmUtils} from "./orm-utils";
 import {GetTheTypeNameOfTheObject, OrmMapper} from "../mapping/orm-mapper";
-import {LoggingWrapper} from "../../common/logging-wrapper";
 import {observable} from "mobx-angular";
 import {TypedObject} from "../../scheduling/base-types";
 import {SWBSafeJSON} from "../../common/json/safe-stringify";
@@ -18,7 +17,7 @@ class StoreBasedResolver implements IReferenceResolver {
     constructor(private loader: IObjectStore,
                 private logService: LoggingService,
                 private mapper: OrmMapper) {
-        this.logger = logService.getLogger('orm.resolver');
+        this.logger = this.logService.getLogger('orm.resolver');
         this.utils = new OrmUtils(this.logger);
     }
 

@@ -13,7 +13,7 @@ export class SubMenuComponent {
     constructor(
         private viewCtrlr: ViewController,
         private navParams: NavParams) {
-        this.items = navParams.get('items');
+        this.items = this.navParams.get('items');
         this.visibleItems = this.items.filter(item => this.testItemFor(item, 'visible'));
     }
 

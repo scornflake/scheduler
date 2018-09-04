@@ -1,6 +1,6 @@
 ///<reference path="./fix.broken.gapi.types.d.ts"/>
 ///<reference path="../../node_modules/@types/gapi.client.sheets/index.d.ts"/>
-import {ApplicationRef, forwardRef, Inject, Injectable} from "@angular/core";
+import {ApplicationRef, Injectable} from "@angular/core";
 import {credentials, DISCOVERY_DOCS, SCOPES} from "./auth-common";
 import {Observable} from "rxjs/Observable";
 import {ScheduleWithRules} from "../scheduling/rule_based/scheduler";
@@ -9,7 +9,6 @@ import {fromPromise} from "rxjs/observable/fromPromise"
 
 import * as _ from 'lodash';
 import {formatDateForGoogleSpreadsheet} from "../scheduling/common/date-utils";
-import {RESTServer} from "../providers/server/server";
 import {RootStore} from "../store/root";
 import {UIStore} from "../store/UIState";
 import {Preferences} from "../scheduling/people";
@@ -19,11 +18,11 @@ import {flatMap} from "rxjs/operators";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {of} from "rxjs/observable/of";
 import {autorun, trace} from "mobx";
+import {SWBSafeJSON} from "./json/safe-stringify";
+import {PageUtils} from "../pages/page-utils";
 import Spreadsheet = gapi.client.sheets.Spreadsheet;
 import Sheet = gapi.client.sheets.Sheet;
 import ValueRange = gapi.client.sheets.ValueRange;
-import {SWBSafeJSON} from "./json/safe-stringify";
-import {PageUtils} from "../pages/page-utils";
 
 const API_KEY = "AIzaSyCVhzG0pEB1NfZsxpdPPon3XhEK4pctEYE";
 
@@ -33,20 +32,18 @@ class GAPIS {
     ready$: Subject<boolean>;
     selectedSheet$: Subject<Spreadsheet>;
 
-    private initDone: boolean;
     progress: Subject<number>;
     private logger: Logger;
 
     constructor(private rootStore: RootStore,
                 private logSvc: LoggingService,
                 private pageUtils: PageUtils,
-                @Inject(forwardRef(() => RESTServer)) private server,
                 private appRef: ApplicationRef) {
 
         this.ready$ = new BehaviorSubject(false);
         this.selectedSheet$ = new ReplaySubject(1);
         this.progress = new BehaviorSubject(0);
-        this.logger = logSvc.getLogger('google');
+        this.logger = this.logSvc.getLogger('google');
 
         this.logger.info("ngOnInit", "Loading GAPI...");
 
@@ -124,7 +121,6 @@ class GAPIS {
 
             // Handle the initial sign-in state.
             this.updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
-            this.initDone = true;
 
             this.logger.info("initClient", "Initializing GAPI complete");
             try {

@@ -15,7 +15,7 @@ import {ObjectWithUUID} from "../../scheduling/base-types";
 import {Subject} from "rxjs";
 import {SubMenuComponent} from "../../components/sub-menu/sub-menu";
 import * as pluralize from "pluralize";
-import {FullPagePreviewPage} from "../full-page-preview/full-page-preview";
+import {LoginPage} from "../login/login";
 
 let __firstTime: boolean = true;
 
@@ -125,7 +125,7 @@ export class HomePage implements AfterContentInit, OnDestroy {
                             this.nativeTrans.fade({
                                 duration: 1000,
                             });
-                            this.navCtrl.setRoot('login', {});
+                            this.navCtrl.setRoot(LoginPage, {});
                         }
                     }
                 });
@@ -157,7 +157,7 @@ export class HomePage implements AfterContentInit, OnDestroy {
             // }
 
 
-            // this.navCtrl.push('login', {create: true});
+            // this.navCtrl.push(LogonPage, {create: true});
             // this.navCtrl.push('page-db');
             // this.navCtrl.push('page-roles');
             // this.navCtrl.push('page-about');

@@ -1,8 +1,8 @@
 {
   "name": "release",
   "server": {
-    "couch": "https://schedulerdb.shinywhitebox.com",
-    "rest": "https://scheduler.shinywhitebox.com"
+    "couch": "https://cunningplandb.shinywhitebox.com",
+    "rest": "https://cunningplan.shinywhitebox.com"
   },
   "database": {
     "name": "scheduler"

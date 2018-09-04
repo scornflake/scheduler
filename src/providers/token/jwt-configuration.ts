@@ -1,7 +1,7 @@
 import {LoggingWrapper} from "../../common/logging-wrapper";
 
 let possibleWebHosts = [
-    'scheduler.shinywhitebox.com',
+    'cunningplan.shinywhitebox.com',
     'localhost:8000',
     '192.168.1.168:8000',
 ];

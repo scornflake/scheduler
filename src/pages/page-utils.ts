@@ -15,13 +15,14 @@ import {TokenStates} from "../providers/token/authorization.service";
 import {AccessControlProvider, ResourceType} from "../providers/access-control/access-control";
 import {RootStore} from "../store/root";
 import * as moment from "moment";
+import {LoginPage} from "./login/login";
 
 interface LifecycleEvent {
     event: LifecycleCallbacks;
     args: any;
 }
 
-type PredicateFunction = () => Observable<boolean> | Promise<boolean>;
+// type PredicateFunction = () => Observable<boolean> | Promise<boolean>;
 
 @Injectable()
 class PageUtils implements OnInit {
@@ -39,7 +40,7 @@ class PageUtils implements OnInit {
                 private nativeTransitions: NativePageTransitions,
                 private zoneRef: NgZone,
                 @Inject(forwardRef(() => SchedulerServer)) private server) {
-        this.logger = logService.getLogger('page.utils');
+        this.logger = this.logService.getLogger('page.utils');
     }
 
     ngOnInit() {
@@ -81,7 +82,7 @@ class PageUtils implements OnInit {
         return {
             showLoginPage: (reason: string) => {
                 this.logger.info(`show login page, because: ${reason}`);
-                navCtrl.push('login');
+                navCtrl.push(LoginPage);
             },
             applicationIsStarting: () => {
             },
@@ -95,7 +96,7 @@ class PageUtils implements OnInit {
                 // add args to tell it to switch to create mode
                 this.logger.info(`show create/invite page, because: ${reason}`);
                 this.nativeTransitions.fade({duration: 1000});
-                navCtrl.push('login');
+                navCtrl.push(LoginPage);
             },
             showError: (message) => {
                 this.showError(message);

@@ -1,14 +1,5 @@
-import {AfterViewInit, Component, OnDestroy, ViewChild} from '@angular/core';
-import {
-    AlertController,
-    IonicPage,
-    Loading,
-    LoadingController,
-    NavController,
-    NavParams,
-    Platform,
-    Slides
-} from 'ionic-angular';
+import {AfterViewInit, Component, forwardRef, Inject, OnDestroy, ViewChild} from '@angular/core';
+import {AlertController, Loading, LoadingController, NavController, NavParams, Platform, Slides} from 'ionic-angular';
 import {AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators} from "@angular/forms";
 import "rxjs/add/operator/debounceTime";
 import {Logger, LoggingService} from "ionic-logging-service";
@@ -32,10 +23,6 @@ enum LoginPageMode {
     ReadyToGo
 }
 
-@IonicPage({
-    defaultHistory: ['home'],
-    name: 'login'
-})
 @Component({
     selector: 'page-login',
     templateUrl: 'login.html',
@@ -66,7 +53,7 @@ class LoginPage implements AfterViewInit, OnDestroy {
                 protected inAppBrowser: InAppBrowser,
                 protected endpoints: EndpointsProvider,
                 protected formBuilder: FormBuilder,
-                protected pageUtils: PageUtils,
+                @Inject(forwardRef(() => PageUtils)) protected pageUtils: PageUtils,
                 protected loadingCtrl: LoadingController) {
 
         this.logger = this.logService.getLogger("page.login");

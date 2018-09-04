@@ -1,11 +1,11 @@
-import {Component, Input} from '@angular/core';
+import {Component} from '@angular/core';
 import {IonicPage, NavController, NavParams} from 'ionic-angular';
 import {RootStore} from "../../store/root";
 import {SchedulerServer} from "../../providers/server/scheduler-server.service";
 import {LifecycleEvent, PageUtils} from "../page-utils";
 import {LifecycleCallbacks} from "../../providers/server/interfaces";
 import {Subject} from "rxjs";
-import {delay, takeUntil} from "rxjs/operators";
+import {takeUntil} from "rxjs/operators";
 
 @IonicPage({
     name: 'page-full',

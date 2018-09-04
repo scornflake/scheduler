@@ -190,7 +190,7 @@ export class AccumulatedFacts {
 
     private assignmentsAbleToDoRoleSortedByTotalUsage(role: Role): Array<{ assignment: IAssignment, usage: number }> {
         let possibleAvailableAssignments = this.service.assignments_with_role(role).filter(possible => {
-            let [has_exclusion, reason] = this.has_exclusion_for(this.current_date, possible.person, role);
+            let [has_exclusion] = this.has_exclusion_for(this.current_date, possible.person, role);
             if (has_exclusion) {
                 return false;
             }

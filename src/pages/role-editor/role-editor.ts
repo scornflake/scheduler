@@ -23,7 +23,7 @@ export class RoleEditorPage {
     }
 
     get canManage(): boolean {
-        let answer = this.accessControl.canUpdateAny(ResourceType.Role);
+        // let answer = this.accessControl.canUpdateAny(ResourceType.Role);
         return this.accessControl.canUpdateAny(ResourceType.Role);
     }
 

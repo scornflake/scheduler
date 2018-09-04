@@ -14,8 +14,8 @@ export function jwtOptionsFactory(state: StateProvider) {
         },
         blacklistedRoutes: generateBlacklistedRoutes(),
         whitelistedDomains: [
-            'schedulerdb.shinywhitebox.com',
-            'scheduler.shinywhitebox.com',
+            'cunningplan.shinywhitebox.com',
+            'cunningplandb.shinywhitebox.com',
             'localhost:8000',
             '192.168.1.168:8000',
         ]

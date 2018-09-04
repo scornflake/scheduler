@@ -72,6 +72,10 @@
   version "4.7.0"
   resolved "https://registry.yarnpkg.com/@ionic-native/core/-/core-4.7.0.tgz#9e7c13db9f18f454d7a31a5d61d369a7db3f338c"
 
+"@ionic-native/deeplinks@^4.12.2":
+  version "4.12.2"
+  resolved "https://registry.yarnpkg.com/@ionic-native/deeplinks/-/deeplinks-4.12.2.tgz#3d2208d9fc496f49a7275db1b3fe5cbc01db02c4"
+
 "@ionic-native/in-app-browser@^4.12.2":
   version "4.12.2"
   resolved "https://registry.yarnpkg.com/@ionic-native/in-app-browser/-/in-app-browser-4.12.2.tgz#c8b006c78f45c8324c4ef74ea9f8a55aacc4b214"

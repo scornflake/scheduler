@@ -18,7 +18,7 @@ class OrmConverterReader {
         private _resolver: IReferenceResolver,
         private _cache: IObjectCache
     ) {
-        this.logger = logService.getLogger('orm.reader');
+        this.logger = this.logService.getLogger('orm.reader');
         this.utils = new OrmUtils(this.logger);
     }
 

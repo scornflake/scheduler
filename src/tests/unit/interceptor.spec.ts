@@ -108,7 +108,7 @@ describe('refresh interceptor tests', () => {
         inject([JwtInterceptor], (jwt) => {
             expect(jwt).not.toBeNull();
             expect(jwt.isWhitelistedDomain(new HttpRequest("GET", "http://localhost:8000"))).toBeTruthy("localhost should work");
-            expect(jwt.isWhitelistedDomain(new HttpRequest("GET", "https://scheduler.shinywhitebox.com"))).toBeTruthy("actual URL should work");
+            expect(jwt.isWhitelistedDomain(new HttpRequest("GET", "https://cunningplan.shinywhitebox.com"))).toBeTruthy("actual URL should work");
             expect(jwt.isWhitelistedDomain(new HttpRequest("GET", "http://naaaa:8000"))).toBeFalsy("unknown should fail");
         })();
     });

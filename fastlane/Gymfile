@@ -1,4 +1,4 @@
-scheme("Scheduler")
-workspace("./platforms/ios/Scheduler.xcworkspace")
+scheme("CunningPlan")
+workspace("./platforms/ios/CunningPlan.xcworkspace")
 output_directory("./build")
-output_name("Scheduler")
+output_name("CunningPlan")

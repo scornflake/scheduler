@@ -1,8 +1,8 @@
 {
-  "name": "scheduler",
+  "name": "cunningplan",
   "version": "0.0.1",
   "author": "Neil Clayton",
-  "homepage": "https://scheduler.shinywhitebox.com/",
+  "homepage": "https://cunningplan.shinywhitebox.com/",
   "private": true,
   "scripts": {
     "clean": "ionic-app-scripts clean",
@@ -34,6 +34,7 @@
     "@angular/platform-browser-dynamic": "5.2.11",
     "@auth0/angular-jwt": "^1.0.0",
     "@ionic-native/core": "4.7.0",
+    "@ionic-native/deeplinks": "^4.12.2",
     "@ionic-native/in-app-browser": "^4.12.2",
     "@ionic-native/native-page-transitions": "^4.9.0",
     "@ionic-native/network": "^4.8.0",
@@ -54,7 +55,7 @@
     "com.telerik.plugins.nativepagetransitions": "^0.6.5",
     "cordova-android": "7.0.0",
     "cordova-browser": "5.0.1",
-    "cordova-ios": "4.5.4",
+    "cordova-ios": "^4.5.5",
     "cordova-plugin-device": "^1.1.4",
     "cordova-plugin-inappbrowser": "^3.0.0",
     "cordova-plugin-ionic-webview": "^1.2.1",
@@ -130,7 +131,7 @@
     "typescript": "~2.6.2",
     "webpack": "^4.6.0"
   },
-  "description": "Scheduler",
+  "description": "CunningPlan",
   "cordova": {
     "plugins": {
       "ionic-plugin-keyboard": {},
@@ -143,9 +144,9 @@
       "cordova-plugin-statusbar": {},
       "com.telerik.plugins.nativepagetransitions": {},
       "ionic-plugin-deeplinks": {
-        "URL_SCHEME": "scheduler",
+        "URL_SCHEME": "cunningplan",
         "DEEPLINK_SCHEME": "https",
-        "DEEPLINK_HOST": "scheduler.shinywhitebox.com",
+        "DEEPLINK_HOST": "cunningplanapp.shinywhitebox.com",
         "ANDROID_PATH_PREFIX": "/",
         "ANDROID_2_PATH_PREFIX": "/",
         "ANDROID_3_PATH_PREFIX": "/",

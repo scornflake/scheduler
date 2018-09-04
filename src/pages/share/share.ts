@@ -122,6 +122,8 @@ export class SharePage implements OnInit, AfterViewInit, OnDestroy {
                     this.logger.error(`Error: ${SWBSafeJSON.stringify(message)}`);
                     this.pageUtils.showError(message, true);
                 }
+
+                progressSubscription.unsubscribe();
             }
         } else {
             this.pageUtils.showError('No schedule');

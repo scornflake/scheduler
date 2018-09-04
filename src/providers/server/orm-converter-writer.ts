@@ -16,7 +16,7 @@ class OrmConverterWriter {
                 private logService: LoggingService,
                 private objectLoader: IObjectStore
     ) {
-        this.logger = logService.getLogger('orm.writer');
+        this.logger = this.logService.getLogger('orm.writer');
         this.utils = new OrmUtils(this.logger);
     }
 

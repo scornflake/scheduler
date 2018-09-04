@@ -1,7 +1,7 @@
 {
   "name": "development",
   "server": {
-    "couch": "https://schedulerdb.shinywhitebox.com",
+    "couch": "https://cunningplandb.shinywhitebox.com",
     "rest": "http://192.168.1.168:8000"
   },
   "database": {

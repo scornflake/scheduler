@@ -5,7 +5,7 @@ import {SWBSafeJSON} from "../../common/json/safe-stringify";
 import {Logger, LoggingService} from "ionic-logging-service";
 import {Person} from "../../scheduling/people";
 import {Observable} from "rxjs/Observable";
-import {forwardRef, Inject, Injectable, NgZone} from "@angular/core";
+import {forwardRef, Inject, Injectable} from "@angular/core";
 import {Organization} from "../../scheduling/organization";
 import {IReplicationNotification, ReplicationStatus, SchedulerDatabase} from "./db";
 import {ObjectWithUUID} from "../../scheduling/base-types";

@@ -15,7 +15,6 @@ import {ConfigurationService} from "ionic-configuration-service";
 import {LoggingService} from "ionic-logging-service";
 import {RESTServer} from "../providers/server/server";
 import {HomePageModule} from "../pages/home/home.module";
-import {LoginPageModule} from "../pages/login/login.module";
 import {RootStore} from "../store/root";
 import {PeoplePageModule} from "../pages/people/people-page.module";
 import {AboutPageModule} from "../pages/about/about.module";
@@ -46,6 +45,8 @@ import {doAppInitializersDeterministic} from "../common/app-initializer";
 import {AccessControlProvider} from '../providers/access-control/access-control';
 import {SharePageModule} from "../pages/share/share.module";
 import {InAppBrowser} from "@ionic-native/in-app-browser";
+import {Deeplinks} from "@ionic-native/deeplinks";
+import {LoginPage} from "../pages/login/login";
 
 
 let config = {
@@ -67,6 +68,7 @@ export function ResponsiveDefinition() {
     declarations: [
         MyApp,
         TabsPage,
+        LoginPage,
     ],
     imports: [
         MobxAngularModule,
@@ -79,7 +81,6 @@ export function ResponsiveDefinition() {
         SheetSelectionPageModule,
         TabSelectionPageModule,
         HomePageModule,
-        LoginPageModule,
         // Took out for now. Maybe add later, but for now just use existing Django functionality.
         // ForgotPasswordPageModule,
         PeoplePageModule,
@@ -101,6 +102,7 @@ export function ResponsiveDefinition() {
     entryComponents: [
         MyApp,
         TabsPage,
+        LoginPage,
     ],
     providers: [
         StatusBar,
@@ -110,6 +112,7 @@ export function ResponsiveDefinition() {
         RootStore,
         SchedulerServer,
         StateProvider,
+        Deeplinks,
         InAppBrowser,
         {provide: ErrorHandler, useClass: IonicErrorHandler},
         // {provide: ErrorHandler, useClass: MyErrorHandler},

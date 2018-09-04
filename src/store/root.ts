@@ -43,7 +43,7 @@ class RootStore extends SchedulerObjectStore implements IObjectCache, OnInit, On
     constructor(private zone: NgZone, private logService: LoggingService) {
         super();
 
-        this.logger = logService.getLogger("service.store");
+        this.logger = this.logService.getLogger("service.store");
         this.setUIStore(new UIStore(logService));
 
         this.loggedInPersonSubject = new BehaviorSubject<Person>(null);

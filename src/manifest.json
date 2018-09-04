@@ -1,6 +1,6 @@
 {
-  "name": "Scheduler",
-  "short_name": "Scheduler",
+  "name": "CunningPlan",
+  "short_name": "CunningPlan",
   "start_url": "index.html",
   "display": "standalone",
   "icons": [{

@@ -15,3 +15,4 @@ platforms
 .gradle
 report.xml
 karma_html
+platforms-old

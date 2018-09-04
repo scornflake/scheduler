@@ -64,7 +64,7 @@ describe('JWT blacklisting', () => {
         inject([JwtInterceptor], (jwt) => {
             expect(jwt.isBlacklistedRoute(new HttpRequest("GET", "http://localhost:8000/api/user"))).toBeFalsy();
             expect(jwt.isBlacklistedRoute(new HttpRequest("GET", "http://localhost:8000/api/login"))).toBeFalsy();
-            expect(jwt.isBlacklistedRoute(new HttpRequest("GET", "http://scheduler.shinywhitebox.com/api/login"))).toBeFalsy();
+            expect(jwt.isBlacklistedRoute(new HttpRequest("GET", "http://cunningplan.shinywhitebox.com/api/login"))).toBeFalsy();
         })();
     });
 

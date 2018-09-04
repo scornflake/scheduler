@@ -9,6 +9,8 @@ import {autorun} from "mobx";
 import {isUndefined} from "util";
 import {NativePageTransitions} from "@ionic-native/native-page-transitions";
 import {AccessControlProvider, ResourceType} from "../providers/access-control/access-control";
+import {Deeplinks} from "@ionic-native/deeplinks";
+import {LoginPage} from "../pages/login/login";
 
 @Component({
     templateUrl: 'app.html',
@@ -27,6 +29,7 @@ export class MyApp {
                 private native: NativePageTransitions,
                 private access: AccessControlProvider,
                 private server: SchedulerServer,
+                private deeplinks: Deeplinks,
                 private menu: MenuController) {
         this.menu.enable(true, 'menu');
         this.frozenGroups = [];
@@ -37,11 +40,29 @@ export class MyApp {
             this.statusBar.styleDefault();
             this.splashScreen.hide();
             console.warn('Platform says ready');
-            this.rebuildGroupsOnChange();
+
+            try {
+                this.rebuildGroupsOnChange();
+            } catch (err) {
+                console.error(`Boom while doing rebuildGroupsOnChange: ${err}`);
+            }
+
         });
     }
 
     ngOnInit() {
+        this.platform.ready().then(() => {
+            console.warn('Deeplinking started listening...');
+            this.deeplinks.route({
+                '/login': LoginPage
+            }).subscribe(match => {
+                console.warn(`Deeplinking Routing to ${match}`);
+            }, err => {
+                console.warn(`Deeplinking Got link that didnt exist: ${err}`);
+            }, () => {
+                console.warn(`Deeplinking is done`);
+            });
+        });
     }
 
     private rebuildGroupsOnChange() {
@@ -74,7 +95,7 @@ export class MyApp {
             {
                 title: "", items: [
                     {title: "Dashboard", page: 'home'},
-                    {title: "Login", page: 'login', visible: () => !this.loggedIn},
+                    {title: "Login", page: LoginPage, visible: () => !this.loggedIn},
                     {title: "Profile", page: 'page-profile', enabled: () => this.loggedIn},
                 ]
             },
@@ -91,7 +112,7 @@ export class MyApp {
                     {
                         title: "Logout", exec: () => {
                             this.server.asyncLogout().then(() => {
-                                this.nav.setRoot('login');
+                                this.nav.setRoot(LoginPage);
                             });
                         },
                         enabled: () => this.loggedIn
