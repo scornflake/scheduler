@@ -11,6 +11,7 @@ import {NativePageTransitions} from "@ionic-native/native-page-transitions";
 import {AccessControlProvider, ResourceType} from "../providers/access-control/access-control";
 import {Deeplinks} from "@ionic-native/deeplinks";
 import {LoginPage} from "../pages/login/login";
+import {SWBSafeJSON} from "../common/json/safe-stringify";
 
 @Component({
     templateUrl: 'app.html',
@@ -56,7 +57,11 @@ export class MyApp {
             this.deeplinks.route({
                 '/login': LoginPage
             }).subscribe(match => {
-                console.warn(`Deeplinking Routing to ${match}`);
+                console.warn(`Deeplinking Routing to ${SWBSafeJSON.stringify(match)}`);
+
+                // At the moment we support "home" only.
+                // This will do the 'if user not logged in, log them in' thing
+                this.nav.setRoot('home');
             }, err => {
                 console.warn(`Deeplinking Got link that didnt exist: ${err}`);
             }, () => {

@@ -60,6 +60,10 @@ class LoginPage implements AfterViewInit, OnDestroy {
         this.isCreateAccount = this.navParams.get('create');
     }
 
+    ngOnInit() {
+
+    }
+
     ngAfterViewInit(): void {
         this.storage.get('last.login.email').then(v => {
             runInAction(() => {
