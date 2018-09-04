@@ -1,5 +1,14 @@
 import {AfterViewInit, Component, OnDestroy, ViewChild} from '@angular/core';
-import {AlertController, IonicPage, Loading, LoadingController, NavController, NavParams, Slides} from 'ionic-angular';
+import {
+    AlertController,
+    IonicPage,
+    Loading,
+    LoadingController,
+    NavController,
+    NavParams,
+    Platform,
+    Slides
+} from 'ionic-angular';
 import {AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators} from "@angular/forms";
 import "rxjs/add/operator/debounceTime";
 import {Logger, LoggingService} from "ionic-logging-service";
@@ -14,6 +23,7 @@ import "rxjs/add/observable/timer";
 import {Storage} from '@ionic/storage';
 import {runInAction} from "mobx";
 import {EndpointsProvider} from "../../providers/endpoints/endpoints";
+import {InAppBrowser} from "@ionic-native/in-app-browser";
 
 enum LoginPageMode {
     LoginOrCreate = 0,
@@ -52,6 +62,8 @@ class LoginPage implements AfterViewInit, OnDestroy {
                 protected logService: LoggingService,
                 protected server: SchedulerServer,
                 protected storage: Storage,
+                protected platform: Platform,
+                protected inAppBrowser: InAppBrowser,
                 protected endpoints: EndpointsProvider,
                 protected formBuilder: FormBuilder,
                 protected pageUtils: PageUtils,
@@ -306,7 +318,10 @@ class LoginPage implements AfterViewInit, OnDestroy {
     }
 
     showForgotPassword() {
-        window.open(this.endpoints.forgotPasswordPage())
+        this.platform.ready().then(() => {
+            let browser = this.inAppBrowser.create(this.endpoints.forgotPasswordPage(), '_system', 'location=yes');
+            browser.show();
+        });
     }
 }
 

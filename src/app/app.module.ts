@@ -45,7 +45,7 @@ import {JWTAPIModule} from "../providers/token/jwt-api.module";
 import {doAppInitializersDeterministic} from "../common/app-initializer";
 import {AccessControlProvider} from '../providers/access-control/access-control';
 import {SharePageModule} from "../pages/share/share.module";
-import {MyErrorHandler} from "./the.error.handler";
+import {InAppBrowser} from "@ionic-native/in-app-browser";
 
 
 let config = {
@@ -110,6 +110,7 @@ export function ResponsiveDefinition() {
         RootStore,
         SchedulerServer,
         StateProvider,
+        InAppBrowser,
         {provide: ErrorHandler, useClass: IonicErrorHandler},
         // {provide: ErrorHandler, useClass: MyErrorHandler},
         PageUtils,

@@ -72,6 +72,10 @@
   version "4.7.0"
   resolved "https://registry.yarnpkg.com/@ionic-native/core/-/core-4.7.0.tgz#9e7c13db9f18f454d7a31a5d61d369a7db3f338c"
 
+"@ionic-native/in-app-browser@^4.12.2":
+  version "4.12.2"
+  resolved "https://registry.yarnpkg.com/@ionic-native/in-app-browser/-/in-app-browser-4.12.2.tgz#c8b006c78f45c8324c4ef74ea9f8a55aacc4b214"
+
 "@ionic-native/native-page-transitions@^4.9.0":
   version "4.9.0"
   resolved "https://registry.yarnpkg.com/@ionic-native/native-page-transitions/-/native-page-transitions-4.9.0.tgz#b2cb5d2119f4a482be1531ad416c2db0d95f28aa"
@@ -938,7 +942,7 @@ base64-js@1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/base64-js/-/base64-js-1.2.0.tgz#a39992d723584811982be5e290bb6a53d86700f1"
 
-base64-js@^1.0.2:
+base64-js@^1.0.2, base64-js@^1.2.3:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/base64-js/-/base64-js-1.3.0.tgz#cab1e6118f051095e58b5281aea8c1cd22bfc0e3"
 
@@ -2020,6 +2024,10 @@ cordova-lib@8.0.0:
 cordova-plugin-device@^1.1.4:
   version "1.1.7"
   resolved "https://registry.yarnpkg.com/cordova-plugin-device/-/cordova-plugin-device-1.1.7.tgz#fc94111be6932628c66868938ddf3dc82c9fbfe6"
+
+cordova-plugin-inappbrowser@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/cordova-plugin-inappbrowser/-/cordova-plugin-inappbrowser-3.0.0.tgz#d4ae00d36676210751057ad258ae4ad4a9161ada"
 
 cordova-plugin-ionic-webview@^1.2.1:
   version "1.2.1"
@@ -4035,6 +4043,15 @@ ionic-mocks@^1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/ionic-mocks/-/ionic-mocks-1.3.0.tgz#398bae25e01f23ab31b6d379754ee9d3c4bfb066"
 
+ionic-plugin-deeplinks@^1.0.17:
+  version "1.0.17"
+  resolved "https://registry.yarnpkg.com/ionic-plugin-deeplinks/-/ionic-plugin-deeplinks-1.0.17.tgz#875d3e0731ee69d410603a4351f397cea428df60"
+  dependencies:
+    mkpath ">=1.0.0"
+    node-version-compare ">=1.0.1"
+    plist ">=1.2.0"
+    xml2js ">=0.4"
+
 ionic-plugin-keyboard@^2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/ionic-plugin-keyboard/-/ionic-plugin-keyboard-2.2.1.tgz#f2a9e169bbe9b5522400347c9fd6d3467ee3fa12"
@@ -5459,6 +5476,10 @@ mkdirp@0.5.x, "mkdirp@>=0.5 0", mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@~0.5.0:
   dependencies:
     minimist "0.0.8"
 
+mkpath@>=1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/mkpath/-/mkpath-1.0.0.tgz#ebb3a977e7af1c683ae6fda12b545a6ba6c5853d"
+
 mobx-angular@^3.0.1:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/mobx-angular/-/mobx-angular-3.0.1.tgz#881379acea563c0767550d1f7801ab3434449bb1"
@@ -5750,6 +5771,10 @@ node-sass@^4.9.2:
 node-uuid@~1.4.7:
   version "1.4.8"
   resolved "https://registry.yarnpkg.com/node-uuid/-/node-uuid-1.4.8.tgz#b040eb0923968afabf8d32fb1f17f1167fdab907"
+
+node-version-compare@>=1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/node-version-compare/-/node-version-compare-1.0.1.tgz#d85bfd20f0acade33577f56682c7109c34c550cd"
 
 nodemailer-direct-transport@3.3.2:
   version "3.3.2"
@@ -6362,6 +6387,14 @@ plist@2.0.1:
   dependencies:
     base64-js "1.1.2"
     xmlbuilder "8.2.2"
+    xmldom "0.1.x"
+
+plist@>=1.2.0:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/plist/-/plist-3.0.1.tgz#a9b931d17c304e8912ef0ba3bdd6182baf2e1f8c"
+  dependencies:
+    base64-js "^1.2.3"
+    xmlbuilder "^9.0.7"
     xmldom "0.1.x"
 
 plist@^1.2.0:
@@ -9194,7 +9227,7 @@ xml2js@0.4.4:
     sax "0.6.x"
     xmlbuilder ">=1.0.0"
 
-xml2js@^0.4.17, xml2js@^0.4.19:
+xml2js@>=0.4, xml2js@^0.4.17, xml2js@^0.4.19:
   version "0.4.19"
   resolved "https://registry.yarnpkg.com/xml2js/-/xml2js-0.4.19.tgz#686c20f213209e94abf0d1bcf1efaa291c7827a7"
   dependencies:
@@ -9211,7 +9244,7 @@ xmlbuilder@8.2.2:
   version "8.2.2"
   resolved "https://registry.yarnpkg.com/xmlbuilder/-/xmlbuilder-8.2.2.tgz#69248673410b4ba42e1a6136551d2922335aa773"
 
-xmlbuilder@>=1.0.0, xmlbuilder@~9.0.1:
+xmlbuilder@>=1.0.0, xmlbuilder@^9.0.7, xmlbuilder@~9.0.1:
   version "9.0.7"
   resolved "https://registry.yarnpkg.com/xmlbuilder/-/xmlbuilder-9.0.7.tgz#132ee63d2ec5565c557e20f4c22df9aca686b10d"
 
