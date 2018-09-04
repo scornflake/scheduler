@@ -35,6 +35,11 @@ fastlane ios beta
 fastlane android test
 ```
 Runs all the tests
+### android slackbuild
+```
+fastlane android slackbuild
+```
+Build production release
 ### android build
 ```
 fastlane android build

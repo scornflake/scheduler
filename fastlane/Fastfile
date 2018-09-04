@@ -13,6 +13,8 @@
 # Uncomment the line if you want fastlane to automatically update itself
 # update_fastlane
 
+ENV["SLACK_URL"]="https://hooks.slack.com/services/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"
+
 default_platform(:ios)
 
 platform :ios do
@@ -45,7 +47,13 @@ platform :ios do
 end
 
 
-
+desc "Upload the APK to Slack channel"
+private_lane :upload_to_slack do |options|
+  file_path = lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
+  file_name = file_path.gsub(/\/.*\//,"")
+  sh "echo Uploading " + file_name + " to Slack"
+  sh "curl https://slack.com/api/files.upload -F token=\"xoxp-36167262595-36207234084-428594084545-2287fb045243196b7ed38e2f983beaad\" -F channels=\"#cunningplan\" -F title=\"" + file_name + "\" -F filename=\"" + file_name + "\" -F file=@" + file_path
+end
 
 platform :android do
   desc "Runs all the tests"
@@ -54,15 +62,16 @@ platform :android do
   end
 
   desc "Build production release"
-  lane :build do
+  lane :slackbuild do
     ionic(
         platform: "android",
-        prod: true,
+        prod: false,
         keystore_path: '../scheduler-certs/google_play/android-release-key.jks',
         keystore_alias: 'my-alias',
         keystore_password: 'scheduler'
     )
     gradle(task: "clean assembleRelease", project_dir: "./platforms/android")
+    upload_to_slack()
   end
 
   desc "Deploy new alpha"
@@ -76,6 +85,18 @@ platform :android do
     )
     gradle(task: "clean assembleRelease", project_dir: "./platforms/android")
     upload_to_play_store(track: 'alpha')
+  end
+
+  desc "Build production release"
+  lane :build do
+    ionic(
+        platform: "android",
+        prod: true,
+        keystore_path: '../scheduler-certs/google_play/android-release-key.jks',
+        keystore_alias: 'my-alias',
+        keystore_password: 'scheduler'
+    )
+    gradle(task: "clean assembleRelease", project_dir: "./platforms/android")
   end
 
   desc "Deploy a new version to the Google Play"

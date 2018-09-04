@@ -1,4 +1,4 @@
-To add ios
+To add iOS
 ===
 ionic cordova platform add ios
 
@@ -24,21 +24,17 @@ Prod Build
 ionic cordova build ios --release --prod
 
 
-
-Fastlane
-========
-
-ios
----
-
-- We're using 'match' based signing.
-- This requires the private repo scheduler-certs in order to work.
-
-android
+Android
 -------
 
 If you blow away the android folder, the following needs to happen:
 ** do this from within platforms/android **
+
+
+
+
+Not sure below is required?
+Fastlane seems to build it just fine.
 
 - add build-extras.gradle
     - this adds dependencies for screenshots
@@ -49,3 +45,15 @@ If you blow away the android folder, the following needs to happen:
 Notes:
 - Had to create a local keystore (its in the google_play of private repo scheduler-certs) to sign app first.
 - Had to upload at least one APK before fastlane supply init would work.
+
+
+
+Fastlane
+========
+
+ios
+---
+
+- We're using 'match' based signing.
+- This requires the private repo scheduler-certs in order to work.
+
